@@ -42,6 +42,22 @@ const checkSlugUnique = async (slug: string): Promise<boolean> => {
   return data?.length === 0;
 };
 
+const uploadToStorage = async (fileName: string, content: string) => {
+  const { data, error } = await supabase.storage
+    .from('components')
+    .upload(fileName, content, {
+      contentType: 'text/plain',
+    });
+
+  if (error) throw error;
+
+  const { data: publicUrlData } = supabase.storage
+    .from('components')
+    .getPublicUrl(fileName);
+
+  return publicUrlData.publicUrl;
+};
+
 export default function ComponentForm() {
   const { register, handleSubmit, reset, watch, setValue } = useForm<FormData>()
   const [isLoading, setIsLoading] = useState(false)
@@ -111,12 +127,24 @@ export default function ComponentForm() {
 
     setIsLoading(true)
     try {
+      const timestamp = new Date().getTime();
+      const codeFileName = `components/${data.component_slug}-code-${timestamp}.tsx`;
+      const demoCodeFileName = `components/${data.component_slug}-demo-${timestamp}.tsx`;
+
+      const [codeUrl, demoCodeUrl] = await Promise.all([
+        uploadToStorage(codeFileName, data.code),
+        uploadToStorage(demoCodeFileName, data.demo_code)
+      ]);
+
+      const installUrl = `https://yourdomain.com/r/${data.component_slug}`;
+      
       const { error } = await supabase.from('components').insert({
         component_name: data.component_name,
         component_slug: data.component_slug,
-        code: data.code,
-        demo_code: data.demo_code,
+        code: codeUrl,
+        demo_code: demoCodeUrl,
         description: data.description,
+        install_url: installUrl,
         user_id: "304651f2-9afd-4181-9a20-3263aa601384"
       })
     

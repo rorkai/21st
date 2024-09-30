@@ -47,6 +47,7 @@ const uploadToStorage = async (fileName: string, content: string) => {
     .from('components')
     .upload(fileName, content, {
       contentType: 'text/plain',
+      upsert: true
     });
 
   if (error) throw error;
@@ -128,8 +129,8 @@ export default function ComponentForm() {
     setIsLoading(true)
     try {
       const timestamp = new Date().getTime();
-      const codeFileName = `components/${data.component_slug}-code-${timestamp}.tsx`;
-      const demoCodeFileName = `components/${data.component_slug}-demo-${timestamp}.tsx`;
+      const codeFileName = `${data.component_slug}-code.tsx`;
+      const demoCodeFileName = `${data.component_slug}-demo.tsx`;
 
       const [codeUrl, demoCodeUrl] = await Promise.all([
         uploadToStorage(codeFileName, data.code),

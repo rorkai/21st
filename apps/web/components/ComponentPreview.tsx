@@ -27,6 +27,7 @@ interface Component {
   component_name: string;
   demo_component_name: string;
   demo_dependencies: string;
+  internal_dependencies: string; // Новое поле
 }
 
 export default function ComponentPreview({ component }: { component: Component }) {
@@ -35,6 +36,8 @@ export default function ComponentPreview({ component }: { component: Component }
   const [dependencies, setDependencies] = useState<Record<string, string>>({});
   const [demoDependencies, setDemoDependencies] = useState<Record<string, string>>({});
   const [isClient, setIsClient] = useState(false);
+  const [internalDependencies, setInternalDependencies] = useState<Record<string, string>>({});
+  const [internalDependenciesCode, setInternalDependenciesCode] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setIsClient(true);
@@ -59,13 +62,15 @@ export default function ComponentPreview({ component }: { component: Component }
       setDemoCode(updatedDemoCode);
 
       const componentDependencies = JSON.parse(component.dependencies || '{}');
-      const componentDemoDependencies = JSON.parse(component.demo_dependencies );
+      const componentDemoDependencies = JSON.parse(component.demo_dependencies || '{}');
+      const componentInternalDependencies = JSON.parse(component.internal_dependencies || '{}');
       setDependencies(componentDependencies);
       setDemoDependencies(componentDemoDependencies);
+      setInternalDependencies(componentInternalDependencies);
     }
 
     fetchCode();
-  }, [component.component_slug, component.component_name, component.dependencies, component.demo_dependencies]);
+  }, [component.component_slug, component.component_name, component.dependencies, component.demo_dependencies, component.internal_dependencies]);
 
   const demoComponentName = component.demo_component_name;
 
@@ -86,6 +91,31 @@ export default function App() {
     "/Demo.tsx": demoCode,
   };
 
+  useEffect(() => {
+    const componentInternalDependencies = JSON.parse(component.internal_dependencies || '{}');
+    setInternalDependencies(componentInternalDependencies);
+
+    async function fetchInternalDependencies() {
+      const internalDepsCode: Record<string, string> = {};
+      for (const [path, slug] of Object.entries(componentInternalDependencies)) {
+        const { data, error } = await supabase.storage
+          .from('components')
+          .download(`${slug}-code.tsx`);
+
+        if (error) {
+          console.error(`Ошибка при загрузке внутренней зависимости ${slug}:`, error);
+          continue;
+        }
+
+        const dependencyCode = await data.text();
+        internalDepsCode[`/components/${slug}.tsx`] = dependencyCode;
+      }
+      setInternalDependenciesCode(internalDepsCode);
+    }
+
+    fetchInternalDependencies();
+  }, [component.internal_dependencies]);
+
   return (
     <div className="border rounded-lg p-4 shadow-md">
       <h2 className="text-xl font-semibold mb-2">{component.name}</h2>
@@ -96,6 +126,7 @@ export default function App() {
           dependencies={dependencies}
           demoDependencies={demoDependencies}
           demoComponentName={demoComponentName}
+          internalDependencies={internalDependenciesCode}
         />
       )}
       
@@ -114,6 +145,7 @@ export default function App() {
         <p><strong>Likes:</strong> {component.likes_count}</p>
         <p><strong>Dependencies:</strong> {component.dependencies}</p>
         <p><strong>Demo Dependencies:</strong> {component.demo_dependencies}</p>
+        <p><strong>Internal Dependencies:</strong> {component.internal_dependencies}</p>
       </div>
     </div>
   );

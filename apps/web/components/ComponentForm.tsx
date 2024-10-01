@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { supabase } from '../utils/supabase'
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
+import * as t from '@babel/types';
 
 type FormData = {
   name: string
@@ -27,6 +28,7 @@ export default function ComponentForm() {
   const [parsedDependencies, setParsedDependencies] = useState<Record<string, string>>({});
   const [parsedComponentNames, setParsedComponentNames] = useState<string[]>([]);
   const [parsedDemoDependencies, setParsedDemoDependencies] = useState<Record<string, string>>({});
+  const [internalDependencies, setInternalDependencies] = useState<Record<string, string>>({});
 
   const name = watch('name')
   const componentSlug = watch('component_slug')
@@ -111,8 +113,58 @@ export default function ComponentForm() {
 
   const extractComponentNames = (code: string): string[] => {
     if (!code) return [];
-    const matches = code.match(/(?:const|function)\s+([A-Z]\w+)\s*(?:=|\()/g);
-    return matches ? matches.map(match => match.split(/\s+/)[1]).filter((name): name is string => Boolean(name)) : [];
+    const ast = parse(code, {
+      sourceType: 'module',
+      plugins: ['typescript', 'jsx'],
+    });
+    
+    const exportedComponents: string[] = [];
+    
+    traverse(ast, {
+      ExportNamedDeclaration(path) {
+        const declaration = path.node.declaration;
+        if (declaration) {
+          if (t.isFunctionDeclaration(declaration) && declaration.id) {
+            exportedComponents.push(declaration.id.name);
+          } else if (t.isVariableDeclaration(declaration)) {
+            declaration.declarations.forEach(d => {
+              if (t.isIdentifier(d.id)) {
+                exportedComponents.push(d.id.name);
+              }
+            });
+          } else if (t.isClassDeclaration(declaration) && declaration.id) {
+            exportedComponents.push(declaration.id.name);
+          }
+        } else if (path.node.specifiers) {
+          path.node.specifiers.forEach(specifier => {
+            if (t.isExportSpecifier(specifier)) {
+              if (t.isIdentifier(specifier.exported)) {
+                exportedComponents.push(specifier.exported.name);
+              }
+            }
+          });
+        }
+      },
+      ExportDefaultDeclaration(path) {
+        const declaration = path.node.declaration;
+        if (t.isIdentifier(declaration)) {
+          exportedComponents.push(declaration.name);
+        } else if (t.isFunctionDeclaration(declaration) && declaration.id) {
+          exportedComponents.push(declaration.id.name);
+        } else if (t.isClassDeclaration(declaration) && declaration.id) {
+          exportedComponents.push(declaration.id.name);
+        }
+      },
+      VariableDeclarator(path) {
+        if (t.isIdentifier(path.node.id) && 
+            t.isVariableDeclaration(path.parent) &&
+            path.parentPath && t.isExportNamedDeclaration(path.parentPath.parent)) {
+          exportedComponents.push(path.node.id.name);
+        }
+      }
+    });
+    
+    return exportedComponents;
   };
 
   const extractDemoComponentName = (code: string): string => {
@@ -187,23 +239,71 @@ export default function ComponentForm() {
     return dependencies;
   }
 
+  function parseInternalDependencies(code: string): Record<string, string> {
+    const internalDeps: Record<string, string> = {};
+    try {
+      const ast = parse(code, {
+        sourceType: 'module',
+        plugins: [
+          'typescript',
+          'jsx',
+          'decorators-legacy',
+          'classProperties',
+          'objectRestSpread',
+          'dynamicImport',
+        ],
+      });
+
+      traverse(ast, {
+        ImportDeclaration({ node }) {
+          const source = node.source.value;
+          if (typeof source === 'string' && source.startsWith('@/components/')) {
+            internalDeps[source] = '';
+          }
+        },
+      });
+    } catch (error) {
+      console.error('Ошибка при парсинге внутренних зависимостей:', error);
+    }
+
+    return internalDeps;
+  }
+
+  useEffect(() => {
+    const deps = parseInternalDependencies(code);
+    setInternalDependencies(deps);
+  }, [code]);
+
   const onSubmit = async (data: FormData) => {
     if (!slugAvailable || demoCodeError) {
       alert('Please choose an available and correct slug before submitting.');
       return;
     }
 
+    // Проверка на заполненность всех внутренних зависимостей
+    if (Object.values(internalDependencies).some(slug => !slug)) {
+      alert('Пожалуйста, укажите slug для всех внутренних зависимостей');
+      return;
+    }
+
+    // Модифицируем код компонента, заменяя пути импорта на slug'и
+    let modifiedCode = data.code;
+    Object.entries(internalDependencies).forEach(([path, slug]) => {
+      const regex = new RegExp(`from\\s+["']${path}["']`, 'g');
+      modifiedCode = modifiedCode.replace(regex, `from "@/components/${slug}"`);
+    });
+
     setIsLoading(true)
     try {
-      const componentNames = extractComponentNames(data.code);
+      const componentNames = extractComponentNames(modifiedCode);
       const demoComponentName = extractDemoComponentName(data.demo_code);
-      const dependencies = parseDependencies(data.code);
+      const dependencies = parseDependencies(modifiedCode);
       
       const codeFileName = `${data.component_slug}-code.tsx`;
       const demoCodeFileName = `${data.component_slug}-demo.tsx`;
 
       const [codeUrl, demoCodeUrl] = await Promise.all([
-        uploadToStorage(codeFileName, data.code),
+        uploadToStorage(codeFileName, modifiedCode),
         uploadToStorage(demoCodeFileName, data.demo_code)
       ]);
 
@@ -220,7 +320,8 @@ export default function ComponentForm() {
         install_url: installUrl,
         user_id: "304651f2-9afd-4181-9a20-3263aa601384",
         dependencies: JSON.stringify(dependencies),
-        demo_dependencies: JSON.stringify(parsedDemoDependencies)
+        demo_dependencies: JSON.stringify(parsedDemoDependencies),
+        internal_dependencies: JSON.stringify(internalDependencies) // Добавляем эту строку
       })
     
       if (error) throw error
@@ -325,6 +426,25 @@ export default function ComponentForm() {
         <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
         <Input id="description" {...register('description', { required: true })} className="mt-1 w-full" />
       </div>
+      
+      {Object.keys(internalDependencies).length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold mb-2">Внутренние зависимости:</h3>
+          {Object.entries(internalDependencies).map(([path, slug]) => (
+            <div key={path} className="mb-2">
+              <label className="block text-sm font-medium text-gray-700">{path}</label>
+              <Input
+                value={slug}
+                onChange={(e) => {
+                  setInternalDependencies(prev => ({...prev, [path]: e.target.value}));
+                }}
+                placeholder="Введите slug компонента"
+                className="mt-1 w-full"
+              />
+            </div>
+          ))}
+        </div>
+      )}
       
       <Button type="submit" disabled={isLoading || !slugAvailable || !!demoCodeError} className="w-full">
         {isLoading ? 'Adding...' : 'Add Component'}

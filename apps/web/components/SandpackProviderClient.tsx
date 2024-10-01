@@ -158,7 +158,6 @@ root.render(
               }
             }
             
-            // Добавляем обработчик клика для обновления активного файла
             tab.addEventListener('click', () => {
               if (fileName) {
                 setActiveFile(fileName);
@@ -169,7 +168,6 @@ root.render(
       }
     };
 
-    // Вызываем функцию сразу и затем каждые 100мс в течение 1 секунды
     updateTabLabels();
     const interval = setInterval(updateTabLabels, 100);
     setTimeout(() => clearInterval(interval), 1000);

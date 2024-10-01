@@ -1,5 +1,5 @@
 .customScroller :global(.cm-scroller) {
-  max-height: calc(var(--vh, 1vh) * 100 - 120px) !important; /* Вычитаем примерную высоту заголовка и отступов */
+  max-height: calc(var(--vh, 1vh) * 100 - 120px) !important;
   height: auto !important;
   border-radius: 8px !important;
   overflow: hidden !important;
@@ -11,6 +11,6 @@
 }
 
 .codeViewerWrapper {
-  height: calc(var(--vh, 1vh) * 100 - 317px); /* Используем ту же высоту, что и для скроллера */
+  height: calc(var(--vh, 1vh) * 100 - 317px);
   overflow: hidden;
 }

@@ -263,7 +263,7 @@ export default function ComponentForm() {
         },
       });
     } catch (error) {
-      console.error('Ошибка при парсинге внутренних зависимостей:', error);
+      console.error('Error parsing internal dependencies:', error);
     }
 
     return internalDeps;
@@ -280,13 +280,11 @@ export default function ComponentForm() {
       return;
     }
 
-    // Проверка на заполненность всех внутренних зависимостей
     if (Object.values(internalDependencies).some(slug => !slug)) {
-      alert('Пожалуйста, укажите slug для всех внутренних зависимостей');
+      alert('Please specify the slug for all internal dependencies');
       return;
     }
 
-    // Модифицируем код компонента, заменяя пути импорта на slug'и
     let modifiedCode = data.code;
     Object.entries(internalDependencies).forEach(([path, slug]) => {
       const regex = new RegExp(`from\\s+["']${path}["']`, 'g');
@@ -321,7 +319,7 @@ export default function ComponentForm() {
         user_id: "304651f2-9afd-4181-9a20-3263aa601384",
         dependencies: JSON.stringify(dependencies),
         demo_dependencies: JSON.stringify(parsedDemoDependencies),
-        internal_dependencies: JSON.stringify(internalDependencies) // Добавляем эту строку
+        internal_dependencies: JSON.stringify(internalDependencies)
       })
     
       if (error) throw error
@@ -429,7 +427,7 @@ export default function ComponentForm() {
       
       {Object.keys(internalDependencies).length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold mb-2">Внутренние зависимости:</h3>
+          <h3 className="text-lg font-semibold mb-2">Internal dependencies:</h3>
           {Object.entries(internalDependencies).map(([path, slug]) => (
             <div key={path} className="mb-2">
               <label className="block text-sm font-medium text-gray-700">{path}</label>
@@ -438,7 +436,7 @@ export default function ComponentForm() {
                 onChange={(e) => {
                   setInternalDependencies(prev => ({...prev, [path]: e.target.value}));
                 }}
-                placeholder="Введите slug компонента"
+                placeholder="Enter component slug"
                 className="mt-1 w-full"
               />
             </div>

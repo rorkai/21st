@@ -29,7 +29,7 @@ interface Component {
   component_name: string;
   demo_component_name: string;
   demo_dependencies: string;
-  internal_dependencies: string; // Новое поле
+  internal_dependencies: string;
 }
 
 export default function ComponentPreview({ component }: { component: Component }) {
@@ -124,7 +124,7 @@ export default function App() {
           .download(`${slug}-code.tsx`);
 
         if (error) {
-          console.error(`Ошибка при загрузке внутренней зависимости ${slug}:`, error);
+          console.error(`Error loading internal dependency ${slug}:`, error);
           continue;
         }
 
@@ -173,7 +173,6 @@ function parseComponentNames(componentName: string): string[] {
   try {
     return JSON.parse(componentName);
   } catch {
-    // Если разбор JSON не удался, предполагаем, что это одиночное имя компонента
     return [componentName];
   }
 }

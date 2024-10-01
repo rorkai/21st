@@ -6,4 +6,13 @@ module.exports = {
   parserOptions: {
     project: true,
   },
+  overrides: [
+    {
+      files: ['tailwind.config.js'],
+      parser: 'espree',
+      parserOptions: {
+        ecmaVersion: 2020,
+      },
+    },
+  ],
 };

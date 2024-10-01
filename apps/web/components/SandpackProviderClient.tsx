@@ -6,7 +6,7 @@ import {
 } from "@codesandbox/sandpack-react";
 
 import { SandpackProvider as SandpackProviderUnstyled, SandpackPreview  } from "@codesandbox/sandpack-react/unstyled";
-import { CheckIcon, CopyIcon, Terminal } from "lucide-react";
+import { CheckIcon, CopyIcon, Terminal, Clipboard } from "lucide-react";
 import styles from './SandpackProviderClient.module.css';
 
 import { SandpackProviderProps } from "@codesandbox/sandpack-react";
@@ -33,6 +33,8 @@ export default function SandpackProviderClient({
   componentSlug,
 }: SandpackProviderClientProps) {
   const [copied, setCopied] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
   const sandpackRef = useRef<HTMLDivElement>(null);
 
   const tsConfig = {
@@ -76,6 +78,8 @@ root.render(
   const mainComponentFile = Object.keys(updatedFiles).find(file => file.endsWith(`${componentSlug}.tsx`)) || 
                             Object.keys(updatedFiles)[0];
 
+  const [activeFile, setActiveFile] = useState(mainComponentFile);
+
   const visibleFiles = [
     mainComponentFile,
     ...Object.keys(internalDependencies)
@@ -102,7 +106,7 @@ root.render(
       externalResources: [
         "https://vucvdpamtrjkzmubwlts.supabase.co/storage/v1/object/public/css/compiled-tailwind.css"
       ],
-      activeFile: mainComponentFile,
+      activeFile: activeFile,
       visibleFiles: visibleFiles,
     },
     fileLabels: customFileLabels,
@@ -113,6 +117,16 @@ root.render(
     navigator.clipboard.writeText(command);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const copyCode = () => {
+    const codeElement = sandpackRef.current?.querySelector('.sp-code-editor');
+    if (codeElement) {
+      const code = codeElement.textContent;
+      navigator.clipboard.writeText(code || '');
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 2000);
+    }
   };
 
   useEffect(() => {
@@ -142,10 +156,17 @@ root.render(
                 tab.appendChild(span);
               }
             }
+            
+            // Добавляем обработчик клика для обновления активного файла
+            tab.addEventListener('click', () => {
+              if (fileName) {
+                setActiveFile(fileName);
+              }
+            });
           }
         });
       }
-    }; // Добавлена закрывающая скобка здесь
+    };
 
     // Вызываем функцию сразу и затем каждые 100мс в течение 1 секунды
     updateTabLabels();
@@ -163,7 +184,7 @@ root.render(
           className="flex-grow h-full"
           transition={{ duration: 0.3 }}
         >
-          <SandpackPreview />
+          <SandpackPreview/>
         </motion.div>
       </SandpackProviderUnstyled>
       <AnimatePresence>
@@ -176,7 +197,7 @@ root.render(
             className="h-full w-full max-w-[40%] overflow-hidden rounded-lg border border-[#efefef]"
           >
             <SandpackProvider {...providerProps}>
-              <div ref={sandpackRef} className="h-full w-full flex">
+              <div ref={sandpackRef} className="h-full w-full flex relative">
                 <SandpackLayout className="flex w-full flex-row gap-4">
                   <div className={`flex flex-col w-full ${styles.customScroller}`}>
                     <div className="flex w-full flex-col">
@@ -201,7 +222,24 @@ root.render(
                           </button>
                         </div>
                       </div>
-                      <div className={`overflow-auto ${styles.codeViewerWrapper}`}>
+                      <div 
+                        className={`overflow-auto ${styles.codeViewerWrapper} relative`}
+                        onMouseEnter={() => setIsHovering(true)}
+                        onMouseLeave={() => setIsHovering(false)}
+                      >
+                        <AnimatePresence>
+                          {isHovering && (
+                            <motion.button 
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              onClick={copyCode}
+                              className="absolute flex items-center gap-2 top-12 right-2 z-10 p-1 px-2 bg-white border text-gray-500 border-[#efefef] rounded-md hover:bg-gray-100 transition-colors"
+                            >
+                              Copy Code {codeCopied ? <CheckIcon size={16} /> : <Clipboard size={16} />}
+                            </motion.button>
+                          )}
+                        </AnimatePresence>
                         <SandpackCodeViewer
                           showLineNumbers={true}
                           wrapContent={true}

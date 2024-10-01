@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { supabase } from '../utils/supabase'
+import { parse } from '@babel/parser';
+import traverse from '@babel/traverse';
 
 type FormData = {
   name: string
@@ -22,6 +24,7 @@ export default function ComponentForm() {
   const [slugChecking, setSlugChecking] = useState(false)
   const [slugError, setSlugError] = useState<string | null>(null)
   const [demoCodeError, setDemoCodeError] = useState<string | null>(null);
+  const [parsedDependencies, setParsedDependencies] = useState<Record<string, string>>({});
 
   const name = watch('name')
   const componentSlug = watch('component_slug')
@@ -124,6 +127,7 @@ export default function ComponentForm() {
 
   useEffect(() => {
     setParsedComponentName(code ? extractComponentName(code) : '');
+    setParsedDependencies(code ? parseDependencies(code) : {});
   }, [code]);
 
   useEffect(() => {
@@ -146,14 +150,47 @@ export default function ComponentForm() {
     }
   }, [code, demoCode, checkDemoCode]);
 
-  const onSubmit = async (data: FormData) => {
-    if (!slugAvailable) {
-      alert('Please choose an available and correct slug before submitting.');
-      return;
+  function parseDependencies(code: string): Record<string, string> {
+    const dependencies: Record<string, string> = {};
+    try {
+      const ast = parse(code, {
+        sourceType: 'module',
+        plugins: [
+          'typescript',
+          'jsx',
+          'decorators-legacy',
+          'classProperties',
+          'objectRestSpread',
+          'dynamicImport',
+        ],
+      });
+
+      const defaultDependencies = ['react', 'react-dom', 'tailwindcss'];
+
+      traverse(ast, {
+        ImportDeclaration({ node }) {
+          const source = node.source.value;
+          if (typeof source === 'string' && !source.startsWith('.') && !source.startsWith('/') && !source.startsWith('@/')) {
+            let packageName = source.split('/')[0];
+            if (packageName?.startsWith('@')) {
+              packageName = packageName.substring(1); // Удаляем '@' в начале
+            }
+            if (packageName && !defaultDependencies.includes(packageName)) {
+              dependencies[packageName] = 'latest';
+            }
+          }
+        },
+      });
+    } catch (error) {
+      console.error('Error parsing dependencies:', error);
     }
 
-    if (demoCodeError) {
-      alert('Please fix the errors in the demo code before submitting.');
+    return dependencies;
+  }
+
+  const onSubmit = async (data: FormData) => {
+    if (!slugAvailable || demoCodeError) {
+      alert('Please choose an available and correct slug before submitting.');
       return;
     }
 
@@ -161,6 +198,7 @@ export default function ComponentForm() {
     try {
       const componentName = extractComponentName(data.code);
       const demoComponentName = extractDemoComponentName(data.demo_code);
+      const dependencies = parseDependencies(data.code);
       
       const codeFileName = `${data.component_slug}-code.tsx`;
       const demoCodeFileName = `${data.component_slug}-demo.tsx`;
@@ -181,7 +219,8 @@ export default function ComponentForm() {
         demo_code: demoCodeUrl,
         description: data.description,
         install_url: installUrl,
-        user_id: "304651f2-9afd-4181-9a20-3263aa601384"
+        user_id: "304651f2-9afd-4181-9a20-3263aa601384",
+        dependencies: JSON.stringify(dependencies) // Сохраняем зависимости в JSON формате
       })
     
       if (error) throw error
@@ -257,6 +296,15 @@ export default function ComponentForm() {
       <div>
         <label className="block text-sm font-medium text-gray-700">Parsed Demo Component Name</label>
         <Input value={parsedDemoComponentName} readOnly className="mt-1 w-full bg-gray-100" />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Parsed Dependencies</label>
+        <Textarea 
+          value={Object.entries(parsedDependencies).map(([key, value]) => `${key}: ${value}`).join('\n')}
+          readOnly 
+          className="mt-1 w-full bg-gray-100" 
+        />
       </div>
       
       <div>

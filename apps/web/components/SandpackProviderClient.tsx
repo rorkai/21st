@@ -6,7 +6,7 @@ import {
 } from "@codesandbox/sandpack-react";
 
 import { SandpackProvider as SandpackProviderUnstyled, SandpackPreview  } from "@codesandbox/sandpack-react/unstyled";
-import { CheckIcon, CopyIcon, Terminal, Clipboard } from "lucide-react";
+import { CheckIcon, CopyIcon, Terminal, Clipboard, Loader2 } from "lucide-react";
 import styles from './SandpackProviderClient.module.css';
 
 import { SandpackProviderProps } from "@codesandbox/sandpack-react";
@@ -36,6 +36,7 @@ export default function SandpackProviderClient({
   const [codeCopied, setCodeCopied] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const sandpackRef = useRef<HTMLDivElement>(null);
+  const [isPreviewReady, setIsPreviewReady] = useState(false);
 
   const tsConfig = {
     compilerOptions: {
@@ -107,9 +108,9 @@ root.render(
         "https://vucvdpamtrjkzmubwlts.supabase.co/storage/v1/object/public/css/compiled-tailwind.css"
       ],
       activeFile: activeFile,
-      visibleFiles: visibleFiles,
+      visibleFiles: visibleFiles.filter((file): file is string => file !== undefined),
     },
-    fileLabels: customFileLabels,
+    ...({fileLabels: customFileLabels} as any),
   };
 
   const copyCommand = () => {
@@ -176,15 +177,29 @@ root.render(
     return () => clearInterval(interval);
   }, [internalDependencies, showCode]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsPreviewReady(true);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className="h-full w-full flex gap-4 bg-[#FAFAFA] rounded-lg">
       <SandpackProviderUnstyled {...providerProps}>
         <motion.div
           layout
-          className="flex-grow h-full"
+          className="flex-grow h-full relative"
           transition={{ duration: 0.3 }}
         >
-          <SandpackPreview/>
+          {!isPreviewReady && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white">
+              <Loader2 className="w-5 h-5 text-gray-600 animate-spin" />
+              <span className="ml-2 text-gray-600">Loading...</span>
+            </div>
+          )}
+          {isPreviewReady && <SandpackPreview />}
         </motion.div>
       </SandpackProviderUnstyled>
       <AnimatePresence>
@@ -234,7 +249,7 @@ root.render(
                               animate={{ opacity: 1 }}
                               exit={{ opacity: 0 }}
                               onClick={copyCode}
-                              className="absolute flex items-center gap-2 top-12 right-2 z-10 p-1 px-2 bg-white border text-gray-500 border-[#efefef] rounded-md hover:bg-gray-100 transition-colors"
+                              className={`absolute flex items-center gap-2 ${visibleFiles.length > 1 ? 'top-12' : 'top-2'} right-2 z-10 p-1 px-2 bg-white border text-gray-500 border-[#efefef] rounded-md hover:bg-gray-100 transition-colors ${codeCopied ? 'opacity-0' : 'opacity-100'}`}
                             >
                               Copy Code {codeCopied ? <CheckIcon size={16} /> : <Clipboard size={16} />}
                             </motion.button>

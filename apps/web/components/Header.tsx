@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { LockOpen, Lock } from 'lucide-react';
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { LockOpen, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface HeaderProps {
@@ -13,7 +13,7 @@ interface HeaderProps {
 
 export function Header({ componentSlug, isPublic }: HeaderProps) {
   const pathname = usePathname();
-  const isHomePage = pathname === '/';
+  const isHomePage = pathname === "/";
 
   return (
     <header className="flex items-center justify-between">
@@ -33,23 +33,21 @@ export function Header({ componentSlug, isPublic }: HeaderProps) {
           <div className="text-[14px] border border-gray-200 rounded-full px-2 py-[1px]">
             {isPublic ? (
               <div className="flex gap-2 items-center">
-                  <LockOpen className="w-3 h-3" />
+                <LockOpen className="w-3 h-3" />
                 <span>Public</span>
               </div>
             ) : (
               <div className="flex gap-2 items-center">
-                  <Lock className="w-3 h-3" />
+                <Lock className="w-3 h-3" />
                 <span>Private</span>
               </div>
             )}
           </div>
         )}
       </div>
-      {!isHomePage && (
-        <Button asChild>
-          <Link href="/publish">Publish</Link>
-        </Button>
-      )}
+      <Button asChild>
+        <Link href="/publish">Publish</Link>
+      </Button>
     </header>
   );
 }

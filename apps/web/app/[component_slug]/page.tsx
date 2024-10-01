@@ -1,5 +1,6 @@
 import { supabase } from '@/utils/supabase';
 import ComponentPreview from '@/components/ComponentPreview'
+import { Header } from '../../components/Header';
 
 async function getComponent(slug: string) {
   const { data, error } = await supabase
@@ -23,9 +24,11 @@ export default async function ComponentPage({ params }: { params: { component_sl
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">{component.name}</h1>
+    <>
+    <Header componentSlug={component.component_slug} isPublic={component.is_public} />
+    <div className="w-full ">
       <ComponentPreview component={component} />
     </div>
+    </>
   );
 }

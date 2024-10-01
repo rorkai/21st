@@ -25,6 +25,85 @@ a {
   }
 }
 
+.sp-preview-actions {
+  display: none;
+}
+
+button.sp-icon-standalone.sp-button {
+  display: none;
+}
+
+.sp-wrapper {
+  height: 100%;
+  width: 100%;
+}
+
+.sp-preview-container {
+  background: white;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  height: 100% !important;
+  width: 100% !important;
+  min-height: 700px;
+  min-width: 50vw !important;
+  flex-grow: 1;
+}
+
+.sp-c-ikJbEZ {
+  background: transparent !important;
+  max-height: 100%;
+  height: 100%;
+  overflow: auto;
+  border: transparent !important;
+}
+
+.sp-layout {
+max-height: 100%;
+height: 100%;
+overflow: auto;
+}
+
+
+.sp-preview-iframe {
+  border: none;
+  height: 100% !important;
+  width: 100% !important;
+  min-height: 700px;
+  border-radius: 8px !important;
+}
+
+.sp-c-euXojQ {
+  height: 100% !important;
+  max-height: 100vh;
+  overflow-y: auto;
+  background: transparent !important;
+}
+
+.sp-c-dyHYiL {
+  background: transparent !important;
+}
+
+.sp-editor-viewer {
+  height: 100% !important;
+  max-height: 100%;
+}
+
+.sp-stack {
+  height: 100% !important;
+  max-height: 100%;
+}
+
+.cm-scroller {
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.sp-c-gtcpyq {
+  height: 100% !important;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

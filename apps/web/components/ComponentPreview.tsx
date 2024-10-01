@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { supabase } from '@/utils/supabase';
+import { Button } from './ui/button';
+import { LayoutTemplate, CodeXml } from 'lucide-react';
 
 const SandpackProviderClient = dynamic(
   () => import('./SandpackProviderClient'),
@@ -38,6 +40,7 @@ export default function ComponentPreview({ component }: { component: Component }
   const [isClient, setIsClient] = useState(false);
   const [internalDependencies, setInternalDependencies] = useState<Record<string, string>>({});
   const [internalDependenciesCode, setInternalDependenciesCode] = useState<Record<string, string>>({});
+  const [showCode, setShowCode] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -117,36 +120,32 @@ export default function App() {
   }, [component.internal_dependencies]);
 
   return (
-    <div className="border rounded-lg p-4 shadow-md">
-      <h2 className="text-xl font-semibold mb-2">{component.name}</h2>
-      <p className="text-gray-600 mb-4">{component.description}</p>
-      {isClient && (
-        <SandpackProviderClient
-          files={files}
-          dependencies={dependencies}
-          demoDependencies={demoDependencies}
-          demoComponentName={demoComponentName}
-          internalDependencies={internalDependenciesCode}
-        />
-      )}
-      
-      <div className="mt-4 p-4 bg-gray-100 rounded">
-        <h3 className="text-lg font-semibold mb-2">Component Details:</h3>
-        <p><strong>ID:</strong> {component.id}</p>
-        <p><strong>Name:</strong> {component.name}</p>
-        <p><strong>Slug:</strong> {component.component_slug}</p>
-        <p><strong>Extracted Names:</strong> {parseComponentNames(component.component_name).join(', ')}</p>
-        <p><strong>Demo Component Name:</strong> {component.demo_component_name}</p>
-        <p><strong>Install URL:</strong> {component.install_url}</p>
-        <p><strong>Created At:</strong> {new Date(component.created_at).toLocaleString()}</p>
-        <p><strong>Updated At:</strong> {new Date(component.updated_at).toLocaleString()}</p>
-        <p><strong>Public:</strong> {component.is_public ? 'Yes' : 'No'}</p>
-        <p><strong>Downloads:</strong> {component.downloads_count}</p>
-        <p><strong>Likes:</strong> {component.likes_count}</p>
-        <p><strong>Dependencies:</strong> {component.dependencies}</p>
-        <p><strong>Demo Dependencies:</strong> {component.demo_dependencies}</p>
-        <p><strong>Internal Dependencies:</strong> {component.internal_dependencies}</p>
+    <div className="flex flex-col gap-4 mt-7 rounded-lg p-4 bg-slate-50 h-[90vh] w-full">
+      <div className="flex justify-between items-center">
+        <div className="flex gap-2 items-start justify-center">
+          <p className="text-[17px] font-semibold">{component.name}</p>
+          <p className="text-[17px] text-gray-600">{component.description}</p>
+        </div>
+        <Button  onClick={() => setShowCode(!showCode)}>
+          {showCode ? 'Canvas' : 'Code'}
+          <div className="ml-2 w-5 h-5 flex items-center justify-center">
+          {showCode ? <LayoutTemplate /> : <CodeXml />}
+          </div>
+        </Button>
       </div>
+      {isClient && (
+        <div className="flex w-full !flex-grow">
+          <SandpackProviderClient
+            files={files}
+            dependencies={dependencies}
+            demoDependencies={demoDependencies}
+            demoComponentName={demoComponentName}
+            internalDependencies={internalDependenciesCode}
+            showCode={showCode}
+            installUrl={component.install_url}
+          />
+        </div>
+      )}
     </div>
   );
 }

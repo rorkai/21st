@@ -84,12 +84,30 @@ import { ${demoComponentName} } from './Demo';
 
 export default function App() {
   return (
-    <div className="flex justify-center items-center h-screen p-4">
+    <div className="flex justify-center items-center h-screen p-4 relative">
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: -1,
+        opacity: 0.5,
+        width: '100%',
+        height: '100%',
+        background: 'radial-gradient(#00000055 1px, transparent 1px)',
+        backgroundSize: '16px 16px'
+      }}>
+        <style>{
+          \`@media (prefers-color-scheme: dark) {
+            div {
+              background: radial-gradient(#ffffff22 1px, transparent 1px);
+            }
+          }\`
+        }</style>
+      </div>
       <${demoComponentName} />
     </div>
   );
 }
-  `,
+`,
     [`/${component.component_slug}.tsx`]: code,
     "/Demo.tsx": demoCode,
   };
@@ -143,6 +161,7 @@ export default function App() {
             internalDependencies={internalDependenciesCode}
             showCode={showCode}
             installUrl={component.install_url}
+            componentSlug={component.component_slug}
           />
         </div>
       )}

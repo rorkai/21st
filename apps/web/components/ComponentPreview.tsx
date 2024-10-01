@@ -52,10 +52,10 @@ export default function ComponentPreview({ component }: { component: Component }
 
       setCode(await codeData.text());
       const rawDemoCode = await demoData.text();
-      const updatedDemoCode = `import { ${component.component_name} } from "./${component.component_slug}";\n${rawDemoCode}`;
+      const componentNames = JSON.parse(component.component_name);
+      const updatedDemoCode = `import { ${componentNames.join(', ')} } from "./${component.component_slug}";\n${rawDemoCode}`;
       setDemoCode(updatedDemoCode);
 
-      // Парсим зависимости из JSON
       const componentDependencies = JSON.parse(component.dependencies || '{}');
       setDependencies(componentDependencies);
     }
@@ -72,7 +72,7 @@ import { ${demoComponentName} } from './Demo';
 
 export default function App() {
   return (
-    <div className="p-4">
+    <div className="flex justify-center items-center h-screen p-4">
       <${demoComponentName} />
     </div>
   );
@@ -80,7 +80,6 @@ export default function App() {
   `,
     [`/${component.component_slug}.tsx`]: code,
     "/Demo.tsx": demoCode,
-    // Удалите "/index.tsx" и "/styles.css" отсюда, так как они теперь определены в SandpackProviderClient
   };
 
   return (
@@ -100,7 +99,7 @@ export default function App() {
         <p><strong>ID:</strong> {component.id}</p>
         <p><strong>Name:</strong> {component.name}</p>
         <p><strong>Slug:</strong> {component.component_slug}</p>
-        <p><strong>Extracted Name:</strong> {component.component_name}</p>
+        <p><strong>Extracted Names:</strong> {JSON.parse(component.component_name).join(', ')}</p>
         <p><strong>Demo Component Name:</strong> {component.demo_component_name}</p>
         <p><strong>Install URL:</strong> {component.install_url}</p>
         <p><strong>Created At:</strong> {new Date(component.created_at).toLocaleString()}</p>

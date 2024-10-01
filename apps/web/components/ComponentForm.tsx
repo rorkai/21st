@@ -25,6 +25,7 @@ export default function ComponentForm() {
   const [slugError, setSlugError] = useState<string | null>(null)
   const [demoCodeError, setDemoCodeError] = useState<string | null>(null);
   const [parsedDependencies, setParsedDependencies] = useState<Record<string, string>>({});
+  const [parsedComponentNames, setParsedComponentNames] = useState<string[]>([]);
 
   const name = watch('name')
   const componentSlug = watch('component_slug')
@@ -107,10 +108,10 @@ export default function ComponentForm() {
     checkSlug();
   }, [componentSlug]);
 
-  const extractComponentName = (code: string): string => {
-    if (!code) return '';
-    const match = code.match(/const\s+([A-Z]\w+)\s*=/);
-    return match && match[1] ? match[1] : '';
+  const extractComponentNames = (code: string): string[] => {
+    if (!code) return [];
+    const matches = code.match(/(?:const|function)\s+([A-Z]\w+)\s*(?:=|\()/g);
+    return matches ? matches.map(match => match.split(/\s+/)[1]).filter((name): name is string => Boolean(name)) : [];
   };
 
   const extractDemoComponentName = (code: string): string => {
@@ -119,14 +120,13 @@ export default function ComponentForm() {
     return match && match[1] ? match[1] : '';
   };
 
-  const [parsedComponentName, setParsedComponentName] = useState('');
   const [parsedDemoComponentName, setParsedDemoComponentName] = useState('');
 
   const code = watch('code');
   const demoCode = watch('demo_code');
 
   useEffect(() => {
-    setParsedComponentName(code ? extractComponentName(code) : '');
+    setParsedComponentNames(code ? extractComponentNames(code) : []);
     setParsedDependencies(code ? parseDependencies(code) : {});
   }, [code]);
 
@@ -134,8 +134,8 @@ export default function ComponentForm() {
     setParsedDemoComponentName(demoCode ? extractDemoComponentName(demoCode) : '');
   }, [demoCode]);
 
-  const checkDemoCode = useCallback((demoCode: string, componentName: string) => {
-    const importRegex = new RegExp(`import\\s+{?\\s*${componentName}\\s*}?\\s+from`);
+  const checkDemoCode = useCallback((demoCode: string, componentNames: string[]) => {
+    const importRegex = new RegExp(`import\\s+{?\\s*(${componentNames.join('|')})\\s*}?\\s+from`);
     if (importRegex.test(demoCode)) {
       setDemoCodeError('Please remove the component import from the demo code. It will be added automatically.');
     } else {
@@ -144,9 +144,9 @@ export default function ComponentForm() {
   }, []);
 
   useEffect(() => {
-    const componentName = extractComponentName(code);
-    if (componentName && demoCode) {
-      checkDemoCode(demoCode, componentName);
+    const componentNames = extractComponentNames(code);
+    if (componentNames.length > 0 && demoCode) {
+      checkDemoCode(demoCode, componentNames);
     }
   }, [code, demoCode, checkDemoCode]);
 
@@ -171,11 +171,8 @@ export default function ComponentForm() {
         ImportDeclaration({ node }) {
           const source = node.source.value;
           if (typeof source === 'string' && !source.startsWith('.') && !source.startsWith('/') && !source.startsWith('@/')) {
-            let packageName = source.split('/')[0];
-            if (packageName?.startsWith('@')) {
-              packageName = packageName.substring(1); // Удаляем '@' в начале
-            }
-            if (packageName && !defaultDependencies.includes(packageName)) {
+            let packageName = source;
+            if (!defaultDependencies.includes(packageName)) {
               dependencies[packageName] = 'latest';
             }
           }
@@ -196,7 +193,7 @@ export default function ComponentForm() {
 
     setIsLoading(true)
     try {
-      const componentName = extractComponentName(data.code);
+      const componentNames = extractComponentNames(data.code);
       const demoComponentName = extractDemoComponentName(data.demo_code);
       const dependencies = parseDependencies(data.code);
       
@@ -212,7 +209,7 @@ export default function ComponentForm() {
       
       const { error } = await supabase.from('components').insert({
         name: data.name,
-        component_name: componentName,
+        component_name: JSON.stringify(componentNames),
         demo_component_name: demoComponentName,
         component_slug: data.component_slug,
         code: codeUrl,
@@ -220,7 +217,7 @@ export default function ComponentForm() {
         description: data.description,
         install_url: installUrl,
         user_id: "304651f2-9afd-4181-9a20-3263aa601384",
-        dependencies: JSON.stringify(dependencies) // Сохраняем зависимости в JSON формате
+        dependencies: JSON.stringify(dependencies)
       })
     
       if (error) throw error
@@ -277,7 +274,7 @@ export default function ComponentForm() {
       </div>
       
       <div>
-        <label htmlFor="demo_code" className="block text-sm font-medium text-gray-700">Demo Code (without сomponent import)</label>
+        <label htmlFor="demo_code" className="block text-sm font-medium text-gray-700">Demo Code (without component import)</label>
         <Textarea 
           id="demo_code" 
           {...register('demo_code', { required: true })} 
@@ -287,16 +284,21 @@ export default function ComponentForm() {
           <p className="text-red-500 text-sm mt-1">{demoCodeError}</p>
         )}
       </div>
-      
+
       <div>
-        <label className="block text-sm font-medium text-gray-700">Parsed Component Name</label>
-        <Input value={parsedComponentName} readOnly className="mt-1 w-full bg-gray-100" />
+        <label className="block text-sm font-medium text-gray-700">Parsed Component Names</label>
+        <Textarea 
+          value={parsedComponentNames.join(', ')}
+          readOnly 
+          className="mt-1 w-full bg-gray-100" 
+        />
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Parsed Demo Component Name</label>
         <Input value={parsedDemoComponentName} readOnly className="mt-1 w-full bg-gray-100" />
       </div>
+    
       
       <div>
         <label className="block text-sm font-medium text-gray-700">Parsed Dependencies</label>

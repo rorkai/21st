@@ -16,7 +16,6 @@ interface SandpackProviderClientProps {
 export default function SandpackProviderClient({
   files,
   dependencies,
-  demoComponentName,
 }: SandpackProviderClientProps) {
   const tsConfig = {
     compilerOptions: {
@@ -35,7 +34,7 @@ export function cn(...inputs: (string | undefined)[]) {
 }
   `;
 
-  const updatedFiles = {
+  const updatedFiles: Record<string, string> = {
     ...files,
     "/tsconfig.json": JSON.stringify(tsConfig, null, 2),
     "/lib/utils.ts": utilsContent,

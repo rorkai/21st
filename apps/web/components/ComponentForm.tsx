@@ -236,7 +236,7 @@ export default function ComponentForm() {
   }
 
   const uploadToStorage = async (fileName: string, content: string) => {
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('components')
       .upload(fileName, content, {
         contentType: 'text/plain',

@@ -14,7 +14,7 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
 })
 
 // Проверка соединения
-supabase.auth.getSession().then(({ data, error }) => {
+supabase.auth.getSession().then(({ error }) => {
   if (error) {
     console.error('Error connecting to Supabase:', error)
   } else {

@@ -6,7 +6,7 @@ import {
 } from "@codesandbox/sandpack-react";
 
 import { SandpackProvider as SandpackProviderUnstyled, SandpackPreview  } from "@codesandbox/sandpack-react/unstyled";
-import { CopyIcon } from "lucide-react";
+import { CheckIcon, CopyIcon, Terminal } from "lucide-react";
 import styles from './SandpackProviderClient.module.css';
 
 import { SandpackProviderProps } from "@codesandbox/sandpack-react";
@@ -183,17 +183,21 @@ root.render(
                       <>
                       <div className="p-4">
                         <p className="text-[17px] font-medium mb-4 whitespace-nowrap overflow-hidden text-ellipsis">Add component to project</p>
-                        <div className="mb-2 mt-4 p-4 max-h-[650px] rounded-lg border bg-zinc-950 py-4 dark:bg-zinc-900 flex items-center">
+                        <div className="mb-2 mt-4 p-4 h-14 rounded-lg border bg-zinc-950 dark:bg-zinc-900 flex items-center">
+                          <div className="flex items-center justify-center text-white w-5 h-5 mr-3">
+                            <Terminal size={20} />
+                          </div>
                           <div className="flex-grow overflow-hidden">
-                            <code data-language="bash" data-theme="default" className="whitespace-nowrap font-mono text-sm block overflow-x-auto">
-                              <span className="text-white">npx</span> <span className="text-gray-400">shadcn@latest add "{installUrl}"</span>
+                            <code className="flex items-center whitespace-nowrap font-mono text-sm">
+                              <span className="mr-2 text-white">npx</span>
+                              <span className="text-gray-400">shadcn@latest add "{installUrl}"</span>
                             </code>
                           </div>
                           <button 
                             onClick={copyCommand}
-                            className="flex-shrink-0 ml-2 flex items-center rounded-md justify-center p-1 hover:bg-zinc-800 text-white w-6 h-6"
+                            className="flex-shrink-0 ml-3 flex items-center justify-center p-1 hover:bg-zinc-800 text-white w-8 h-8 rounded-md"
                           >
-                            <CopyIcon />
+                            {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
                           </button>
                         </div>
                       </div>

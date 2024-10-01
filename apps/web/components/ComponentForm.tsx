@@ -104,14 +104,30 @@ export default function ComponentForm() {
   }, [componentSlug]);
 
   const extractComponentName = (code: string): string => {
-    const match = code.match(/const\s+(\w+)\s*=/);
+    if (!code) return '';
+    const match = code.match(/const\s+([A-Z]\w+)\s*=/);
     return match && match[1] ? match[1] : '';
   };
 
   const extractDemoComponentName = (code: string): string => {
-    const match = code.match(/export\s+function\s+(\w+)/);
+    if (!code) return '';
+    const match = code.match(/export\s+function\s+([A-Z]\w+)/);
     return match && match[1] ? match[1] : '';
   };
+
+  const [parsedComponentName, setParsedComponentName] = useState('');
+  const [parsedDemoComponentName, setParsedDemoComponentName] = useState('');
+
+  const code = watch('code');
+  const demoCode = watch('demo_code');
+
+  useEffect(() => {
+    setParsedComponentName(code ? extractComponentName(code) : '');
+  }, [code]);
+
+  useEffect(() => {
+    setParsedDemoComponentName(demoCode ? extractDemoComponentName(demoCode) : '');
+  }, [demoCode]);
 
   const onSubmit = async (data: FormData) => {
     if (!slugAvailable) {
@@ -202,6 +218,16 @@ export default function ComponentForm() {
       <div>
         <label htmlFor="demo_code" className="block text-sm font-medium text-gray-700">Demo Code</label>
         <Textarea id="demo_code" {...register('demo_code', { required: true })} className="mt-1 w-full" />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Parsed Component Name</label>
+        <Input value={parsedComponentName} readOnly className="mt-1 w-full bg-gray-100" />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Parsed Demo Component Name</label>
+        <Input value={parsedDemoComponentName} readOnly className="mt-1 w-full bg-gray-100" />
       </div>
       
       <div>

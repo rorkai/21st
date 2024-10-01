@@ -6,7 +6,6 @@ import { supabase } from '@/utils/supabase';
 
 interface Component {
   id: string;
-  component_name: string;
   description: string;
   code: string;
   demo_code: string;
@@ -20,7 +19,7 @@ interface Component {
   likes_count: number;
   component_slug: string;
   name: string;
-  extracted_name: string;
+  component_name: string;
   demo_component_name: string;
 }
 
@@ -50,8 +49,8 @@ export default function ComponentPreview({ component }: { component: Component }
     fetchCode();
   }, [component.component_slug]);
 
-  const componentName = component.extracted_name || 'Component';
-  const demoComponentName = component.demo_component_name || 'DemoComponent';
+  const componentName = component.component_name;
+  const demoComponentName = component.demo_component_name;
 
   const files = {
     "/App.tsx": `
@@ -174,7 +173,7 @@ export function cn(...inputs: (string | undefined)[]) {
         <p><strong>ID:</strong> {component.id}</p>
         <p><strong>Name:</strong> {component.name}</p>
         <p><strong>Slug:</strong> {component.component_slug}</p>
-        <p><strong>Extracted Name:</strong> {component.extracted_name}</p>
+        <p><strong>Extracted Name:</strong> {component.component_name}</p>
         <p><strong>Demo Component Name:</strong> {component.demo_component_name}</p>
         <p><strong>Install URL:</strong> {component.install_url}</p>
         <p><strong>Created At:</strong> {new Date(component.created_at).toLocaleString()}</p>

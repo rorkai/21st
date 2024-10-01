@@ -30,10 +30,8 @@ export async function GET(
 
     const code = await codeContent.text();
 
-    const escapedCode = code
-      .replace(/\\/g, '\\\\')
-      .replace(/"/g, '\\"')
-      .replace(/\n/g, '\\n');
+
+/*     const escapedCode = JSON.stringify(code); */
 
     const responseData = {
       name: component_slug,
@@ -41,7 +39,7 @@ export async function GET(
       files: [
         {
           path: `cc/${component_slug}.tsx`,
-          content: `"${escapedCode}"`,
+          content: code,
           type: 'registry:ui',
           target: '',
         },

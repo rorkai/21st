@@ -26,12 +26,14 @@ interface Component {
   name: string;
   component_name: string;
   demo_component_name: string;
+  demo_dependencies: string;
 }
 
 export default function ComponentPreview({ component }: { component: Component }) {
   const [code, setCode] = useState('');
   const [demoCode, setDemoCode] = useState('');
   const [dependencies, setDependencies] = useState<Record<string, string>>({});
+  const [demoDependencies, setDemoDependencies] = useState<Record<string, string>>({});
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -52,16 +54,18 @@ export default function ComponentPreview({ component }: { component: Component }
 
       setCode(await codeData.text());
       const rawDemoCode = await demoData.text();
-      const componentNames = JSON.parse(component.component_name);
+      const componentNames = parseComponentNames(component.component_name);
       const updatedDemoCode = `import { ${componentNames.join(', ')} } from "./${component.component_slug}";\n${rawDemoCode}`;
       setDemoCode(updatedDemoCode);
 
       const componentDependencies = JSON.parse(component.dependencies || '{}');
+      const componentDemoDependencies = JSON.parse(component.demo_dependencies );
       setDependencies(componentDependencies);
+      setDemoDependencies(componentDemoDependencies);
     }
 
     fetchCode();
-  }, [component.component_slug, component.component_name, component.dependencies]);
+  }, [component.component_slug, component.component_name, component.dependencies, component.demo_dependencies]);
 
   const demoComponentName = component.demo_component_name;
 
@@ -90,6 +94,7 @@ export default function App() {
         <SandpackProviderClient
           files={files}
           dependencies={dependencies}
+          demoDependencies={demoDependencies}
           demoComponentName={demoComponentName}
         />
       )}
@@ -99,7 +104,7 @@ export default function App() {
         <p><strong>ID:</strong> {component.id}</p>
         <p><strong>Name:</strong> {component.name}</p>
         <p><strong>Slug:</strong> {component.component_slug}</p>
-        <p><strong>Extracted Names:</strong> {JSON.parse(component.component_name).join(', ')}</p>
+        <p><strong>Extracted Names:</strong> {parseComponentNames(component.component_name).join(', ')}</p>
         <p><strong>Demo Component Name:</strong> {component.demo_component_name}</p>
         <p><strong>Install URL:</strong> {component.install_url}</p>
         <p><strong>Created At:</strong> {new Date(component.created_at).toLocaleString()}</p>
@@ -108,7 +113,17 @@ export default function App() {
         <p><strong>Downloads:</strong> {component.downloads_count}</p>
         <p><strong>Likes:</strong> {component.likes_count}</p>
         <p><strong>Dependencies:</strong> {component.dependencies}</p>
+        <p><strong>Demo Dependencies:</strong> {component.demo_dependencies}</p>
       </div>
     </div>
   );
+}
+
+function parseComponentNames(componentName: string): string[] {
+  try {
+    return JSON.parse(componentName);
+  } catch {
+    // Если разбор JSON не удался, предполагаем, что это одиночное имя компонента
+    return [componentName];
+  }
 }

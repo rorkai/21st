@@ -26,6 +26,7 @@ export default function ComponentForm() {
   const [demoCodeError, setDemoCodeError] = useState<string | null>(null);
   const [parsedDependencies, setParsedDependencies] = useState<Record<string, string>>({});
   const [parsedComponentNames, setParsedComponentNames] = useState<string[]>([]);
+  const [parsedDemoDependencies, setParsedDemoDependencies] = useState<Record<string, string>>({});
 
   const name = watch('name')
   const componentSlug = watch('component_slug')
@@ -128,7 +129,8 @@ export default function ComponentForm() {
   useEffect(() => {
     setParsedComponentNames(code ? extractComponentNames(code) : []);
     setParsedDependencies(code ? parseDependencies(code) : {});
-  }, [code]);
+    setParsedDemoDependencies(demoCode ? parseDependencies(demoCode) : {});
+  }, [code, demoCode]);
 
   useEffect(() => {
     setParsedDemoComponentName(demoCode ? extractDemoComponentName(demoCode) : '');
@@ -217,7 +219,8 @@ export default function ComponentForm() {
         description: data.description,
         install_url: installUrl,
         user_id: "304651f2-9afd-4181-9a20-3263aa601384",
-        dependencies: JSON.stringify(dependencies)
+        dependencies: JSON.stringify(dependencies),
+        demo_dependencies: JSON.stringify(parsedDemoDependencies)
       })
     
       if (error) throw error
@@ -286,7 +289,7 @@ export default function ComponentForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Parsed Component Names</label>
+        <label className="block text-sm font-medium text-gray-700">Components Names</label>
         <Textarea 
           value={parsedComponentNames.join(', ')}
           readOnly 
@@ -295,15 +298,24 @@ export default function ComponentForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Parsed Demo Component Name</label>
+        <label className="block text-sm font-medium text-gray-700">Demo Component Name</label>
         <Input value={parsedDemoComponentName} readOnly className="mt-1 w-full bg-gray-100" />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Component Dependencies</label>
+        <Textarea 
+          value={Object.entries(parsedDependencies).map(([key, value]) => `${key}: ${value}`).join('\n')}
+          readOnly 
+          className="mt-1 w-full bg-gray-100" 
+        />
       </div>
     
       
       <div>
-        <label className="block text-sm font-medium text-gray-700">Parsed Dependencies</label>
+        <label className="block text-sm font-medium text-gray-700">Demo Dependencies</label>
         <Textarea 
-          value={Object.entries(parsedDependencies).map(([key, value]) => `${key}: ${value}`).join('\n')}
+          value={Object.entries(parsedDemoDependencies).map(([key, value]) => `${key}: ${value}`).join('\n')}
           readOnly 
           className="mt-1 w-full bg-gray-100" 
         />

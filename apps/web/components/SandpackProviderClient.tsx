@@ -10,12 +10,14 @@ import {
 interface SandpackProviderClientProps {
   files: Record<string, string>;
   dependencies: Record<string, string>;
+  demoDependencies: Record<string, string>;
   demoComponentName: string;
 }
 
 export default function SandpackProviderClient({
   files,
   dependencies,
+  demoDependencies,
 }: SandpackProviderClientProps) {
   const tsConfig = {
     compilerOptions: {
@@ -66,6 +68,7 @@ root.render(
           react: "^18.0.0",
           "react-dom": "^18.0.0",
           ...dependencies,
+          ...demoDependencies,
         },
       }}
       options={{

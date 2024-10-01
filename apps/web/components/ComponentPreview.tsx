@@ -118,18 +118,36 @@ export default function App() {
 
     async function fetchInternalDependencies() {
       const internalDepsCode: Record<string, string> = {};
-      for (const [path, slug] of Object.entries(componentInternalDependencies)) {
-        const { data, error } = await supabase.storage
-          .from('components')
-          .download(`${slug}-code.tsx`);
+      for (const [path, slugs] of Object.entries(componentInternalDependencies)) {
+        if (typeof slugs === 'string') {
+          // Обработка старого формата
+          const { data, error } = await supabase.storage
+            .from('components')
+            .download(`${slugs}-code.tsx`);
 
-        if (error) {
-          console.error(`Error loading internal dependency ${slug}:`, error);
-          continue;
+          if (error) {
+            console.error(`Error loading internal dependency ${slugs}:`, error);
+            continue;
+          }
+
+          const dependencyCode = await data.text();
+          internalDepsCode[`/components/${slugs}.tsx`] = dependencyCode;
+        } else if (Array.isArray(slugs)) {
+          // Обработка нового формата
+          for (const slug of slugs) {
+            const { data, error } = await supabase.storage
+              .from('components')
+              .download(`${slug}-code.tsx`);
+
+            if (error) {
+              console.error(`Error loading internal dependency ${slug}:`, error);
+              continue;
+            }
+
+            const dependencyCode = await data.text();
+            internalDepsCode[`/components/${slug}.tsx`] = dependencyCode;
+          }
         }
-
-        const dependencyCode = await data.text();
-        internalDepsCode[`/components/${slug}.tsx`] = dependencyCode;
       }
       setInternalDependenciesCode(internalDepsCode);
     }

@@ -3,6 +3,7 @@ import {
   SandpackProvider,
   SandpackLayout,
   SandpackCodeViewer,
+  SandpackFileExplorer,
 } from "@codesandbox/sandpack-react";
 
 import { SandpackProvider as SandpackProviderUnstyled, SandpackPreview  } from "@codesandbox/sandpack-react/unstyled";
@@ -37,6 +38,7 @@ export default function SandpackProviderClient({
   const [isHovering, setIsHovering] = useState(false);
   const sandpackRef = useRef<HTMLDivElement>(null);
   const [isPreviewReady, setIsPreviewReady] = useState(false);
+  const [isDebug, setIsDebug] = useState(false);
 
   const tsConfig = {
     compilerOptions: {
@@ -76,6 +78,13 @@ root.render(
     "/index.tsx": updatedIndexContent,
   };
 
+  // Добавляем файлы для внутренних зависимостей
+  Object.entries(internalDependencies).forEach(([path, code]) => {
+    const parts = path.split('/');
+    const fileName = parts[parts.length - 1];
+    updatedFiles[`/components/${fileName}`] = code;
+  });
+
   const mainComponentFile = Object.keys(updatedFiles).find(file => file.endsWith(`${componentSlug}.tsx`)) || 
                             Object.keys(updatedFiles)[0];
 
@@ -83,12 +92,39 @@ root.render(
 
   const visibleFiles = [
     mainComponentFile,
-    ...Object.keys(internalDependencies)
+    ...Object.keys(internalDependencies).map(path => {
+      const parts = path.split('/');
+      return `/components/${parts[parts.length - 1]}`;
+    })
   ];
 
   const customFileLabels = Object.fromEntries(
-    Object.keys(internalDependencies).map(file => [file, `${file.split('/').pop()} (dependencies)`])
+    Object.keys(internalDependencies).map(path => {
+      const parts = path.split('/');
+      const fileName = parts[parts.length - 1];
+      return [`/components/${fileName}`, `${fileName} (dependencies)`];
+    })
   );
+
+  // Функция для извлечения зависимостей из кода внутренних компонентов
+  const extractInternalDependencies = (code: string): Record<string, string> => {
+    const deps: Record<string, string> = {};
+    const lines = code.split('\n');
+    lines.forEach(line => {
+      if (line.startsWith('import') && !line.includes('./') && !line.includes('../') && !line.includes('@/')) {
+        const match = line.match(/from\s+['"](.+)['"]/);
+        if (match && match[1]) {
+          deps[match[1]] = 'latest';
+        }
+      }
+    });
+    return deps;
+  };
+
+  // Собираем все зависимости из внутренних компонентов
+  const allInternalDependencies = Object.values(internalDependencies).reduce((acc, code) => {
+    return { ...acc, ...extractInternalDependencies(code) };
+  }, {});
 
   const providerProps: SandpackProviderProps = {
     theme: "light",
@@ -101,6 +137,7 @@ root.render(
         "react-dom": "^18.0.0",
         ...dependencies,
         ...demoDependencies,
+        ...allInternalDependencies, // Добавляем зависимости из внутренних компонентов
       },
     },
     options: {
@@ -183,6 +220,21 @@ root.render(
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Tab') {
+        event.preventDefault();
+        setIsDebug(prevState => !prevState);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   return (
     <div className="h-full w-full flex gap-4 bg-[#FAFAFA] rounded-lg">
       <SandpackProviderUnstyled {...providerProps}>
@@ -235,6 +287,9 @@ root.render(
                           </button>
                         </div>
                       </div>
+                      {isDebug && (
+                        <SandpackFileExplorer />
+                      )}
                       <div 
                         className={`overflow-auto ${styles.codeViewerWrapper} relative`}
                         onMouseEnter={() => setIsHovering(true)}
@@ -253,6 +308,7 @@ root.render(
                             </motion.button>
                           )}
                         </AnimatePresence>
+                        
                         <SandpackCodeViewer
                           showLineNumbers={true}
                           wrapContent={true}
@@ -267,6 +323,11 @@ root.render(
           </motion.div>
         )}
       </AnimatePresence>
+      {isDebug && (
+        <div className="absolute top-0 left-0 bg-black text-white p-2 z-50">
+          Debug Mode
+        </div>
+      )}
     </div>
   );
 }

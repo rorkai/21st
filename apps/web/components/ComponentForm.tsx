@@ -9,6 +9,7 @@ import { supabase } from '../utils/supabase'
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
 import * as t from '@babel/types';
+import { Alert } from "@/components/ui/alert"
 
 type FormData = {
   name: string
@@ -29,6 +30,7 @@ export default function ComponentForm() {
   const [parsedComponentNames, setParsedComponentNames] = useState<string[]>([]);
   const [parsedDemoDependencies, setParsedDemoDependencies] = useState<Record<string, string>>({});
   const [internalDependencies, setInternalDependencies] = useState<Record<string, string>>({});
+  const [importsToRemove, setImportsToRemove] = useState<string[]>([]);
 
   const name = watch('name')
   const componentSlug = watch('component_slug')
@@ -188,11 +190,51 @@ export default function ComponentForm() {
     setParsedDemoComponentName(demoCode ? extractDemoComponentName(demoCode) : '');
   }, [demoCode]);
 
+  const removeComponentImports = (demoCode: string, componentNames: string[]): { modifiedCode: string, removedImports: string[] } => {
+    const ast = parse(demoCode, {
+      sourceType: 'module',
+      plugins: ['typescript', 'jsx'],
+    });
+
+    const importsToDrop: { start: number; end: number; text: string }[] = [];
+
+    traverse(ast, {
+      ImportDeclaration(path) {
+        const specifiers = path.node.specifiers;
+        const importedNames = specifiers.map(s => t.isImportSpecifier(s) && t.isIdentifier(s.imported) ? s.imported.name : '');
+        
+        if (importedNames.some(name => componentNames.includes(name))) {
+          importsToDrop.push({
+            start: path.node.start!,
+            end: path.node.end!,
+            text: demoCode.slice(path.node.start!, path.node.end!)
+          });
+        }
+      }
+    });
+
+    let modifiedCode = demoCode;
+    const removedImports: string[] = [];
+    for (let i = importsToDrop.length - 1; i >= 0; i--) {
+      const importToDrop = importsToDrop[i];
+      if (importToDrop) {
+        const { start, end, text } = importToDrop;
+        modifiedCode = modifiedCode.slice(0, start) + modifiedCode.slice(end);
+        removedImports.push(text);
+      }
+    }
+
+    return { modifiedCode: modifiedCode.trim(), removedImports };
+  };
+
   const checkDemoCode = useCallback((demoCode: string, componentNames: string[]) => {
-    const importRegex = new RegExp(`import\\s+{?\\s*(${componentNames.join('|')})\\s*}?\\s+from`);
-    if (importRegex.test(demoCode)) {
-      setDemoCodeError('Please remove the component import from the demo code. It will be added automatically.');
+    const { modifiedCode, removedImports } = removeComponentImports(demoCode, componentNames);
+    
+    if (removedImports.length > 0) {
+      setImportsToRemove(removedImports);
+      setDemoCodeError('Component imports in the Demo component are automatic. Please confirm deletion.');
     } else {
+      setImportsToRemove([]);
       setDemoCodeError(null);
     }
   }, []);
@@ -223,11 +265,24 @@ export default function ComponentForm() {
 
       traverse(ast, {
         ImportDeclaration({ node }) {
-          const source = node.source.value;
+          const importDeclaration = node as t.ImportDeclaration;
+          const source = importDeclaration.source.value;
           if (typeof source === 'string' && !source.startsWith('.') && !source.startsWith('/') && !source.startsWith('@/')) {
             let packageName = source;
             if (!defaultDependencies.includes(packageName)) {
               dependencies[packageName] = 'latest';
+            }
+          }
+        },
+        ImportNamespaceSpecifier(path) {
+          const importDeclaration = path.findParent((p) => p.isImportDeclaration());
+          if (importDeclaration && t.isImportDeclaration(importDeclaration.node)) {
+            const source = importDeclaration.node.source.value;
+            if (typeof source === 'string' && !source.startsWith('.') && !source.startsWith('/') && !source.startsWith('@/')) {
+              let packageName = source;
+              if (!defaultDependencies.includes(packageName)) {
+                dependencies[packageName] = 'latest';
+              }
             }
           }
         },
@@ -270,9 +325,20 @@ export default function ComponentForm() {
   }
 
   useEffect(() => {
-    const deps = parseInternalDependencies(code);
-    setInternalDependencies(deps);
-  }, [code]);
+    const componentDeps = parseInternalDependencies(code);
+    const demoDeps = parseInternalDependencies(demoCode);
+    
+    const combinedDeps = { ...componentDeps, ...demoDeps };
+    
+    setInternalDependencies(combinedDeps);
+  }, [code, demoCode]);
+
+  const handleApproveDelete = () => {
+    const { modifiedCode } = removeComponentImports(demoCode, parsedComponentNames);
+    setValue('demo_code', modifiedCode);
+    setImportsToRemove([]);
+    setDemoCodeError(null);
+  };
 
   const onSubmit = async (data: FormData) => {
     if (!slugAvailable || demoCodeError) {
@@ -286,23 +352,29 @@ export default function ComponentForm() {
     }
 
     let modifiedCode = data.code;
+    let modifiedDemoCode = data.demo_code;
     Object.entries(internalDependencies).forEach(([path, slug]) => {
       const regex = new RegExp(`from\\s+["']${path}["']`, 'g');
-      modifiedCode = modifiedCode.replace(regex, `from "@/components/${slug}"`);
+      const replacement = `from "@/components/${slug}"`;
+      modifiedCode = modifiedCode.replace(regex, replacement);
+      modifiedDemoCode = modifiedDemoCode.replace(regex, replacement);
     });
 
     setIsLoading(true)
     try {
       const componentNames = extractComponentNames(modifiedCode);
-      const demoComponentName = extractDemoComponentName(data.demo_code);
+      const demoComponentName = extractDemoComponentName(modifiedDemoCode);
       const dependencies = parseDependencies(modifiedCode);
       
+      // Удаляем импорты компонентов из демо-кода перед сохранением
+      const cleanedDemoCode = removeComponentImports(modifiedDemoCode, componentNames).modifiedCode;
+
       const codeFileName = `${data.component_slug}-code.tsx`;
       const demoCodeFileName = `${data.component_slug}-demo.tsx`;
 
       const [codeUrl, demoCodeUrl] = await Promise.all([
         uploadToStorage(codeFileName, modifiedCode),
-        uploadToStorage(demoCodeFileName, data.demo_code)
+        uploadToStorage(demoCodeFileName, cleanedDemoCode)
       ]);
 
       const installUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/r/${data.component_slug}`;
@@ -380,10 +452,18 @@ export default function ComponentForm() {
         <Textarea 
           id="demo_code" 
           {...register('demo_code', { required: true })} 
-          className={`mt-1 w-full ${demoCodeError ? 'border-red-500' : ''}`}
+          className={`mt-1 w-full ${demoCodeError ? 'border-yellow-500' : ''}`}
         />
         {demoCodeError && (
-          <p className="text-red-500 text-sm mt-1">{demoCodeError}</p>
+          <Alert variant="default" className="mt-2 text-[14px]">
+            <p>{demoCodeError}</p>
+            {importsToRemove.map((importStr, index) => (
+              <div key={index} className="bg-gray-100 p-2 mt-2 rounded flex flex-col">
+                <code className="mb-2">{importStr}</code>
+                <Button onClick={handleApproveDelete} size="sm" className="self-end">Delete</Button>
+              </div>
+            ))}
+          </Alert>
         )}
       </div>
 

@@ -43,20 +43,20 @@ export default function ComponentPreview({ component }: { component: Component }
       }
 
       setCode(await codeData.text());
-      setDemoCode(await demoData.text());
+      const rawDemoCode = await demoData.text();
+      const updatedDemoCode = `import { ${component.component_name} } from "./${component.component_slug}";\n${rawDemoCode}`;
+      setDemoCode(updatedDemoCode);
     }
 
     fetchCode();
-  }, [component.component_slug]);
+  }, [component.component_slug, component.component_name]);
 
-  const componentName = component.component_name;
   const demoComponentName = component.demo_component_name;
 
   const files = {
     "/App.tsx": `
 import React from 'react';
 import { ${demoComponentName} } from './Demo';
-import { ${componentName} } from './${component.component_slug}';
 
 export default function App() {
   return (

@@ -21,6 +21,7 @@ export default function ComponentForm() {
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null)
   const [slugChecking, setSlugChecking] = useState(false)
   const [slugError, setSlugError] = useState<string | null>(null)
+  const [demoCodeError, setDemoCodeError] = useState<string | null>(null);
 
   const name = watch('name')
   const componentSlug = watch('component_slug')
@@ -129,9 +130,30 @@ export default function ComponentForm() {
     setParsedDemoComponentName(demoCode ? extractDemoComponentName(demoCode) : '');
   }, [demoCode]);
 
+  const checkDemoCode = useCallback((demoCode: string, componentName: string) => {
+    const importRegex = new RegExp(`import\\s+{?\\s*${componentName}\\s*}?\\s+from`);
+    if (importRegex.test(demoCode)) {
+      setDemoCodeError('Please remove the component import from the demo code. It will be added automatically.');
+    } else {
+      setDemoCodeError(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    const componentName = extractComponentName(code);
+    if (componentName && demoCode) {
+      checkDemoCode(demoCode, componentName);
+    }
+  }, [code, demoCode, checkDemoCode]);
+
   const onSubmit = async (data: FormData) => {
     if (!slugAvailable) {
-      alert('Please choose an available and valid slug before submitting.');
+      alert('Please choose an available and correct slug before submitting.');
+      return;
+    }
+
+    if (demoCodeError) {
+      alert('Please fix the errors in the demo code before submitting.');
       return;
     }
 
@@ -216,8 +238,15 @@ export default function ComponentForm() {
       </div>
       
       <div>
-        <label htmlFor="demo_code" className="block text-sm font-medium text-gray-700">Demo Code</label>
-        <Textarea id="demo_code" {...register('demo_code', { required: true })} className="mt-1 w-full" />
+        <label htmlFor="demo_code" className="block text-sm font-medium text-gray-700">Demo Code (without сomponent import)</label>
+        <Textarea 
+          id="demo_code" 
+          {...register('demo_code', { required: true })} 
+          className={`mt-1 w-full ${demoCodeError ? 'border-red-500' : ''}`}
+        />
+        {demoCodeError && (
+          <p className="text-red-500 text-sm mt-1">{demoCodeError}</p>
+        )}
       </div>
       
       <div>
@@ -235,7 +264,7 @@ export default function ComponentForm() {
         <Input id="description" {...register('description', { required: true })} className="mt-1 w-full" />
       </div>
       
-      <Button type="submit" disabled={isLoading || !slugAvailable} className="w-full">
+      <Button type="submit" disabled={isLoading || !slugAvailable || !!demoCodeError} className="w-full">
         {isLoading ? 'Adding...' : 'Add Component'}
       </Button>
     </form>

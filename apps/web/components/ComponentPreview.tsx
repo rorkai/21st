@@ -49,7 +49,7 @@ export default function ComponentPreview({
   useEffect(() => {
     setIsClient(true);
     async function fetchCode() {
-      const loadingTimeout = setTimeout(() => setShowLoading(true), 1000);
+      const loadingTimeout = setTimeout(() => setShowLoading(true), 300);
       setIsLoading(true);
       try {
         const { data: codeData, error: codeError } = await supabase.storage
@@ -185,11 +185,7 @@ export default function App() {
       setIsSharing(false);
     }
   };
-
-  if (isLoading && showLoading) {
-    return <LoadingSpinner />;
-  }
-
+  
   return (
     <div className="flex flex-col gap-4 rounded-lg p-4 bg-slate-50 h-[90vh] w-full">
       <div className="flex justify-between items-center">

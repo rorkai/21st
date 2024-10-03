@@ -48,7 +48,6 @@ export default function SandpackProviderClient({
   demoDependencies,
   internalDependencies,
   showCode,
-  installUrl,
   componentSlug,
 }: SandpackProviderClientProps) {
   const [copied, setCopied] = useAtom(copiedAtom);
@@ -58,7 +57,7 @@ export default function SandpackProviderClient({
   const [activeFile, setActiveFile] = useAtom(activeFileAtom);
   const [isComponentsLoaded, setIsComponentsLoaded] = useAtom(isComponentsLoadedAtom);
   const isDebug = useDebugMode();
-
+  const installUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/r/${componentSlug}`;
   const tsConfig = {
     compilerOptions: {
       jsx: "react-jsx",

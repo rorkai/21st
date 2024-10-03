@@ -27,16 +27,16 @@ export function ComponentCard({ component }: ComponentCardProps) {
             className="w-full h-full"
           />
         </div>
-        <div className="bg-white p-4 flex items-center justify-between flex-grow">
+        <div className="bg-white px-4 py-2 flex items-center justify-between flex-grow">
           <div className="flex gap-3 items-center h-full w-full">
               <div className="flex-shrink-0">
                 <UserAvatar src={component.user.image_url} alt={component.user.name} size={32} />
               </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-800 truncate">
+              <h2 className="text-[17px] font-semibold text-gray-800 truncate">
                 {component.name}
               </h2>
-              <p className="text-sm text-gray-600 mt-[2px] line-clamp-2">
+              <p className="text-sm text-gray-600 line-clamp-2">
                 {component.description}
               </p>
             </div>
@@ -66,11 +66,11 @@ function getPreviewClass(size: string): string {
     case "1x1":
       return "h-[200px]";
     case "1x2":
-      return "h-[400px]";
+      return "h-[520px]";
     case "2x1":
       return "h-[200px]";
     case "2x2":
-      return "h-[400px]";
+      return "h-[520px]";
     default:
       return "h-[200px]";
   }

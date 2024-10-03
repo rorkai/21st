@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LockOpen, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import React from "react";
 
 interface HeaderProps {
@@ -46,9 +47,17 @@ export function Header({ componentSlug, isPublic }: HeaderProps) {
           </div>
         )}
       </div>
-      <Button asChild>
-        <Link href="/publish">Publish</Link>
-      </Button>
+      <div className="flex items-center gap-4">
+        <Button asChild>
+          <Link href="/publish">Publish</Link>
+        </Button>
+        <SignedIn>
+          <UserButton />
+        </SignedIn>
+        <SignedOut>
+          <SignInButton />
+        </SignedOut>
+      </div>
     </header>
   );
 }

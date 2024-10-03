@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from '@clerk/nextjs'
 import localFont from "next/font/local";
 import "./globals.css";
 import { Provider } from 'jotai';
@@ -25,7 +26,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} p-4 h-full`}>
       <body>
-        <Provider>{children}</Provider>
+        <ClerkProvider>
+          <Provider>{children}</Provider>
+        </ClerkProvider>
       </body>
     </html>
   );

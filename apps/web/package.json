@@ -13,6 +13,7 @@
     "@babel/parser": "^7.25.6",
     "@babel/traverse": "^7.25.6",
     "@babel/types": "^7.25.6",
+    "@clerk/nextjs": "^5.7.1",
     "@codesandbox/sandpack-react": "^2.19.9",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",

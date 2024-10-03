@@ -3,11 +3,22 @@ const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['jotai'],
   images: {
-    domains: ['vucvdpamtrjkzmubwlts.supabase.co', 'supabase.co'],
+    domains: ['vucvdpamtrjkzmubwlts.supabase.co', 'img.clerk.com', 'avatars.githubusercontent.com'],
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**.supabase.co',
+        hostname: 'vucvdpamtrjkzmubwlts.supabase.co',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'img.clerk.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+        pathname: '/**',
       },
     ],
   },

@@ -12,10 +12,12 @@ async function getComponent(slug: string) {
       .from('components')
       .select(`
         *,
-        user:users!user_id (
+        users:users!user_id (
           id,
           username,
-          image_url
+          image_url,
+          name,
+          email
         )
       `)
       .eq('component_slug', slug)
@@ -25,10 +27,21 @@ async function getComponent(slug: string) {
     console.log('Fetched component:', component);
 
     if (error) throw error;
+
+    if (component) {
+      console.log('Component user_id:', component.user_id);
+      if (component.user) {
+        console.log('User found:', component.user);
+      } else {
+        console.log('User not found for user_id:', component.user_id);
+      }
+    } else {
+      console.log('Component not found for slug:', slug);
+    }
     
     return component;
   } catch (error) {
-    console.error('Error in getComponent:', error);
+    console.log('Error in getComponent:', error);
     return null;
   }
 }

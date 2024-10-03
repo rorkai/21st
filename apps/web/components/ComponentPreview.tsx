@@ -54,7 +54,7 @@ interface Component {
   demo_component_name: string;
   demo_dependencies: string;
   internal_dependencies: string;
-  user: User; // Изменено с 'users' на 'user'
+  users: User; // Изменено с 'user' на 'users'
 }
 
 export default function ComponentPreview({ component }: { component: Component }) {
@@ -207,16 +207,16 @@ export default function App() {
     <div className="flex flex-col gap-4 mt-7 rounded-lg p-4 bg-slate-50 h-[90vh] w-full">
       <div className="flex justify-between items-center">
         <div className="flex gap-4 items-center">
-          {component.user && (
+          {component.users && (
             <div className="flex items-center gap-2">
               <Image
-                src={component.user.image_url || 'https://placehold.co/32x32'}
-                alt={`${component.user.username}'s avatar`}
+                src={component.users.image_url || 'https://placehold.co/32x32'}
+                alt={`${component.users.username}'s avatar`}
                 width={32}
                 height={32}
                 className="rounded-full"
               />
-              <span className="text-sm text-gray-600">{component.user.username}</span>
+              <span className="text-sm text-gray-600">{component.users.username}</span>
             </div>
           )}
           <div className="flex gap-2 items-start">

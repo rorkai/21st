@@ -64,14 +64,14 @@ export function ComponentCard({ component }: ComponentCardProps) {
 function getPreviewClass(size: string): string {
   switch (size) {
     case "1x1":
-      return "h-[200px]";
+      return "max-h-[200px]";
     case "1x2":
-      return "h-[520px]";
+      return "max-h-[520px]";
     case "2x1":
-      return "h-[200px]";
+      return "max-h-[200px]";
     case "2x2":
-      return "h-[520px]";
+      return "max-h-[520px]";
     default:
-      return "h-[200px]";
+      return "max-h-[200px]";
   }
 }

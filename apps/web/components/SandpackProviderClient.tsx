@@ -107,13 +107,20 @@ root.render(
   const mainComponentFile = Object.keys(updatedFiles).find(file => file.endsWith(`${componentSlug}.tsx`)) || 
                             Object.keys(updatedFiles)[0];
 
+  // Изменим эту часть
+  useEffect(() => {
+    if (mainComponentFile) {
+      setActiveFile(mainComponentFile);
+    }
+  }, [mainComponentFile, setActiveFile]);
+
   const visibleFiles = [
     mainComponentFile,
     ...Object.keys(internalDependencies).map(path => {
       const parts = path.split('/');
       return `/components/${parts[parts.length - 1]}`;
     })
-  ];
+  ].filter((file): file is string => file !== undefined);
 
   const customFileLabels = Object.fromEntries(
     Object.keys(internalDependencies).map(path => {
@@ -152,6 +159,7 @@ root.render(
       dependencies: {
         react: "^18.0.0",
         "react-dom": "^18.0.0",
+        "lucide-react": "^0.446.0",
         ...dependencies,
         ...demoDependencies,
         ...allInternalDependencies, // Add internal component dependencies
@@ -161,8 +169,8 @@ root.render(
       externalResources: [
         "https://vucvdpamtrjkzmubwlts.supabase.co/storage/v1/object/public/css/compiled-tailwind.css"
       ],
-      activeFile: activeFile,
-      visibleFiles: visibleFiles.filter((file): file is string => file !== undefined),
+      activeFile: activeFile || mainComponentFile || '',
+      visibleFiles,
     },
     ...({fileLabels: customFileLabels} as any),
   };

@@ -13,6 +13,7 @@ import { Alert } from "@/components/ui/alert"
 import { useAtom, atom } from 'jotai';
 import { useDebugMode } from '@/hooks/useDebugMode';
 import React from 'react';
+import { useUser } from '@clerk/nextjs'
 
 type FormData = {
   name: string
@@ -48,6 +49,7 @@ export default function ComponentForm() {
   const [importsToRemove, setImportsToRemove] = useAtom(importsToRemoveAtom)
   const [parsedDemoComponentName, setParsedDemoComponentName] = useAtom(parsedDemoComponentNameAtom)
   const isDebug = useDebugMode();
+  const { user } = useUser()
 
   const name = watch('name')
   const componentSlug = watch('component_slug')
@@ -243,7 +245,7 @@ export default function ComponentForm() {
   };
 
   const checkDemoCode = useCallback((demoCode: string, componentNames: string[]) => {
-    const { modifiedCode, removedImports } = removeComponentImports(demoCode, componentNames);
+    const { removedImports } = removeComponentImports(demoCode, componentNames);
     
     if (removedImports.length > 0) {
       setImportsToRemove(removedImports);
@@ -402,7 +404,7 @@ export default function ComponentForm() {
         demo_code: demoCodeUrl,
         description: data.description,
         install_url: installUrl,
-        user_id: "304651f2-9afd-4181-9a20-3263aa601384",
+        user_id: user?.id,
         dependencies: JSON.stringify(dependencies),
         demo_dependencies: JSON.stringify(parsedDemoDependencies),
         internal_dependencies: JSON.stringify(internalDependencies)

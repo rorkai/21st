@@ -2,13 +2,18 @@ import { supabase } from '@/utils/supabase';
 import ComponentPreview from '@/components/ComponentPreview'
 import { Header } from '../../components/Header';
 import React from 'react';
-import JotaiProvider from '@/components/JotaiProvider';
-import ClientJotaiProvider from '@/components/ClientJotaiProvider';
 
 async function getComponent(slug: string) {
-  const { data, error } = await supabase
+  const { data: component, error } = await supabase
     .from('components')
-    .select('*')
+    .select(`
+      *,
+      user:user_id (
+        id,
+        username,
+        image_url
+      )
+    `)
     .eq('component_slug', slug)
     .single();
 
@@ -16,7 +21,7 @@ async function getComponent(slug: string) {
     console.error('Error fetching component:', error);
     return null;
   }
-  return data;
+  return component;
 }
 
 export default async function ComponentPage({ params }: { params: { component_slug: string } }) {
@@ -27,13 +32,11 @@ export default async function ComponentPage({ params }: { params: { component_sl
   }
 
   return (
-    <JotaiProvider>
-      <ClientJotaiProvider initialValues={component}>
-        <Header componentSlug={component.component_slug} isPublic={component.is_public} />
-        <div className="w-full ">
-          <ComponentPreview component={component} />
-        </div>
-      </ClientJotaiProvider>
-    </JotaiProvider>
+    <>
+      <Header componentSlug={component.component_slug} isPublic={component.is_public} />
+      <div className="w-full ">
+        <ComponentPreview component={component} />
+      </div>
+    </>
   );
 }

@@ -16,9 +16,9 @@ interface HeaderProps {
 export function Header({ componentSlug, isPublic }: HeaderProps) {
   const pathname = usePathname();
   const isHomePage = pathname === "/";
-
+  const isPublishPage = pathname === "/publish";
   return (
-    <header className="flex items-center justify-between">
+    <header className="flex items-center justify-between mx-1">
       <div className="flex items-center gap-4">
         <div className="flex items-center">
           <Link href="/" className="flex items-center">
@@ -31,7 +31,7 @@ export function Header({ componentSlug, isPublic }: HeaderProps) {
             </>
           )}
         </div>
-        {!isHomePage && (
+        {!isHomePage && !isPublishPage && (
           <div className="text-[14px] border border-gray-200 rounded-full px-2 py-[1px]">
             {isPublic ? (
               <div className="flex gap-2 items-center">
@@ -48,9 +48,11 @@ export function Header({ componentSlug, isPublic }: HeaderProps) {
         )}
       </div>
       <div className="flex items-center gap-4">
-        <Button asChild>
-          <Link href="/publish">Publish</Link>
-        </Button>
+        {!isPublishPage && (
+          <Button asChild>
+            <Link href="/publish">Publish</Link>
+          </Button>
+        )}
         <SignedIn>
           <UserButton />
         </SignedIn>

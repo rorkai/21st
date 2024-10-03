@@ -4,7 +4,8 @@ import React, { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { supabase } from '@/utils/supabase';
 import { Button } from './ui/button';
-import { LayoutTemplate, CodeXml, Link, Loader2 } from 'lucide-react';
+import { LayoutTemplate, CodeXml, Link } from 'lucide-react';
+import { LoadingSpinner } from './Loading';
 import { useAtom } from 'jotai';
 import { atom } from 'jotai';
 import {
@@ -12,6 +13,7 @@ import {
   isLoadingAtom,
   showLoadingAtom,
 } from '@/lib/atoms';
+import Image from 'next/image';
 
 const codeAtom = atom('');
 const demoCodeAtom = atom('');
@@ -27,12 +29,11 @@ const SandpackProviderClient = dynamic(
   { ssr: false, loading: () => null }
 );
 
-const LoadingSpinner = () => (
-  <div className="absolute inset-0 flex items-center justify-center bg-white">
-    <Loader2 className="w-5 h-5 text-gray-600 animate-spin" />
-    <span className="ml-2 text-gray-600">Loading...</span>
-  </div>
-);
+interface User {
+  id: string;
+  username: string;
+  image_url: string;
+}
 
 interface Component {
   id: string;
@@ -53,6 +54,7 @@ interface Component {
   demo_component_name: string;
   demo_dependencies: string;
   internal_dependencies: string;
+  user: User; // Изменено с 'users' на 'user'
 }
 
 export default function ComponentPreview({ component }: { component: Component }) {
@@ -116,7 +118,7 @@ export default function ComponentPreview({ component }: { component: Component }
 
   async function fetchInternalDependencies(componentInternalDependencies: Record<string, string | string[]>) {
     const internalDepsCode: Record<string, string> = {};
-    for (const [path, slugs] of Object.entries(componentInternalDependencies)) {
+    for (const [, slugs] of Object.entries(componentInternalDependencies)) {
       if (typeof slugs === 'string') {
         await fetchSingleDependency(slugs, internalDepsCode);
       } else if (Array.isArray(slugs)) {
@@ -204,9 +206,23 @@ export default function App() {
   return (
     <div className="flex flex-col gap-4 mt-7 rounded-lg p-4 bg-slate-50 h-[90vh] w-full">
       <div className="flex justify-between items-center">
-        <div className="flex gap-2 items-start justify-center">
-          <p className="text-[17px] font-semibold">{component.name}</p>
-          <p className="text-[17px] text-gray-600">{component.description}</p>
+        <div className="flex gap-4 items-center">
+          {component.user && (
+            <div className="flex items-center gap-2">
+              <Image
+                src={component.user.image_url || 'https://placehold.co/32x32'}
+                alt={`${component.user.username}'s avatar`}
+                width={32}
+                height={32}
+                className="rounded-full"
+              />
+              <span className="text-sm text-gray-600">{component.user.username}</span>
+            </div>
+          )}
+          <div className="flex gap-2 items-start">
+            <p className="text-[17px] font-semibold">{component.name}</p>
+            <p className="text-[17px] text-gray-600">{component.description}</p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button variant="ghost" onClick={handleShareClick} disabled={isSharing}>

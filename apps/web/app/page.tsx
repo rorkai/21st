@@ -18,7 +18,7 @@ export default async function HomePage() {
   return (
     <>
       <Header />
-      <div className="container mx-auto p-4 h-full">
+      <div className="container mx-auto">
         <h1 className="text-2xl font-bold mb-4">Component Library</h1>
         <ComponentBento components={components} />
       </div>

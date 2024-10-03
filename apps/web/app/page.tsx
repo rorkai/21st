@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Heart, Download } from 'lucide-react';
 import { Header } from '../components/Header';
+import React from 'react';
 
 async function getComponents() {
   const { data, error } = await supabase

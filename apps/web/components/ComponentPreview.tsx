@@ -9,7 +9,7 @@ import { useToast } from "@/components/hooks/use-toast";
 
 const SandpackProviderClient = dynamic(
   () => import('./SandpackProviderClient'),
-  { ssr: false }
+  { ssr: false, loading: () => <div>Loading Sandpack...</div> }
 );
 
 interface Component {
@@ -45,39 +45,83 @@ export default function ComponentPreview({ component }: { component: Component }
   const [isSharing, setIsSharing] = useState(false);
   const [shareButtonText, setShareButtonText] = useState("Share");
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     setIsClient(true);
     async function fetchCode() {
-      const { data: codeData, error: codeError } = await supabase.storage
-        .from('components')
-        .download(`${component.component_slug}-code.tsx`);
+      setIsLoading(true);
+      try {
+        const { data: codeData, error: codeError } = await supabase.storage
+          .from('components')
+          .download(`${component.component_slug}-code.tsx`);
 
-      const { data: demoData, error: demoError } = await supabase.storage
-        .from('components')
-        .download(`${component.component_slug}-demo.tsx`);
+        const { data: demoData, error: demoError } = await supabase.storage
+          .from('components')
+          .download(`${component.component_slug}-demo.tsx`);
 
-      if (codeError || demoError) {
-        console.error('Error fetching code:', codeError || demoError);
-        return;
+        if (codeError || demoError) {
+          console.error('Error fetching code:', codeError || demoError);
+          return;
+        }
+
+        const codeText = await codeData.text();
+        const rawDemoCode = await demoData.text();
+        
+        setCode(codeText);
+        const componentNames = parseComponentNames(component.component_name);
+        const updatedDemoCode = `import { ${componentNames.join(', ')} } from "./${component.component_slug}";\n${rawDemoCode}`;
+        setDemoCode(updatedDemoCode);
+
+        const componentDependencies = JSON.parse(component.dependencies || '{}');
+        const componentDemoDependencies = JSON.parse(component.demo_dependencies || '{}');
+        const componentInternalDependencies = JSON.parse(component.internal_dependencies || '{}');
+        setDependencies(componentDependencies);
+        setDemoDependencies(componentDemoDependencies);
+        setInternalDependencies(componentInternalDependencies);
+
+        await fetchInternalDependencies(componentInternalDependencies);
+      } catch (error) {
+        console.error('Error in fetchCode:', error);
+      } finally {
+        setIsLoading(false);
       }
-
-      setCode(await codeData.text());
-      const rawDemoCode = await demoData.text();
-      const componentNames = parseComponentNames(component.component_name);
-      const updatedDemoCode = `import { ${componentNames.join(', ')} } from "./${component.component_slug}";\n${rawDemoCode}`;
-      setDemoCode(updatedDemoCode);
-
-      const componentDependencies = JSON.parse(component.dependencies || '{}');
-      const componentDemoDependencies = JSON.parse(component.demo_dependencies || '{}');
-      const componentInternalDependencies = JSON.parse(component.internal_dependencies || '{}');
-      setDependencies(componentDependencies);
-      setDemoDependencies(componentDemoDependencies);
-      setInternalDependencies(componentInternalDependencies);
     }
 
     fetchCode();
-  }, [component.component_slug, component.component_name, component.dependencies, component.demo_dependencies, component.internal_dependencies]);
+  }, [component]);
+
+  async function fetchInternalDependencies(componentInternalDependencies: Record<string, string | string[]>) {
+    const internalDepsCode: Record<string, string> = {};
+    for (const [path, slugs] of Object.entries(componentInternalDependencies)) {
+      if (typeof slugs === 'string') {
+        await fetchSingleDependency(slugs, internalDepsCode);
+      } else if (Array.isArray(slugs)) {
+        for (const slug of slugs) {
+          await fetchSingleDependency(slug, internalDepsCode);
+        }
+      }
+    }
+    setInternalDependenciesCode(internalDepsCode);
+  }
+
+  async function fetchSingleDependency(slug: string, internalDepsCode: Record<string, string>) {
+    try {
+      const { data, error } = await supabase.storage
+        .from('components')
+        .download(`${slug}-code.tsx`);
+
+      if (error) {
+        console.error(`Error loading internal dependency ${slug}:`, error);
+        return;
+      }
+
+      const dependencyCode = await data.text();
+      internalDepsCode[`/components/${slug}.tsx`] = dependencyCode;
+    } catch (error) {
+      console.error(`Error fetching dependency ${slug}:`, error);
+    }
+  }
 
   const demoComponentName = component.demo_component_name;
 
@@ -116,49 +160,6 @@ export default function App() {
     "/Demo.tsx": demoCode,
   };
 
-  useEffect(() => {
-    const componentInternalDependencies = JSON.parse(component.internal_dependencies || '{}');
-    setInternalDependencies(componentInternalDependencies);
-
-    async function fetchInternalDependencies() {
-      const internalDepsCode: Record<string, string> = {};
-      for (const [path, slugs] of Object.entries(componentInternalDependencies)) {
-        if (typeof slugs === 'string') {
-          // Обработка старого формата
-          const { data, error } = await supabase.storage
-            .from('components')
-            .download(`${slugs}-code.tsx`);
-
-          if (error) {
-            console.error(`Error loading internal dependency ${slugs}:`, error);
-            continue;
-          }
-
-          const dependencyCode = await data.text();
-          internalDepsCode[`/components/${slugs}.tsx`] = dependencyCode;
-        } else if (Array.isArray(slugs)) {
-          // Обработка нового формата
-          for (const slug of slugs) {
-            const { data, error } = await supabase.storage
-              .from('components')
-              .download(`${slug}-code.tsx`);
-
-            if (error) {
-              console.error(`Error loading internal dependency ${slug}:`, error);
-              continue;
-            }
-
-            const dependencyCode = await data.text();
-            internalDepsCode[`/components/${slug}.tsx`] = dependencyCode;
-          }
-        }
-      }
-      setInternalDependenciesCode(internalDepsCode);
-    }
-
-    fetchInternalDependencies();
-  }, [component.internal_dependencies]);
-
   const handleShareClick = async () => {
     setIsSharing(true);
     const url = `${window.location.origin}/${component.component_slug}`;
@@ -172,6 +173,10 @@ export default function App() {
       setIsSharing(false);
     }
   };
+
+  if (isLoading) {
+    return <div>Loading component preview...</div>;
+  }
 
   return (
     <div className="flex flex-col gap-4 mt-7 rounded-lg p-4 bg-slate-50 h-[90vh] w-full">
@@ -195,7 +200,7 @@ export default function App() {
           </Button>
         </div>
       </div>
-      {isClient && (
+      {isClient && !isLoading && (
         <div className="flex w-full !flex-grow">
           <SandpackProviderClient
             files={files}

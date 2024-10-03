@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import {
   SandpackProvider,
   SandpackLayout,
@@ -6,7 +6,7 @@ import {
   SandpackFileExplorer,
 } from "@codesandbox/sandpack-react";
 
-import { SandpackProvider as SandpackProviderUnstyled, SandpackPreview  } from "@codesandbox/sandpack-react/unstyled";
+import { SandpackProvider as SandpackProviderUnstyled } from "@codesandbox/sandpack-react/unstyled";
 import { CheckIcon, CopyIcon, Terminal, Clipboard, Loader2 } from "lucide-react";
 import styles from './SandpackProviderClient.module.css';
 
@@ -23,6 +23,8 @@ interface SandpackProviderClientProps {
   installUrl: string;
   componentSlug: string;
 }
+
+const LazyPreview = React.lazy(() => import("@codesandbox/sandpack-react/unstyled").then(module => ({ default: module.SandpackPreview })));
 
 export default function SandpackProviderClient({
   files,
@@ -235,6 +237,26 @@ root.render(
     };
   }, []);
 
+  const [isComponentsLoaded, setIsComponentsLoaded] = useState(false);
+
+  useEffect(() => {
+    // Проверяем, загружены ли все необходимые компоненты
+    const checkComponentsLoaded = async () => {
+      try {
+        await import("@codesandbox/sandpack-react/unstyled");
+        setIsComponentsLoaded(true);
+      } catch (error) {
+        console.error("Error loading components:", error);
+      }
+    };
+
+    checkComponentsLoaded();
+  }, []);
+
+  if (!isComponentsLoaded) {
+    return <div>Loading components...</div>;
+  }
+
   return (
     <div className="h-full w-full flex gap-4 bg-[#FAFAFA] rounded-lg">
       <SandpackProviderUnstyled {...providerProps}>
@@ -249,7 +271,11 @@ root.render(
               <span className="ml-2 text-gray-600">Loading...</span>
             </div>
           )}
-          {isPreviewReady && <SandpackPreview />}
+          {isPreviewReady && (
+            <Suspense fallback={<div>Loading preview...</div>}>
+              <LazyPreview />
+            </Suspense>
+          )}
         </motion.div>
       </SandpackProviderUnstyled>
       <AnimatePresence>

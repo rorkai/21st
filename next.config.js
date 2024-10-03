@@ -10,7 +10,6 @@ const nextConfig = {
       };
     }
     
-    // Добавьте это правило для обработки Jotai как ESM
     config.module.rules.push({
       test: /node_modules\/jotai/,
       type: 'javascript/auto',

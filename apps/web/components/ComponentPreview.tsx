@@ -6,19 +6,21 @@ import { supabase } from '@/utils/supabase';
 import { Button } from './ui/button';
 import { LayoutTemplate, CodeXml, Link, Loader2 } from 'lucide-react';
 import { useAtom } from 'jotai';
+import { atom } from 'jotai';
 import {
   isClientAtom,
   isLoadingAtom,
   showLoadingAtom,
-  codeAtom,
-  demoCodeAtom,
-  dependenciesAtom,
-  demoDependenciesAtom,
-  internalDependenciesCodeAtom,
-  showCodeAtom,
-  isSharingAtom,
-  shareButtonTextAtom
 } from '@/lib/atoms';
+
+const codeAtom = atom('');
+const demoCodeAtom = atom('');
+const dependenciesAtom = atom<Record<string, string>>({});
+const demoDependenciesAtom = atom<Record<string, string>>({});
+const internalDependenciesCodeAtom = atom<Record<string, string>>({});
+const showCodeAtom = atom(false);
+const isSharingAtom = atom(false);
+const shareButtonTextAtom = atom('Share');
 
 const SandpackProviderClient = dynamic(
   () => import('./SandpackProviderClient'),

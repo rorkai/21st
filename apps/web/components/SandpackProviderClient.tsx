@@ -12,16 +12,15 @@ import styles from './SandpackProviderClient.module.css';
 
 import { SandpackProviderProps } from "@codesandbox/sandpack-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAtom } from 'jotai';
-import {
-  copiedAtom,
-  codeCopiedAtom,
-  isHoveringAtom,
-  isDebugAtom,
-  activeFileAtom,
-  isComponentsLoadedAtom
-} from '@/lib/atoms';
+import { useAtom, atom } from 'jotai';
 import { useDebugMode } from '@/hooks/useDebugMode';
+
+
+const copiedAtom = atom(false);
+const codeCopiedAtom = atom(false);
+const isHoveringAtom = atom(false);
+const activeFileAtom = atom('');
+const isComponentsLoadedAtom = atom(false);
 
 interface SandpackProviderClientProps {
   files: Record<string, string>;

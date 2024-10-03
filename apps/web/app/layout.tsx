@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { ClerkProvider } from '@clerk/nextjs'
 import localFont from "next/font/local";
 import "./globals.css";
-import { Provider } from 'jotai';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -27,7 +26,7 @@ export default function RootLayout({
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} p-4 h-full`}>
       <body>
         <ClerkProvider>
-          <Provider>{children}</Provider>
+          {children}
         </ClerkProvider>
       </body>
     </html>

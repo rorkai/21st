@@ -10,19 +10,7 @@ import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
 import * as t from '@babel/types';
 import { Alert } from "@/components/ui/alert"
-import { useAtom } from 'jotai';
-import {
-  slugAvailableAtom,
-  slugCheckingAtom,
-  slugErrorAtom,
-  demoCodeErrorAtom,
-  parsedDependenciesAtom,
-  parsedComponentNamesAtom,
-  parsedDemoDependenciesAtom,
-  internalDependenciesAtom,
-  importsToRemoveAtom,
-  parsedDemoComponentNameAtom
-} from '@/lib/atoms';
+import { useAtom, atom } from 'jotai';
 import { useDebugMode } from '@/hooks/useDebugMode';
 import React from 'react';
 
@@ -33,6 +21,18 @@ type FormData = {
   demo_code: string
   description: string
 }
+
+
+const slugAvailableAtom = atom<boolean | null>(null);
+const slugCheckingAtom = atom(false);
+const slugErrorAtom = atom<string | null>(null);
+const demoCodeErrorAtom = atom<string | null>(null);
+const parsedDependenciesAtom = atom<Record<string, string>>({});
+const parsedComponentNamesAtom = atom<string[]>([]);
+const parsedDemoDependenciesAtom = atom<Record<string, string>>({});
+const internalDependenciesAtom = atom<Record<string, string>>({});
+const importsToRemoveAtom = atom<string[]>([]);
+const parsedDemoComponentNameAtom = atom<string>('');
 
 export default function ComponentForm() {
   const { register, handleSubmit, reset, watch, setValue } = useForm<FormData>()

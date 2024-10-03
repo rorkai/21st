@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
-import { useAtom } from 'jotai';
-import { isDebugAtom } from '@/lib/atoms';
+import { useAtom, atom } from 'jotai';
+
+
+const isDebugAtom = atom(false);
 
 export function useDebugMode() {
   const [isDebug, setIsDebug] = useAtom(isDebugAtom);
@@ -9,7 +11,7 @@ export function useDebugMode() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Tab') {
         event.preventDefault();
-        setIsDebug(prevState => !prevState);
+        setIsDebug((prevState: boolean) => !prevState);
       }
     };
 

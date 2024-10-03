@@ -543,6 +543,7 @@ export default function ComponentForm() {
         </div>
       )}
       
+      
       <Button type="submit" disabled={isLoading || !slugAvailable || !!demoCodeError} className="w-full">
         {isLoading ? 'Adding...' : 'Add Component'}
       </Button>

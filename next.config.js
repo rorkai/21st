@@ -2,24 +2,6 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['jotai'],
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-      };
-    }
-    
-    config.module.rules.push({
-      test: /node_modules\/jotai/,
-      type: 'javascript/auto',
-      resolve: {
-        fullySpecified: false
-      }
-    });
-
-    return config;
-  },
   images: {
     domains: ['vucvdpamtrjkzmubwlts.supabase.co', 'supabase.co'],
     remotePatterns: [
@@ -28,6 +10,12 @@ const nextConfig = {
         hostname: '**.supabase.co',
       },
     ],
+  },
+  experimental: {
+    turbo: {
+      resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
+      moduleIdStrategy: 'deterministic',
+    },
   },
 };
 

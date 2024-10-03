@@ -88,5 +88,9 @@ export async function getUserComponents(userId: string): Promise<Component[] | n
 
 export async function getComponents(): Promise<Component[]> {
   const query = supabase.from('components').select(componentFields);
-  return await fetchComponents(query);
+  const components = await fetchComponents(query);
+  if (components === null) {
+    return [];
+  }
+  return components;
 }

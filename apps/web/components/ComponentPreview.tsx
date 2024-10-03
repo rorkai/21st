@@ -10,7 +10,7 @@ import { LoadingSpinner } from "./Loading";
 import { useAtom } from "jotai";
 import { atom } from "jotai";
 import { isClientAtom, isLoadingAtom, showLoadingAtom } from "@/lib/atoms";
-import { Component, User } from '@/types/types';
+import { Component } from '@/types/types';
 import { UserAvatar } from './UserAvatar';
 
 const codeAtom = atom("");
@@ -222,6 +222,7 @@ export default function App() {
           </Button>
         </div>
       </div>
+      {isLoading && showLoading && <LoadingSpinner />}
       {isClient && !isLoading && (
         <div className="flex w-full !flex-grow">
           <SandpackProviderClient

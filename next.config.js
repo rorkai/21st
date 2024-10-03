@@ -11,6 +11,7 @@ const nextConfig = {
         pathname: '**',
       },
     ],
+    domains: ['placehold.co', 'your-supabase-storage-domain.com'],
   },
   experimental: {
     turbo: {

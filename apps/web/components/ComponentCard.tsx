@@ -1,6 +1,7 @@
-import Link from 'next/link';
-import { Heart, Download } from 'lucide-react';
-import ComponentPreviewImage from './ComponentPreviewImage';
+/* eslint-disable @next/next/no-img-element */
+import Link from "next/link";
+import { Heart, Download } from "lucide-react";
+import ComponentPreviewImage from "./ComponentPreviewImage";
 
 interface ComponentCardProps {
   component: {
@@ -12,6 +13,12 @@ interface ComponentCardProps {
     likes_count: number;
     downloads_count: number;
     size: string;
+    users: {
+      id: string;
+      name: string;
+      image_url: string;
+      username: string;
+    };
   };
 }
 
@@ -19,10 +26,15 @@ export function ComponentCard({ component }: ComponentCardProps) {
   const previewClass = getPreviewClass(component.size);
   const isPlaceholder = component.preview_url === "/placeholder.svg";
 
+  // Создаем URL с учетом возможного отсутствия users
+  const componentUrl = component.users
+    ? `/${component.users.username}/${component.component_slug}`
+    : `/${component.component_slug}`;
+
   return (
-    <Link href={`/${component.component_slug}`} className="block h-full">
+    <Link href={componentUrl} className="block h-full">
       <div className="h-full flex flex-col rounded-lg hover:shadow-lg transition-shadow border border-gray-200 overflow-hidden">
-        <div className={`relative ${previewClass} ${isPlaceholder ? '' : ''}`}>
+        <div className={`relative ${previewClass} ${isPlaceholder ? "" : ""}`}>
           <ComponentPreviewImage
             src={component.preview_url || "/placeholder.svg"}
             alt={component.name}
@@ -31,9 +43,24 @@ export function ComponentCard({ component }: ComponentCardProps) {
           />
         </div>
         <div className="bg-white p-4 flex items-center justify-between flex-grow">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-800 truncate">{component.name}</h2>
-            <p className="text-sm text-gray-600 mt-[2px] line-clamp-2">{component.description}</p>
+          <div className="flex gap-3 items-center h-full w-full">
+            <div className="flex-shrink-0">
+              <img
+                src={`${component.users.image_url}&size=64`}
+                alt={`${component.users.username}'s avatar`}
+                width={32}
+                height={32}
+                className="rounded-full"
+              />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800 truncate">
+                {component.name}
+              </h2>
+              <p className="text-sm text-gray-600 mt-[2px] line-clamp-2">
+                {component.description}
+              </p>
+            </div>
           </div>
           <div className="flex justify-between items-center mt-3">
             <div className="flex items-center space-x-2">
@@ -43,7 +70,9 @@ export function ComponentCard({ component }: ComponentCardProps) {
               </div>
               <div className="flex items-center text-gray-600">
                 <Download className="w-4 h-4 mr-1" />
-                <span className="text-xs">{component.downloads_count || 0}</span>
+                <span className="text-xs">
+                  {component.downloads_count || 0}
+                </span>
               </div>
             </div>
           </div>
@@ -55,10 +84,15 @@ export function ComponentCard({ component }: ComponentCardProps) {
 
 function getPreviewClass(size: string): string {
   switch (size) {
-    case '1x1': return 'h-[200px]';
-    case '1x2': return 'h-[400px]';
-    case '2x1': return 'h-[200px]';
-    case '2x2': return 'h-[400px]';
-    default: return 'h-[200px]';
+    case "1x1":
+      return "h-[200px]";
+    case "1x2":
+      return "h-[400px]";
+    case "2x1":
+      return "h-[200px]";
+    case "2x2":
+      return "h-[400px]";
+    default:
+      return "h-[200px]";
   }
 }

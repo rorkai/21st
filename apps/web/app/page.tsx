@@ -5,8 +5,17 @@ import { ComponentBento } from '../components/ComponentBento';
 
 async function getComponents() {
   const { data, error } = await supabase
-    .from('components')
-    .select('*')
+  .from('components')
+  .select(`
+    *,
+    users:users!user_id (
+      id,
+      username,
+      image_url,
+      name,
+      email
+    )
+  `)
 
   if (error) throw error;
   return data || [];

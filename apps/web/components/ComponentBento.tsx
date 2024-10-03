@@ -10,6 +10,12 @@ interface Component {
   likes_count: number;
   downloads_count: number;
   size: string;
+  users: {
+    username: string;
+    id: string;
+    name: string;
+    image_url: string;
+  };
 }
 
 interface ComponentBentoProps {

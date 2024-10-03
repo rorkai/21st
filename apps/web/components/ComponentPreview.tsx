@@ -1,31 +1,27 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import React, { useEffect } from 'react';
-import dynamic from 'next/dynamic';
-import { supabase } from '@/utils/supabase';
-import { Button } from './ui/button';
-import { LayoutTemplate, CodeXml, Link } from 'lucide-react';
-import { LoadingSpinner } from './Loading';
-import { useAtom } from 'jotai';
-import { atom } from 'jotai';
-import {
-  isClientAtom,
-  isLoadingAtom,
-  showLoadingAtom,
-} from '@/lib/atoms';
+import React, { useEffect } from "react";
+import dynamic from "next/dynamic";
+import { supabase } from "@/utils/supabase";
+import { Button } from "./ui/button";
+import { LayoutTemplate, CodeXml, Link } from "lucide-react";
+import { LoadingSpinner } from "./Loading";
+import { useAtom } from "jotai";
+import { atom } from "jotai";
+import { isClientAtom, isLoadingAtom, showLoadingAtom } from "@/lib/atoms";
 
-const codeAtom = atom('');
-const demoCodeAtom = atom('');
+const codeAtom = atom("");
+const demoCodeAtom = atom("");
 const dependenciesAtom = atom<Record<string, string>>({});
 const demoDependenciesAtom = atom<Record<string, string>>({});
 const internalDependenciesCodeAtom = atom<Record<string, string>>({});
 const showCodeAtom = atom(false);
 const isSharingAtom = atom(false);
-const shareButtonTextAtom = atom('Share');
+const shareButtonTextAtom = atom("Share");
 
 const SandpackProviderClient = dynamic(
-  () => import('./SandpackProviderClient'),
+  () => import("./SandpackProviderClient"),
   { ssr: false, loading: () => null }
 );
 
@@ -58,7 +54,11 @@ interface Component {
   users: User; // Изменено с 'user' на 'users'
 }
 
-export default function ComponentPreview({ component }: { component: Component }) {
+export default function ComponentPreview({
+  component,
+}: {
+  component: Component;
+}) {
   const [isClient, setIsClient] = useAtom(isClientAtom);
   const [isLoading, setIsLoading] = useAtom(isLoadingAtom);
   const [showLoading, setShowLoading] = useAtom(showLoadingAtom);
@@ -66,7 +66,9 @@ export default function ComponentPreview({ component }: { component: Component }
   const [demoCode, setDemoCode] = useAtom(demoCodeAtom);
   const [dependencies, setDependencies] = useAtom(dependenciesAtom);
   const [demoDependencies, setDemoDependencies] = useAtom(demoDependenciesAtom);
-  const [internalDependenciesCode, setInternalDependenciesCode] = useAtom(internalDependenciesCodeAtom);
+  const [internalDependenciesCode, setInternalDependenciesCode] = useAtom(
+    internalDependenciesCodeAtom
+  );
   const [showCode, setShowCode] = useAtom(showCodeAtom);
   const [isSharing, setIsSharing] = useAtom(isSharingAtom);
   const [shareButtonText, setShareButtonText] = useAtom(shareButtonTextAtom);
@@ -78,35 +80,41 @@ export default function ComponentPreview({ component }: { component: Component }
       setIsLoading(true);
       try {
         const { data: codeData, error: codeError } = await supabase.storage
-          .from('components')
+          .from("components")
           .download(`${component.component_slug}-code.tsx`);
 
         const { data: demoData, error: demoError } = await supabase.storage
-          .from('components')
+          .from("components")
           .download(`${component.component_slug}-demo.tsx`);
 
         if (codeError || demoError) {
-          console.error('Error fetching code:', codeError || demoError);
+          console.error("Error fetching code:", codeError || demoError);
           return;
         }
 
         const codeText = await codeData.text();
         const rawDemoCode = await demoData.text();
-        
+
         setCode(codeText);
         const componentNames = parseComponentNames(component.component_name);
-        const updatedDemoCode = `import { ${componentNames.join(', ')} } from "./${component.component_slug}";\n${rawDemoCode}`;
+        const updatedDemoCode = `import { ${componentNames.join(", ")} } from "./${component.component_slug}";\n${rawDemoCode}`;
         setDemoCode(updatedDemoCode);
 
-        const componentDependencies = JSON.parse(component.dependencies || '{}');
-        const componentDemoDependencies = JSON.parse(component.demo_dependencies || '{}');
-        const componentInternalDependencies = JSON.parse(component.internal_dependencies || '{}');
+        const componentDependencies = JSON.parse(
+          component.dependencies || "{}"
+        );
+        const componentDemoDependencies = JSON.parse(
+          component.demo_dependencies || "{}"
+        );
+        const componentInternalDependencies = JSON.parse(
+          component.internal_dependencies || "{}"
+        );
         setDependencies(componentDependencies);
         setDemoDependencies(componentDemoDependencies);
 
         await fetchInternalDependencies(componentInternalDependencies);
       } catch (error) {
-        console.error('Error in fetchCode:', error);
+        console.error("Error in fetchCode:", error);
       } finally {
         clearTimeout(loadingTimeout);
         setIsLoading(false);
@@ -117,10 +125,12 @@ export default function ComponentPreview({ component }: { component: Component }
     fetchCode();
   }, [component]);
 
-  async function fetchInternalDependencies(componentInternalDependencies: Record<string, string | string[]>) {
+  async function fetchInternalDependencies(
+    componentInternalDependencies: Record<string, string | string[]>
+  ) {
     const internalDepsCode: Record<string, string> = {};
     for (const [, slugs] of Object.entries(componentInternalDependencies)) {
-      if (typeof slugs === 'string') {
+      if (typeof slugs === "string") {
         await fetchSingleDependency(slugs, internalDepsCode);
       } else if (Array.isArray(slugs)) {
         for (const slug of slugs) {
@@ -131,10 +141,13 @@ export default function ComponentPreview({ component }: { component: Component }
     setInternalDependenciesCode(internalDepsCode);
   }
 
-  async function fetchSingleDependency(slug: string, internalDepsCode: Record<string, string>) {
+  async function fetchSingleDependency(
+    slug: string,
+    internalDepsCode: Record<string, string>
+  ) {
     try {
       const { data, error } = await supabase.storage
-        .from('components')
+        .from("components")
         .download(`${slug}-code.tsx`);
 
       if (error) {
@@ -188,13 +201,13 @@ export default function App() {
 
   const handleShareClick = async () => {
     setIsSharing(true);
-    const url = `${window.location.origin}/${component.component_slug}`;
+    const url = `${window.location.origin}/${component.users.username}/${component.component_slug}`;
     try {
       await navigator.clipboard.writeText(url);
       setShareButtonText("Copied");
-      setTimeout(() => setShareButtonText("Share"), 2000); 
+      setTimeout(() => setShareButtonText("Share"), 2000);
     } catch (err) {
-      console.error('Error copying link: ', err);
+      console.error("Error copying link: ", err);
     } finally {
       setIsSharing(false);
     }
@@ -209,18 +222,25 @@ export default function App() {
       <div className="flex justify-between items-center">
         <div className="flex gap-4 items-center">
           {component.users && (
-            <><div className="flex items-center gap-2">
-              <img
-                src={component.users.image_url || 'https://placehold.co/32x32'}
-                alt={`${component.users.username}'s avatar`}
-                width={32}
-                height={32}
-                className="rounded-full" />
-              <div className="flex flex-col">
-                <span className="text-sm text-gray-600">{component.users.name}</span>
-                <span className="text-xs text-gray-400">{component.users.username}</span>
+            <><a href={`/${component.users.username}`}>
+              <div className="flex items-center gap-2">
+                <img
+                  src={`${component.users.image_url}&size=64`}
+                  alt={`${component.users.username}'s avatar`}
+                  width={32}
+                  height={32}
+                  className="rounded-full" />
+                <div className="flex flex-col">
+                  <span className="text-sm text-gray-600">
+                    {component.users.name}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {component.users.username}
+                  </span>
+                </div>
               </div>
-            </div><div className="h-10 w-[1px] bg-gray-200" /></>
+            </a><div className="h-10 w-[1px] bg-gray-200" /></>
+            
           )}
           <div className="flex gap-2 items-start">
             <p className="text-[17px] font-semibold">{component.name}</p>
@@ -228,14 +248,18 @@ export default function App() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="ghost" onClick={handleShareClick} disabled={isSharing}>
+          <Button
+            variant="ghost"
+            onClick={handleShareClick}
+            disabled={isSharing}
+          >
             {shareButtonText}
             <div className="ml-2 w-5 h-5 flex items-center justify-center">
               <Link size={20} />
             </div>
           </Button>
           <Button onClick={() => setShowCode(!showCode)}>
-            {showCode ? 'Canvas' : 'Code'}
+            {showCode ? "Canvas" : "Code"}
             <div className="ml-2 w-5 h-5 flex items-center justify-center">
               {showCode ? <LayoutTemplate /> : <CodeXml />}
             </div>

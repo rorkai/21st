@@ -11,12 +11,15 @@ import React from "react";
 interface HeaderProps {
   componentSlug?: string;
   isPublic?: boolean;
+  username?: string;
 }
 
-export function Header({ componentSlug, isPublic }: HeaderProps) {
+export function Header({ componentSlug, isPublic, username }: HeaderProps) {
   const pathname = usePathname();
   const isHomePage = pathname === "/";
   const isPublishPage = pathname === "/publish";
+  const isComponentPage = username && componentSlug && pathname === `/${username}/${componentSlug}`;
+
   return (
     <header className="flex items-center justify-between mx-1">
       <div className="flex items-center gap-4">
@@ -24,14 +27,20 @@ export function Header({ componentSlug, isPublic }: HeaderProps) {
           <Link href="/" className="flex items-center">
             <Image src="/cc-logo.svg" alt="Logo" width={32} height={32} />
           </Link>
-          {!isHomePage && componentSlug && (
+          {!isHomePage && username && (
             <>
               <span className="mx-2 text-gray-400">/</span>
-              <span className="text-gray-700">{componentSlug}</span>
+              <span className="text-gray-700">{username}</span>
+              {componentSlug && (
+                <>
+                  <span className="mx-2 text-gray-400">/</span>
+                  <span className="text-gray-700">{componentSlug}</span>
+                </>
+              )}
             </>
           )}
         </div>
-        {!isHomePage && !isPublishPage && (
+        {isComponentPage && (
           <div className="text-[14px] border border-gray-200 rounded-full px-2 py-[1px]">
             {isPublic ? (
               <div className="flex gap-2 items-center">

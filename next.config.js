@@ -21,6 +21,15 @@ const nextConfig = {
 
     return config;
   },
+  images: {
+    domains: ['vucvdpamtrjkzmubwlts.supabase.co', 'supabase.co'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+      },
+    ],
+  },
 };
 
 module.exports = nextConfig;

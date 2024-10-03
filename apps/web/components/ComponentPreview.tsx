@@ -10,6 +10,7 @@ import { LoadingSpinner } from "./Loading";
 import { useAtom } from "jotai";
 import { atom } from "jotai";
 import { isClientAtom, isLoadingAtom, showLoadingAtom } from "@/lib/atoms";
+import { Component, User } from '@/types/types';
 
 const codeAtom = atom("");
 const demoCodeAtom = atom("");
@@ -24,35 +25,6 @@ const SandpackProviderClient = dynamic(
   () => import("./SandpackProviderClient"),
   { ssr: false, loading: () => null }
 );
-
-interface User {
-  id: string;
-  name: string;
-  username: string;
-  image_url: string;
-}
-
-interface Component {
-  id: string;
-  description: string;
-  code: string;
-  demo_code: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-  install_url: string;
-  dependencies: string;
-  is_public: boolean;
-  downloads_count: number;
-  likes_count: number;
-  component_slug: string;
-  name: string;
-  component_name: string;
-  demo_component_name: string;
-  demo_dependencies: string;
-  internal_dependencies: string;
-  users: User; // Изменено с 'user' на 'users'
-}
 
 export default function ComponentPreview({
   component,
@@ -201,7 +173,7 @@ export default function App() {
 
   const handleShareClick = async () => {
     setIsSharing(true);
-    const url = `${window.location.origin}/${component.users.username}/${component.component_slug}`;
+    const url = `${window.location.origin}/${component.user.username}/${component.component_slug}`;
     try {
       await navigator.clipboard.writeText(url);
       setShareButtonText("Copied");
@@ -221,21 +193,21 @@ export default function App() {
     <div className="flex flex-col gap-4 mt-7 rounded-lg p-4 bg-slate-50 h-[90vh] w-full">
       <div className="flex justify-between items-center">
         <div className="flex gap-4 items-center">
-          {component.users && (
-            <><a href={`/${component.users.username}`}>
+          {component.user && (
+            <><a href={`/${component.user.username}`}>
               <div className="flex items-center gap-2">
                 <img
-                  src={`${component.users.image_url}&size=64`}
-                  alt={`${component.users.username}'s avatar`}
+                  src={`${component.user.image_url}&size=64`}
+                  alt={`${component.user.username}'s avatar`}
                   width={32}
                   height={32}
                   className="rounded-full" />
                 <div className="flex flex-col">
                   <span className="text-sm text-gray-600">
-                    {component.users.name}
+                    {component.user.name}
                   </span>
                   <span className="text-xs text-gray-400">
-                    {component.users.username}
+                    {component.user.username}
                   </span>
                 </div>
               </div>

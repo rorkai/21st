@@ -22,6 +22,7 @@
     "@radix-ui/react-toast": "^1.2.1",
     "@repo/ui": "workspace:*",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/postgrest-js": "^1.16.2",
     "@supabase/supabase-js": "^2.45.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",

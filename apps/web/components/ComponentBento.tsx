@@ -1,22 +1,6 @@
 import React from 'react';
 import { ComponentCard } from './ComponentCard';
-
-interface Component {
-  id: string;
-  component_slug: string;
-  name: string;
-  description: string;
-  preview_url: string;
-  likes_count: number;
-  downloads_count: number;
-  size: string;
-  users: {
-    username: string;
-    id: string;
-    name: string;
-    image_url: string;
-  };
-}
+import { Component } from '../types/types';
 
 interface ComponentBentoProps {
   components: Component[];

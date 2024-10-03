@@ -106,6 +106,9 @@ importers:
       '@supabase/auth-helpers-nextjs':
         specifier: ^0.10.0
         version: 0.10.0(@supabase/supabase-js@2.45.4)
+      '@supabase/postgrest-js':
+        specifier: ^1.16.2
+        version: 1.16.2
       '@supabase/supabase-js':
         specifier: ^2.45.4
         version: 2.45.4
@@ -1498,6 +1501,12 @@ packages:
 
   /@supabase/postgrest-js@1.16.1:
     resolution: {integrity: sha512-EOSEZFm5pPuCPGCmLF1VOCS78DfkSz600PBuvBND/IZmMciJ1pmsS3ss6TkB6UkuvTybYiBh7gKOYyxoEO3USA==}
+    dependencies:
+      '@supabase/node-fetch': 2.6.15
+    dev: false
+
+  /@supabase/postgrest-js@1.16.2:
+    resolution: {integrity: sha512-dA/CIrSO2YDQ6ABNpbvEg9DwBMMbuKfWaFuZAU9c66PenoLSoIoyXk1Yq/wC2XISgEIqaMHmTrDAAsO80kjHqg==}
     dependencies:
       '@supabase/node-fetch': 2.6.15
     dev: false

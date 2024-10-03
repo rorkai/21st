@@ -1,25 +1,7 @@
-import { supabase } from '@/utils/supabase';
 import { Header } from '../components/Header';
 import React from 'react';
 import { ComponentBento } from '../components/ComponentBento';
-
-async function getComponents() {
-  const { data, error } = await supabase
-  .from('components')
-  .select(`
-    *,
-    users:users!user_id (
-      id,
-      username,
-      image_url,
-      name,
-      email
-    )
-  `)
-
-  if (error) throw error;
-  return data || [];
-}
+import { getComponents } from '@/utils/dataFetchers';
 
 export default async function HomePage() {
   const components = await getComponents();
@@ -29,7 +11,7 @@ export default async function HomePage() {
       <Header />
       <div className="container mx-auto">
         <h1 className="text-2xl font-bold mb-4">Component Library</h1>
-        <ComponentBento components={components} />
+        <ComponentBento components={components || []} />
       </div>
     </>
   );

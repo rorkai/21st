@@ -2,34 +2,18 @@
 import Link from "next/link";
 import { Heart, Download } from "lucide-react";
 import ComponentPreviewImage from "./ComponentPreviewImage";
+import { Component } from '../types/types';
 
 interface ComponentCardProps {
-  component: {
-    id: string;
-    component_slug: string;
-    name: string;
-    description: string;
-    preview_url: string;
-    likes_count: number;
-    downloads_count: number;
-    size: string;
-    users: {
-      id: string;
-      name: string;
-      image_url: string;
-      username: string;
-    };
-  };
+  component: Component;
 }
 
 export function ComponentCard({ component }: ComponentCardProps) {
   const previewClass = getPreviewClass(component.size);
   const isPlaceholder = component.preview_url === "/placeholder.svg";
 
-  // Создаем URL с учетом возможного отсутствия users
-  const componentUrl = component.users
-    ? `/${component.users.username}/${component.component_slug}`
-    : `/${component.component_slug}`;
+  // Создаем URL с учетом возможного отсутствия user
+  const componentUrl = `/${component.user.username}/${component.component_slug}`
 
   return (
     <Link href={componentUrl} className="block h-full">
@@ -44,15 +28,15 @@ export function ComponentCard({ component }: ComponentCardProps) {
         </div>
         <div className="bg-white p-4 flex items-center justify-between flex-grow">
           <div className="flex gap-3 items-center h-full w-full">
-            <div className="flex-shrink-0">
-              <img
-                src={`${component.users.image_url}&size=64`}
-                alt={`${component.users.username}'s avatar`}
-                width={32}
-                height={32}
-                className="rounded-full"
-              />
-            </div>
+              <div className="flex-shrink-0">
+                <img
+                  src={`${component.user.image_url}&size=64`}
+                  alt={`${component.user.username}'s avatar`}
+                  width={32}
+                  height={32}
+                  className="rounded-full"
+                />
+              </div>
             <div>
               <h2 className="text-lg font-semibold text-gray-800 truncate">
                 {component.name}

@@ -4,6 +4,7 @@ import { ComponentBento } from '@/components/ComponentBento';
 import { Header } from '@/components/Header';
 import { User, Component } from '@/types/types';
 import { getUserData, getUserComponents } from '@/utils/dataFetchers';
+import { UserAvatar } from '@/components/UserAvatar';
 
 export default async function UserProfile({ params }: { params: { username: string } }) {
   const user = await getUserData(params.username);
@@ -22,13 +23,7 @@ export default async function UserProfile({ params }: { params: { username: stri
         <div className="flex flex-col md:flex-row gap-8">
           <div className="flex md:w-[30%]  flex-col items-center w-full">
           <div className="flex flex-col items-center md:items-start">
-            <img
-              src={`${user.image_url}&size=552`}
-              alt={`${user.name}'s avatar`}
-              width={184}
-              height={184}
-              className="rounded-full"
-            />
+            <UserAvatar src={user.image_url} alt={user.name} size={184} />
             <h1 className="mt-4 text-[44px] font-bold">{user.name}</h1>
             <p className="text-[20px] text-gray-600">@{user.username}</p>
           </div>

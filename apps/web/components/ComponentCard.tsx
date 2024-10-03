@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Heart, Download } from "lucide-react";
 import ComponentPreviewImage from "./ComponentPreviewImage";
 import { Component } from '../types/types';
+import { UserAvatar } from "./UserAvatar";
 
 interface ComponentCardProps {
   component: Component;
@@ -29,13 +30,7 @@ export function ComponentCard({ component }: ComponentCardProps) {
         <div className="bg-white p-4 flex items-center justify-between flex-grow">
           <div className="flex gap-3 items-center h-full w-full">
               <div className="flex-shrink-0">
-                <img
-                  src={`${component.user.image_url}&size=64`}
-                  alt={`${component.user.username}'s avatar`}
-                  width={32}
-                  height={32}
-                  className="rounded-full"
-                />
+                <UserAvatar src={component.user.image_url} alt={component.user.name} size={32} />
               </div>
             <div>
               <h2 className="text-lg font-semibold text-gray-800 truncate">

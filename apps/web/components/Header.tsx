@@ -21,7 +21,7 @@ export function Header({ componentSlug, isPublic, username }: HeaderProps) {
   const isComponentPage = username && componentSlug && pathname === `/${username}/${componentSlug}`;
 
   return (
-    <header className="flex items-center justify-between mx-1">
+    <header className="flex items-center justify-between border-b border-gray-200 p-4 -mx-4">
       <div className="flex items-center gap-4">
         <div className="flex items-center">
           <Link href="/" className="flex items-center">

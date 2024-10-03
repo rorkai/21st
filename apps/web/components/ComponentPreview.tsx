@@ -11,6 +11,7 @@ import { useAtom } from "jotai";
 import { atom } from "jotai";
 import { isClientAtom, isLoadingAtom, showLoadingAtom } from "@/lib/atoms";
 import { Component, User } from '@/types/types';
+import { UserAvatar } from './UserAvatar';
 
 const codeAtom = atom("");
 const demoCodeAtom = atom("");
@@ -190,30 +191,13 @@ export default function App() {
   }
 
   return (
-    <div className="flex flex-col gap-4 mt-7 rounded-lg p-4 bg-slate-50 h-[90vh] w-full">
+    <div className="flex flex-col gap-4 rounded-lg p-4 bg-slate-50 h-[90vh] w-full">
       <div className="flex justify-between items-center">
         <div className="flex gap-4 items-center">
-          {component.user && (
-            <><a href={`/${component.user.username}`}>
-              <div className="flex items-center gap-2">
-                <img
-                  src={`${component.user.image_url}&size=64`}
-                  alt={`${component.user.username}'s avatar`}
-                  width={32}
-                  height={32}
-                  className="rounded-full" />
-                <div className="flex flex-col">
-                  <span className="text-sm text-gray-600">
-                    {component.user.name}
-                  </span>
-                  <span className="text-xs text-gray-400">
-                    {component.user.username}
-                  </span>
-                </div>
-              </div>
-            </a><div className="h-10 w-[1px] bg-gray-200" /></>
-            
-          )}
+            <a href={`/${component.user.username}`}>
+              <UserAvatar src={component.user.image_url} alt={component.user.name} size={32} />
+            </a>
+            <div className="h-10 w-[1px] bg-gray-200" />
           <div className="flex gap-2 items-start">
             <p className="text-[17px] font-semibold">{component.name}</p>
             <p className="text-[17px] text-gray-600">{component.description}</p>

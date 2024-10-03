@@ -9,8 +9,7 @@ export default async function HomePage() {
   return (
     <>
       <Header />
-      <div className="container mx-auto">
-        <h1 className="text-2xl font-bold mb-4">Component Library</h1>
+      <div className="container mx-auto mt-7">
         <ComponentBento components={components || []} />
       </div>
     </>

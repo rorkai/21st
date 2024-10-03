@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { supabase } from '@/utils/supabase';
 import { Button } from './ui/button';
-import { LayoutTemplate, CodeXml } from 'lucide-react';
+import { LayoutTemplate, CodeXml, Link } from 'lucide-react';
+import { useToast } from "@/components/hooks/use-toast";
 
 const SandpackProviderClient = dynamic(
   () => import('./SandpackProviderClient'),
@@ -41,6 +42,9 @@ export default function ComponentPreview({ component }: { component: Component }
   const [internalDependencies, setInternalDependencies] = useState<Record<string, string>>({});
   const [internalDependenciesCode, setInternalDependenciesCode] = useState<Record<string, string>>({});
   const [showCode, setShowCode] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareButtonText, setShareButtonText] = useState("Share");
+  const { toast } = useToast();
 
   useEffect(() => {
     setIsClient(true);
@@ -155,6 +159,20 @@ export default function App() {
     fetchInternalDependencies();
   }, [component.internal_dependencies]);
 
+  const handleShareClick = async () => {
+    setIsSharing(true);
+    const url = `${window.location.origin}/${component.component_slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareButtonText("Copied");
+      setTimeout(() => setShareButtonText("Share"), 2000); 
+    } catch (err) {
+      console.error('Error copying link: ', err);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4 mt-7 rounded-lg p-4 bg-slate-50 h-[90vh] w-full">
       <div className="flex justify-between items-center">
@@ -162,12 +180,20 @@ export default function App() {
           <p className="text-[17px] font-semibold">{component.name}</p>
           <p className="text-[17px] text-gray-600">{component.description}</p>
         </div>
-        <Button  onClick={() => setShowCode(!showCode)}>
-          {showCode ? 'Canvas' : 'Code'}
-          <div className="ml-2 w-5 h-5 flex items-center justify-center">
-          {showCode ? <LayoutTemplate /> : <CodeXml />}
-          </div>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="ghost" onClick={handleShareClick} disabled={isSharing}>
+            {shareButtonText}
+            <div className="ml-2 w-5 h-5 flex items-center justify-center">
+              <Link size={20} />
+            </div>
+          </Button>
+          <Button onClick={() => setShowCode(!showCode)}>
+            {showCode ? 'Canvas' : 'Code'}
+            <div className="ml-2 w-5 h-5 flex items-center justify-center">
+              {showCode ? <LayoutTemplate /> : <CodeXml />}
+            </div>
+          </Button>
+        </div>
       </div>
       {isClient && (
         <div className="flex w-full !flex-grow">

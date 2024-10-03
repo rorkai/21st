@@ -4,12 +4,19 @@ import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { supabase } from '@/utils/supabase';
 import { Button } from './ui/button';
-import { LayoutTemplate, CodeXml, Link } from 'lucide-react';
+import { LayoutTemplate, CodeXml, Link, Loader2 } from 'lucide-react';
 import { useToast } from "@/components/hooks/use-toast";
 
 const SandpackProviderClient = dynamic(
   () => import('./SandpackProviderClient'),
-  { ssr: false, loading: () => <div>Loading Sandpack...</div> }
+  { ssr: false, loading: () => null }
+);
+
+const LoadingSpinner = () => (
+  <div className="absolute inset-0 flex items-center justify-center bg-white">
+    <Loader2 className="w-5 h-5 text-gray-600 animate-spin" />
+    <span className="ml-2 text-gray-600">Loading...</span>
+  </div>
 );
 
 interface Component {
@@ -46,10 +53,12 @@ export default function ComponentPreview({ component }: { component: Component }
   const [shareButtonText, setShareButtonText] = useState("Share");
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
+  const [showLoading, setShowLoading] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
     async function fetchCode() {
+      const loadingTimeout = setTimeout(() => setShowLoading(true), 1000);
       setIsLoading(true);
       try {
         const { data: codeData, error: codeError } = await supabase.storage
@@ -84,7 +93,9 @@ export default function ComponentPreview({ component }: { component: Component }
       } catch (error) {
         console.error('Error in fetchCode:', error);
       } finally {
+        clearTimeout(loadingTimeout);
         setIsLoading(false);
+        setShowLoading(false);
       }
     }
 
@@ -174,8 +185,8 @@ export default function App() {
     }
   };
 
-  if (isLoading) {
-    return <div>Loading component preview...</div>;
+  if (isLoading && showLoading) {
+    return <LoadingSpinner />;
   }
 
   return (

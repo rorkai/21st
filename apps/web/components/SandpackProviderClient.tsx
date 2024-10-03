@@ -26,6 +26,13 @@ interface SandpackProviderClientProps {
 
 const LazyPreview = React.lazy(() => import("@codesandbox/sandpack-react/unstyled").then(module => ({ default: module.SandpackPreview })));
 
+const LoadingSpinner = () => (
+  <div className="absolute inset-0 flex items-center justify-center bg-white">
+    <Loader2 className="w-5 h-5 text-gray-600 animate-spin" />
+    <span className="ml-2 text-gray-600">Loading...</span>
+  </div>
+);
+
 export default function SandpackProviderClient({
   files,
   dependencies,
@@ -39,7 +46,6 @@ export default function SandpackProviderClient({
   const [codeCopied, setCodeCopied] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const sandpackRef = useRef<HTMLDivElement>(null);
-  const [isPreviewReady, setIsPreviewReady] = useState(false);
   const [isDebug, setIsDebug] = useState(false);
 
   const tsConfig = {
@@ -80,7 +86,7 @@ root.render(
     "/index.tsx": updatedIndexContent,
   };
 
-  // Добавляем файлы для внутренних зависимостей
+  // Add files for internal dependencies
   Object.entries(internalDependencies).forEach(([path, code]) => {
     const parts = path.split('/');
     const fileName = parts[parts.length - 1];
@@ -108,7 +114,7 @@ root.render(
     })
   );
 
-  // Функция для извлечения зависимостей из кода внутренних компонентов
+  // Function to extract dependencies from internal component code
   const extractInternalDependencies = (code: string): Record<string, string> => {
     const deps: Record<string, string> = {};
     const lines = code.split('\n');
@@ -123,7 +129,7 @@ root.render(
     return deps;
   };
 
-  // Собираем все зависимости из внутренних компонентов
+  // Collect all dependencies from internal components
   const allInternalDependencies = Object.values(internalDependencies).reduce((acc, code) => {
     return { ...acc, ...extractInternalDependencies(code) };
   }, {});
@@ -139,7 +145,7 @@ root.render(
         "react-dom": "^18.0.0",
         ...dependencies,
         ...demoDependencies,
-        ...allInternalDependencies, // Добавляем зависимости из внутренних компонентов
+        ...allInternalDependencies, // Add internal component dependencies
       },
     },
     options: {
@@ -215,14 +221,6 @@ root.render(
   }, [internalDependencies, showCode]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsPreviewReady(true);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Tab') {
         event.preventDefault();
@@ -238,23 +236,27 @@ root.render(
   }, []);
 
   const [isComponentsLoaded, setIsComponentsLoaded] = useState(false);
+  const [showLoading, setShowLoading] = useState(false);
 
   useEffect(() => {
-    // Проверяем, загружены ли все необходимые компоненты
     const checkComponentsLoaded = async () => {
       try {
+        const loadingTimeout = setTimeout(() => setShowLoading(true), 1000);
         await import("@codesandbox/sandpack-react/unstyled");
+        clearTimeout(loadingTimeout);
         setIsComponentsLoaded(true);
       } catch (error) {
         console.error("Error loading components:", error);
+      } finally {
+        setShowLoading(false);
       }
     };
 
     checkComponentsLoaded();
   }, []);
 
-  if (!isComponentsLoaded) {
-    return <div>Loading components...</div>;
+  if (!isComponentsLoaded && showLoading) {
+    return <LoadingSpinner />;
   }
 
   return (
@@ -265,17 +267,9 @@ root.render(
           className="flex-grow h-full relative"
           transition={{ duration: 0.3 }}
         >
-          {!isPreviewReady && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white">
-              <Loader2 className="w-5 h-5 text-gray-600 animate-spin" />
-              <span className="ml-2 text-gray-600">Loading...</span>
-            </div>
-          )}
-          {isPreviewReady && (
-            <Suspense fallback={<div>Loading preview...</div>}>
-              <LazyPreview />
-            </Suspense>
-          )}
+          <Suspense fallback={<LoadingSpinner />}>
+            <LazyPreview />
+          </Suspense>
         </motion.div>
       </SandpackProviderUnstyled>
       <AnimatePresence>

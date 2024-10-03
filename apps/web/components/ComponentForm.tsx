@@ -366,7 +366,6 @@ export default function ComponentForm() {
       const demoComponentName = extractDemoComponentName(modifiedDemoCode);
       const dependencies = parseDependencies(modifiedCode);
       
-      // Удаляем импорты компонентов из демо-кода перед сохранением
       const cleanedDemoCode = removeComponentImports(modifiedDemoCode, componentNames).modifiedCode;
 
       const codeFileName = `${data.component_slug}-code.tsx`;

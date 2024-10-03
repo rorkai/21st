@@ -12,6 +12,15 @@ import styles from './SandpackProviderClient.module.css';
 
 import { SandpackProviderProps } from "@codesandbox/sandpack-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAtom } from 'jotai';
+import {
+  copiedAtom,
+  codeCopiedAtom,
+  isHoveringAtom,
+  isDebugAtom,
+  activeFileAtom,
+  isComponentsLoadedAtom
+} from '@/lib/atoms';
 
 interface SandpackProviderClientProps {
   files: Record<string, string>;
@@ -42,11 +51,13 @@ export default function SandpackProviderClient({
   installUrl,
   componentSlug,
 }: SandpackProviderClientProps) {
-  const [copied, setCopied] = useState(false);
-  const [codeCopied, setCodeCopied] = useState(false);
-  const [isHovering, setIsHovering] = useState(false);
+  const [copied, setCopied] = useAtom(copiedAtom);
+  const [codeCopied, setCodeCopied] = useAtom(codeCopiedAtom);
+  const [isHovering, setIsHovering] = useAtom(isHoveringAtom);
   const sandpackRef = useRef<HTMLDivElement>(null);
-  const [isDebug, setIsDebug] = useState(false);
+  const [isDebug, setIsDebug] = useAtom(isDebugAtom);
+  const [activeFile, setActiveFile] = useAtom(activeFileAtom);
+  const [isComponentsLoaded, setIsComponentsLoaded] = useAtom(isComponentsLoadedAtom);
 
   const tsConfig = {
     compilerOptions: {
@@ -95,8 +106,6 @@ root.render(
 
   const mainComponentFile = Object.keys(updatedFiles).find(file => file.endsWith(`${componentSlug}.tsx`)) || 
                             Object.keys(updatedFiles)[0];
-
-  const [activeFile, setActiveFile] = useState(mainComponentFile);
 
   const visibleFiles = [
     mainComponentFile,
@@ -235,7 +244,6 @@ root.render(
     };
   }, []);
 
-  const [isComponentsLoaded, setIsComponentsLoaded] = useState(false);
   const [showLoading, setShowLoading] = useState(false);
 
   useEffect(() => {

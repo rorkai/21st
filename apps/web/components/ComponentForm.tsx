@@ -10,6 +10,19 @@ import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
 import * as t from '@babel/types';
 import { Alert } from "@/components/ui/alert"
+import { useAtom } from 'jotai';
+import {
+  slugAvailableAtom,
+  slugCheckingAtom,
+  slugErrorAtom,
+  demoCodeErrorAtom,
+  parsedDependenciesAtom,
+  parsedComponentNamesAtom,
+  parsedDemoDependenciesAtom,
+  internalDependenciesAtom,
+  importsToRemoveAtom,
+  parsedDemoComponentNameAtom
+} from '@/lib/atoms';
 
 type FormData = {
   name: string
@@ -22,15 +35,16 @@ type FormData = {
 export default function ComponentForm() {
   const { register, handleSubmit, reset, watch, setValue } = useForm<FormData>()
   const [isLoading, setIsLoading] = useState(false)
-  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null)
-  const [slugChecking, setSlugChecking] = useState(false)
-  const [slugError, setSlugError] = useState<string | null>(null)
-  const [demoCodeError, setDemoCodeError] = useState<string | null>(null);
-  const [parsedDependencies, setParsedDependencies] = useState<Record<string, string>>({});
-  const [parsedComponentNames, setParsedComponentNames] = useState<string[]>([]);
-  const [parsedDemoDependencies, setParsedDemoDependencies] = useState<Record<string, string>>({});
-  const [internalDependencies, setInternalDependencies] = useState<Record<string, string>>({});
-  const [importsToRemove, setImportsToRemove] = useState<string[]>([]);
+  const [slugAvailable, setSlugAvailable] = useAtom(slugAvailableAtom)
+  const [slugChecking, setSlugChecking] = useAtom(slugCheckingAtom)
+  const [slugError, setSlugError] = useAtom(slugErrorAtom)
+  const [demoCodeError, setDemoCodeError] = useAtom(demoCodeErrorAtom)
+  const [parsedDependencies, setParsedDependencies] = useAtom(parsedDependenciesAtom)
+  const [parsedComponentNames, setParsedComponentNames] = useAtom(parsedComponentNamesAtom)
+  const [parsedDemoDependencies, setParsedDemoDependencies] = useAtom(parsedDemoDependenciesAtom)
+  const [internalDependencies, setInternalDependencies] = useAtom(internalDependenciesAtom)
+  const [importsToRemove, setImportsToRemove] = useAtom(importsToRemoveAtom)
+  const [parsedDemoComponentName, setParsedDemoComponentName] = useAtom(parsedDemoComponentNameAtom)
 
   const name = watch('name')
   const componentSlug = watch('component_slug')
@@ -174,8 +188,6 @@ export default function ComponentForm() {
     const match = code.match(/export\s+function\s+([A-Z]\w+)/);
     return match && match[1] ? match[1] : '';
   };
-
-  const [parsedDemoComponentName, setParsedDemoComponentName] = useState('');
 
   const code = watch('code');
   const demoCode = watch('demo_code');

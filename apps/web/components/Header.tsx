@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LockOpen, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import React from "react";
 
 interface HeaderProps {
   componentSlug?: string;

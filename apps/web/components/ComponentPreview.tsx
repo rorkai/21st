@@ -6,6 +6,20 @@ import { supabase } from '@/utils/supabase';
 import { Button } from './ui/button';
 import { LayoutTemplate, CodeXml, Link, Loader2 } from 'lucide-react';
 import { useToast } from "@/components/hooks/use-toast";
+import { useAtom } from 'jotai';
+import {
+  isClientAtom,
+  isLoadingAtom,
+  showLoadingAtom,
+  codeAtom,
+  demoCodeAtom,
+  dependenciesAtom,
+  demoDependenciesAtom,
+  internalDependenciesCodeAtom,
+  showCodeAtom,
+  isSharingAtom,
+  shareButtonTextAtom
+} from '@/lib/atoms';
 
 const SandpackProviderClient = dynamic(
   () => import('./SandpackProviderClient'),
@@ -41,19 +55,18 @@ interface Component {
 }
 
 export default function ComponentPreview({ component }: { component: Component }) {
-  const [code, setCode] = useState('');
-  const [demoCode, setDemoCode] = useState('');
-  const [dependencies, setDependencies] = useState<Record<string, string>>({});
-  const [demoDependencies, setDemoDependencies] = useState<Record<string, string>>({});
-  const [isClient, setIsClient] = useState(false);
-  const [internalDependencies, setInternalDependencies] = useState<Record<string, string>>({});
-  const [internalDependenciesCode, setInternalDependenciesCode] = useState<Record<string, string>>({});
-  const [showCode, setShowCode] = useState(false);
-  const [isSharing, setIsSharing] = useState(false);
-  const [shareButtonText, setShareButtonText] = useState("Share");
+  const [isClient, setIsClient] = useAtom(isClientAtom);
+  const [isLoading, setIsLoading] = useAtom(isLoadingAtom);
+  const [showLoading, setShowLoading] = useAtom(showLoadingAtom);
+  const [code, setCode] = useAtom(codeAtom);
+  const [demoCode, setDemoCode] = useAtom(demoCodeAtom);
+  const [dependencies, setDependencies] = useAtom(dependenciesAtom);
+  const [demoDependencies, setDemoDependencies] = useAtom(demoDependenciesAtom);
+  const [internalDependenciesCode, setInternalDependenciesCode] = useAtom(internalDependenciesCodeAtom);
+  const [showCode, setShowCode] = useAtom(showCodeAtom);
+  const [isSharing, setIsSharing] = useAtom(isSharingAtom);
+  const [shareButtonText, setShareButtonText] = useAtom(shareButtonTextAtom);
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(true);
-  const [showLoading, setShowLoading] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -87,7 +100,6 @@ export default function ComponentPreview({ component }: { component: Component }
         const componentInternalDependencies = JSON.parse(component.internal_dependencies || '{}');
         setDependencies(componentDependencies);
         setDemoDependencies(componentDemoDependencies);
-        setInternalDependencies(componentInternalDependencies);
 
         await fetchInternalDependencies(componentInternalDependencies);
       } catch (error) {

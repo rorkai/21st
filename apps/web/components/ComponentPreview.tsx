@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useEffect } from 'react';
@@ -13,7 +14,6 @@ import {
   isLoadingAtom,
   showLoadingAtom,
 } from '@/lib/atoms';
-import Image from 'next/image';
 
 const codeAtom = atom('');
 const demoCodeAtom = atom('');
@@ -31,6 +31,7 @@ const SandpackProviderClient = dynamic(
 
 interface User {
   id: string;
+  name: string;
   username: string;
   image_url: string;
 }
@@ -208,16 +209,18 @@ export default function App() {
       <div className="flex justify-between items-center">
         <div className="flex gap-4 items-center">
           {component.users && (
-            <div className="flex items-center gap-2">
-              <Image
+            <><div className="flex items-center gap-2">
+              <img
                 src={component.users.image_url || 'https://placehold.co/32x32'}
                 alt={`${component.users.username}'s avatar`}
                 width={32}
                 height={32}
-                className="rounded-full"
-              />
-              <span className="text-sm text-gray-600">{component.users.username}</span>
-            </div>
+                className="rounded-full" />
+              <div className="flex flex-col">
+                <span className="text-sm text-gray-600">{component.users.name}</span>
+                <span className="text-xs text-gray-400">{component.users.username}</span>
+              </div>
+            </div><div className="h-10 w-[1px] bg-gray-200" /></>
           )}
           <div className="flex gap-2 items-start">
             <p className="text-[17px] font-semibold">{component.name}</p>

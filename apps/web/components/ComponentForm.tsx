@@ -23,6 +23,8 @@ import {
   importsToRemoveAtom,
   parsedDemoComponentNameAtom
 } from '@/lib/atoms';
+import { useDebugMode } from '@/hooks/useDebugMode';
+import React from 'react';
 
 type FormData = {
   name: string
@@ -45,6 +47,7 @@ export default function ComponentForm() {
   const [internalDependencies, setInternalDependencies] = useAtom(internalDependenciesAtom)
   const [importsToRemove, setImportsToRemove] = useAtom(importsToRemoveAtom)
   const [parsedDemoComponentName, setParsedDemoComponentName] = useAtom(parsedDemoComponentNameAtom)
+  const isDebug = useDebugMode();
 
   const name = watch('name')
   const componentSlug = watch('component_slug')
@@ -478,39 +481,42 @@ export default function ComponentForm() {
         )}
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Components Names</label>
-        <Textarea 
-          value={parsedComponentNames.join(', ')}
-          readOnly 
-          className="mt-1 w-full bg-gray-100" 
-        />
-      </div>
+      {isDebug && (
+        <>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Components Names</label>
+            <Textarea 
+              value={parsedComponentNames.join(', ')}
+              readOnly 
+              className="mt-1 w-full bg-gray-100" 
+            />
+          </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Demo Component Name</label>
-        <Input value={parsedDemoComponentName} readOnly className="mt-1 w-full bg-gray-100" />
-      </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Demo Component Name</label>
+            <Input value={parsedDemoComponentName} readOnly className="mt-1 w-full bg-gray-100" />
+          </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Component Dependencies</label>
-        <Textarea 
-          value={Object.entries(parsedDependencies).map(([key, value]) => `${key}: ${value}`).join('\n')}
-          readOnly 
-          className="mt-1 w-full bg-gray-100" 
-        />
-      </div>
-    
-      
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Demo Dependencies</label>
-        <Textarea 
-          value={Object.entries(parsedDemoDependencies).map(([key, value]) => `${key}: ${value}`).join('\n')}
-          readOnly 
-          className="mt-1 w-full bg-gray-100" 
-        />
-      </div>
-      
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Component Dependencies</label>
+            <Textarea 
+              value={Object.entries(parsedDependencies).map(([key, value]) => `${key}: ${value}`).join('\n')}
+              readOnly 
+              className="mt-1 w-full bg-gray-100" 
+            />
+          </div>
+        
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Demo Dependencies</label>
+            <Textarea 
+              value={Object.entries(parsedDemoDependencies).map(([key, value]) => `${key}: ${value}`).join('\n')}
+              readOnly 
+              className="mt-1 w-full bg-gray-100" 
+            />
+          </div>
+        </>
+      )}
+
       <div>
         <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
         <Input id="description" {...register('description', { required: true })} className="mt-1 w-full" />

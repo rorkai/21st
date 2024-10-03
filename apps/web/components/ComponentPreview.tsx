@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { supabase } from '@/utils/supabase';
 import { Button } from './ui/button';
 import { LayoutTemplate, CodeXml, Link, Loader2 } from 'lucide-react';
-import { useToast } from "@/components/hooks/use-toast";
 import { useAtom } from 'jotai';
 import {
   isClientAtom,
@@ -66,7 +65,6 @@ export default function ComponentPreview({ component }: { component: Component }
   const [showCode, setShowCode] = useAtom(showCodeAtom);
   const [isSharing, setIsSharing] = useAtom(isSharingAtom);
   const [shareButtonText, setShareButtonText] = useAtom(shareButtonTextAtom);
-  const { toast } = useToast();
 
   useEffect(() => {
     setIsClient(true);

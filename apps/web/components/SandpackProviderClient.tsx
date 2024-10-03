@@ -21,6 +21,7 @@ import {
   activeFileAtom,
   isComponentsLoadedAtom
 } from '@/lib/atoms';
+import { useDebugMode } from '@/hooks/useDebugMode';
 
 interface SandpackProviderClientProps {
   files: Record<string, string>;
@@ -55,9 +56,9 @@ export default function SandpackProviderClient({
   const [codeCopied, setCodeCopied] = useAtom(codeCopiedAtom);
   const [isHovering, setIsHovering] = useAtom(isHoveringAtom);
   const sandpackRef = useRef<HTMLDivElement>(null);
-  const [isDebug, setIsDebug] = useAtom(isDebugAtom);
   const [activeFile, setActiveFile] = useAtom(activeFileAtom);
   const [isComponentsLoaded, setIsComponentsLoaded] = useAtom(isComponentsLoadedAtom);
+  const isDebug = useDebugMode();
 
   const tsConfig = {
     compilerOptions: {
@@ -228,21 +229,6 @@ root.render(
 
     return () => clearInterval(interval);
   }, [internalDependencies, showCode]);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Tab') {
-        event.preventDefault();
-        setIsDebug(prevState => !prevState);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
 
   const [showLoading, setShowLoading] = useState(false);
 

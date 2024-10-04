@@ -1,3 +1,5 @@
+import { User, Component } from './types';
+
 export type GenericView = {
   Row: Record<string, unknown>;
 };
@@ -11,53 +13,15 @@ export type Database = {
   public: {
     Tables: {
       components: {
-        Row: {
-          id: string
-          component_name: string
-          description: string
-          code: string
-          
-        }
-        Insert: {
-          component_name: string
-          description: string
-          code: string
-          
-        }
-        Update: {
-          component_name?: string
-          description?: string
-          code?: string
-          
-        }
+        Row: Component
+        Insert: Omit<Component, 'id' | 'created_at' | 'updated_at' | 'user' | 'downloads_count' | 'likes_count'>
+        Update: Partial<Omit<Component, 'id' | 'created_at' | 'updated_at' | 'user'>>
       }
       users: {
-        Row: {
-          id: string
-          username: string
-          image_url: string
-          name: string
-          email: string
-          created_at: string
-          updated_at: string
-          
-        }
-        Insert: {
-          username: string
-          image_url?: string
-          name: string
-          email: string
-          
-        }
-        Update: {
-          username?: string
-          image_url?: string
-          name?: string
-          email?: string
-          
-        }
+        Row: User
+        Insert: Omit<User, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<User, 'id' | 'created_at' | 'updated_at'>>
       }
-      
     }
     Views: Record<string, GenericView>
     Functions: Record<string, GenericFunction>

@@ -14,6 +14,7 @@ import { useDebugMode } from '@/hooks/useDebugMode';
 import React from 'react';
 import { useUser, useSession } from '@clerk/nextjs'
 import { createClient } from '@supabase/supabase-js'
+import { useRouter } from 'next/navigation'
 
 type FormData = {
   name: string
@@ -52,6 +53,7 @@ export default function ComponentForm() {
   const { user } = useUser()
   const { session } = useSession()
   const [step, setStep] = useState(1);
+  const router = useRouter()
 
   const name = watch('name')
   const componentSlug = watch('component_slug')
@@ -423,7 +425,7 @@ export default function ComponentForm() {
 
       const installUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/r/${data.component_slug}`;
       
-      const { error } = await client.from('components').insert({
+      const { data: insertedData, error } = await client.from('components').insert({
         name: data.name,
         component_name: JSON.stringify(componentNames),
         demo_component_name: demoComponentName,
@@ -436,12 +438,16 @@ export default function ComponentForm() {
         dependencies: JSON.stringify(dependencies),
         demo_dependencies: JSON.stringify(parsedDemoDependencies),
         internal_dependencies: JSON.stringify(internalDependencies)
-      })
+      }).select().single()
     
       if (error) throw error
       
       reset()
       alert('Component successfully added!')
+      
+      if (insertedData && user) {
+        router.push(`/${user.username}/${data.component_slug}`)
+      }
     } catch (error) {
       console.error('Error adding component:', error)
       alert('An error occurred while adding the component')
@@ -465,6 +471,49 @@ export default function ComponentForm() {
       .getPublicUrl(fileName);
 
     return publicUrlData.publicUrl;
+  };
+
+  const formatComponentName = (name: string): string => {
+    return name.replace(/([A-Z])/g, ' $1').trim();
+  };
+
+  useEffect(() => {
+    if (step === 2 && parsedComponentNames.length > 0) {
+      const formattedName = formatComponentName(parsedComponentNames[0] || '');
+      setValue('name', formattedName);
+      generateAndSetSlug(formattedName);
+    }
+  }, [step, parsedComponentNames, setValue]);
+
+  const generateAndSetSlug = async (name: string) => {
+    const newSlug = await generateUniqueSlug(name);
+    setValue('component_slug', newSlug);
+    setSlugAvailable(true);
+    setSlugError(null);
+  };
+
+  useEffect(() => {
+    if (componentSlug) {
+      checkSlug();
+    }
+  }, [componentSlug]);
+
+  const checkSlug = async () => {
+    setSlugChecking(true);
+    setSlugError(null);
+
+    if (!isValidSlug(componentSlug)) {
+      setSlugAvailable(false);
+      setSlugError('Invalid slug format');
+    } else {
+      const isUnique = await checkSlugUnique(componentSlug);
+      setSlugAvailable(isUnique);
+      if (!isUnique) {
+        setSlugError('This slug is already taken');
+      }
+    }
+
+    setSlugChecking(false);
   };
 
   return (
@@ -563,11 +612,17 @@ export default function ComponentForm() {
         <>
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
-            <Input id="name" {...register('name', { required: true })} className="mt-1 w-full" />
+            <Input 
+              id="name" 
+              {...register('name', { required: true })} 
+              className="mt-1 w-full" 
+              defaultValue={formatComponentName(parsedComponentNames[0] || '')}
+              onChange={(e) => generateAndSetSlug(e.target.value)}
+            />
           </div>
 
           <div>
-            <label htmlFor="component_slug" className="block text-sm font-medium text-gray-700">Component slug</label>
+            <label htmlFor="component_slug" className="block text-sm font-medium text-gray-700">Slug</label>
             <Input id="component_slug" {...register('component_slug', { required: true, validate: isValidSlug })} className="mt-1 w-full" />
             {slugChecking ? (
               <p className="text-gray-500 text-sm mt-1">Checking availability...</p>
@@ -579,8 +634,8 @@ export default function ComponentForm() {
           </div>
 
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
-            <Input id="description" {...register('description', { required: true })} className="mt-1 w-full" />
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description (optional)</label>
+            <Input id="description" {...register('description')} className="mt-1 w-full" />
           </div>
           
           <div className="flex space-x-2">

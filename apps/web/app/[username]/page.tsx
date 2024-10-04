@@ -10,7 +10,7 @@ export default async function UserProfile({ params }: { params: { username: stri
   const user = await getUserData(params.username);
   
   if (!user) {
-    // Обработка случая, когда пользователь не найден
+    // handle user not found
     return <div>User not found</div>;
   }
 

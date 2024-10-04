@@ -13,7 +13,7 @@ export function ComponentCard({ component }: ComponentCardProps) {
   const previewClass = getPreviewClass(component.size);
   const isPlaceholder = component.preview_url === "/placeholder.svg";
 
-  // Создаем URL с учетом возможного отсутствия user
+  // Create URL with possible absence of user
   const componentUrl = `/${component.user.username}/${component.component_slug}`
 
   return (

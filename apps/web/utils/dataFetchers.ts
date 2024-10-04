@@ -45,7 +45,6 @@ export async function getComponent(username: string, slug: string): Promise<Comp
 
   const { data, error } = await query;
   
-  console.log('Fetched component data:', data); // Добавьте это для отладки
   
   if (error) {
     console.error('Error fetching component:', error);

@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { supabase } from '../utils/supabase'
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
 import * as t from '@babel/types';
@@ -13,7 +12,8 @@ import { Alert } from "@/components/ui/alert"
 import { useAtom, atom } from 'jotai';
 import { useDebugMode } from '@/hooks/useDebugMode';
 import React from 'react';
-import { useUser } from '@clerk/nextjs'
+import { useUser, useSession } from '@clerk/nextjs'
+import { createClient } from '@supabase/supabase-js'
 
 type FormData = {
   name: string
@@ -50,9 +50,37 @@ export default function ComponentForm() {
   const [parsedDemoComponentName, setParsedDemoComponentName] = useAtom(parsedDemoComponentNameAtom)
   const isDebug = useDebugMode();
   const { user } = useUser()
+  const { session } = useSession()
+  const [step, setStep] = useState(1);
 
   const name = watch('name')
   const componentSlug = watch('component_slug')
+
+  function createClerkSupabaseClient() {
+    return createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_KEY!,
+      {
+        global: {
+          fetch: async (url, options = {}) => {
+            const clerkToken = await session?.getToken({
+              template: 'supabase',
+            })
+
+            const headers = new Headers(options?.headers)
+            headers.set('Authorization', `Bearer ${clerkToken}`)
+
+            return fetch(url, {
+              ...options,
+              headers,
+            })
+          },
+        },
+      },
+    )
+  }
+
+  const client = createClerkSupabaseClient()
 
   const generateSlug = (name: string): string => {
     return name
@@ -68,7 +96,7 @@ export default function ComponentForm() {
   };
 
   const checkSlugUnique = async (slug: string): Promise<boolean> => {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('components')
       .select('id')
       .eq('component_slug', slug);
@@ -359,7 +387,7 @@ export default function ComponentForm() {
 
   const onSubmit = async (data: FormData) => {
     if (!slugAvailable || demoCodeError) {
-      alert('Please choose an available and correct slug before submitting.');
+      alert('Please fix errors and try again.');
       return;
     }
 
@@ -395,7 +423,7 @@ export default function ComponentForm() {
 
       const installUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/r/${data.component_slug}`;
       
-      const { error } = await supabase.from('components').insert({
+      const { error } = await client.from('components').insert({
         name: data.name,
         component_name: JSON.stringify(componentNames),
         demo_component_name: demoComponentName,
@@ -413,7 +441,7 @@ export default function ComponentForm() {
       if (error) throw error
       
       reset()
-      alert('Component added successfully!')
+      alert('Component successfully added!')
     } catch (error) {
       console.error('Error adding component:', error)
       alert('An error occurred while adding the component')
@@ -423,7 +451,7 @@ export default function ComponentForm() {
   }
 
   const uploadToStorage = async (fileName: string, content: string) => {
-    const { error } = await supabase.storage
+    const { error } = await client.storage
       .from('components')
       .upload(fileName, content, {
         contentType: 'text/plain',
@@ -432,7 +460,7 @@ export default function ComponentForm() {
 
     if (error) throw error;
 
-    const { data: publicUrlData } = supabase.storage
+    const { data: publicUrlData } = client.storage
       .from('components')
       .getPublicUrl(fileName);
 
@@ -441,112 +469,130 @@ export default function ComponentForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-[300px]">
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
-        <Input id="name" {...register('name', { required: true })} className="mt-1 w-full" />
-      </div>
-
-      <div>
-        <label htmlFor="component_slug" className="block text-sm font-medium text-gray-700">Component Slug</label>
-        <Input id="component_slug" {...register('component_slug', { required: true, validate: isValidSlug })} className="mt-1 w-full" />
-        {slugChecking ? (
-          <p className="text-gray-500 text-sm mt-1">Checking availability...</p>
-        ) : slugError ? (
-          <p className="text-red-500 text-sm mt-1">{slugError}</p>
-        ) : slugAvailable ? (
-          <p className="text-green-500 text-sm mt-1">This slug is available</p>
-        ) : null}
-      </div>
-      
-      <div>
-        <label htmlFor="code" className="block text-sm font-medium text-gray-700">Code</label>
-        <Textarea id="code" {...register('code', { required: true })} className="mt-1 w-full" />
-      </div>
-      
-      <div>
-        <label htmlFor="demo_code" className="block text-sm font-medium text-gray-700">Demo Code (without component import)</label>
-        <Textarea 
-          id="demo_code" 
-          {...register('demo_code', { required: true })} 
-          className={`mt-1 w-full ${demoCodeError ? 'border-yellow-500' : ''}`}
-        />
-        {demoCodeError && (
-          <Alert variant="default" className="mt-2 text-[14px]">
-            <p>{demoCodeError}</p>
-            {importsToRemove.map((importStr, index) => (
-              <div key={index} className="bg-gray-100 p-2 mt-2 rounded flex flex-col">
-                <code className="mb-2">{importStr}</code>
-                <Button onClick={handleApproveDelete} size="sm" className="self-end">Delete</Button>
-              </div>
-            ))}
-          </Alert>
-        )}
-      </div>
-
-      {isDebug && (
+      {step === 1 ? (
         <>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Components Names</label>
+            <label htmlFor="code" className="block text-sm font-medium text-gray-700">Code</label>
+            <Textarea id="code" {...register('code', { required: true })} className="mt-1 w-full" />
+          </div>
+          
+          <div>
+            <label htmlFor="demo_code" className="block text-sm font-medium text-gray-700">Demo code (without component import)</label>
             <Textarea 
-              value={parsedComponentNames.join(', ')}
-              readOnly 
-              className="mt-1 w-full bg-gray-100" 
+              id="demo_code" 
+              {...register('demo_code', { required: true })} 
+              className={`mt-1 w-full ${demoCodeError ? 'border-yellow-500' : ''}`}
             />
+            {demoCodeError && (
+              <Alert variant="default" className="mt-2 text-[14px]">
+                <p>{demoCodeError}</p>
+                {importsToRemove.map((importStr, index) => (
+                  <div key={index} className="bg-gray-100 p-2 mt-2 rounded flex flex-col">
+                    <code className="mb-2">{importStr}</code>
+                    <Button onClick={handleApproveDelete} size="sm" className="self-end">Delete</Button>
+                  </div>
+                ))}
+              </Alert>
+            )}
+          </div>
+
+          {Object.keys(internalDependencies).length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Internal dependencies:</h3>
+              {Object.entries(internalDependencies).map(([path, slug]) => (
+                <div key={path} className="mb-2">
+                  <label className="block text-sm font-medium text-gray-700">{path}</label>
+                  <Input
+                    value={slug}
+                    onChange={(e) => {
+                      setInternalDependencies(prev => ({...prev, [path]: e.target.value}));
+                    }}
+                    placeholder="Enter component slug"
+                    className="mt-1 w-full"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {isDebug && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Component names</label>
+                <Textarea 
+                  value={parsedComponentNames.join(', ')}
+                  readOnly 
+                  className="mt-1 w-full bg-gray-100" 
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Demo component name</label>
+                <Input value={parsedDemoComponentName} readOnly className="mt-1 w-full bg-gray-100" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Component dependencies</label>
+                <Textarea 
+                  value={Object.entries(parsedDependencies).map(([key, value]) => `${key}: ${value}`).join('\n')}
+                  readOnly 
+                  className="mt-1 w-full bg-gray-100" 
+                />
+              </div>
+            
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Demo dependencies</label>
+                <Textarea 
+                  value={Object.entries(parsedDemoDependencies).map(([key, value]) => `${key}: ${value}`).join('\n')}
+                  readOnly 
+                  className="mt-1 w-full bg-gray-100" 
+                />
+              </div>
+            </>
+          )}
+
+          <Button 
+            onClick={() => setStep(2)} 
+            disabled={!watch('code') || !watch('demo_code') || Object.values(internalDependencies).some(slug => !slug)} 
+            className="w-full"
+          >
+            Next
+          </Button>
+        </>
+      ) : (
+        <>
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+            <Input id="name" {...register('name', { required: true })} className="mt-1 w-full" />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Demo Component Name</label>
-            <Input value={parsedDemoComponentName} readOnly className="mt-1 w-full bg-gray-100" />
+            <label htmlFor="component_slug" className="block text-sm font-medium text-gray-700">Component slug</label>
+            <Input id="component_slug" {...register('component_slug', { required: true, validate: isValidSlug })} className="mt-1 w-full" />
+            {slugChecking ? (
+              <p className="text-gray-500 text-sm mt-1">Checking availability...</p>
+            ) : slugError ? (
+              <p className="text-red-500 text-sm mt-1">{slugError}</p>
+            ) : slugAvailable ? (
+              <p className="text-green-500 text-sm mt-1">This slug is available</p>
+            ) : null}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Component Dependencies</label>
-            <Textarea 
-              value={Object.entries(parsedDependencies).map(([key, value]) => `${key}: ${value}`).join('\n')}
-              readOnly 
-              className="mt-1 w-full bg-gray-100" 
-            />
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
+            <Input id="description" {...register('description', { required: true })} className="mt-1 w-full" />
           </div>
-        
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Demo Dependencies</label>
-            <Textarea 
-              value={Object.entries(parsedDemoDependencies).map(([key, value]) => `${key}: ${value}`).join('\n')}
-              readOnly 
-              className="mt-1 w-full bg-gray-100" 
-            />
+          
+          <div className="flex space-x-2">
+            <Button onClick={() => setStep(1)} className="w-1/2">
+              Back
+            </Button>
+            <Button type="submit" disabled={isLoading || !slugAvailable || !!demoCodeError} className="w-1/2">
+              {isLoading ? 'Adding...' : 'Add component'}
+            </Button>
           </div>
         </>
       )}
-
-      <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
-        <Input id="description" {...register('description', { required: true })} className="mt-1 w-full" />
-      </div>
-      
-      {Object.keys(internalDependencies).length > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold mb-2">Internal dependencies:</h3>
-          {Object.entries(internalDependencies).map(([path, slug]) => (
-            <div key={path} className="mb-2">
-              <label className="block text-sm font-medium text-gray-700">{path}</label>
-              <Input
-                value={slug}
-                onChange={(e) => {
-                  setInternalDependencies(prev => ({...prev, [path]: e.target.value}));
-                }}
-                placeholder="Enter component slug"
-                className="mt-1 w-full"
-              />
-            </div>
-          ))}
-        </div>
-      )}
-      
-      
-      <Button type="submit" disabled={isLoading || !slugAvailable || !!demoCodeError} className="w-full">
-        {isLoading ? 'Adding...' : 'Add Component'}
-      </Button>
     </form>
   )
 }

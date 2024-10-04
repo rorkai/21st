@@ -106,7 +106,6 @@ root.render(
   const mainComponentFile = Object.keys(updatedFiles).find(file => file.endsWith(`${componentSlug}.tsx`)) || 
                             Object.keys(updatedFiles)[0];
 
-  // Изменим эту часть
   useEffect(() => {
     if (mainComponentFile) {
       setActiveFile(mainComponentFile);

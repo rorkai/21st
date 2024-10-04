@@ -29,5 +29,5 @@ export interface Component {
   internal_dependencies: any; // jsonb
   preview_url: string;
   size: string;
-  user: User; // Убедитесь, что поле называется 'user'
+  user: User;
 }

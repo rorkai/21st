@@ -20,15 +20,15 @@ export async function POST(req: Request) {
     'svix-signature': headersList.get('svix-signature'),
   };
 
-  // Проверка наличия всех необходимых заголовков
+  // Check if all required headers are present
   if (!heads['svix-id'] || !heads['svix-timestamp'] || !heads['svix-signature']) {
-    console.error('Отсутствуют необходимые заголовки');
-    return NextResponse.json({ error: 'Отсутствуют необходимые заголовки' }, { status: 400 });
+    console.error('Missing required headers');
+    return NextResponse.json({ error: 'Missing required headers' }, { status: 400 });
   }
 
   if (!webhookSecret) {
-    console.error('Отсутствует секрет вебхука');
-    return NextResponse.json({ error: 'Ошибка конфигурации сервера' }, { status: 500 });
+    console.error('Missing webhook secret');
+    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
   }
 
   const wh = new Webhook(webhookSecret);
@@ -37,8 +37,8 @@ export async function POST(req: Request) {
   try {
     evt = wh.verify(payload, heads as WebhookRequiredHeaders) as WebhookEvent;
   } catch (err) {
-    console.error('Ошибка верификации вебхука:', err);
-    return NextResponse.json({ error: 'Неверная подпись вебхука' }, { status: 400 });
+    console.error('Webhook verification error:', err);
+    return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 400 });
   }
 
   const { type, data: user } = evt;
@@ -56,8 +56,8 @@ export async function POST(req: Request) {
       });
 
       if (error) {
-        console.error('Ошибка синхронизации пользователя с Supabase:', error);
-        return NextResponse.json({ error: 'Не удалось синхронизировать пользователя' }, { status: 500 });
+        console.error('User sync error with Supabase:', error);
+        return NextResponse.json({ error: 'Failed to sync user with Supabase' }, { status: 500 });
       }
       break;
 
@@ -69,18 +69,18 @@ export async function POST(req: Request) {
         .match({ id: user.id });
 
       if (deleteError) {
-        console.error('Ошибка удаления пользователя из Supabase:', deleteError);
-        return NextResponse.json({ error: 'Не удалось удалить пользователя' }, { status: 500 });
+        console.error('User deletion error from Supabase:', deleteError);
+        return NextResponse.json({ error: 'Failed to delete user from Supabase' }, { status: 500 });
       }
       break;
 
     default:
-      console.warn('Неизвестный тип события:', type);
+      console.warn('Unknown event type:', type);
   }
 
-  return NextResponse.json({ message: 'Вебхук успешно обработан' });
+  return NextResponse.json({ message: 'Webhook processed successfully' });
 }
 
 export async function GET() {
-  return NextResponse.json({ message: 'Конечная точка вебхука Clerk' });
+  return NextResponse.json({ message: 'Clerk webhook endpoint' });
 }

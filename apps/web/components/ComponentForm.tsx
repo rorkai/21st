@@ -49,6 +49,7 @@ import { highlight, languages } from 'prismjs';
 import 'prismjs/components/prism-typescript';
 import 'prismjs/components/prism-jsx';
 import 'prismjs/themes/prism.css';
+import Image from "next/image";
 
 
 const formSchema = z.object({
@@ -71,6 +72,7 @@ const formSchema = z.object({
     slug: z.string(),
   })).optional().default([]),
   is_public: z.boolean().default(true),
+  preview_url: z.instanceof(File).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -304,6 +306,42 @@ export default function ComponentForm() {
     return valid;
   }, [form, demoCodeError, internalDependencies, slugAvailable, isSlugManuallyEdited]);
 
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  const uploadPreviewImage = async (file: File): Promise<string> => {
+    const fileExtension = file.name.split('.').pop();
+    const fileName = `${componentSlug}-preview-${Date.now()}.${fileExtension}`;
+    const { error } = await client.storage
+      .from("components")
+      .upload(fileName, file, { upsert: true });
+
+    if (error) throw error;
+
+    const { data } = client.storage
+      .from("components")
+      .getPublicUrl(fileName);
+
+    return data.publicUrl;
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("File is too large. Maximum size is 5 MB.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreviewImage(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      form.setValue("preview_url", file);
+    }
+  };
+
   const onSubmit = async (data: FormData) => {
     console.log("onSubmit called with data:", data);
     
@@ -346,6 +384,11 @@ export default function ComponentForm() {
 
       const installUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/r/${data.component_slug}`;
 
+      let previewImageUrl = "";
+      if (data.preview_url) {
+        previewImageUrl = await uploadPreviewImage(data.preview_url);
+      }
+
       const { data: insertedData, error } = await client
         .from("components")
         .insert({
@@ -362,6 +405,7 @@ export default function ComponentForm() {
           demo_dependencies: JSON.stringify(parsedDemoDependencies),
           internal_dependencies: JSON.stringify(internalDependencies),
           is_public: data.is_public,
+          preview_url: previewImageUrl,
         })
         .select()
         .single();
@@ -377,7 +421,11 @@ export default function ComponentForm() {
       }
     } catch (error) {
       console.error("Error adding component:", error);
-      alert("An error occurred while adding the component: " + (error as Error).message);
+      let errorMessage = "An error occurred while adding the component";
+      if (error instanceof Error) {
+        errorMessage += ": " + error.message;
+      }
+      alert(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -569,15 +617,6 @@ useEffect(() => {
     }
   }, [isFormValid, onSubmit, form]);
 
-  const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      if (isConfirmDialogOpen && isFormValid()) {
-        handleSubmit(event);
-      }
-    }
-  }, [isConfirmDialogOpen, isFormValid, handleSubmit]);
-
   return (
     <>
       <Form {...form}>
@@ -767,7 +806,7 @@ useEffect(() => {
       </Form>
 
       <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]" onKeyDown={handleKeyDown}>
+        <DialogContent className="sm:max-w-[425px]" >
           <DialogHeader>
             <DialogTitle>Confirm Component Details</DialogTitle>
             <DialogDescription>
@@ -914,6 +953,30 @@ useEffect(() => {
                 ? "This component will be visible to everyone"
                 : "This component will be visible only to you"}
             </Label>
+
+            <div className="w-full">
+              <Label htmlFor="preview_image" className="block text-sm font-medium text-gray-700">
+                Preview image (recommended resolution: 1200x900 or higher)
+              </Label>
+              <Input
+                id="preview_image"
+                type="file"
+                accept="image/png,image/jpeg,image/gif"
+                onChange={handleFileChange}
+                className="mt-1 w-full"
+              />
+              {previewImage && (
+                <div className="mt-2">
+                  <Image
+                    src={previewImage}
+                    alt="Preview"
+                    width={300}
+                    height={225}
+                    className="rounded-md"
+                  />
+                </div>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button onClick={() => setIsConfirmDialogOpen(false)} variant="outline">

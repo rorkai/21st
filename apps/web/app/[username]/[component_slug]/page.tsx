@@ -4,7 +4,7 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import { getComponent } from '@/utils/dataFetchers';
 
-export default async function ComponentPage({ params }: { params: { username: string, component_slug: string } }) {
+export default async function ComponentPage({ params }: { params: { username: string; component_slug: string } }) {
   const { username, component_slug } = params;
   
   console.log('ComponentPage called with params:', params);

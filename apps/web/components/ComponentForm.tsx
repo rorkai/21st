@@ -41,20 +41,21 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useValidTags } from '@/hooks/useValidateTags';
 
-// Определение схемы формы с использованием Zod
+
 const formSchema = z.object({
   name: z.string().min(2, {
-    message: "Название должно содержать не менее 2 символов.",
+    message: "Name must be at least 2 characters.",
   }),
   component_slug: z.string().min(2, {
-    message: "Слаг должен содержать не менее 2 символов.",
+    message: "Slug must be at least 2 characters.",
   }),
   code: z.string().min(1, {
-    message: "Код компонента обязателен.",
+    message: "Component code is required.",
   }),
   demo_code: z.string().min(1, {
-    message: "Демо-код обязателен.",
+    message: "Demo code is required.",
   }),
   description: z.string().optional(),
   tags: z.array(z.object({
@@ -274,6 +275,8 @@ export default function ComponentForm() {
     }
   };
 
+  const { data: validTags, isLoading: isValidatingTags } = useValidTags(form.watch("tags"));
+
   const onSubmit = async (data: FormData) => {
     if (!slugAvailable || demoCodeError) {
       alert("Please fix errors and try again.");
@@ -337,11 +340,11 @@ export default function ComponentForm() {
       if (error) throw error;
 
       if (insertedData) {
-        await addTagsToComponent(insertedData.id, data.tags.filter((tag): tag is Tag => tag.id !== undefined));
+        await addTagsToComponent(insertedData.id, validTags || []);
 
         setNewComponentSlug(data.component_slug);
-        setIsConfirmDialogOpen(false);  // Закрываем диалог подтверждения
-        setIsSuccessDialogOpen(true);   // Открываем диалог успеха
+        setIsConfirmDialogOpen(false);  
+        setIsSuccessDialogOpen(true);  
       }
     } catch (error) {
       console.error("Error adding component:", error);
@@ -501,8 +504,8 @@ useEffect(() => {
       files,
       dependencies,
     });
-  }
-}, [codeMemoized, demoCodeMemoized, internalDependencies, isConfirmDialogOpen]);
+    }
+  }, [codeMemoized, demoCodeMemoized, internalDependencies, isConfirmDialogOpen]);
 
   return (
     <>
@@ -515,7 +518,7 @@ useEffect(() => {
                 name="code"
                 render={({ field }) => (
                   <FormItem className="w-full">
-                    <FormLabel>Код</FormLabel>
+                    <FormLabel>Code</FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
@@ -532,7 +535,7 @@ useEffect(() => {
                 name="demo_code"
                 render={({ field }) => (
                   <FormItem className="w-full">
-                    <FormLabel>Демо-код (без импорта компонента)</FormLabel>
+                    <FormLabel>Demo Code</FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
@@ -554,7 +557,7 @@ useEffect(() => {
                               size="sm"
                               className="self-end"
                             >
-                              Удалить
+                              Delete
                             </Button>
                           </div>
                         ))}
@@ -651,12 +654,12 @@ useEffect(() => {
                 }
                 className="w-full max-w-[150px] mr-auto"
               >
-                Далее
+                Next
               </Button>
             </div>
             {previewProps && Object.keys(internalDependencies).length === 0 && (
               <div className="w-1/2">
-                <h3 className="block text-sm font-medium text-gray-700 mb-1">Предпросмотр компонента</h3>
+                <h3 className="block text-sm font-medium text-gray-700 mb-1">Component Preview</h3>
                 <Preview {...previewProps} />
               </div>
             )}
@@ -667,9 +670,9 @@ useEffect(() => {
       <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Подтвердите детали компонента</DialogTitle>
+            <DialogTitle>Confirm Component Details</DialogTitle>
             <DialogDescription>
-              Пожалуйста, проверьте и подтвердите детали вашего компонента.
+              Please check and confirm the details of your component.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
@@ -678,7 +681,7 @@ useEffect(() => {
                 htmlFor="name"
                 className="block text-sm font-medium text-gray-700"
               >
-                Название
+                Name
               </label>
               <Input
                 id="name"
@@ -696,7 +699,7 @@ useEffect(() => {
                 htmlFor="component_slug"
                 className="block text-sm font-medium text-gray-700"
               >
-                Слаг
+                Slug
               </label>
               <Input
                 id="component_slug"
@@ -709,13 +712,13 @@ useEffect(() => {
               />
               {slugChecking ? (
                 <p className="text-gray-500 text-sm mt-1">
-                  Проверка доступности...
+                  Checking availability...
                 </p>
               ) : slugError ? (
                 <p className="text-red-500 text-sm mt-1">{slugError}</p>
               ) : slugAvailable ? (
                 <p className="text-green-500 text-sm mt-1">
-                  Этот слаг доступен
+                  This slug is available
                 </p>
               ) : null}
             </div>
@@ -725,7 +728,7 @@ useEffect(() => {
                 htmlFor="description"
                 className="block text-sm font-medium text-gray-700"
               >
-                Описание (необязательно)
+                Description (optional)
               </label>
               <Input
                 id="description"
@@ -740,7 +743,7 @@ useEffect(() => {
                 htmlFor="tags"
                 className="block text-sm font-medium text-gray-700"
               >
-                Теги
+                Tags
               </label>
               <Controller
                 name="tags"
@@ -764,9 +767,9 @@ useEffect(() => {
                       isMulti
                       options={selectOptions}
                       className="mt-1 w-full rounded-md border border-input bg-transparent text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                      placeholder="Выберите или создайте теги"
+                      placeholder="Select or create tags"
                       formatCreateLabel={(inputValue: string) =>
-                        `Создать "${inputValue}"`
+                        `Create "${inputValue}"`
                       }
                       onChange={(newValue) => {
                         const formattedValue = newValue.map((item: any) => ({
@@ -793,13 +796,13 @@ useEffect(() => {
           </div>
           <DialogFooter>
             <Button onClick={() => setIsConfirmDialogOpen(false)} variant="outline">
-              Назад
+              Back
             </Button>
             <Button
               onClick={form.handleSubmit(onSubmit)}
               disabled={isLoading || !slugAvailable || !!demoCodeError}
             >
-              {isLoading ? "Добавление..." : "Добавить компонент"}
+              {isLoading ? "Adding..." : "Add component"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -810,7 +813,7 @@ useEffect(() => {
           <DialogHeader>
             <DialogTitle>Component Added Successfully</DialogTitle>
             <DialogDescription className="break-words">
-              Your new component has been successfully added. What would you
+                Your new component has been successfully added. What would you
               like to do next?
             </DialogDescription>
           </DialogHeader>

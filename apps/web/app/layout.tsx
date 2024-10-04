@@ -1,7 +1,8 @@
+// app/layout.tsx
 import type { Metadata } from "next";
-import { ClerkProvider } from '@clerk/nextjs'
 import localFont from "next/font/local";
 import "./globals.css";
+import { Providers } from "./providers";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -20,14 +21,17 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} px-4 h-full`}>
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} px-4 h-full`}
+    >
       <body>
-        <ClerkProvider>
+        <Providers>
           {children}
-        </ClerkProvider>
+        </Providers>
       </body>
     </html>
   );

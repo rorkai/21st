@@ -1,5 +1,6 @@
 import { supabase } from '@/utils/supabase';
 import { Component, Tag, User } from '@/types/types';
+import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 
 const userFields = `
   id,
@@ -16,27 +17,9 @@ const componentFields = `
   user:users!user_id (${userFields})
 `;
 
-async function fetchComponents(
-  query: any
-): Promise<Component[] | null> {
-  try {
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Error fetching components:', error);
-      return null;
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Error in fetchComponents:', error);
-    return null;
-  }
-}
-
 export async function getComponent(username: string, slug: string): Promise<Component | null> {
   console.log('getComponent called with username:', username, 'and slug:', slug);
-  const query = supabase
+  const { data, error } = await supabase
     .from('components')
     .select(`
       ${componentFields},
@@ -45,20 +28,24 @@ export async function getComponent(username: string, slug: string): Promise<Comp
     .eq('component_slug', slug)
     .eq('user.username', username)
     .single();
-
-  const { data, error } = await query;
   
   if (error) {
     console.error('Error fetching component:', error);
     return null;
   }
 
-  // Преобразуем структуру тегов
   if (data && data.tags) {
     data.tags = data.tags.map((tag: any) => tag.tags);
   }
 
   return data;
+}
+
+export function useComponent(username: string, slug: string) {
+  return useQuery<Component | null, Error>({
+    queryKey: ['component', username, slug],
+    queryFn: () => getComponent(username, slug)
+  });
 }
 
 export async function getUserData(username: string): Promise<User | null> {
@@ -74,9 +61,6 @@ export async function getUserData(username: string): Promise<User | null> {
       return null;
     }
 
-    if ('error' in data) {
-      throw new Error('Failed to fetch user');
-    }
     return data;
   } catch (error) {
     console.error('Error in getUserData:', error);
@@ -84,22 +68,51 @@ export async function getUserData(username: string): Promise<User | null> {
   }
 }
 
+// Хук useUserData для клиентских компонентов
+export function useUserData(username: string) {
+  return useQuery<User | null, Error>({
+    queryKey: ['user', username],
+    queryFn: () => getUserData(username)
+  });
+}
+
 export async function getUserComponents(userId: string): Promise<Component[] | null> {
-  const query = supabase
+  const { data, error } = await supabase
     .from('components')
     .select(componentFields)
     .eq('user_id', userId);
 
-  return await fetchComponents(query);
+  if (error) {
+    console.error('Error fetching user components:', error);
+    return null;
+  }
+
+  return data;
+}
+
+export function useUserComponents(userId: string) {
+  return useQuery<Component[] | null, Error>({
+    queryKey: ['userComponents', userId],
+    queryFn: () => getUserComponents(userId)
+  });
 }
 
 export async function getComponents(): Promise<Component[]> {
-  const query = supabase.from('components').select(componentFields);
-  const components = await fetchComponents(query);
-  if (components === null) {
+  const { data, error } = await supabase.from('components').select(componentFields);
+
+  if (error) {
+    console.error('Error fetching components:', error);
     return [];
   }
-  return components;
+
+  return data || [];
+}
+
+export function useComponents() {
+  return useQuery<Component[], Error>({
+    queryKey: ['components'],
+    queryFn: getComponents
+  });
 }
 
 export async function getComponentTags(componentId: string): Promise<Tag[] | null> {
@@ -114,4 +127,11 @@ export async function getComponentTags(componentId: string): Promise<Tag[] | nul
   }
 
   return data.map((item: any) => item.tags);
+}
+
+export function useComponentTags(componentId: string) {
+  return useQuery<Tag[] | null, Error>({
+    queryKey: ['componentTags', componentId],
+    queryFn: () => getComponentTags(componentId)
+  });
 }

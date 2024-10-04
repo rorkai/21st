@@ -49,7 +49,7 @@ button.sp-icon-standalone.sp-button {
   height: 100% !important;
   width: 100% !important;
   min-height: 700px;
-  min-width: 50vw !important;
+  min-width: 40vw !important;
   flex-grow: 1;
 }
 

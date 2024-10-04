@@ -373,7 +373,7 @@ export default function ComponentForm() {
     }, []);
   
     if (!isComponentsLoaded) {
-      return <div>Загрузка превью...</div>;
+      return <div>Loading preview...</div>;
     }
   
     const providerProps = {
@@ -394,7 +394,7 @@ export default function ComponentForm() {
     };
   
     return (
-      <div className="h-[300px] w-full bg-[#FAFAFA] rounded-lg overflow-hidden">
+      <div className="w-full bg-[#FAFAFA] rounded-lg">
         <SandpackProviderUnstyled {...providerProps}>
           <ComponentPreview />
         </SandpackProviderUnstyled>
@@ -470,158 +470,162 @@ useEffect(() => {
     <>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="space-y-4 max-w-[300px]"
+        className="flex w-full h-full items-center justify-center"
       >
         {step === 1 ? (
-          <>
-            <div>
-              <label
-                htmlFor="code"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Code
-              </label>
-              <Textarea
-                id="code"
-                {...register("code", { required: true })}
-                className="mt-1 w-full"
-              />
-            </div>
+          <div className="flex gap-10 items-start h-full w-full mt-2">
+            <div className="flex flex-col w-1/2 h-full items-start gap-7 pb-10">
+              
+              <div className="w-full">
+                <label
+                  htmlFor="code"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Code
+                </label>
+                <Textarea
+                  id="code"
+                  {...register("code", { required: true })}
+                  className="mt-1 w-full h-[calc(100vh/3)] min-h-[100px]"
+                />
+              </div>
 
-            <div>
-              <label
-                htmlFor="demo_code"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Demo code (without component import)
-              </label>
-              <Textarea
-                id="demo_code"
-                {...register("demo_code", { required: true })}
-                className={`mt-1 w-full ${demoCodeError ? "border-yellow-500" : ""}`}
-              />
-              {demoCodeError && (
-                <Alert variant="default" className="mt-2 text-[14px]">
-                  <p>{demoCodeError}</p>
-                  {importsToRemove.map((importStr, index) => (
-                    <div
-                      key={index}
-                      className="bg-gray-100 p-2 mt-2 rounded flex flex-col"
-                    >
-                      <code className="mb-2">{importStr}</code>
-                      <Button
-                        onClick={handleApproveDelete}
-                        size="sm"
-                        className="self-end"
+              <div className="w-full">
+                <label
+                  htmlFor="demo_code"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Demo code (without component import)
+                </label>
+                <Textarea
+                  id="demo_code"
+                  {...register("demo_code", { required: true })}
+                  className={`mt-1 w-full h-[calc(100vh/3)] min-h-[100px] ${demoCodeError ? "border-yellow-500" : ""}`}
+                />
+                {demoCodeError && (
+                  <Alert variant="default" className="mt-2 text-[14px] w-full">
+                    <p>{demoCodeError}</p>
+                    {importsToRemove.map((importStr, index) => (
+                      <div
+                        key={index}
+                        className="bg-gray-100 p-2 mt-2 rounded flex flex-col w-full"
                       >
-                        Delete
-                      </Button>
+                        <code className="mb-2">{importStr}</code>
+                        <Button
+                          onClick={handleApproveDelete}
+                          size="sm"
+                          className="self-end"
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    ))}
+                  </Alert>
+                )}
+              </div>
+
+              {Object.keys(internalDependencies).length > 0 && (
+                <div className="w-full">
+                  <h3 className="text-lg font-semibold mb-2">
+                    Internal dependencies
+                  </h3>
+                  {Object.entries(internalDependencies).map(([path, slug]) => (
+                    <div key={path} className="mb-2 w-full">
+                      <label className="block text-sm font-medium text-gray-700">
+                        {path}
+                      </label>
+                      <Input
+                        value={slug}
+                        onChange={(e) => {
+                          setInternalDependencies((prev) => ({
+                            ...prev,
+                            [path]: e.target.value,
+                          }));
+                        }}
+                        placeholder="Enter component slug"
+                        className="mt-1 w-full"
+                      />
                     </div>
                   ))}
-                </Alert>
+                </div>
               )}
-            </div>
 
-            {Object.keys(internalDependencies).length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold mb-2">
-                  Internal dependencies
-                </h3>
-                {Object.entries(internalDependencies).map(([path, slug]) => (
-                  <div key={path} className="mb-2">
+              {isDebug && (
+                <>
+                  <div className="w-full">
                     <label className="block text-sm font-medium text-gray-700">
-                      {path}
+                      Component names
                     </label>
-                    <Input
-                      value={slug}
-                      onChange={(e) => {
-                        setInternalDependencies((prev) => ({
-                          ...prev,
-                          [path]: e.target.value,
-                        }));
-                      }}
-                      placeholder="Enter component slug"
-                      className="mt-1 w-full"
+                    <Textarea
+                      value={parsedComponentNames.join(", ")}
+                      readOnly
+                      className="mt-1 w-full bg-gray-100"
                     />
                   </div>
-                ))}
+
+                  <div className="w-full">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Demo component name
+                    </label>
+                    <Input
+                      value={parsedDemoComponentName}
+                      readOnly
+                      className="mt-1 w-full bg-gray-100"
+                    />
+                  </div>
+
+                  <div className="w-full">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Component dependencies
+                    </label>
+                    <Textarea
+                      value={Object.entries(parsedDependencies)
+                        .map(([key, value]) => `${key}: ${value}`)
+                        .join("\n")}
+                      readOnly
+                      className="mt-1 w-full bg-gray-100"
+                    />
+                  </div>
+
+                  <div className="w-full">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Demo dependencies
+                    </label>
+                    <Textarea
+                      value={Object.entries(parsedDemoDependencies)
+                        .map(([key, value]) => `${key}: ${value}`)
+                        .join("\n")}
+                      readOnly
+                      className="mt-1 w-full bg-gray-100"
+                    />
+                  </div>
+                </>
+              )}
+
+              
+
+              <Button
+                onClick={() => setStep(2)}
+                disabled={
+                  !watch("code") ||
+                  !watch("demo_code") ||
+                  Object.values(internalDependencies).some((slug) => !slug)
+                }
+                className="w-full max-w-[150px] mr-auto"
+              >
+                Next
+              </Button>
+            </div>
+            {previewProps && Object.keys(internalDependencies).length === 0 && (
+              <div className="w-1/2">
+                <h3 className="block text-sm font-medium text-gray-700 mb-1">Component preview</h3>
+                <Preview {...previewProps} />
               </div>
             )}
-
-          {previewProps && Object.keys(internalDependencies).length === 0 && (
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Превью компонента</h3>
-              <Preview {...previewProps} />
-            </div>
-          )}
-
-            {isDebug && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Component names
-                  </label>
-                  <Textarea
-                    value={parsedComponentNames.join(", ")}
-                    readOnly
-                    className="mt-1 w-full bg-gray-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Demo component name
-                  </label>
-                  <Input
-                    value={parsedDemoComponentName}
-                    readOnly
-                    className="mt-1 w-full bg-gray-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Component dependencies
-                  </label>
-                  <Textarea
-                    value={Object.entries(parsedDependencies)
-                      .map(([key, value]) => `${key}: ${value}`)
-                      .join("\n")}
-                    readOnly
-                    className="mt-1 w-full bg-gray-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Demo dependencies
-                  </label>
-                  <Textarea
-                    value={Object.entries(parsedDemoDependencies)
-                      .map(([key, value]) => `${key}: ${value}`)
-                      .join("\n")}
-                    readOnly
-                    className="mt-1 w-full bg-gray-100"
-                  />
-                </div>
-              </>
-            )}
-
-            <Button
-              onClick={() => setStep(2)}
-              disabled={
-                !watch("code") ||
-                !watch("demo_code") ||
-                Object.values(internalDependencies).some((slug) => !slug)
-              }
-              className="w-full"
-            >
-              Next
-            </Button>
-          </>
+          </div>
         ) : (
-          <>
-            <div>
+          <div className="flex flex-col w-full h-full items-center max-w-[400px] justify-center gap-4 mt-10">
+            <div className="w-full">
               <label
                 htmlFor="name"
                 className="block text-sm font-medium text-gray-700"
@@ -639,7 +643,7 @@ useEffect(() => {
               />
             </div>
 
-            <div>
+            <div className="w-full">
               <label
                 htmlFor="component_slug"
                 className="block text-sm font-medium text-gray-700"
@@ -667,7 +671,7 @@ useEffect(() => {
               ) : null}
             </div>
 
-            <div>
+            <div className="w-full">
               <label
                 htmlFor="description"
                 className="block text-sm font-medium text-gray-700"
@@ -681,7 +685,7 @@ useEffect(() => {
               />
             </div>
 
-            <div>
+            <div className="w-full">
               <label
                 htmlFor="tags"
                 className="block text-sm font-medium text-gray-700"
@@ -734,19 +738,19 @@ useEffect(() => {
               />
             </div>
 
-            <div className="flex space-x-2">
-              <Button onClick={() => setStep(1)} className="w-1/2">
+            <div className="flex space-x-2 w-full justify-between">
+              <Button onClick={() => setStep(1)} variant="outline" className="w-1/4">
                 Back
               </Button>
               <Button
                 type="submit"
                 disabled={isLoading || !slugAvailable || !!demoCodeError}
-                className="w-1/2"
+                className="w-1/3"
               >
                 {isLoading ? "Adding..." : "Add component"}
               </Button>
             </div>
-          </>
+          </div>
         )}
       </form>
 

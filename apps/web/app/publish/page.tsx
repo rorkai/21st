@@ -23,12 +23,11 @@ export default function PublishPage() {
 
   return (
     <>
-      <Header />
+    <header className="flex items-center text-[17px] font-semibold justify-between border-b border-gray-200 p-4 -mx-4">
+    Publish new component
+    </header>
       <SignedIn>
-        <div className="container mx-auto p-4 flex flex-col items-center justify-center h-screen">
-          <h1 className="text-2xl font-bold mb-4">
-            Publish new component
-          </h1>
+        <div className=" flex flex-col items-center gap-7 h-full w-full">
           <ComponentForm />
         </div>
       </SignedIn>

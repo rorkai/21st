@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useAtom } from 'jotai';
 import { atom } from 'jotai';
 import { useClerkSupabaseClient } from "@/utils/clerk";

@@ -1,6 +1,6 @@
 import { Header } from '../components/Header';
 import React from 'react';
-import { ComponentBento } from '../components/ComponentBento';
+import { ComponentsList } from '../components/ComponentsList';
 import { getComponents } from '@/utils/dataFetchers';
 import { Metadata } from 'next';
 
@@ -15,7 +15,7 @@ export default async function HomePage() {
     <>
       <Header />
       <div className="container mx-auto mt-7">
-        <ComponentBento components={components || []} />
+        <ComponentsList components={components || []} />
       </div>
     </>
   );

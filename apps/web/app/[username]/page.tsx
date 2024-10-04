@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import React from 'react';
-import { ComponentBento } from '@/components/ComponentBento';
+import { ComponentsList } from '@/components/ComponentsList';
 import { Header } from '@/components/Header';
 import { getUserData, getUserComponents } from '@/utils/dataFetchers';
 import { UserAvatar } from '@/components/UserAvatar';
@@ -34,7 +34,7 @@ export default async function UserProfile({ params }: { params: { username: stri
             </div>
           </div>
           <div className="w-full md:w-[70%]">
-            <ComponentBento components={components || []} />
+            <ComponentsList components={components || []} />
           </div>
         </div>
       </div>

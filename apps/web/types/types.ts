@@ -34,6 +34,7 @@ export interface Component {
 }
 
 export interface Tag {
+  id: number;
   name: string;
   slug: string;
 }

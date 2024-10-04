@@ -1,5 +1,5 @@
 import { supabase } from '@/utils/supabase';
-import { Component, User } from '@/types/types';
+import { Component, Tag, User } from '@/types/types';
 
 const userFields = `
   id,

@@ -4,6 +4,13 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import { getComponent } from '@/utils/dataFetchers';
 
+export const generateMetadata = async ({ params }: { params: { username: string; component_slug: string } }) => {
+  const component = await getComponent(params.username, params.component_slug);
+  return {
+    title: component ? `${component.name} | Component` : 'Component Not Found',
+  };
+};
+
 export default async function ComponentPage({ params }: { params: { username: string; component_slug: string } }) {
   const { username, component_slug } = params;
   

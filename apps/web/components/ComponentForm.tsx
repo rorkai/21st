@@ -909,7 +909,11 @@ useEffect(() => {
               <Label htmlFor="is_public">Public component</Label>
             
             </div>
-            <Label htmlFor="is_public">This component will be visible to everyone</Label>
+            <Label htmlFor="is_public">
+              {form.watch("is_public")
+                ? "This component will be visible to everyone"
+                : "This component will be visible only to you"}
+            </Label>
           </div>
           <DialogFooter>
             <Button onClick={() => setIsConfirmDialogOpen(false)} variant="outline">

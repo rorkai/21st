@@ -42,6 +42,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useValidTags } from '@/hooks/useValidateTags';
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 
 
 const formSchema = z.object({
@@ -62,7 +64,8 @@ const formSchema = z.object({
     id: z.number().optional(),
     name: z.string(),
     slug: z.string(),
-  })),
+  })).optional().default([]),
+  is_public: z.boolean().default(true),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -94,6 +97,7 @@ export default function ComponentForm() {
       demo_code: "",
       description: "",
       tags: [],
+      is_public: true,
     },
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -135,11 +139,14 @@ export default function ComponentForm() {
   const name = form.watch("name");
   const componentSlug = form.watch("component_slug");
 
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
+
   useEffect(() => {
     const updateSlug = async () => {
       if (name && !componentSlug) {
         const newSlug = await generateUniqueSlug(name);
         form.setValue("component_slug", newSlug);
+        setIsSlugManuallyEdited(false);
       }
     };
 
@@ -147,13 +154,13 @@ export default function ComponentForm() {
   }, [name, componentSlug, form.setValue, generateUniqueSlug]);
 
   useEffect(() => {
-    if (componentSlug) {
+    if (componentSlug && isSlugManuallyEdited) {
       const timer = setTimeout(() => {
         checkSlug(componentSlug);
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [componentSlug, checkSlug]);
+  }, [componentSlug, checkSlug, isSlugManuallyEdited]);
 
   const code = form.watch("code");
   const demoCode = form.watch("demo_code");
@@ -277,34 +284,58 @@ export default function ComponentForm() {
 
   const { data: validTags, isLoading: isValidatingTags } = useValidTags(form.watch("tags"));
 
+  const isFormValid = useCallback(() => {
+    const { name, component_slug, code, demo_code } = form.getValues();
+    const valid = (
+      name.length >= 2 &&
+      component_slug.length >= 2 &&
+      code.length > 0 &&
+      demo_code.length > 0 &&
+      !demoCodeError &&
+      Object.values(internalDependencies).every((slug) => slug) &&
+      (slugAvailable || !isSlugManuallyEdited)
+    );
+    console.log('Form validity:', valid, {
+      name: name.length >= 2,
+      component_slug: component_slug.length >= 2,
+      code: code.length > 0,
+      demo_code: demo_code.length > 0,
+      demoCodeError: !demoCodeError,
+      internalDependencies: Object.values(internalDependencies).every((slug) => slug),
+      slugAvailable: slugAvailable || !isSlugManuallyEdited
+    });
+    return valid;
+  }, [form, demoCodeError, internalDependencies, slugAvailable, isSlugManuallyEdited]);
+
   const onSubmit = async (data: FormData) => {
-    if (!slugAvailable || demoCodeError) {
-      alert("Please fix errors and try again.");
+    console.log("onSubmit called with data:", data);
+    
+    if (!slugAvailable && isSlugManuallyEdited) {
+      console.error("Slug is not available");
+      alert("The chosen slug is not available. Please choose a different one.");
+      return;
+    }
+
+    if (demoCodeError) {
+      console.error("Demo code error:", demoCodeError);
+      alert("There's an error in the demo code. Please fix it before submitting.");
       return;
     }
 
     if (Object.values(internalDependencies).some((slug) => !slug)) {
+      console.error("Internal dependencies not specified");
       alert("Please specify the slug for all internal dependencies");
       return;
     }
 
-    let modifiedCode = data.code;
-    let modifiedDemoCode = data.demo_code;
-    Object.entries(internalDependencies).forEach(([path, slug]) => {
-      const regex = new RegExp(`from\\s+["']${path}["']`, "g");
-      const replacement = `from "@/components/${slug}"`;
-      modifiedCode = modifiedCode.replace(regex, replacement);
-      modifiedDemoCode = modifiedDemoCode.replace(regex, replacement);
-    });
-
     setIsLoading(true);
     try {
-      const componentNames = extractComponentNames(modifiedCode);
-      const demoComponentName = extractDemoComponentName(modifiedDemoCode);
-      const dependencies = parseDependencies(modifiedCode);
+      const componentNames = extractComponentNames(data.code);
+      const demoComponentName = extractDemoComponentName(data.demo_code);
+      const dependencies = parseDependencies(data.code);
 
       const cleanedDemoCode = removeComponentImports(
-        modifiedDemoCode,
+        data.demo_code,
         componentNames
       ).modifiedCode;
 
@@ -312,7 +343,7 @@ export default function ComponentForm() {
       const demoCodeFileName = `${data.component_slug}-demo.tsx`;
 
       const [codeUrl, demoCodeUrl] = await Promise.all([
-        uploadToStorage(codeFileName, modifiedCode),
+        uploadToStorage(codeFileName, data.code),
         uploadToStorage(demoCodeFileName, cleanedDemoCode),
       ]);
 
@@ -333,6 +364,7 @@ export default function ComponentForm() {
           dependencies: JSON.stringify(dependencies),
           demo_dependencies: JSON.stringify(parsedDemoDependencies),
           internal_dependencies: JSON.stringify(internalDependencies),
+          is_public: data.is_public,
         })
         .select()
         .single();
@@ -348,7 +380,7 @@ export default function ComponentForm() {
       }
     } catch (error) {
       console.error("Error adding component:", error);
-      alert("An error occurred while adding the component");
+      alert("An error occurred while adding the component: " + (error as Error).message);
     } finally {
       setIsLoading(false);
     }
@@ -507,10 +539,32 @@ useEffect(() => {
     }
   }, [codeMemoized, demoCodeMemoized, internalDependencies, isConfirmDialogOpen]);
 
+  const handleSubmit = useCallback((event: React.FormEvent) => {
+    event.preventDefault();
+    console.log("handleSubmit called, form validity:", isFormValid());
+    if (isFormValid()) {
+      const formData = form.getValues();
+      console.log("Form data:", formData);
+      onSubmit(formData);
+    } else {
+      console.error("Form is not valid");
+      alert("Please fill in all required fields correctly before submitting.");
+    }
+  }, [isFormValid, onSubmit, form]);
+
+  const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      if (isConfirmDialogOpen && isFormValid()) {
+        handleSubmit(event);
+      }
+    }
+  }, [isConfirmDialogOpen, isFormValid, handleSubmit]);
+
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex w-full h-full items-center justify-center">
+        <form onSubmit={(e) => e.preventDefault()} className="flex w-full h-full items-center justify-center">
           <div className="flex gap-10 items-start h-full w-full mt-2">
             <div className="flex flex-col w-1/2 h-full items-start gap-7 pb-10">
               <FormField
@@ -668,7 +722,7 @@ useEffect(() => {
       </Form>
 
       <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px]" onKeyDown={handleKeyDown}>
           <DialogHeader>
             <DialogTitle>Confirm Component Details</DialogTitle>
             <DialogDescription>
@@ -708,19 +762,26 @@ useEffect(() => {
                   validate: isValidSlug,
                 })}
                 className="mt-1 w-full"
-                onChange={(e) => checkSlug(e.target.value)}
+                onChange={(e) => {
+                  setIsSlugManuallyEdited(true);
+                  checkSlug(e.target.value);
+                }}
               />
-              {slugChecking ? (
-                <p className="text-gray-500 text-sm mt-1">
-                  Checking availability...
-                </p>
-              ) : slugError ? (
-                <p className="text-red-500 text-sm mt-1">{slugError}</p>
-              ) : slugAvailable ? (
-                <p className="text-green-500 text-sm mt-1">
-                  This slug is available
-                </p>
-              ) : null}
+              {isSlugManuallyEdited && (
+                <>
+                  {slugChecking ? (
+                    <p className="text-gray-500 text-sm mt-1">
+                      Checking availability...
+                    </p>
+                  ) : slugError ? (
+                    <p className="text-red-500 text-sm mt-1">{slugError}</p>
+                  ) : slugAvailable ? (
+                    <p className="text-green-500 text-sm mt-1">
+                      This slug is available
+                    </p>
+                  ) : null}
+                </>
+              )}
             </div>
 
             <div className="w-full">
@@ -793,14 +854,25 @@ useEffect(() => {
                 }}
               />
             </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="is_public"
+                checked={form.watch("is_public")}
+                onCheckedChange={(checked) => form.setValue("is_public", checked)}
+              />
+              <Label htmlFor="is_public">Public component</Label>
+            
+            </div>
+            <Label htmlFor="is_public">This component will be visible to everyone</Label>
           </div>
           <DialogFooter>
             <Button onClick={() => setIsConfirmDialogOpen(false)} variant="outline">
               Back
             </Button>
             <Button
-              onClick={form.handleSubmit(onSubmit)}
-              disabled={isLoading || !slugAvailable || !!demoCodeError}
+              onClick={handleSubmit}
+              disabled={isLoading || !isFormValid()}
             >
               {isLoading ? "Adding..." : "Add component"}
             </Button>

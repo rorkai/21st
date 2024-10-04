@@ -44,6 +44,11 @@ import {
 import { useValidTags } from '@/hooks/useValidateTags';
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import Editor from 'react-simple-code-editor';
+import { highlight, languages } from 'prismjs';
+import 'prismjs/components/prism-typescript';
+import 'prismjs/components/prism-jsx';
+import 'prismjs/themes/prism.css';
 
 
 const formSchema = z.object({
@@ -482,8 +487,28 @@ import { ${demoComponentName} } from './Demo';
 
 export default function App() {
   return (
-    <div className="flex justify-center items-center h-screen p-4">
+    <div className="flex justify-center items-center h-screen p-4 relative">
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: -1,
+        opacity: 0.5,
+        width: '100%',
+        height: '100%',
+        background: 'radial-gradient(#00000055 1px, transparent 1px)',
+        backgroundSize: '16px 16px'
+      }}>
+        <style>{
+          \`@media (prefers-color-scheme: dark) {
+            div {
+              background: radial-gradient(#ffffff22 1px, transparent 1px);
+            }
+          }\`
+        }</style>
+      </div>
+      <div className="flex justify-center items-center max-w-[600px] w-full h-full max-h-[600px] p-4 relative">
       <${demoComponentName} />
+      </div>
     </div>
   );
 }
@@ -566,9 +591,23 @@ useEffect(() => {
                   <FormItem className="w-full">
                     <FormLabel>Code</FormLabel>
                     <FormControl>
-                      <Textarea
-                        {...field}
-                        className="mt-1 w-full h-[calc(100vh/3)] min-h-[100px]"
+                      <Editor
+                        value={field.value}
+                        onValueChange={(code) => field.onChange(code)}
+                        highlight={(code) => {
+                          const grammar = languages.tsx || languages.jsx;
+                          return grammar ? highlight(code, grammar, 'tsx') : code;
+                        }}
+                        padding={10}
+                        style={{
+                          fontFamily: '"Fira code", "Fira Mono", monospace',
+                          fontSize: 12,
+                          backgroundColor: '#f5f5f5',
+                          borderRadius: '0.375rem',
+                          minHeight: 'calc(100vh/3)',
+                          maxHeight: 'calc(100vh/3)',
+                        }}
+                        className="mt-1 w-full border border-input"
                       />
                     </FormControl>
                     <FormMessage />
@@ -583,9 +622,23 @@ useEffect(() => {
                   <FormItem className="w-full">
                     <FormLabel>Demo Code</FormLabel>
                     <FormControl>
-                      <Textarea
-                        {...field}
-                        className={`mt-1 w-full h-[calc(100vh/3)] min-h-[100px] ${demoCodeError ? "border-yellow-500" : ""}`}
+                      <Editor
+                        value={field.value}
+                        onValueChange={(code) => field.onChange(code)}
+                        highlight={(code) => {
+                          const grammar = languages.tsx || languages.jsx;
+                          return grammar ? highlight(code, grammar, 'tsx') : code;
+                        }}
+                        padding={10}
+                        style={{
+                          fontFamily: '"Fira code", "Fira Mono", monospace',
+                          fontSize: 12,
+                          backgroundColor: '#f5f5f5',
+                          borderRadius: '0.375rem',
+                          minHeight: 'calc(100vh/3)',
+                          maxHeight: 'calc(100vh/3)',
+                        }}
+                        className={`mt-1 w-full border border-input ${demoCodeError ? "border-yellow-500" : ""}`}
                       />
                     </FormControl>
                     <FormMessage />
@@ -705,7 +758,7 @@ useEffect(() => {
             </div>
             {previewProps && Object.keys(internalDependencies).length === 0 && (
               <div className="w-1/2">
-                <h3 className="block text-sm font-medium text-gray-700 mb-1">Component Preview</h3>
+                <h3 className="block text-sm font-medium text-gray-700 mb-2">Component Preview</h3>
                 <Preview {...previewProps} />
               </div>
             )}

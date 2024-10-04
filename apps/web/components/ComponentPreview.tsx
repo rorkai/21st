@@ -102,12 +102,12 @@ export default function ComponentPreview({
     componentInternalDependencies: Record<string, string | string[]>
   ) {
     const internalDepsCode: Record<string, string> = {};
-    for (const [, slugs] of Object.entries(componentInternalDependencies)) {
+    for (const [path, slugs] of Object.entries(componentInternalDependencies)) {
       if (typeof slugs === "string") {
-        await fetchSingleDependency(slugs, internalDepsCode);
+        await fetchSingleDependency(path, slugs, internalDepsCode);
       } else if (Array.isArray(slugs)) {
         for (const slug of slugs) {
-          await fetchSingleDependency(slug, internalDepsCode);
+          await fetchSingleDependency(path, slug, internalDepsCode);
         }
       }
     }
@@ -115,6 +115,7 @@ export default function ComponentPreview({
   }
 
   async function fetchSingleDependency(
+    path: string,
     slug: string,
     internalDepsCode: Record<string, string>
   ) {
@@ -129,7 +130,8 @@ export default function ComponentPreview({
       }
 
       const dependencyCode = await data.text();
-      internalDepsCode[`/components/${slug}.tsx`] = dependencyCode;
+      const fullPath = path.endsWith('.tsx') ? path : `${path}.tsx`;
+      internalDepsCode[fullPath] = dependencyCode;
     } catch (error) {
       console.error(`Error fetching dependency ${slug}:`, error);
     }

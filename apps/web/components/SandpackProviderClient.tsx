@@ -96,11 +96,9 @@ root.render(
     "/index.tsx": updatedIndexContent,
   };
 
-  // Add files for internal dependencies
   Object.entries(internalDependencies).forEach(([path, code]) => {
-    const parts = path.split('/');
-    const fileName = parts[parts.length - 1];
-    updatedFiles[`/components/${fileName}`] = code;
+    const fullPath = path.startsWith('/') ? path : `/${path}`;
+    updatedFiles[fullPath] = code;
   });
 
   const mainComponentFile = Object.keys(updatedFiles).find(file => file.endsWith(`${componentSlug}.tsx`)) || 
@@ -114,17 +112,14 @@ root.render(
 
   const visibleFiles = [
     mainComponentFile,
-    ...Object.keys(internalDependencies).map(path => {
-      const parts = path.split('/');
-      return `/components/${parts[parts.length - 1]}`;
-    })
+    ...Object.keys(internalDependencies)
   ].filter((file): file is string => file !== undefined);
 
   const customFileLabels = Object.fromEntries(
     Object.keys(internalDependencies).map(path => {
       const parts = path.split('/');
       const fileName = parts[parts.length - 1];
-      return [`/components/${fileName}`, `${fileName} (dependencies)`];
+      return [path, `${fileName} (dependencies)`];
     })
   );
 

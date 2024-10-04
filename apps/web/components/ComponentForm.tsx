@@ -30,6 +30,7 @@ import {
   parseInternalDependencies,
   removeComponentImports
 } from "@/utils/parsers";
+import { useComponentSlug, generateSlug, isValidSlug } from '@/hooks/useComponentSlug';
 
 type FormData = {
   name: string;
@@ -47,9 +48,6 @@ interface TagOption {
   __isNew__?: boolean;
 }
 
-const slugAvailableAtom = atom<boolean | null>(null);
-const slugCheckingAtom = atom(false);
-const slugErrorAtom = atom<string | null>(null);
 const demoCodeErrorAtom = atom<string | null>(null);
 const parsedDependenciesAtom = atom<Record<string, string>>({});
 const parsedComponentNamesAtom = atom<string[]>([]);
@@ -64,9 +62,13 @@ export default function ComponentForm() {
   const { register, handleSubmit, reset, watch, setValue, control } =
     useForm<FormData>();
   const [isLoading, setIsLoading] = useState(false);
-  const [slugAvailable, setSlugAvailable] = useAtom(slugAvailableAtom);
-  const [slugChecking, setSlugChecking] = useAtom(slugCheckingAtom);
-  const [slugError, setSlugError] = useAtom(slugErrorAtom);
+  const {
+    slugAvailable,
+    slugChecking,
+    slugError,
+    generateUniqueSlug,
+    checkSlug,
+  } = useComponentSlug();
   const [demoCodeError, setDemoCodeError] = useAtom(demoCodeErrorAtom);
   const [parsedDependencies, setParsedDependencies] = useAtom(
     parsedDependenciesAtom
@@ -96,55 +98,11 @@ export default function ComponentForm() {
   const name = watch("name");
   const componentSlug = watch("component_slug");
 
-
-  const generateSlug = (name: string): string => {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .replace(/-+/g, "-");
-  };
-
-  const isValidSlug = (slug: string): boolean => {
-    const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-    return slugRegex.test(slug);
-  };
-
-  const checkSlugUnique = async (slug: string): Promise<boolean> => {
-    const { data, error } = await client
-      .from("components")
-      .select("id")
-      .eq("component_slug", slug);
-
-    if (error) {
-      console.error("Error checking slug uniqueness:", error);
-      return false;
-    }
-
-    return data?.length === 0;
-  };
-
-  const generateUniqueSlug = useCallback(async (baseName: string) => {
-    let newSlug = generateSlug(baseName);
-    let isUnique = await checkSlugUnique(newSlug);
-    let suffix = 1;
-
-    while (!isUnique) {
-      newSlug = `${generateSlug(baseName)}-${suffix}`;
-      isUnique = await checkSlugUnique(newSlug);
-      suffix += 1;
-    }
-
-    return newSlug;
-  }, []);
-
   useEffect(() => {
     const updateSlug = async () => {
       if (name) {
         const newSlug = await generateUniqueSlug(name);
         setValue("component_slug", newSlug);
-        setSlugAvailable(true);
-        setSlugError(null);
       }
     };
 
@@ -152,28 +110,10 @@ export default function ComponentForm() {
   }, [name, setValue, generateUniqueSlug]);
 
   useEffect(() => {
-    const checkSlug = async () => {
-      if (componentSlug) {
-        setSlugChecking(true);
-        setSlugError(null);
-
-        if (!isValidSlug(componentSlug)) {
-          setSlugAvailable(false);
-          setSlugError("Invalid slug format");
-        } else {
-          const isUnique = await checkSlugUnique(componentSlug);
-          setSlugAvailable(isUnique);
-          if (!isUnique) {
-            setSlugError("This slug is not available");
-          }
-        }
-
-        setSlugChecking(false);
-      }
-    };
-
-    checkSlug();
-  }, [componentSlug]);
+    if (componentSlug) {
+      checkSlug(componentSlug);
+    }
+  }, [componentSlug, checkSlug]);
 
   const code = watch("code");
   const demoCode = watch("demo_code");
@@ -403,32 +343,6 @@ export default function ComponentForm() {
   const generateAndSetSlug = async (name: string) => {
     const newSlug = await generateUniqueSlug(name);
     setValue("component_slug", newSlug);
-    setSlugAvailable(true);
-    setSlugError(null);
-  };
-
-  useEffect(() => {
-    if (componentSlug) {
-      checkSlug();
-    }
-  }, [componentSlug]);
-
-  const checkSlug = async () => {
-    setSlugChecking(true);
-    setSlugError(null);
-
-    if (!isValidSlug(componentSlug)) {
-      setSlugAvailable(false);
-      setSlugError("Invalid slug format");
-    } else {
-      const isUnique = await checkSlugUnique(componentSlug);
-      setSlugAvailable(isUnique);
-      if (!isUnique) {
-        setSlugError("This slug is already taken");
-      }
-    }
-
-    setSlugChecking(false);
   };
 
   const handleGoToComponent = () => {

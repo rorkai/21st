@@ -295,15 +295,7 @@ export default function ComponentForm() {
       Object.values(internalDependencies).every((slug) => slug) &&
       (slugAvailable || !isSlugManuallyEdited)
     );
-    console.log('Form validity:', valid, {
-      name: name.length >= 2,
-      component_slug: component_slug.length >= 2,
-      code: code.length > 0,
-      demo_code: demo_code.length > 0,
-      demoCodeError: !demoCodeError,
-      internalDependencies: Object.values(internalDependencies).every((slug) => slug),
-      slugAvailable: slugAvailable || !isSlugManuallyEdited
-    });
+    
     return valid;
   }, [form, demoCodeError, internalDependencies, slugAvailable, isSlugManuallyEdited]);
 

@@ -5,7 +5,7 @@ import React, { useEffect } from "react";
 import dynamic from "next/dynamic";
 import { supabase } from "@/utils/supabase";
 import { Button } from "./ui/button";
-import { LayoutTemplate, CodeXml, Link } from "lucide-react";
+import { LayoutTemplate, CodeXml, Link, Tag } from "lucide-react";
 import { LoadingSpinner } from "./Loading";
 import { useAtom } from "jotai";
 import { atom } from "jotai";
@@ -199,6 +199,16 @@ export default function App() {
           <div className="flex gap-2 items-start">
             <p className="text-[17px] font-semibold">{component.name}</p>
             <p className="text-[17px] text-gray-600">{component.description}</p>
+            {component.tags && component.tags.length > 0 && (
+              <div className="flex gap-2 ml-2">
+                {component.tags.map((tag) => (
+                  <div key={tag.slug} className="flex items-center gap-1 px-2 py-1 bg-gray-200 text-gray-700 rounded-full text-xs">
+                    <Tag size={12} />
+                    {tag.name}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         <div className="flex gap-2">

@@ -30,11 +30,10 @@ export interface Component {
   preview_url: string;
   size: string;
   user: User;
-  tags?: Tag[];
+  tags: Tag[];
 }
 
 export interface Tag {
-  id: number;
   name: string;
   slug: string;
 }

@@ -13,8 +13,8 @@ import { useAtom, atom } from "jotai";
 import { useDebugMode } from "@/hooks/useDebugMode";
 import React from "react";
 import { useUser, useSession } from "@clerk/nextjs";
-import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+import { SandpackProvider as SandpackProviderUnstyled } from "@codesandbox/sandpack-react/unstyled";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import CreatableSelect from "react-select/creatable";
 import { Tag } from "@/types/types";
+import { useClerkSupabaseClient } from "@/utils/clerk";
 
 type FormData = {
   name: string;
@@ -53,6 +54,8 @@ const internalDependenciesAtom = atom<Record<string, string>>({});
 const importsToRemoveAtom = atom<string[]>([]);
 const parsedDemoComponentNameAtom = atom<string>("");
 
+
+
 export default function ComponentForm() {
   const { register, handleSubmit, reset, watch, setValue, control } =
     useForm<FormData>();
@@ -79,7 +82,7 @@ export default function ComponentForm() {
   );
   const isDebug = useDebugMode();
   const { user } = useUser();
-  const { session } = useSession();
+  const client = useClerkSupabaseClient();
   const [step, setStep] = useState(1);
   const router = useRouter();
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
@@ -89,31 +92,6 @@ export default function ComponentForm() {
   const name = watch("name");
   const componentSlug = watch("component_slug");
 
-  function createClerkSupabaseClient() {
-    return createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_KEY!,
-      {
-        global: {
-          fetch: async (url, options = {}) => {
-            const clerkToken = await session?.getToken({
-              template: "supabase",
-            });
-
-            const headers = new Headers(options?.headers);
-            headers.set("Authorization", `Bearer ${clerkToken}`);
-
-            return fetch(url, {
-              ...options,
-              headers,
-            });
-          },
-        },
-      }
-    );
-  }
-
-  const client = createClerkSupabaseClient();
 
   const generateSlug = (name: string): string => {
     return name
@@ -669,6 +647,112 @@ export default function ComponentForm() {
     setIsSuccessDialogOpen(false);
   };
 
+
+  const ComponentPreview = React.lazy(() => import("@codesandbox/sandpack-react/unstyled").then(module => ({ default: module.SandpackPreview })));
+
+  function Preview({ files, dependencies }: { files: Record<string, string>, dependencies: Record<string, string> }) {
+    const [isComponentsLoaded, setIsComponentsLoaded] = useState(false);
+  
+    useEffect(() => {
+      const loadComponents = async () => {
+        await import("@codesandbox/sandpack-react/unstyled");
+        setIsComponentsLoaded(true);
+      };
+      loadComponents();
+    }, []);
+  
+    if (!isComponentsLoaded) {
+      return <div>Загрузка превью...</div>;
+    }
+  
+    const providerProps = {
+      template: "react-ts" as const,
+      files,
+      customSetup: {
+        dependencies: {
+          react: "^18.0.0",
+          "react-dom": "^18.0.0",
+          ...dependencies,
+        },
+      },
+      options: {
+        externalResources: [
+          "https://vucvdpamtrjkzmubwlts.supabase.co/storage/v1/object/public/css/compiled-tailwind.css"
+        ],
+      },
+    };
+  
+    return (
+      <div className="h-[300px] w-full bg-[#FAFAFA] rounded-lg overflow-hidden">
+        <SandpackProviderUnstyled {...providerProps}>
+          <ComponentPreview />
+        </SandpackProviderUnstyled>
+      </div>
+    );
+  }
+
+const prepareFilesForPreview = (code: string, demoCode: string) => {
+  const componentNames = extractComponentNames(code);
+  const demoComponentName = extractDemoComponentName(demoCode);
+
+  const updatedDemoCode = `import { ${componentNames.join(", ")} } from "./Component";\n${demoCode}`;
+
+  const files = {
+    "/App.tsx": `
+import React from 'react';
+import { ${demoComponentName} } from './Demo';
+
+export default function App() {
+  return (
+    <div className="flex justify-center items-center h-screen p-4">
+      <${demoComponentName} />
+    </div>
+  );
+}
+`,
+    "/Component.tsx": code,
+    "/Demo.tsx": updatedDemoCode,
+    "/lib/utils.ts": `
+export function cn(...inputs: (string | undefined)[]) {
+  return inputs.filter(Boolean).join(' ');
+}
+`,
+    "/tsconfig.json": JSON.stringify({
+      compilerOptions: {
+        jsx: "react-jsx",
+        esModuleInterop: true,
+        baseUrl: ".",
+        paths: {
+          "@/*": ["./*"],
+        },
+      },
+    }, null, 2),
+  };
+
+  const dependencies = {
+    ...parseDependencies(code),
+    ...parseDependencies(demoCode),
+  };
+
+  return { files, dependencies };
+};
+
+
+const [previewProps, setPreviewProps] = useState<{ files: Record<string, string>, dependencies: Record<string, string> } | null>(null);
+
+const codeMemoized = useMemo(() => watch("code"), [watch("code")]);
+const demoCodeMemoized = useMemo(() => watch("demo_code"), [watch("demo_code")]);
+
+useEffect(() => {
+  if (codeMemoized && demoCodeMemoized) {
+    const { files, dependencies } = prepareFilesForPreview(codeMemoized, demoCodeMemoized);
+    setPreviewProps({
+      files,
+      dependencies,
+    });
+  }
+}, [codeMemoized, demoCodeMemoized]);
+
   return (
     <>
       <form
@@ -750,6 +834,13 @@ export default function ComponentForm() {
                 ))}
               </div>
             )}
+
+          {previewProps && (
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Превью компонента</h3>
+              <Preview {...previewProps} />
+            </div>
+          )}
 
             {isDebug && (
               <>

@@ -1,20 +1,20 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useForm, Controller } from 'react-hook-form'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { parse } from '@babel/parser';
-import traverse from '@babel/traverse';
-import * as t from '@babel/types';
-import { Alert } from "@/components/ui/alert"
-import { useAtom, atom } from 'jotai';
-import { useDebugMode } from '@/hooks/useDebugMode';
-import React from 'react';
-import { useUser, useSession } from '@clerk/nextjs'
-import { createClient } from '@supabase/supabase-js'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { parse } from "@babel/parser";
+import traverse from "@babel/traverse";
+import * as t from "@babel/types";
+import { Alert } from "@/components/ui/alert";
+import { useAtom, atom } from "jotai";
+import { useDebugMode } from "@/hooks/useDebugMode";
+import React from "react";
+import { useUser, useSession } from "@clerk/nextjs";
+import { createClient } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -22,25 +22,24 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import CreatableSelect from 'react-select/creatable';
-import MultiValue from "react-select/creatable"
-import { Tag } from '@/types/types'
+} from "@/components/ui/dialog";
+import CreatableSelect from "react-select/creatable";
+import { Tag } from "@/types/types";
 
 type FormData = {
-  name: string
-  component_slug: string
-  code: string
-  demo_code: string
-  description: string
+  name: string;
+  component_slug: string;
+  code: string;
+  demo_code: string;
+  description: string;
   tags: Tag[];
-}
+};
 
-// Определите инерфейс TagOption в начале файла или импортируйте его, если он определен в другом месте
+// Define the TagOption interface at the top of the file or import it if it's defined elsewhere
 interface TagOption {
   value: number;
   label: string;
-  __isNew__?: boolean
+  __isNew__?: boolean;
 }
 
 const slugAvailableAtom = atom<boolean | null>(null);
@@ -52,32 +51,43 @@ const parsedComponentNamesAtom = atom<string[]>([]);
 const parsedDemoDependenciesAtom = atom<Record<string, string>>({});
 const internalDependenciesAtom = atom<Record<string, string>>({});
 const importsToRemoveAtom = atom<string[]>([]);
-const parsedDemoComponentNameAtom = atom<string>('');
+const parsedDemoComponentNameAtom = atom<string>("");
 
 export default function ComponentForm() {
-  const { register, handleSubmit, reset, watch, setValue, control } = useForm<FormData>()
-  const [isLoading, setIsLoading] = useState(false)
-  const [slugAvailable, setSlugAvailable] = useAtom(slugAvailableAtom)
-  const [slugChecking, setSlugChecking] = useAtom(slugCheckingAtom)
-  const [slugError, setSlugError] = useAtom(slugErrorAtom)
-  const [demoCodeError, setDemoCodeError] = useAtom(demoCodeErrorAtom)
-  const [parsedDependencies, setParsedDependencies] = useAtom(parsedDependenciesAtom)
-  const [parsedComponentNames, setParsedComponentNames] = useAtom(parsedComponentNamesAtom)
-  const [parsedDemoDependencies, setParsedDemoDependencies] = useAtom(parsedDemoDependenciesAtom)
-  const [internalDependencies, setInternalDependencies] = useAtom(internalDependenciesAtom)
-  const [importsToRemove, setImportsToRemove] = useAtom(importsToRemoveAtom)
-  const [parsedDemoComponentName, setParsedDemoComponentName] = useAtom(parsedDemoComponentNameAtom)
+  const { register, handleSubmit, reset, watch, setValue, control } =
+    useForm<FormData>();
+  const [isLoading, setIsLoading] = useState(false);
+  const [slugAvailable, setSlugAvailable] = useAtom(slugAvailableAtom);
+  const [slugChecking, setSlugChecking] = useAtom(slugCheckingAtom);
+  const [slugError, setSlugError] = useAtom(slugErrorAtom);
+  const [demoCodeError, setDemoCodeError] = useAtom(demoCodeErrorAtom);
+  const [parsedDependencies, setParsedDependencies] = useAtom(
+    parsedDependenciesAtom
+  );
+  const [parsedComponentNames, setParsedComponentNames] = useAtom(
+    parsedComponentNamesAtom
+  );
+  const [parsedDemoDependencies, setParsedDemoDependencies] = useAtom(
+    parsedDemoDependenciesAtom
+  );
+  const [internalDependencies, setInternalDependencies] = useAtom(
+    internalDependenciesAtom
+  );
+  const [importsToRemove, setImportsToRemove] = useAtom(importsToRemoveAtom);
+  const [parsedDemoComponentName, setParsedDemoComponentName] = useAtom(
+    parsedDemoComponentNameAtom
+  );
   const isDebug = useDebugMode();
-  const { user } = useUser()
-  const { session } = useSession()
+  const { user } = useUser();
+  const { session } = useSession();
   const [step, setStep] = useState(1);
-  const router = useRouter()
-  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false)
-  const [newComponentSlug, setNewComponentSlug] = useState('')
-  const [availableTags, setAvailableTags] = useState<Tag[]>([])
+  const router = useRouter();
+  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
+  const [newComponentSlug, setNewComponentSlug] = useState("");
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
 
-  const name = watch('name')
-  const componentSlug = watch('component_slug')
+  const name = watch("name");
+  const componentSlug = watch("component_slug");
 
   function createClerkSupabaseClient() {
     return createClient(
@@ -87,30 +97,30 @@ export default function ComponentForm() {
         global: {
           fetch: async (url, options = {}) => {
             const clerkToken = await session?.getToken({
-              template: 'supabase',
-            })
+              template: "supabase",
+            });
 
-            const headers = new Headers(options?.headers)
-            headers.set('Authorization', `Bearer ${clerkToken}`)
+            const headers = new Headers(options?.headers);
+            headers.set("Authorization", `Bearer ${clerkToken}`);
 
             return fetch(url, {
               ...options,
               headers,
-            })
+            });
           },
         },
-      },
-    )
+      }
+    );
   }
 
-  const client = createClerkSupabaseClient()
+  const client = createClerkSupabaseClient();
 
   const generateSlug = (name: string): string => {
     return name
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .replace(/-+/g, '-');
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .replace(/-+/g, "-");
   };
 
   const isValidSlug = (slug: string): boolean => {
@@ -120,12 +130,12 @@ export default function ComponentForm() {
 
   const checkSlugUnique = async (slug: string): Promise<boolean> => {
     const { data, error } = await client
-      .from('components')
-      .select('id')
-      .eq('component_slug', slug);
+      .from("components")
+      .select("id")
+      .eq("component_slug", slug);
 
     if (error) {
-      console.error('Error checking slug uniqueness:', error);
+      console.error("Error checking slug uniqueness:", error);
       return false;
     }
 
@@ -150,7 +160,7 @@ export default function ComponentForm() {
     const updateSlug = async () => {
       if (name) {
         const newSlug = await generateUniqueSlug(name);
-        setValue('component_slug', newSlug);
+        setValue("component_slug", newSlug);
         setSlugAvailable(true);
         setSlugError(null);
       }
@@ -167,12 +177,12 @@ export default function ComponentForm() {
 
         if (!isValidSlug(componentSlug)) {
           setSlugAvailable(false);
-          setSlugError('Invalid slug format');
+          setSlugError("Invalid slug format");
         } else {
           const isUnique = await checkSlugUnique(componentSlug);
           setSlugAvailable(isUnique);
           if (!isUnique) {
-            setSlugError('This slug is not available');
+            setSlugError("This slug is not available");
           }
         }
 
@@ -186,12 +196,12 @@ export default function ComponentForm() {
   const extractComponentNames = (code: string): string[] => {
     if (!code) return [];
     const ast = parse(code, {
-      sourceType: 'module',
-      plugins: ['typescript', 'jsx'],
+      sourceType: "module",
+      plugins: ["typescript", "jsx"],
     });
-    
+
     const exportedComponents: string[] = [];
-    
+
     traverse(ast, {
       ExportNamedDeclaration(path) {
         const declaration = path.node.declaration;
@@ -199,7 +209,7 @@ export default function ComponentForm() {
           if (t.isFunctionDeclaration(declaration) && declaration.id) {
             exportedComponents.push(declaration.id.name);
           } else if (t.isVariableDeclaration(declaration)) {
-            declaration.declarations.forEach(d => {
+            declaration.declarations.forEach((d) => {
               if (t.isIdentifier(d.id)) {
                 exportedComponents.push(d.id.name);
               }
@@ -208,7 +218,7 @@ export default function ComponentForm() {
             exportedComponents.push(declaration.id.name);
           }
         } else if (path.node.specifiers) {
-          path.node.specifiers.forEach(specifier => {
+          path.node.specifiers.forEach((specifier) => {
             if (t.isExportSpecifier(specifier)) {
               if (t.isIdentifier(specifier.exported)) {
                 exportedComponents.push(specifier.exported.name);
@@ -228,25 +238,28 @@ export default function ComponentForm() {
         }
       },
       VariableDeclarator(path) {
-        if (t.isIdentifier(path.node.id) && 
-            t.isVariableDeclaration(path.parent) &&
-            path.parentPath && t.isExportNamedDeclaration(path.parentPath.parent)) {
+        if (
+          t.isIdentifier(path.node.id) &&
+          t.isVariableDeclaration(path.parent) &&
+          path.parentPath &&
+          t.isExportNamedDeclaration(path.parentPath.parent)
+        ) {
           exportedComponents.push(path.node.id.name);
         }
-      }
+      },
     });
-    
+
     return exportedComponents;
   };
 
   const extractDemoComponentName = (code: string): string => {
-    if (!code) return '';
+    if (!code) return "";
     const match = code.match(/export\s+function\s+([A-Z]\w+)/);
-    return match && match[1] ? match[1] : '';
+    return match && match[1] ? match[1] : "";
   };
 
-  const code = watch('code');
-  const demoCode = watch('demo_code');
+  const code = watch("code");
+  const demoCode = watch("demo_code");
 
   useEffect(() => {
     setParsedComponentNames(code ? extractComponentNames(code) : []);
@@ -255,13 +268,18 @@ export default function ComponentForm() {
   }, [code, demoCode]);
 
   useEffect(() => {
-    setParsedDemoComponentName(demoCode ? extractDemoComponentName(demoCode) : '');
+    setParsedDemoComponentName(
+      demoCode ? extractDemoComponentName(demoCode) : ""
+    );
   }, [demoCode]);
 
-  const removeComponentImports = (demoCode: string, componentNames: string[]): { modifiedCode: string, removedImports: string[] } => {
+  const removeComponentImports = (
+    demoCode: string,
+    componentNames: string[]
+  ): { modifiedCode: string; removedImports: string[] } => {
     const ast = parse(demoCode, {
-      sourceType: 'module',
-      plugins: ['typescript', 'jsx'],
+      sourceType: "module",
+      plugins: ["typescript", "jsx"],
     });
 
     const importsToDrop: { start: number; end: number; text: string }[] = [];
@@ -269,16 +287,20 @@ export default function ComponentForm() {
     traverse(ast, {
       ImportDeclaration(path) {
         const specifiers = path.node.specifiers;
-        const importedNames = specifiers.map(s => t.isImportSpecifier(s) && t.isIdentifier(s.imported) ? s.imported.name : '');
-        
-        if (importedNames.some(name => componentNames.includes(name))) {
+        const importedNames = specifiers.map((s) =>
+          t.isImportSpecifier(s) && t.isIdentifier(s.imported)
+            ? s.imported.name
+            : ""
+        );
+
+        if (importedNames.some((name) => componentNames.includes(name))) {
           importsToDrop.push({
             start: path.node.start!,
             end: path.node.end!,
-            text: demoCode.slice(path.node.start!, path.node.end!)
+            text: demoCode.slice(path.node.start!, path.node.end!),
           });
         }
-      }
+      },
     });
 
     let modifiedCode = demoCode;
@@ -295,17 +317,25 @@ export default function ComponentForm() {
     return { modifiedCode: modifiedCode.trim(), removedImports };
   };
 
-  const checkDemoCode = useCallback((demoCode: string, componentNames: string[]) => {
-    const { removedImports } = removeComponentImports(demoCode, componentNames);
-    
-    if (removedImports.length > 0) {
-      setImportsToRemove(removedImports);
-      setDemoCodeError('Component imports in the Demo component are automatic. Please confirm deletion.');
-    } else {
-      setImportsToRemove([]);
-      setDemoCodeError(null);
-    }
-  }, []);
+  const checkDemoCode = useCallback(
+    (demoCode: string, componentNames: string[]) => {
+      const { removedImports } = removeComponentImports(
+        demoCode,
+        componentNames
+      );
+
+      if (removedImports.length > 0) {
+        setImportsToRemove(removedImports);
+        setDemoCodeError(
+          "Component imports in the Demo component are automatic. Please confirm deletion."
+        );
+      } else {
+        setImportsToRemove([]);
+        setDemoCodeError(null);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     const componentNames = extractComponentNames(code);
@@ -318,45 +348,60 @@ export default function ComponentForm() {
     const dependencies: Record<string, string> = {};
     try {
       const ast = parse(code, {
-        sourceType: 'module',
+        sourceType: "module",
         plugins: [
-          'typescript',
-          'jsx',
-          'decorators-legacy',
-          'classProperties',
-          'objectRestSpread',
-          'dynamicImport',
+          "typescript",
+          "jsx",
+          "decorators-legacy",
+          "classProperties",
+          "objectRestSpread",
+          "dynamicImport",
         ],
       });
 
-      const defaultDependencies = ['react', 'react-dom', 'tailwindcss'];
+      const defaultDependencies = ["react", "react-dom", "tailwindcss"];
 
       traverse(ast, {
         ImportDeclaration({ node }) {
           const importDeclaration = node as t.ImportDeclaration;
           const source = importDeclaration.source.value;
-          if (typeof source === 'string' && !source.startsWith('.') && !source.startsWith('/') && !source.startsWith('@/')) {
+          if (
+            typeof source === "string" &&
+            !source.startsWith(".") &&
+            !source.startsWith("/") &&
+            !source.startsWith("@/")
+          ) {
             let packageName = source;
             if (!defaultDependencies.includes(packageName)) {
-              dependencies[packageName] = 'latest';
+              dependencies[packageName] = "latest";
             }
           }
         },
         ImportNamespaceSpecifier(path) {
-          const importDeclaration = path.findParent((p) => p.isImportDeclaration());
-          if (importDeclaration && t.isImportDeclaration(importDeclaration.node)) {
+          const importDeclaration = path.findParent((p) =>
+            p.isImportDeclaration()
+          );
+          if (
+            importDeclaration &&
+            t.isImportDeclaration(importDeclaration.node)
+          ) {
             const source = importDeclaration.node.source.value;
-            if (typeof source === 'string' && !source.startsWith('.') && !source.startsWith('/') && !source.startsWith('@/')) {
+            if (
+              typeof source === "string" &&
+              !source.startsWith(".") &&
+              !source.startsWith("/") &&
+              !source.startsWith("@/")
+            ) {
               let packageName = source;
               if (!defaultDependencies.includes(packageName)) {
-                dependencies[packageName] = 'latest';
+                dependencies[packageName] = "latest";
               }
             }
           }
         },
       });
     } catch (error) {
-      console.error('Error parsing dependencies:', error);
+      console.error("Error parsing dependencies:", error);
     }
 
     return dependencies;
@@ -366,27 +411,32 @@ export default function ComponentForm() {
     const internalDeps: Record<string, string> = {};
     try {
       const ast = parse(code, {
-        sourceType: 'module',
+        sourceType: "module",
         plugins: [
-          'typescript',
-          'jsx',
-          'decorators-legacy',
-          'classProperties',
-          'objectRestSpread',
-          'dynamicImport',
+          "typescript",
+          "jsx",
+          "decorators-legacy",
+          "classProperties",
+          "objectRestSpread",
+          "dynamicImport",
         ],
       });
 
       traverse(ast, {
         ImportDeclaration({ node }) {
           const source = node.source.value;
-          if (typeof source === 'string' && source.startsWith('@/components/')) {
-            internalDeps[source] = '';
+          if (
+            typeof source === "string" &&
+            source.startsWith("@/components/")
+          ) {
+            if (!internalDeps[source]) {
+              internalDeps[source] = "";
+            }
           }
         },
       });
     } catch (error) {
-      console.error('Error parsing internal dependencies:', error);
+      console.error("Error parsing internal dependencies:", error);
     }
 
     return internalDeps;
@@ -395,182 +445,189 @@ export default function ComponentForm() {
   useEffect(() => {
     const componentDeps = parseInternalDependencies(code);
     const demoDeps = parseInternalDependencies(demoCode);
-    
+
     const combinedDeps = { ...componentDeps, ...demoDeps };
-    
+
     setInternalDependencies(combinedDeps);
   }, [code, demoCode]);
 
   const handleApproveDelete = () => {
-    const { modifiedCode } = removeComponentImports(demoCode, parsedComponentNames);
-    setValue('demo_code', modifiedCode);
+    const { modifiedCode } = removeComponentImports(
+      demoCode,
+      parsedComponentNames
+    );
+    setValue("demo_code", modifiedCode);
     setImportsToRemove([]);
     setDemoCodeError(null);
   };
 
   const loadAvailableTags = useCallback(async () => {
-    const { data, error } = await client
-      .from('tags')
-      .select('*')
-      .order('name')
+    const { data, error } = await client.from("tags").select("*").order("name");
 
     if (error) {
-      console.error('Error loading tags:', error)
+      console.error("Error loading tags:", error);
     } else {
-      setAvailableTags(data || [])
+      setAvailableTags(data || []);
     }
-  }, [client])
+  }, [client]);
 
   useEffect(() => {
-    loadAvailableTags()
-  }, [loadAvailableTags])
+    loadAvailableTags();
+  }, [loadAvailableTags]);
 
   const addTagsToComponent = async (componentId: number, tags: Tag[]) => {
     for (const tag of tags) {
-      let tagId: number
+      let tagId: number;
 
       if (tag.id) {
-        tagId = tag.id
+        tagId = tag.id;
       } else {
-        const slug = generateSlug(tag.name)
+        const slug = generateSlug(tag.name);
         const { data: existingTag, error: selectError } = await client
-          .from('tags')
-          .select('id')
-          .eq('slug', slug)
-          .single()
+          .from("tags")
+          .select("id")
+          .eq("slug", slug)
+          .single();
 
         if (existingTag) {
-          tagId = existingTag.id
+          tagId = existingTag.id;
         } else {
           const { data: newTag, error: insertError } = await client
-            .from('tags')
+            .from("tags")
             .insert({ name: tag.name, slug })
-            .single()
+            .single();
 
           if (insertError) {
-            console.error('Error inserting tag:', insertError)
-            continue
+            console.error("Error inserting tag:", insertError);
+            continue;
           }
-          if (newTag && typeof newTag === 'object' && 'id' in newTag) {
-            tagId = (newTag as { id: number }).id
+          if (newTag && typeof newTag === "object" && "id" in newTag) {
+            tagId = (newTag as { id: number }).id;
           } else {
-            console.error('New tag was not created or does not have an id')
-            continue
+            console.error("New tag was not created or does not have an id");
+            continue;
           }
         }
       }
 
       const { error: linkError } = await client
-        .from('component_tags')
-        .insert({ component_id: componentId, tag_id: tagId })
+        .from("component_tags")
+        .insert({ component_id: componentId, tag_id: tagId });
 
       if (linkError) {
-        console.error('Error linking tag to component:', linkError)
+        console.error("Error linking tag to component:", linkError);
       }
     }
-  }
+  };
 
   const onSubmit = async (data: FormData) => {
     if (!slugAvailable || demoCodeError) {
-      alert('Please fix errors and try again.');
+      alert("Please fix errors and try again.");
       return;
     }
 
-    if (Object.values(internalDependencies).some(slug => !slug)) {
-      alert('Please specify the slug for all internal dependencies');
+    if (Object.values(internalDependencies).some((slug) => !slug)) {
+      alert("Please specify the slug for all internal dependencies");
       return;
     }
 
     let modifiedCode = data.code;
     let modifiedDemoCode = data.demo_code;
     Object.entries(internalDependencies).forEach(([path, slug]) => {
-      const regex = new RegExp(`from\\s+["']${path}["']`, 'g');
+      const regex = new RegExp(`from\\s+["']${path}["']`, "g");
       const replacement = `from "@/components/${slug}"`;
       modifiedCode = modifiedCode.replace(regex, replacement);
       modifiedDemoCode = modifiedDemoCode.replace(regex, replacement);
     });
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       const componentNames = extractComponentNames(modifiedCode);
       const demoComponentName = extractDemoComponentName(modifiedDemoCode);
       const dependencies = parseDependencies(modifiedCode);
-      
-      const cleanedDemoCode = removeComponentImports(modifiedDemoCode, componentNames).modifiedCode;
+
+      const cleanedDemoCode = removeComponentImports(
+        modifiedDemoCode,
+        componentNames
+      ).modifiedCode;
 
       const codeFileName = `${data.component_slug}-code.tsx`;
       const demoCodeFileName = `${data.component_slug}-demo.tsx`;
 
       const [codeUrl, demoCodeUrl] = await Promise.all([
         uploadToStorage(codeFileName, modifiedCode),
-        uploadToStorage(demoCodeFileName, cleanedDemoCode)
+        uploadToStorage(demoCodeFileName, cleanedDemoCode),
       ]);
 
       const installUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/r/${data.component_slug}`;
-      
-      const { data: insertedData, error } = await client.from('components').insert({
-        name: data.name,
-        component_name: JSON.stringify(componentNames),
-        demo_component_name: demoComponentName,
-        component_slug: data.component_slug,
-        code: codeUrl,
-        demo_code: demoCodeUrl,
-        description: data.description,
-        install_url: installUrl,
-        user_id: user?.id,
-        dependencies: JSON.stringify(dependencies),
-        demo_dependencies: JSON.stringify(parsedDemoDependencies),
-        internal_dependencies: JSON.stringify(internalDependencies)
-      }).select().single()
-    
-      if (error) throw error
-      
-      if (insertedData) {
-        await addTagsToComponent(insertedData.id, data.tags)
 
-        setNewComponentSlug(data.component_slug)
-        setIsSuccessDialogOpen(true)
+      const { data: insertedData, error } = await client
+        .from("components")
+        .insert({
+          name: data.name,
+          component_name: JSON.stringify(componentNames),
+          demo_component_name: demoComponentName,
+          component_slug: data.component_slug,
+          code: codeUrl,
+          demo_code: demoCodeUrl,
+          description: data.description,
+          install_url: installUrl,
+          user_id: user?.id,
+          dependencies: JSON.stringify(dependencies),
+          demo_dependencies: JSON.stringify(parsedDemoDependencies),
+          internal_dependencies: JSON.stringify(internalDependencies),
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (insertedData) {
+        await addTagsToComponent(insertedData.id, data.tags);
+
+        setNewComponentSlug(data.component_slug);
+        setIsSuccessDialogOpen(true);
       }
     } catch (error) {
-      console.error('Error adding component:', error)
-      alert('An error occurred while adding the component')
+      console.error("Error adding component:", error);
+      alert("An error occurred while adding the component");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const uploadToStorage = async (fileName: string, content: string) => {
     const { error } = await client.storage
-      .from('components')
+      .from("components")
       .upload(fileName, content, {
-        contentType: 'text/plain',
-        upsert: true
+        contentType: "text/plain",
+        upsert: true,
       });
 
     if (error) throw error;
 
     const { data: publicUrlData } = client.storage
-      .from('components')
+      .from("components")
       .getPublicUrl(fileName);
 
     return publicUrlData.publicUrl;
   };
 
   const formatComponentName = (name: string): string => {
-    return name.replace(/([A-Z])/g, ' $1').trim();
+    return name.replace(/([A-Z])/g, " $1").trim();
   };
 
   useEffect(() => {
     if (step === 2 && parsedComponentNames.length > 0) {
-      const formattedName = formatComponentName(parsedComponentNames[0] || '');
-      setValue('name', formattedName);
+      const formattedName = formatComponentName(parsedComponentNames[0] || "");
+      setValue("name", formattedName);
       generateAndSetSlug(formattedName);
     }
   }, [step, parsedComponentNames, setValue]);
 
   const generateAndSetSlug = async (name: string) => {
     const newSlug = await generateUniqueSlug(name);
-    setValue('component_slug', newSlug);
+    setValue("component_slug", newSlug);
     setSlugAvailable(true);
     setSlugError(null);
   };
@@ -587,12 +644,12 @@ export default function ComponentForm() {
 
     if (!isValidSlug(componentSlug)) {
       setSlugAvailable(false);
-      setSlugError('Invalid slug format');
+      setSlugError("Invalid slug format");
     } else {
       const isUnique = await checkSlugUnique(componentSlug);
       setSlugAvailable(isUnique);
       if (!isUnique) {
-        setSlugError('This slug is already taken');
+        setSlugError("This slug is already taken");
       }
     }
 
@@ -601,41 +658,67 @@ export default function ComponentForm() {
 
   const handleGoToComponent = () => {
     if (user) {
-      router.push(`/${user.username}/${newComponentSlug}`)
+      router.push(`/${user.username}/${newComponentSlug}`);
     }
-    setIsSuccessDialogOpen(false)
-  }
+    setIsSuccessDialogOpen(false);
+  };
 
   const handleAddAnother = () => {
-    reset()
-    setStep(1)
-    setIsSuccessDialogOpen(false)
-  }
+    reset();
+    setStep(1);
+    setIsSuccessDialogOpen(false);
+  };
 
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-[300px]">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-4 max-w-[300px]"
+      >
         {step === 1 ? (
           <>
             <div>
-              <label htmlFor="code" className="block text-sm font-medium text-gray-700">Code</label>
-              <Textarea id="code" {...register('code', { required: true })} className="mt-1 w-full" />
+              <label
+                htmlFor="code"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Code
+              </label>
+              <Textarea
+                id="code"
+                {...register("code", { required: true })}
+                className="mt-1 w-full"
+              />
             </div>
-            
+
             <div>
-              <label htmlFor="demo_code" className="block text-sm font-medium text-gray-700">Demo code (without component import)</label>
-              <Textarea 
-                id="demo_code" 
-                {...register('demo_code', { required: true })} 
-                className={`mt-1 w-full ${demoCodeError ? 'border-yellow-500' : ''}`}
+              <label
+                htmlFor="demo_code"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Demo code (without component import)
+              </label>
+              <Textarea
+                id="demo_code"
+                {...register("demo_code", { required: true })}
+                className={`mt-1 w-full ${demoCodeError ? "border-yellow-500" : ""}`}
               />
               {demoCodeError && (
                 <Alert variant="default" className="mt-2 text-[14px]">
                   <p>{demoCodeError}</p>
                   {importsToRemove.map((importStr, index) => (
-                    <div key={index} className="bg-gray-100 p-2 mt-2 rounded flex flex-col">
+                    <div
+                      key={index}
+                      className="bg-gray-100 p-2 mt-2 rounded flex flex-col"
+                    >
                       <code className="mb-2">{importStr}</code>
-                      <Button onClick={handleApproveDelete} size="sm" className="self-end">Delete</Button>
+                      <Button
+                        onClick={handleApproveDelete}
+                        size="sm"
+                        className="self-end"
+                      >
+                        Delete
+                      </Button>
                     </div>
                   ))}
                 </Alert>
@@ -644,14 +727,21 @@ export default function ComponentForm() {
 
             {Object.keys(internalDependencies).length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold mb-2">Internal dependencies:</h3>
+                <h3 className="text-lg font-semibold mb-2">
+                  Internal dependencies
+                </h3>
                 {Object.entries(internalDependencies).map(([path, slug]) => (
                   <div key={path} className="mb-2">
-                    <label className="block text-sm font-medium text-gray-700">{path}</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      {path}
+                    </label>
                     <Input
                       value={slug}
                       onChange={(e) => {
-                        setInternalDependencies(prev => ({...prev, [path]: e.target.value}));
+                        setInternalDependencies((prev) => ({
+                          ...prev,
+                          [path]: e.target.value,
+                        }));
                       }}
                       placeholder="Enter component slug"
                       className="mt-1 w-full"
@@ -664,42 +754,62 @@ export default function ComponentForm() {
             {isDebug && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Component names</label>
-                  <Textarea 
-                    value={parsedComponentNames.join(', ')}
-                    readOnly 
-                    className="mt-1 w-full bg-gray-100" 
+                  <label className="block text-sm font-medium text-gray-700">
+                    Component names
+                  </label>
+                  <Textarea
+                    value={parsedComponentNames.join(", ")}
+                    readOnly
+                    className="mt-1 w-full bg-gray-100"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Demo component name</label>
-                  <Input value={parsedDemoComponentName} readOnly className="mt-1 w-full bg-gray-100" />
+                  <label className="block text-sm font-medium text-gray-700">
+                    Demo component name
+                  </label>
+                  <Input
+                    value={parsedDemoComponentName}
+                    readOnly
+                    className="mt-1 w-full bg-gray-100"
+                  />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Component dependencies</label>
-                  <Textarea 
-                    value={Object.entries(parsedDependencies).map(([key, value]) => `${key}: ${value}`).join('\n')}
-                    readOnly 
-                    className="mt-1 w-full bg-gray-100" 
+                  <label className="block text-sm font-medium text-gray-700">
+                    Component dependencies
+                  </label>
+                  <Textarea
+                    value={Object.entries(parsedDependencies)
+                      .map(([key, value]) => `${key}: ${value}`)
+                      .join("\n")}
+                    readOnly
+                    className="mt-1 w-full bg-gray-100"
                   />
                 </div>
-              
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Demo dependencies</label>
-                  <Textarea 
-                    value={Object.entries(parsedDemoDependencies).map(([key, value]) => `${key}: ${value}`).join('\n')}
-                    readOnly 
-                    className="mt-1 w-full bg-gray-100" 
+                  <label className="block text-sm font-medium text-gray-700">
+                    Demo dependencies
+                  </label>
+                  <Textarea
+                    value={Object.entries(parsedDemoDependencies)
+                      .map(([key, value]) => `${key}: ${value}`)
+                      .join("\n")}
+                    readOnly
+                    className="mt-1 w-full bg-gray-100"
                   />
                 </div>
               </>
             )}
 
-            <Button 
-              onClick={() => setStep(2)} 
-              disabled={!watch('code') || !watch('demo_code') || Object.values(internalDependencies).some(slug => !slug)} 
+            <Button
+              onClick={() => setStep(2)}
+              disabled={
+                !watch("code") ||
+                !watch("demo_code") ||
+                Object.values(internalDependencies).some((slug) => !slug)
+              }
               className="w-full"
             >
               Next
@@ -708,35 +818,72 @@ export default function ComponentForm() {
         ) : (
           <>
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
-              <Input 
-                id="name" 
-                {...register('name', { required: true })} 
-                className="mt-1 w-full" 
-                defaultValue={formatComponentName(parsedComponentNames[0] || '')}
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Name
+              </label>
+              <Input
+                id="name"
+                {...register("name", { required: true })}
+                className="mt-1 w-full"
+                defaultValue={formatComponentName(
+                  parsedComponentNames[0] || ""
+                )}
                 onChange={(e) => generateAndSetSlug(e.target.value)}
               />
             </div>
 
             <div>
-              <label htmlFor="component_slug" className="block text-sm font-medium text-gray-700">Slug</label>
-              <Input id="component_slug" {...register('component_slug', { required: true, validate: isValidSlug })} className="mt-1 w-full" />
+              <label
+                htmlFor="component_slug"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Slug
+              </label>
+              <Input
+                id="component_slug"
+                {...register("component_slug", {
+                  required: true,
+                  validate: isValidSlug,
+                })}
+                className="mt-1 w-full"
+              />
               {slugChecking ? (
-                <p className="text-gray-500 text-sm mt-1">Checking availability...</p>
+                <p className="text-gray-500 text-sm mt-1">
+                  Checking availability...
+                </p>
               ) : slugError ? (
                 <p className="text-red-500 text-sm mt-1">{slugError}</p>
               ) : slugAvailable ? (
-                <p className="text-green-500 text-sm mt-1">This slug is available</p>
+                <p className="text-green-500 text-sm mt-1">
+                  This slug is available
+                </p>
               ) : null}
             </div>
 
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description (optional)</label>
-              <Input id="description" {...register('description')} className="mt-1 w-full" />
+              <label
+                htmlFor="description"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Description (optional)
+              </label>
+              <Input
+                id="description"
+                {...register("description")}
+                className="mt-1 w-full"
+              />
             </div>
 
             <div>
-              <label htmlFor="tags" className="block text-sm font-medium text-gray-700">Tags</label>
+              <label
+                htmlFor="tags"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Tags
+              </label>
               <Controller
                 name="tags"
                 control={control}
@@ -744,8 +891,12 @@ export default function ComponentForm() {
                 render={({ field }) => {
                   const [tags, setTags] = useState(field.value);
 
-                  const selectOptions = useMemo(() => 
-                    availableTags.map(tag => ({ value: tag.id, label: tag.name })),
+                  const selectOptions = useMemo(
+                    () =>
+                      availableTags.map((tag) => ({
+                        value: tag.id,
+                        label: tag.name,
+                      })),
                     [availableTags]
                   );
 
@@ -756,17 +907,22 @@ export default function ComponentForm() {
                       options={selectOptions}
                       className="mt-1 w-full rounded-md border border-input bg-transparent text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                       placeholder="Select or create tags"
-                      formatCreateLabel={(inputValue: string) => `Create "${inputValue}"`}
+                      formatCreateLabel={(inputValue: string) =>
+                        `Create "${inputValue}"`
+                      }
                       onChange={(newValue) => {
                         const formattedValue = newValue.map((item: any) => ({
                           id: item.__isNew__ ? undefined : item.value,
                           name: item.label,
-                          slug: generateSlug(item.label)
+                          slug: generateSlug(item.label),
                         }));
                         setTags(formattedValue);
                         field.onChange(formattedValue);
                       }}
-                      value={tags.map((tag) => ({ value: tag.id ?? -1, label: tag.name }))}
+                      value={tags.map((tag) => ({
+                        value: tag.id ?? -1,
+                        label: tag.name,
+                      }))}
                       menuPortalTarget={document.body}
                     />
                   );
@@ -778,8 +934,12 @@ export default function ComponentForm() {
               <Button onClick={() => setStep(1)} className="w-1/2">
                 Back
               </Button>
-              <Button type="submit" disabled={isLoading || !slugAvailable || !!demoCodeError} className="w-1/2">
-                {isLoading ? 'Adding...' : 'Add component'}
+              <Button
+                type="submit"
+                disabled={isLoading || !slugAvailable || !!demoCodeError}
+                className="w-1/2"
+              >
+                {isLoading ? "Adding..." : "Add component"}
               </Button>
             </div>
           </>
@@ -791,7 +951,8 @@ export default function ComponentForm() {
           <DialogHeader>
             <DialogTitle>Component Added Successfully</DialogTitle>
             <DialogDescription className="break-words">
-              Your new component has been successfully added. What would you like to do next?
+              Your new component has been successfully added. What would you
+              like to do next?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -805,5 +966,5 @@ export default function ComponentForm() {
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

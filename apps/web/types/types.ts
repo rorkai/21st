@@ -30,7 +30,7 @@ export interface Component {
   preview_url: string;
   size: string;
   user: User;
-  tags?: Tag[]; // Добавляем поле для тегов
+  tags?: Tag[];
 }
 
 export interface Tag {

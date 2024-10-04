@@ -30,4 +30,16 @@ export interface Component {
   preview_url: string;
   size: string;
   user: User;
+  tags?: Tag[]; // Добавляем поле для тегов
+}
+
+export interface Tag {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+export interface ComponentTag {
+  component_id: number;
+  tag_id: number;
 }

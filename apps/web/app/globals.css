@@ -13,6 +13,11 @@ body {
   margin: 0;
 }
 
+.css-13cymwt-control {
+  border-color: transparent !important;
+  border-width: 0px !important;
+}
+
 a {
   color: inherit;
   text-decoration: none;

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react'
-import { useForm } from 'react-hook-form'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useForm, Controller } from 'react-hook-form'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -23,6 +23,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import CreatableSelect from 'react-select/creatable';
+import MultiValue from "react-select/creatable"
+import { Tag } from '@/types/types'
 
 type FormData = {
   name: string
@@ -30,8 +33,15 @@ type FormData = {
   code: string
   demo_code: string
   description: string
+  tags: Tag[];
 }
 
+// Определите инерфейс TagOption в начале файла или импортируйте его, если он определен в другом месте
+interface TagOption {
+  value: number;
+  label: string;
+  __isNew__?: boolean
+}
 
 const slugAvailableAtom = atom<boolean | null>(null);
 const slugCheckingAtom = atom(false);
@@ -45,7 +55,7 @@ const importsToRemoveAtom = atom<string[]>([]);
 const parsedDemoComponentNameAtom = atom<string>('');
 
 export default function ComponentForm() {
-  const { register, handleSubmit, reset, watch, setValue } = useForm<FormData>()
+  const { register, handleSubmit, reset, watch, setValue, control } = useForm<FormData>()
   const [isLoading, setIsLoading] = useState(false)
   const [slugAvailable, setSlugAvailable] = useAtom(slugAvailableAtom)
   const [slugChecking, setSlugChecking] = useAtom(slugCheckingAtom)
@@ -64,6 +74,7 @@ export default function ComponentForm() {
   const router = useRouter()
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false)
   const [newComponentSlug, setNewComponentSlug] = useState('')
+  const [availableTags, setAvailableTags] = useState<Tag[]>([])
 
   const name = watch('name')
   const componentSlug = watch('component_slug')
@@ -397,6 +408,68 @@ export default function ComponentForm() {
     setDemoCodeError(null);
   };
 
+  const loadAvailableTags = useCallback(async () => {
+    const { data, error } = await client
+      .from('tags')
+      .select('*')
+      .order('name')
+
+    if (error) {
+      console.error('Error loading tags:', error)
+    } else {
+      setAvailableTags(data || [])
+    }
+  }, [client])
+
+  useEffect(() => {
+    loadAvailableTags()
+  }, [loadAvailableTags])
+
+  const addTagsToComponent = async (componentId: number, tags: Tag[]) => {
+    for (const tag of tags) {
+      let tagId: number
+
+      if (tag.id) {
+        tagId = tag.id
+      } else {
+        const slug = generateSlug(tag.name)
+        const { data: existingTag, error: selectError } = await client
+          .from('tags')
+          .select('id')
+          .eq('slug', slug)
+          .single()
+
+        if (existingTag) {
+          tagId = existingTag.id
+        } else {
+          const { data: newTag, error: insertError } = await client
+            .from('tags')
+            .insert({ name: tag.name, slug })
+            .single()
+
+          if (insertError) {
+            console.error('Error inserting tag:', insertError)
+            continue
+          }
+          if (newTag && typeof newTag === 'object' && 'id' in newTag) {
+            tagId = (newTag as { id: number }).id
+          } else {
+            console.error('New tag was not created or does not have an id')
+            continue
+          }
+        }
+      }
+
+      const { error: linkError } = await client
+        .from('component_tags')
+        .insert({ component_id: componentId, tag_id: tagId })
+
+      if (linkError) {
+        console.error('Error linking tag to component:', linkError)
+      }
+    }
+  }
+
   const onSubmit = async (data: FormData) => {
     if (!slugAvailable || demoCodeError) {
       alert('Please fix errors and try again.');
@@ -452,11 +525,9 @@ export default function ComponentForm() {
     
       if (error) throw error
       
-      reset()
-      // Удаляем стандартный alert
-      // alert('Component successfully added!')
-      
       if (insertedData) {
+        await addTagsToComponent(insertedData.id, data.tags)
+
         setNewComponentSlug(data.component_slug)
         setIsSuccessDialogOpen(true)
       }
@@ -663,7 +734,46 @@ export default function ComponentForm() {
               <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description (optional)</label>
               <Input id="description" {...register('description')} className="mt-1 w-full" />
             </div>
-            
+
+            <div>
+              <label htmlFor="tags" className="block text-sm font-medium text-gray-700">Tags</label>
+              <Controller
+                name="tags"
+                control={control}
+                defaultValue={[]}
+                render={({ field }) => {
+                  const [tags, setTags] = useState(field.value);
+
+                  const selectOptions = useMemo(() => 
+                    availableTags.map(tag => ({ value: tag.id, label: tag.name })),
+                    [availableTags]
+                  );
+
+                  return (
+                    <CreatableSelect<TagOption, true>
+                      {...field}
+                      isMulti
+                      options={selectOptions}
+                      className="mt-1 w-full rounded-md border border-input bg-transparent text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                      placeholder="Select or create tags"
+                      formatCreateLabel={(inputValue: string) => `Create "${inputValue}"`}
+                      onChange={(newValue) => {
+                        const formattedValue = newValue.map((item: any) => ({
+                          id: item.__isNew__ ? undefined : item.value,
+                          name: item.label,
+                          slug: generateSlug(item.label)
+                        }));
+                        setTags(formattedValue);
+                        field.onChange(formattedValue);
+                      }}
+                      value={tags.map((tag) => ({ value: tag.id ?? -1, label: tag.name }))}
+                      menuPortalTarget={document.body}
+                    />
+                  );
+                }}
+              />
+            </div>
+
             <div className="flex space-x-2">
               <Button onClick={() => setStep(1)} className="w-1/2">
                 Back

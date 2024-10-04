@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,15 +33,38 @@ import {
   removeComponentImports
 } from "@/utils/parsers";
 import { useComponentSlug, generateSlug, isValidSlug } from '@/hooks/useComponentSlug';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
-type FormData = {
-  name: string;
-  component_slug: string;
-  code: string;
-  demo_code: string;
-  description: string;
-  tags: Tag[];
-};
+// Определение схемы формы с использованием Zod
+const formSchema = z.object({
+  name: z.string().min(2, {
+    message: "Название должно содержать не менее 2 символов.",
+  }),
+  component_slug: z.string().min(2, {
+    message: "Слаг должен содержать не менее 2 символов.",
+  }),
+  code: z.string().min(1, {
+    message: "Код компонента обязателен.",
+  }),
+  demo_code: z.string().min(1, {
+    message: "Демо-код обязателен.",
+  }),
+  description: z.string().optional(),
+  tags: z.array(z.object({
+    id: z.number().optional(),
+    name: z.string(),
+    slug: z.string(),
+  })),
+});
+
+type FormData = z.infer<typeof formSchema>;
 
 // Define the TagOption interface at the top of the file or import it if it's defined elsewhere
 interface TagOption {
@@ -59,8 +84,17 @@ const parsedDemoComponentNameAtom = atom<string>("");
 
 
 export default function ComponentForm() {
-  const { register, handleSubmit, reset, watch, setValue, control } =
-    useForm<FormData>();
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      component_slug: "",
+      code: "",
+      demo_code: "",
+      description: "",
+      tags: [],
+    },
+  });
   const [isLoading, setIsLoading] = useState(false);
   const {
     slugAvailable,
@@ -94,29 +128,34 @@ export default function ComponentForm() {
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
   const [newComponentSlug, setNewComponentSlug] = useState("");
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const descriptionRef = useRef<HTMLInputElement>(null);
 
-  const name = watch("name");
-  const componentSlug = watch("component_slug");
+  const name = form.watch("name");
+  const componentSlug = form.watch("component_slug");
 
   useEffect(() => {
     const updateSlug = async () => {
-      if (name) {
+      if (name && !componentSlug) {
         const newSlug = await generateUniqueSlug(name);
-        setValue("component_slug", newSlug);
+        form.setValue("component_slug", newSlug);
       }
     };
 
     updateSlug();
-  }, [name, setValue, generateUniqueSlug]);
+  }, [name, componentSlug, form.setValue, generateUniqueSlug]);
 
   useEffect(() => {
     if (componentSlug) {
-      checkSlug(componentSlug);
+      const timer = setTimeout(() => {
+        checkSlug(componentSlug);
+      }, 500);
+      return () => clearTimeout(timer);
     }
   }, [componentSlug, checkSlug]);
 
-  const code = watch("code");
-  const demoCode = watch("demo_code");
+  const code = form.watch("code");
+  const demoCode = form.watch("demo_code");
 
   useEffect(() => {
     setParsedComponentNames(code ? extractComponentNames(code) : []);
@@ -171,7 +210,7 @@ export default function ComponentForm() {
       demoCode,
       parsedComponentNames
     );
-    setValue("demo_code", modifiedCode);
+    form.setValue("demo_code", modifiedCode);
     setImportsToRemove([]);
     setDemoCodeError(null);
   };
@@ -298,10 +337,11 @@ export default function ComponentForm() {
       if (error) throw error;
 
       if (insertedData) {
-        await addTagsToComponent(insertedData.id, data.tags);
+        await addTagsToComponent(insertedData.id, data.tags.filter((tag): tag is Tag => tag.id !== undefined));
 
         setNewComponentSlug(data.component_slug);
-        setIsSuccessDialogOpen(true);
+        setIsConfirmDialogOpen(false);  // Закрываем диалог подтверждения
+        setIsSuccessDialogOpen(true);   // Открываем диалог успеха
       }
     } catch (error) {
       console.error("Error adding component:", error);
@@ -335,14 +375,14 @@ export default function ComponentForm() {
   useEffect(() => {
     if (step === 2 && parsedComponentNames.length > 0) {
       const formattedName = formatComponentName(parsedComponentNames[0] || "");
-      setValue("name", formattedName);
+      form.setValue("name", formattedName);
       generateAndSetSlug(formattedName);
     }
-  }, [step, parsedComponentNames, setValue]);
+  }, [step, parsedComponentNames, form.setValue]);
 
   const generateAndSetSlug = async (name: string) => {
     const newSlug = await generateUniqueSlug(name);
-    setValue("component_slug", newSlug);
+    form.setValue("component_slug", newSlug);
   };
 
   const handleGoToComponent = () => {
@@ -353,7 +393,7 @@ export default function ComponentForm() {
   };
 
   const handleAddAnother = () => {
-    reset();
+    form.reset();
     setStep(1);
     setIsSuccessDialogOpen(false);
   };
@@ -451,78 +491,78 @@ export function cn(...inputs: (string | undefined)[]) {
 
 const [previewProps, setPreviewProps] = useState<{ files: Record<string, string>, dependencies: Record<string, string> } | null>(null);
 
-const codeMemoized = useMemo(() => watch("code"), [watch("code")]);
-const demoCodeMemoized = useMemo(() => watch("demo_code"), [watch("demo_code")]);
+const codeMemoized = useMemo(() => form.watch("code"), [form.watch("code")]);
+const demoCodeMemoized = useMemo(() => form.watch("demo_code"), [form.watch("demo_code")]);
 
 useEffect(() => {
-  if (codeMemoized && demoCodeMemoized && Object.keys(internalDependencies).length === 0) {
+  if (codeMemoized && demoCodeMemoized && Object.keys(internalDependencies).length === 0 && !isConfirmDialogOpen) {
     const { files, dependencies } = prepareFilesForPreview(codeMemoized, demoCodeMemoized);
     setPreviewProps({
       files,
       dependencies,
     });
-  } else {
-    setPreviewProps(null);
   }
-}, [codeMemoized, demoCodeMemoized, internalDependencies]);
+}, [codeMemoized, demoCodeMemoized, internalDependencies, isConfirmDialogOpen]);
 
   return (
     <>
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex w-full h-full items-center justify-center"
-      >
-        {step === 1 ? (
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex w-full h-full items-center justify-center">
           <div className="flex gap-10 items-start h-full w-full mt-2">
             <div className="flex flex-col w-1/2 h-full items-start gap-7 pb-10">
-              
-              <div className="w-full">
-                <label
-                  htmlFor="code"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Code
-                </label>
-                <Textarea
-                  id="code"
-                  {...register("code", { required: true })}
-                  className="mt-1 w-full h-[calc(100vh/3)] min-h-[100px]"
-                />
-              </div>
-
-              <div className="w-full">
-                <label
-                  htmlFor="demo_code"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Demo code (without component import)
-                </label>
-                <Textarea
-                  id="demo_code"
-                  {...register("demo_code", { required: true })}
-                  className={`mt-1 w-full h-[calc(100vh/3)] min-h-[100px] ${demoCodeError ? "border-yellow-500" : ""}`}
-                />
-                {demoCodeError && (
-                  <Alert variant="default" className="mt-2 text-[14px] w-full">
-                    <p>{demoCodeError}</p>
-                    {importsToRemove.map((importStr, index) => (
-                      <div
-                        key={index}
-                        className="bg-gray-100 p-2 mt-2 rounded flex flex-col w-full"
-                      >
-                        <code className="mb-2">{importStr}</code>
-                        <Button
-                          onClick={handleApproveDelete}
-                          size="sm"
-                          className="self-end"
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    ))}
-                  </Alert>
+              <FormField
+                control={form.control}
+                name="code"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Код</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        className="mt-1 w-full h-[calc(100vh/3)] min-h-[100px]"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </div>
+              />
+
+              <FormField
+                control={form.control}
+                name="demo_code"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Демо-код (без импорта компонента)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        className={`mt-1 w-full h-[calc(100vh/3)] min-h-[100px] ${demoCodeError ? "border-yellow-500" : ""}`}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    {demoCodeError && (
+                      <Alert variant="default" className="mt-2 text-[14px] w-full">
+                        <p>{demoCodeError}</p>
+                        {importsToRemove.map((importStr, index) => (
+                          <div
+                            key={index}
+                            className="bg-gray-100 p-2 mt-2 rounded flex flex-col w-full"
+                          >
+                            <code className="mb-2">{importStr}</code>
+                            <Button
+                              onClick={handleApproveDelete}
+                              size="sm"
+                              className="self-end"
+                            >
+                              Удалить
+                            </Button>
+                          </div>
+                        ))}
+                      </Alert>
+                    )}
+                  </FormItem>
+                )}
+              />
 
               {Object.keys(internalDependencies).length > 0 && (
                 <div className="w-full">
@@ -602,44 +642,52 @@ useEffect(() => {
                 </>
               )}
 
-              
-
               <Button
-                onClick={() => setStep(2)}
+                onClick={() => setIsConfirmDialogOpen(true)}
                 disabled={
-                  !watch("code") ||
-                  !watch("demo_code") ||
+                  !form.watch("code") ||
+                  !form.watch("demo_code") ||
                   Object.values(internalDependencies).some((slug) => !slug)
                 }
                 className="w-full max-w-[150px] mr-auto"
               >
-                Next
+                Далее
               </Button>
             </div>
             {previewProps && Object.keys(internalDependencies).length === 0 && (
               <div className="w-1/2">
-                <h3 className="block text-sm font-medium text-gray-700 mb-1">Component preview</h3>
+                <h3 className="block text-sm font-medium text-gray-700 mb-1">Предпросмотр компонента</h3>
                 <Preview {...previewProps} />
               </div>
             )}
           </div>
-        ) : (
-          <div className="flex flex-col w-full h-full items-center max-w-[400px] justify-center gap-4 mt-10">
+        </form>
+      </Form>
+
+      <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Подтвердите детали компонента</DialogTitle>
+            <DialogDescription>
+              Пожалуйста, проверьте и подтвердите детали вашего компонента.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4">
             <div className="w-full">
               <label
                 htmlFor="name"
                 className="block text-sm font-medium text-gray-700"
               >
-                Name
+                Название
               </label>
               <Input
                 id="name"
-                {...register("name", { required: true })}
+                {...form.register("name", { required: true })}
                 className="mt-1 w-full"
-                defaultValue={formatComponentName(
-                  parsedComponentNames[0] || ""
-                )}
-                onChange={(e) => generateAndSetSlug(e.target.value)}
+                onChange={(e) => {
+                  form.setValue("name", e.target.value);
+                  generateAndSetSlug(e.target.value);
+                }}
               />
             </div>
 
@@ -648,25 +696,26 @@ useEffect(() => {
                 htmlFor="component_slug"
                 className="block text-sm font-medium text-gray-700"
               >
-                Slug
+                Слаг
               </label>
               <Input
                 id="component_slug"
-                {...register("component_slug", {
+                {...form.register("component_slug", {
                   required: true,
                   validate: isValidSlug,
                 })}
                 className="mt-1 w-full"
+                onChange={(e) => checkSlug(e.target.value)}
               />
               {slugChecking ? (
                 <p className="text-gray-500 text-sm mt-1">
-                  Checking availability...
+                  Проверка доступности...
                 </p>
               ) : slugError ? (
                 <p className="text-red-500 text-sm mt-1">{slugError}</p>
               ) : slugAvailable ? (
                 <p className="text-green-500 text-sm mt-1">
-                  This slug is available
+                  Этот слаг доступен
                 </p>
               ) : null}
             </div>
@@ -676,12 +725,13 @@ useEffect(() => {
                 htmlFor="description"
                 className="block text-sm font-medium text-gray-700"
               >
-                Description (optional)
+                Описание (необязательно)
               </label>
               <Input
                 id="description"
-                {...register("description")}
+                {...form.register("description")}
                 className="mt-1 w-full"
+                ref={descriptionRef}
               />
             </div>
 
@@ -690,11 +740,11 @@ useEffect(() => {
                 htmlFor="tags"
                 className="block text-sm font-medium text-gray-700"
               >
-                Tags
+                Теги
               </label>
               <Controller
                 name="tags"
-                control={control}
+                control={form.control}
                 defaultValue={[]}
                 render={({ field }) => {
                   const [tags, setTags] = useState(field.value);
@@ -714,9 +764,9 @@ useEffect(() => {
                       isMulti
                       options={selectOptions}
                       className="mt-1 w-full rounded-md border border-input bg-transparent text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                      placeholder="Select or create tags"
+                      placeholder="Выберите или создайте теги"
                       formatCreateLabel={(inputValue: string) =>
-                        `Create "${inputValue}"`
+                        `Создать "${inputValue}"`
                       }
                       onChange={(newValue) => {
                         const formattedValue = newValue.map((item: any) => ({
@@ -732,27 +782,28 @@ useEffect(() => {
                         label: tag.name,
                       }))}
                       menuPortalTarget={document.body}
+                      styles={{
+                        menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                      }}
                     />
                   );
                 }}
               />
             </div>
-
-            <div className="flex space-x-2 w-full justify-between">
-              <Button onClick={() => setStep(1)} variant="outline" className="w-1/4">
-                Back
-              </Button>
-              <Button
-                type="submit"
-                disabled={isLoading || !slugAvailable || !!demoCodeError}
-                className="w-1/3"
-              >
-                {isLoading ? "Adding..." : "Add component"}
-              </Button>
-            </div>
           </div>
-        )}
-      </form>
+          <DialogFooter>
+            <Button onClick={() => setIsConfirmDialogOpen(false)} variant="outline">
+              Назад
+            </Button>
+            <Button
+              onClick={form.handleSubmit(onSubmit)}
+              disabled={isLoading || !slugAvailable || !!demoCodeError}
+            >
+              {isLoading ? "Добавление..." : "Добавить компонент"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isSuccessDialogOpen} onOpenChange={setIsSuccessDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">

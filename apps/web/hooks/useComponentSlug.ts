@@ -1,7 +1,8 @@
 import { useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useClerkSupabaseClient } from "@/utils/clerk";
 import { useAtom } from 'jotai';
 import { atom } from 'jotai';
-import { useClerkSupabaseClient } from "@/utils/clerk";
 
 const slugAvailableAtom = atom<boolean | null>(null);
 const slugCheckingAtom = atom(false);
@@ -26,7 +27,7 @@ export const useComponentSlug = () => {
   const [slugError, setSlugError] = useAtom(slugErrorAtom);
   const client = useClerkSupabaseClient();
 
-  const checkSlugUnique = async (slug: string): Promise<boolean> => {
+  const checkSlugUnique = useCallback(async (slug: string): Promise<boolean> => {
     const { data, error } = await client
       .from("components")
       .select("id")
@@ -38,7 +39,7 @@ export const useComponentSlug = () => {
     }
 
     return data?.length === 0;
-  };
+  }, [client]);
 
   const generateUniqueSlug = useCallback(async (baseName: string) => {
     let newSlug = generateSlug(baseName);
@@ -52,9 +53,9 @@ export const useComponentSlug = () => {
     }
 
     return newSlug;
-  }, []);
+  }, [checkSlugUnique]);
 
-  const checkSlug = async (slug: string) => {
+  const checkSlug = useCallback(async (slug: string) => {
     setSlugChecking(true);
     setSlugError(null);
 
@@ -70,6 +71,23 @@ export const useComponentSlug = () => {
     }
 
     setSlugChecking(false);
+  }, [checkSlugUnique, setSlugAvailable, setSlugChecking, setSlugError]);
+
+  const useSlugCheck = (slug: string) => {
+    return useQuery({
+      queryKey: ['slugCheck', slug],
+      queryFn: async () => {
+        if (!isValidSlug(slug)) {
+          throw new Error("Invalid slug format");
+        }
+        const isUnique = await checkSlugUnique(slug);
+        if (!isUnique) {
+          throw new Error("This slug is already taken");
+        }
+        return true;
+      },
+      enabled: !!slug && isValidSlug(slug),
+    });
   };
 
   return {
@@ -79,5 +97,6 @@ export const useComponentSlug = () => {
     checkSlugUnique,
     generateUniqueSlug,
     checkSlug,
+    useSlugCheck,
   };
 };

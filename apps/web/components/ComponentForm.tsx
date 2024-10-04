@@ -9,7 +9,7 @@ import { Alert } from "@/components/ui/alert";
 import { useAtom, atom } from "jotai";
 import { useDebugMode } from "@/hooks/useDebugMode";
 import React from "react";
-import { useUser, useSession } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { SandpackProvider as SandpackProviderUnstyled } from "@codesandbox/sandpack-react/unstyled";
 import {
@@ -541,14 +541,16 @@ const codeMemoized = useMemo(() => watch("code"), [watch("code")]);
 const demoCodeMemoized = useMemo(() => watch("demo_code"), [watch("demo_code")]);
 
 useEffect(() => {
-  if (codeMemoized && demoCodeMemoized) {
+  if (codeMemoized && demoCodeMemoized && Object.keys(internalDependencies).length === 0) {
     const { files, dependencies } = prepareFilesForPreview(codeMemoized, demoCodeMemoized);
     setPreviewProps({
       files,
       dependencies,
     });
+  } else {
+    setPreviewProps(null);
   }
-}, [codeMemoized, demoCodeMemoized]);
+}, [codeMemoized, demoCodeMemoized, internalDependencies]);
 
   return (
     <>
@@ -632,7 +634,7 @@ useEffect(() => {
               </div>
             )}
 
-          {previewProps && (
+          {previewProps && Object.keys(internalDependencies).length === 0 && (
             <div>
               <h3 className="text-lg font-semibold mb-2">Превью компонента</h3>
               <Preview {...previewProps} />

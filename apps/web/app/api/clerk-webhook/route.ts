@@ -11,8 +11,13 @@ const supabaseAdmin = createClient(
 );
 
 export async function POST(req: Request) {
+  console.log('Received webhook request');
+  
   const payload = await req.text();
   const headersList = req.headers;
+
+  console.log('Webhook payload:', payload);
+  console.log('Webhook headers:', Object.fromEntries(headersList));
 
   const heads = {
     'svix-id': headersList.get('svix-id'),
@@ -36,12 +41,15 @@ export async function POST(req: Request) {
 
   try {
     evt = wh.verify(payload, heads as WebhookRequiredHeaders) as WebhookEvent;
+    console.log('Webhook verified successfully');
   } catch (err) {
     console.error('Webhook verification error:', err);
     return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 400 });
   }
 
   const { type, data: user } = evt;
+  console.log('Webhook event type:', type);
+  console.log('Webhook user data:', user);
 
   switch (type) {
     case 'user.created':
@@ -50,7 +58,7 @@ export async function POST(req: Request) {
       const { error } = await supabaseAdmin.from('users').upsert({
         id: user.id,
         username: user.username ?? null,
-        image_url: user.image_url ?? null,
+        image_url: user.image_url,
         email: user.email_addresses[0]?.email_address ?? null,
         name: `${user.first_name ?? ''} ${user.last_name ?? ''}`.trim() || null,
       });
@@ -59,6 +67,7 @@ export async function POST(req: Request) {
         console.error('User sync error with Supabase:', error);
         return NextResponse.json({ error: 'Failed to sync user with Supabase' }, { status: 500 });
       }
+      console.log('User synced successfully');
       break;
 
     case 'user.deleted':
@@ -72,15 +81,19 @@ export async function POST(req: Request) {
         console.error('User deletion error from Supabase:', deleteError);
         return NextResponse.json({ error: 'Failed to delete user from Supabase' }, { status: 500 });
       }
+      console.log('User deleted successfully');
       break;
 
     default:
       console.warn('Unknown event type:', type);
   }
 
+  console.log('Webhook processed successfully');
   return NextResponse.json({ message: 'Webhook processed successfully' });
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  console.log('Received GET request to webhook endpoint');
+  console.log('Request URL:', req.url);
   return NextResponse.json({ message: 'Clerk webhook endpoint' });
 }

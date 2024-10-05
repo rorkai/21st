@@ -244,6 +244,7 @@ export default function App() {
             showCode={showCode}
             installUrl={component.install_url}
             componentSlug={component.component_slug}
+            componentInfo={component}
           />
         </div>
       )}

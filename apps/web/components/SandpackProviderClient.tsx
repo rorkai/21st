@@ -14,7 +14,11 @@ import { SandpackProviderProps } from "@codesandbox/sandpack-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAtom, atom } from 'jotai';
 import { useDebugMode } from '@/hooks/useDebugMode';
-
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Component } from '@/types/types';
+import { format } from 'date-fns';
+import Link from 'next/link';
+import { UserAvatar } from '@/components/UserAvatar';
 
 const copiedAtom = atom(false);
 const codeCopiedAtom = atom(false);
@@ -31,6 +35,7 @@ interface SandpackProviderClientProps {
   showCode: boolean;
   installUrl: string;
   componentSlug: string;
+  componentInfo: Component;
 }
 
 const LazyPreview = React.lazy(() => import("@codesandbox/sandpack-react/unstyled").then(module => ({ default: module.SandpackPreview })));
@@ -42,6 +47,109 @@ const LoadingSpinner = () => (
   </div>
 );
 
+const Info: React.FC<{ info: Component }> = ({ info }) => {
+  const [copiedDependencies, setCopiedDependencies] = useState(false);
+
+  const parseDependencies = (deps: any): Record<string, string> => {
+    if (typeof deps === 'string') {
+      try {
+        return JSON.parse(deps);
+      } catch (e) {
+        console.error('Failed to parse dependencies:', e);
+        return {};
+      }
+    }
+    return deps || {};
+  };
+
+  const allDependencies = {
+    ...parseDependencies(info.dependencies),
+    ...parseDependencies(info.demo_dependencies),
+    ...parseDependencies(info.internal_dependencies)
+  };
+
+  const copyAllDependencies = () => {
+    const dependenciesString = Object.entries(allDependencies)
+      .map(([dep, version]) => `"${dep}": "${version}"`)
+      .join(',\n');
+    navigator.clipboard.writeText(`{\n${dependenciesString}\n}`);
+    setCopiedDependencies(true);
+    setTimeout(() => setCopiedDependencies(false), 2000);
+  };
+
+  return (
+    <div className="p-4 space-y-4 text-sm">
+      {info.name && (
+        <div className="flex items-center">
+          <span className="text-gray-500 w-1/3">Name:</span>
+          <span className="text-black w-2/3 font-semibold text-right">{info.name}</span>
+        </div>
+      )}
+      {info.user && (
+        <div className="flex items-center">
+          <span className="text-gray-500 w-1/3">Created by:</span>
+          <div className="flex items-center w-2/3 justify-end font-semibold">
+            <Link href={`/${info.user.username}`} className="flex items-center text-blue-500 hover:underline">
+              <UserAvatar 
+                src={info.user.image_url || "/placeholder.svg"} 
+                alt={info.user.name || info.user.username} 
+                size={24} 
+              />
+              <span className="ml-2">{info.user.name || info.user.username}</span>
+            </Link>
+          </div>
+        </div>
+      )}
+      {info.description && (
+        <div className="flex">
+          <span className="text-gray-500 w-1/3">Description:</span>
+          <span className="text-black w-2/3 font-semibold text-right">{info.description}</span>
+        </div>
+      )}
+      {info.created_at && (
+        <div className="flex">
+          <span className="text-gray-500 w-1/3">Created:</span>
+          <span className="text-black w-2/3 font-semibold text-right">{format(new Date(info.created_at), 'PPP')}</span>
+        </div>
+      )}
+      {info.tags && info.tags.length > 0 && (
+        <div className="flex">
+          <span className="text-gray-500 w-1/3">Tags:</span>
+          <div className="w-2/3 flex flex-wrap gap-2 font-semibold justify-end">
+            {info.tags.map((tag) => (
+              <span key={tag.slug} className="bg-gray-200 px-2 py-1 rounded-md text-black">
+                {tag.name}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+      {Object.keys(allDependencies).length > 0 && (
+        <div className="flex">
+          <span className="text-gray-500 w-1/3">Dependencies:</span>
+          <div className="w-2/3 hover:underline">
+          {copiedDependencies ? (
+            <div className="font-mono text-ellipsis font-semibold text-right">
+              Copied!
+            </div>
+          ) : (
+            Object.entries(allDependencies).map(([dep]) => (
+              <div
+                key={dep}
+                className="font-mono text-blue-500 cursor-pointer font-semibold text-ellipsis text-right"
+                onClick={copyAllDependencies}
+              >
+                {dep}
+              </div>
+            ))
+          )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function SandpackProviderClient({
   files,
   dependencies,
@@ -49,6 +157,7 @@ export default function SandpackProviderClient({
   internalDependencies,
   showCode,
   componentSlug,
+  componentInfo,
 }: SandpackProviderClientProps) {
   const [copied, setCopied] = useAtom(copiedAtom);
   const [codeCopied, setCodeCopied] = useAtom(codeCopiedAtom);
@@ -172,7 +281,7 @@ root.render(
     const command = `npx shadcn@latest add "${installUrl}"`;
     navigator.clipboard.writeText(command);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 1000);
   };
 
   const copyCode = () => {
@@ -280,8 +389,14 @@ root.render(
                 <SandpackLayout className="flex w-full flex-row gap-4">
                   <div className={`flex flex-col w-full ${styles.customScroller}`}>
                     <div className="flex w-full flex-col">
-                      <>
-                      <div className="p-4">
+                      <Tabs defaultValue="code" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                          <TabsTrigger value="code">Code</TabsTrigger>
+                          <TabsTrigger value="info">Info</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="code">
+                        <>
+                      <div className="px-4 py-2">
                         <p className="text-[17px] font-medium mb-4 whitespace-nowrap overflow-hidden text-ellipsis">Add component to project</p>
                         <div className="mb-2 mt-4 p-4 h-14 rounded-lg border bg-zinc-950 dark:bg-zinc-900 flex items-center">
                           <div className="flex items-center justify-center text-white w-5 h-5 mr-3">
@@ -329,6 +444,11 @@ root.render(
                         />
                       </div>
                       </>
+                        </TabsContent>
+                        <TabsContent value="info">
+                          <Info info={componentInfo} />
+                        </TabsContent>
+                      </Tabs>
                     </div>
                   </div>
                 </SandpackLayout>

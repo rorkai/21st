@@ -19,6 +19,10 @@ const nextConfig = {
       moduleIdStrategy: 'deterministic',
     },
   },
+  trailingSlash: false,
+  async redirects() {
+    return [];
+  },
 };
 
 module.exports = nextConfig;

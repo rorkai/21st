@@ -24,7 +24,7 @@ export function ComponentCard({ component }: ComponentCardProps) {
           />
         </div>
         <div className="flex items-center space-x-3">
-          <UserAvatar src={component.user.image_url} alt={component.user.name} size={24} />
+          <UserAvatar src={component.user.image_url || "/placeholder.svg"} alt={component.user.name} size={24} />
           <h2 className="text-sm font-medium text-gray-900 truncate flex-grow">
             {component.name}
           </h2>

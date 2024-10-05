@@ -28,7 +28,7 @@ export default async function UserProfile({ params }: { params: { username: stri
         <div className="flex flex-col md:flex-row gap-8">
           <div className="flex md:w-[30%] flex-col items-center w-full">
             <div className="flex flex-col items-center md:items-start">
-              <UserAvatar src={user.image_url} alt={user.name} size={184} />
+              <UserAvatar src={user.image_url || '/placeholder.svg'} alt={user.name} size={184} />
               <h1 className="mt-4 text-[44px] font-bold">{user.name}</h1>
               <p className="text-[20px] text-gray-600">@{user.username}</p>
             </div>

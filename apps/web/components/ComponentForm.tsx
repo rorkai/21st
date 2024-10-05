@@ -149,6 +149,13 @@ export default function ComponentForm() {
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
 
   useEffect(() => {
+    if (user) {
+      console.log("Current user:", user);
+      console.log("User username:", user.username);
+    }
+  }, [user]);
+
+  useEffect(() => {
     const updateSlug = async () => {
       if (name && !componentSlug) {
         const newSlug = await generateUniqueSlug(name);
@@ -343,6 +350,12 @@ export default function ComponentForm() {
   };
 
   const onSubmit = async (data: FormData) => {
+    if (!user || !user.id) {
+      console.error("User is not authenticated");
+      alert("You must be logged in to add a component.");
+      return;
+    }
+
     console.log("onSubmit called with data:", data);
     
     if (!slugAvailable && isSlugManuallyEdited) {
@@ -365,6 +378,18 @@ export default function ComponentForm() {
 
     setIsLoading(true);
     try {
+      const { data: userData, error: userError } = await client
+        .from('users')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+
+      if (userError || !userData) {
+        console.error("User not found in Supabase:", userError);
+        alert("There was an error with your account. Please try logging out and back in.");
+        return;
+      }
+
       const componentNames = extractComponentNames(data.code);
       const demoComponentName = extractDemoComponentName(data.demo_code);
       const dependencies = parseDependencies(data.code);

@@ -195,7 +195,7 @@ export default function App() {
       <div className="flex justify-between items-center">
         <div className="flex gap-4 items-center">
             <a href={`/${component.user.username}`}>
-              <UserAvatar src={component.user.image_url} alt={component.user.name} size={32} />
+              <UserAvatar src={component.user.image_url || '/placeholder.svg'} alt={component.user.name} size={32} />
             </a>
             <div className="h-10 w-[1px] bg-gray-200" />
           <div className="flex gap-2 items-start">

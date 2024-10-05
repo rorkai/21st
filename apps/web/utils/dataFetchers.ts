@@ -17,6 +17,9 @@ const componentFields = `
   user:users!user_id (${userFields})
 `;
 
+// Удалим эту строку
+// console.log('componentFields:', componentFields);
+
 export async function getComponent(username: string, slug: string): Promise<Component | null> {
   console.log('getComponent called with username:', username, 'and slug:', slug);
   const { data, error } = await supabase
@@ -98,10 +101,13 @@ export function useUserComponents(userId: string) {
 }
 
 export async function getComponents(): Promise<Component[]> {
-  const { data, error } = await supabase.from('components').select(componentFields);
+  const { data, error } = await supabase
+    .from('components')
+    .select(componentFields)
+    .limit(1000);
 
   if (error) {
-    console.error('Error fetching components:', error);
+    console.error('Ошибка при получении компонентов:', error);
     return [];
   }
 

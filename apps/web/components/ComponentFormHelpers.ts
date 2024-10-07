@@ -2,8 +2,8 @@ import { useClerkSupabaseClient } from "@/utils/clerk"
 import {
   extractComponentNames,
   extractDemoComponentName,
-  parseDependencies,
-  parseInternalDependencies,
+  extractDependencies,
+  findInternalDependencies,
   removeComponentImports,
 } from "@/utils/parsers"
 import { FormData } from "./ComponentFormUtils"
@@ -54,7 +54,10 @@ export const checkDemoCode = (
   setImportsToRemove: (imports: string[]) => void,
   setDemoCodeError: (error: string | null) => void,
 ) => {
-  const { removedImports } = removeComponentImports(demoCode, componentNames)
+  const { removedImports, modifiedCode } = removeComponentImports(
+    demoCode,
+    componentNames,
+  )
 
   if (removedImports.length > 0) {
     setImportsToRemove(removedImports)
@@ -65,22 +68,22 @@ export const checkDemoCode = (
     setImportsToRemove([])
     setDemoCodeError(null)
   }
+
+  return { modifiedCode, removedImports }
 }
 
-export const handleApproveDelete = (
+export const handleApproveDelete = async (
   demoCode: string,
   parsedComponentNames: string[],
   form: UseFormReturn<FormData>,
   setImportsToRemove: (imports: string[]) => void,
   setDemoCodeError: (error: string | null) => void,
-) => {
+): Promise<string | null> => {
   const { modifiedCode } = removeComponentImports(
     demoCode,
     parsedComponentNames,
   )
-  form.setValue("demo_code", modifiedCode)
-  setImportsToRemove([])
-  setDemoCodeError(null)
+  return modifiedCode
 }
 
 export const handleFileChange = (
@@ -124,12 +127,11 @@ export const updateDependencies = (
   setInternalDependencies: (deps: Record<string, string>) => void,
 ) => {
   setParsedComponentNames(code ? extractComponentNames(code) : [])
-  setParsedDependencies(code ? parseDependencies(code) : {})
-  setParsedDemoDependencies(demoCode ? parseDependencies(demoCode) : {})
+  setParsedDependencies(code ? extractDependencies(code) : {})
+  setParsedDemoDependencies(demoCode ? extractDependencies(demoCode) : {})
   setParsedDemoComponentName(demoCode ? extractDemoComponentName(demoCode) : "")
 
-  const componentDeps = parseInternalDependencies(code)
-  const demoDeps = parseInternalDependencies(demoCode)
-  const combinedDeps = { ...componentDeps, ...demoDeps }
-  setInternalDependencies(combinedDeps)
+  const componentDeps = extractDependencies(code)
+  const demoDeps = extractDependencies(demoCode)
+  setInternalDependencies(findInternalDependencies(componentDeps, demoDeps))
 }

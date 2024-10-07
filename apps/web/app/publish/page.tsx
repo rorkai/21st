@@ -27,11 +27,8 @@ export default function PublishPage() {
       <Head>
         <title>Publish New Component | Component Library</title>
       </Head>
-      <header className="flex items-center text-[17px] font-semibold justify-between border-b border-gray-200 p-4 -mx-4">
-        Publish new component
-      </header>
       <SignedIn>
-        <div className=" flex flex-col items-center gap-7 h-full w-full">
+        <div className="flex flex-col items-center gap-7 h-screen w-full">
           <ComponentForm />
         </div>
       </SignedIn>

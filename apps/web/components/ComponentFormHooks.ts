@@ -25,11 +25,11 @@ import {
 import { Tag } from "@/types/types"
 import {
   extractComponentNames,
+  extractDependencies,
   extractDemoComponentName,
-  parseDependencies,
-  parseInternalDependencies,
+  findInternalDependencies,
   removeComponentImports,
-} from "@/utils/parsers"
+} from "../utils/parsers"
 import { UseFormReturn } from "react-hook-form"
 
 type ComponentFormState = {
@@ -161,8 +161,8 @@ export const useComponentFormState = (
 
   useEffect(() => {
     setParsedComponentNames(code ? extractComponentNames(code) : [])
-    setParsedDependencies(code ? parseDependencies(code) : {})
-    setParsedDemoDependencies(demoCode ? parseDependencies(demoCode) : {})
+    setParsedDependencies(code ? extractDependencies(code) : {})
+    setParsedDemoDependencies(demoCode ? extractDependencies(demoCode) : {})
   }, [
     code,
     demoCode,
@@ -205,13 +205,13 @@ export const useComponentFormState = (
   }, [code, demoCode, checkDemoCode])
 
   useEffect(() => {
-    const componentDeps = parseInternalDependencies(code)
-    const demoDeps = parseInternalDependencies(demoCode)
+    const componentDeps = extractDependencies(code)
+    const demoDeps = extractDependencies(demoCode)
 
-    const combinedDeps = { ...componentDeps, ...demoDeps }
+    const internalDeps = findInternalDependencies(componentDeps, demoDeps)
 
-    setInternalDependencies(combinedDeps)
-  }, [code, demoCode, setInternalDependencies])
+    setInternalDependencies(internalDeps)
+  }, [code, demoCode])
 
   useEffect(() => {
     if (step === 2 && parsedComponentNames.length > 0) {

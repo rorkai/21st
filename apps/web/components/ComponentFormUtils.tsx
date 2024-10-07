@@ -3,7 +3,7 @@ import { z } from "zod"
 import {
   extractComponentNames,
   extractDemoComponentName,
-  parseDependencies,
+  extractDependencies,
 } from "@/utils/parsers"
 
 export const demoCodeErrorAtom = atom<string | null>(null)
@@ -117,8 +117,8 @@ export function cn(...inputs: (string | undefined)[]) {
   }
 
   const dependencies = {
-    ...parseDependencies(code),
-    ...parseDependencies(demoCode),
+    ...extractDependencies(code),
+    ...extractDependencies(demoCode),
   }
 
   return { files, dependencies }

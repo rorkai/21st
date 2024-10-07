@@ -54,10 +54,66 @@ export const formatComponentName = (name: string): string => {
   return name.replace(/([A-Z])/g, " $1").trim()
 }
 
-export function prepareFilesForPreview(code: string, demoCode: string) {
+export const prepareFilesForPreview = (code: string, demoCode: string) => {
+  const componentNames = extractComponentNames(code)
+  const demoComponentName = extractDemoComponentName(demoCode)
+
+  const updatedDemoCode = `import { ${componentNames.join(", ")} } from "./Component";\n${demoCode}`
+
   const files = {
-    "/App.tsx": demoCode,
+    "/App.tsx": `
+import React from 'react';
+import { ${demoComponentName} } from './Demo';
+
+export default function App() {
+  return (
+    <div className="flex justify-center items-center h-screen p-4 relative">
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: -1,
+        opacity: 0.5,
+        width: '100%',
+        height: '100%',
+        background: 'radial-gradient(#00000055 1px, transparent 1px)',
+        backgroundSize: '16px 16px'
+      }}>
+        <style>{
+          \`@media (prefers-color-scheme: dark) {
+            div {
+              background: radial-gradient(#ffffff22 1px, transparent 1px);
+            }
+          }\`
+        }</style>
+      </div>
+      <div className="flex justify-center items-center max-w-[600px] w-full h-full max-h-[600px] p-4 relative">
+      <${demoComponentName} />
+      </div>
+    </div>
+  );
+}
+`,
     "/Component.tsx": code,
+    "/Demo.tsx": updatedDemoCode,
+    "/lib/utils.ts": `
+export function cn(...inputs: (string | undefined)[]) {
+  return inputs.filter(Boolean).join(' ');
+}
+`,
+    "/tsconfig.json": JSON.stringify(
+      {
+        compilerOptions: {
+          jsx: "react-jsx",
+          esModuleInterop: true,
+          baseUrl: ".",
+          paths: {
+            "@/*": ["./*"],
+          },
+        },
+      },
+      null,
+      2,
+    ),
   }
 
   const dependencies = {

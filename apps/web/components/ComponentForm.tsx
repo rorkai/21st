@@ -8,6 +8,7 @@ import React, {
   useRef,
   lazy,
   Suspense,
+  useLayoutEffect,
 } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -68,8 +69,8 @@ import {
   useAvailableTags,
 } from "@/utils/dataFetchers"
 
-import ComponentConfirmationForm from "./ComponentConfirmationForm"
-import { motion, AnimatePresence } from "framer-motion"
+import { ComponentDetails } from "./ComponentDetails"
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion"
 import Image from "next/image"
 
 const ComponentPreview = React.lazy(() =>
@@ -145,6 +146,9 @@ export default function ComponentForm() {
   // Добавьте новое состояние для отслеживания, был ли вставлен код компонента
   const [isComponentCodeEntered, setIsComponentCodeEntered] = useState(false)
 
+  const [isDemoCodeCollapsed, setIsDemoCodeCollapsed] = useState(false)
+  const [showComponentDetails, setShowComponentDetails] = useState(false)
+
   useEffect(() => {
     if (user) {
       console.log("Current user:", user)
@@ -212,14 +216,39 @@ export default function ComponentForm() {
     }
   }, [code, demoCode, parsedComponentNames])
 
-  const handleApproveDeleteWrapper = () => {
-    handleApproveDelete(
+  const handleApproveDeleteWrapper = async () => {
+    const updatedDemoCode = await handleApproveDelete(
       demoCode,
       parsedComponentNames,
       form,
       setImportsToRemove,
       setDemoCodeError,
     )
+
+    if (updatedDemoCode) {
+      // Сразу устанавливаем новое значение в форму
+      form.setValue("demo_code", updatedDemoCode)
+
+      // Обновляем состояния
+      setImportsToRemove([])
+      setDemoCodeError(null)
+
+      // Проверяем условия для сворачивания кода
+      if (updatedDemoCode.trim()) {
+        setIsDemoCodeCollapsed(true)
+        setIsPreviewReady(true)
+        setShowComponentDetails(true)
+      }
+    }
+  }
+
+  const checkAndCollapseDemoCode = (code: string) => {
+    if (code.trim()) {
+      setIsDemoCodeCollapsed(true)
+      setIsPreviewReady(true)
+      setShowComponentDetails(true)
+      form.setValue("demo_code", code)
+    }
   }
 
   const handleFileChangeWrapper = (
@@ -419,6 +448,40 @@ export default function ComponentForm() {
     importsToRemove,
   ])
 
+  useEffect(() => {
+    console.log("Preview conditions:", {
+      previewProps: !!previewProps,
+      internalDependencies: Object.keys(internalDependencies).length,
+      isConfirmDialogOpen,
+      demoCodeError,
+      importsToRemove: importsToRemove.length,
+      code: !!code,
+      demoCode: !!demoCode,
+    })
+
+    if (
+      previewProps &&
+      Object.keys(internalDependencies).length === 0 &&
+      !isConfirmDialogOpen &&
+      !demoCodeError &&
+      importsToRemove.length === 0 &&
+      code &&
+      demoCode
+    ) {
+      setIsPreviewReady(true)
+    } else {
+      setIsPreviewReady(false)
+    }
+  }, [
+    previewProps,
+    internalDependencies,
+    isConfirmDialogOpen,
+    demoCodeError,
+    importsToRemove,
+    code,
+    demoCode,
+  ])
+
   const handleSubmit = useCallback(
     (event: React.FormEvent) => {
       event.preventDefault()
@@ -464,7 +527,8 @@ export default function ComponentForm() {
       !demoCodeError &&
       importsToRemove.length === 0 &&
       code &&
-      demoCode
+      demoCode &&
+      isDemoCodeCollapsed
     ) {
       setIsPreviewReady(true)
     } else {
@@ -478,7 +542,16 @@ export default function ComponentForm() {
     importsToRemove,
     code,
     demoCode,
+    isDemoCodeCollapsed,
   ])
+
+  useLayoutEffect(() => {
+    if (code.trim().length > 0) {
+      setIsComponentCodeEntered(true)
+    } else {
+      setIsComponentCodeEntered(false)
+    }
+  }, [code])
 
   return (
     <>
@@ -487,57 +560,117 @@ export default function ComponentForm() {
           onSubmit={(e) => e.preventDefault()}
           className="flex w-full h-full items-center justify-center"
         >
-          <AnimatePresence>
-            <motion.div
-              key="form-container"
-              className="flex gap-4 items-center h-full w-full mt-2"
-              initial={false}
-              animate={isMounted && isPreviewReady ? "withPreview" : "centered"}
-              variants={{
-                centered: { justifyContent: "center" },
-                withPreview: { justifyContent: "flex-start" },
-              }}
-              transition={{ duration: 0.5 }}
+          <div
+            className={`flex gap-4 ${isPreviewReady ? "items-start" : "items-center"} h-full w-full mt-2`}
+          >
+            <div
+              className={`flex flex-col items-start gap-2 py-10 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto ${isPreviewReady ? "w-1/3 min-w-[450px]" : "w-full max-w-[450px]"}`}
             >
-              <motion.div
-                className="flex flex-col items-start gap-7 pb-10"
-                initial={false}
-                animate={
-                  isMounted && isPreviewReady ? "withPreview" : "centered"
-                }
-                variants={{
-                  centered: { width: "100%", maxWidth: "500px" },
-                  withPreview: {
-                    width: "50%",
-                    maxWidth: "none",
-                    minWidth: "50%",
-                  },
-                }}
-                transition={{ duration: 0.5 }}
-              >
+              <FormField
+                control={form.control}
+                name="code"
+                render={({ field }) => (
+                  <FormItem className="w-full relative">
+                    {!isCodeUploaded && (
+                      <FormLabel>Paste component code</FormLabel>
+                    )}
+                    <FormControl>
+                      <div className="relative">
+                        <Editor
+                          value={field.value}
+                          onValueChange={(code) => {
+                            field.onChange(code)
+                            setIsCodeUploaded(code.trim().length > 0)
+                            setIsComponentCodeEntered(code.trim().length > 0)
+                          }}
+                          highlight={(code) => {
+                            const grammar =
+                              languages.tsx || languages.typescript
+                            return grammar
+                              ? highlight(code, grammar, "tsx")
+                              : code
+                          }}
+                          padding={10}
+                          style={{
+                            fontFamily: '"Fira code", "Fira Mono", monospace',
+                            fontSize: 12,
+                            backgroundColor: "#f5f5f5",
+                            borderRadius: "0.375rem",
+                            height: isCodeUploaded ? "64px" : "calc(100vh/3)",
+                            overflow: "auto",
+                            outline: "none !important",
+                          }}
+                          className="mt-1 w-full border border-input"
+                        />
+                        {isCodeUploaded && (
+                          <div className="absolute p-2 border  rounded-md inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-start">
+                            <div className="flex items-center gap-2 w-full">
+                              <div className="flex items-center justify-between w-full">
+                                <div className="flex items-center">
+                                  <div className="w-12 h-12 relative bg-white border p-1 rounded-md mr-4">
+                                    <Image
+                                      src="/tsx-file.svg"
+                                      width={40}
+                                      height={40}
+                                      alt="TSX File"
+                                    />
+                                  </div>
+                                  <div className="flex flex-col items-start">
+                                    <p className="font-semibold">Component code</p>
+                                    <p className="text-sm text-gray-600">
+                                      {parsedComponentNames.join(", ")}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button
+                                  onClick={() => setIsCodeUploaded(false)}
+                                  variant="default"
+                                >
+                                  Edit
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {isComponentCodeEntered && (
                 <FormField
                   control={form.control}
-                  name="code"
+                  name="demo_code"
                   render={({ field }) => (
                     <FormItem className="w-full relative">
-                      {!isCodeUploaded && (
-                        <FormLabel>Paste Component Code</FormLabel>
+                      {!isDemoCodeCollapsed && (
+                        <FormLabel>Paste demo code</FormLabel>
                       )}
                       <FormControl>
-                        <motion.div
-                          animate={{ height: isCodeUploaded ? 100 : "auto" }}
-                          transition={{ duration: 0.5 }}
-                          className="relative"
-                        >
+                        <div className="relative">
                           <Editor
                             value={field.value}
                             onValueChange={(code) => {
                               field.onChange(code)
-                              setIsCodeUploaded(code.trim().length > 0)
-                              setIsComponentCodeEntered(code.trim().length > 0)
+                              const { modifiedCode, removedImports } =
+                                checkDemoCode(
+                                  code,
+                                  parsedComponentNames,
+                                  setImportsToRemove,
+                                  setDemoCodeError,
+                                )
+                              if (
+                                removedImports.length === 0 &&
+                                !demoCodeError
+                              ) {
+                                checkAndCollapseDemoCode(modifiedCode)
+                              }
                             }}
                             highlight={(code) => {
-                              const grammar = languages.tsx || languages.jsx
+                              const grammar =
+                                languages.tsx || languages.typescript
                               return grammar
                                 ? highlight(code, grammar, "tsx")
                                 : code
@@ -548,248 +681,189 @@ export default function ComponentForm() {
                               fontSize: 12,
                               backgroundColor: "#f5f5f5",
                               borderRadius: "0.375rem",
-                              height: isCodeUploaded
-                                ? "100px"
+                              height: isDemoCodeCollapsed
+                                ? "64px"
                                 : "calc(100vh/3)",
                               overflow: "auto",
                               outline: "none !important",
                             }}
                             className="mt-1 w-full border border-input"
                           />
-                          <AnimatePresence>
-                            {isCodeUploaded && (
-                              <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="absolute border rounded-md inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-center"
-                              >
-                                <div className="flex items-center">
-                                  <Image
-                                    src="/tsx-file.svg"
-                                    width={40}
-                                    height={40}
-                                    alt="TSX File"
-                                    className="mr-4"
-                                  />
-                                  <div className="flex gap-2 items-center justify-center">
-                                    <p className="text-sm text-gray-600">
-                                      {" "}
-                                      {parsedComponentNames.join(", ")}
-                                    </p>
-
-                                    <Button
-                                      onClick={() => setIsCodeUploaded(false)}
-                                      variant="ghost"
-                                    >
-                                      Edit
-                                    </Button>
+                          {isDemoCodeCollapsed && (
+                            <div className="absolute p-2 border rounded-md inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-start">
+                              <div className="flex items-center gap-2 w-full">
+                                <div className="flex items-center justify-between w-full">
+                                  <div className="flex items-center">
+                                    <div className="w-12 h-12 relative bg-white border p-1 rounded-md mr-4">
+                                      <Image
+                                        src="/demo-file.svg"
+                                        width={40}
+                                        height={40}
+                                        alt="Demo File"
+                                      />
+                                    </div>
+                                    <div className="flex flex-col items-start">
+                                      <p className="font-semibold">Demo code</p>
+                                      <p className="text-sm text-gray-600">
+                                        for {parsedComponentNames[0]}
+                                      </p>
+                                    </div>
                                   </div>
+                                  <Button
+                                    onClick={() =>
+                                      setIsDemoCodeCollapsed(false)
+                                    }
+                                    variant="default"
+                                  >
+                                    Edit
+                                  </Button>
                                 </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </motion.div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </FormControl>
                       <FormMessage />
+                      {demoCodeError && !isDemoCodeCollapsed && (
+                        <Alert
+                          variant="default"
+                          className="mt-2 text-[14px] w-full"
+                        >
+                          <p>{demoCodeError}</p>
+                          {importsToRemove.map((importStr, index) => (
+                            <div
+                              key={index}
+                              className="bg-gray-100 p-2 mt-2 rounded flex flex-col w-full"
+                            >
+                              <code className="mb-2">{importStr}</code>
+                              <Button
+                                onClick={handleApproveDeleteWrapper}
+                                size="sm"
+                                className="self-end"
+                              >
+                                Delete
+                              </Button>
+                            </div>
+                          ))}
+                        </Alert>
+                      )}
                     </FormItem>
                   )}
                 />
+              )}
 
-                {isComponentCodeEntered && (
-                  <FormField
-                    control={form.control}
-                    name="demo_code"
-                    render={({ field }) => (
-                      <FormItem className="w-full">
-                        <FormLabel>Demo Code</FormLabel>
-                        <FormControl>
-                          <Editor
-                            value={field.value}
-                            onValueChange={(code) => field.onChange(code)}
-                            highlight={(code) => {
-                              const grammar = languages.tsx || languages.jsx
-                              return grammar
-                                ? highlight(code, grammar, "tsx")
-                                : code
-                            }}
-                            padding={10}
-                            style={{
-                              fontFamily: '"Fira code", "Fira Mono", monospace',
-                              fontSize: 12,
-                              backgroundColor: "#f5f5f5",
-                              borderRadius: "0.375rem",
-                              height: "calc(100vh/3)",
-                              overflow: "auto",
-                            }}
-                            className={`mt-1 w-full border border-input ${demoCodeError ? "border-yellow-500" : ""}`}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                        {demoCodeError && (
-                          <Alert
-                            variant="default"
-                            className="mt-2 text-[14px] w-full"
-                          >
-                            <p>{demoCodeError}</p>
-                            {importsToRemove.map((importStr, index) => (
-                              <div
-                                key={index}
-                                className="bg-gray-100 p-2 mt-2 rounded flex flex-col w-full"
-                              >
-                                <code className="mb-2">{importStr}</code>
-                                <Button
-                                  onClick={handleApproveDeleteWrapper}
-                                  size="sm"
-                                  className="self-end"
-                                >
-                                  Delete
-                                </Button>
-                              </div>
-                            ))}
-                          </Alert>
-                        )}
-                      </FormItem>
-                    )}
-                  />
-                )}
-
-                {Object.keys(internalDependencies).length > 0 && (
-                  <div className="w-full">
-                    <h3 className="text-lg font-semibold mb-2">
-                      Internal dependencies
-                    </h3>
-                    {Object.entries(internalDependencies).map(
-                      ([path, slug]) => (
-                        <div key={path} className="mb-2 w-full">
-                          <label className="block text-sm font-medium text-gray-700">
-                            {path}
-                          </label>
-                          <Input
-                            value={slug}
-                            onChange={(e) => {
-                              setInternalDependencies((prev) => ({
-                                ...prev,
-                                [path]: e.target.value,
-                              }))
-                            }}
-                            placeholder="Enter component slug"
-                            className="mt-1 w-full"
-                          />
-                        </div>
-                      ),
-                    )}
-                  </div>
-                )}
-
-                {isDebug && (
-                  <>
-                    <div className="w-full">
+              {Object.keys(internalDependencies).length > 0 && (
+                <div className="w-full">
+                  <h3 className="text-lg font-semibold mb-2">
+                    Internal dependencies
+                  </h3>
+                  {Object.entries(internalDependencies).map(([path, slug]) => (
+                    <div key={path} className="mb-2 w-full">
                       <label className="block text-sm font-medium text-gray-700">
-                        Component names
-                      </label>
-                      <Textarea
-                        value={parsedComponentNames.join(", ")}
-                        readOnly
-                        className="mt-1 w-full bg-gray-100"
-                      />
-                    </div>
-
-                    <div className="w-full">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Demo component name
+                        {path}
                       </label>
                       <Input
-                        value={parsedDemoComponentName}
-                        readOnly
-                        className="mt-1 w-full bg-gray-100"
+                        value={slug}
+                        onChange={(e) => {
+                          setInternalDependencies((prev) => ({
+                            ...prev,
+                            [path]: e.target.value,
+                          }))
+                        }}
+                        placeholder="Enter component slug"
+                        className="mt-1 w-full"
                       />
                     </div>
-
-                    <div className="w-full">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Component dependencies
-                      </label>
-                      <Textarea
-                        value={Object.entries(parsedDependencies)
-                          .map(([key, value]) => `${key}: ${value}`)
-                          .join("\n")}
-                        readOnly
-                        className="mt-1 w-full bg-gray-100"
-                      />
-                    </div>
-
-                    <div className="w-full">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Demo dependencies
-                      </label>
-                      <Textarea
-                        value={Object.entries(parsedDemoDependencies)
-                          .map(([key, value]) => `${key}: ${value}`)
-                          .join("\n")}
-                        readOnly
-                        className="mt-1 w-full bg-gray-100"
-                      />
-                    </div>
-                  </>
-                )}
-
-                <Button
-                  onClick={() => setIsConfirmDialogOpen(true)}
-                  disabled={
-                    !form.watch("code") ||
-                    !form.watch("demo_code") ||
-                    Object.values(internalDependencies).some((slug) => !slug)
-                  }
-                  className="w-full max-w-[150px] mr-auto"
-                >
-                  Next
-                </Button>
-              </motion.div>
-              {previewProps && isMounted && isPreviewReady && (
-                <motion.div
-                  key="preview"
-                  className="w-1/2"
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 50 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <h3 className="block text-sm font-medium text-gray-700 mb-2">
-                    Component Preview
-                  </h3>
-                  <React.Suspense fallback={<div>Loading preview...</div>}>
-                    <Preview {...previewProps} />
-                  </React.Suspense>
-                </motion.div>
+                  ))}
+                </div>
               )}
-            </motion.div>
-          </AnimatePresence>
+
+              {isDebug && (
+                <>
+                  <div className="w-full">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Component names
+                    </label>
+                    <Textarea
+                      value={parsedComponentNames.join(", ")}
+                      readOnly
+                      className="mt-1 w-full bg-gray-100"
+                    />
+                  </div>
+                  <div className="w-full">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Demo component name
+                    </label>
+                    <Input
+                      value={parsedDemoComponentName}
+                      readOnly
+                      className="mt-1 w-full bg-gray-100"
+                    />
+                  </div>
+                  <div className="w-full">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Component dependencies
+                    </label>
+                    <Textarea
+                      value={Object.entries(parsedDependencies)
+                        .map(([key, value]) => `${key}: ${value}`)
+                        .join("\n")}
+                      readOnly
+                      className="mt-1 w-full bg-gray-100"
+                    />
+                  </div>
+                  <div className="w-full">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Demo dependencies
+                    </label>
+                    <Textarea
+                      value={Object.entries(parsedDemoDependencies)
+                        .map(([key, value]) => `${key}: ${value}`)
+                        .join("\n")}
+                      readOnly
+                      className="mt-1 w-full bg-gray-100"
+                    />
+                  </div>
+                </>
+              )}
+
+              {showComponentDetails && (
+                <ComponentDetails
+                  form={form}
+                  isSlugManuallyEdited={isSlugManuallyEdited}
+                  setIsSlugManuallyEdited={setIsSlugManuallyEdited}
+                  slugChecking={slugChecking}
+                  slugError={slugError}
+                  slugAvailable={slugAvailable}
+                  checkSlug={checkSlug}
+                  generateAndSetSlug={(name) =>
+                    generateAndSetSlug(name, generateUniqueSlug, form)
+                  }
+                  availableTags={availableTags}
+                  previewImage={previewImage}
+                  handleFileChange={handleFileChangeWrapper}
+                  handleSubmit={handleSubmit}
+                  isLoading={isLoading}
+                  isFormValid={isFormValid}
+                  demoCodeError={demoCodeError}
+                  internalDependencies={internalDependencies}
+                />
+              )}
+            </div>
+
+            {previewProps && isPreviewReady && (
+              <div className="w-2/3 py-4">
+                <h3 className="block text-sm font-medium text-gray-700 mb-2">
+                  Component Preview
+                </h3>
+                <React.Suspense fallback={<div>Loading preview...</div>}>
+                  <Preview {...previewProps} />
+                </React.Suspense>
+              </div>
+            )}
+          </div>
         </form>
       </Form>
-
-      <ComponentConfirmationForm
-        isConfirmDialogOpen={isConfirmDialogOpen}
-        setIsConfirmDialogOpen={setIsConfirmDialogOpen}
-        form={form}
-        isSlugManuallyEdited={isSlugManuallyEdited}
-        setIsSlugManuallyEdited={setIsSlugManuallyEdited}
-        slugChecking={slugChecking}
-        slugError={slugError}
-        slugAvailable={slugAvailable}
-        checkSlug={checkSlug}
-        generateAndSetSlug={(name) =>
-          generateAndSetSlug(name, generateUniqueSlug, form)
-        }
-        availableTags={availableTags}
-        previewImage={previewImage}
-        handleFileChange={handleFileChangeWrapper}
-        handleSubmit={handleSubmit}
-        isLoading={isLoading}
-        isFormValid={isFormValid}
-        demoCodeError={demoCodeError}
-        internalDependencies={internalDependencies}
-      />
 
       <Dialog open={isSuccessDialogOpen} onOpenChange={setIsSuccessDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">

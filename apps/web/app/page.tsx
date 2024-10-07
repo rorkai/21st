@@ -1,15 +1,15 @@
-import { Header } from '../components/Header';
-import React from 'react';
-import { ComponentsList } from '../components/ComponentsList';
-import { getComponents } from '@/utils/dataFetchers';
-import { Metadata } from 'next';
+import { Header } from "../components/Header"
+import React from "react"
+import { ComponentsList } from "../components/ComponentsList"
+import { getComponents } from "@/utils/dataFetchers"
+import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: 'Home | Component Library',
-};
+  title: "Home | Component Library",
+}
 
 export default async function HomePage() {
-  const components = await getComponents();
+  const components = await getComponents()
 
   return (
     <>
@@ -18,5 +18,5 @@ export default async function HomePage() {
         <ComponentsList components={components || []} />
       </div>
     </>
-  );
+  )
 }

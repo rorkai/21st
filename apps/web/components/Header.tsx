@@ -1,24 +1,25 @@
-"use client";
+"use client"
 
-import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { LockOpen, Lock } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
-import React from "react";
+import Image from "next/image"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { LockOpen, Lock } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
+import React from "react"
 
 interface HeaderProps {
-  componentSlug?: string;
-  isPublic?: boolean;
-  username?: string;
+  componentSlug?: string
+  isPublic?: boolean
+  username?: string
 }
 
 export function Header({ componentSlug, isPublic, username }: HeaderProps) {
-  const pathname = usePathname();
-  const isHomePage = pathname === "/";
-  const isPublishPage = pathname === "/publish";
-  const isComponentPage = username && componentSlug && pathname === `/${username}/${componentSlug}`;
+  const pathname = usePathname()
+  const isHomePage = pathname === "/"
+  const isPublishPage = pathname === "/publish"
+  const isComponentPage =
+    username && componentSlug && pathname === `/${username}/${componentSlug}`
 
   return (
     <header className="flex items-center justify-between border-b border-gray-200 p-4 -mx-4">
@@ -70,5 +71,5 @@ export function Header({ componentSlug, isPublic, username }: HeaderProps) {
         </SignedOut>
       </div>
     </header>
-  );
+  )
 }

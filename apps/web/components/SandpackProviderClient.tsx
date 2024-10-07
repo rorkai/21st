@@ -1,101 +1,112 @@
-import React, { useState, useEffect, useRef, Suspense } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react"
 import {
   SandpackProvider,
   SandpackLayout,
   SandpackCodeViewer,
   SandpackFileExplorer,
-} from "@codesandbox/sandpack-react";
+} from "@codesandbox/sandpack-react"
 
-import { SandpackProvider as SandpackProviderUnstyled } from "@codesandbox/sandpack-react/unstyled";
-import { CheckIcon, CopyIcon, Terminal, Clipboard, Loader2 } from "lucide-react";
-import styles from './SandpackProviderClient.module.css';
+import { SandpackProvider as SandpackProviderUnstyled } from "@codesandbox/sandpack-react/unstyled"
+import { CheckIcon, CopyIcon, Terminal, Clipboard, Loader2 } from "lucide-react"
+import styles from "./SandpackProviderClient.module.css"
 
-import { SandpackProviderProps } from "@codesandbox/sandpack-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useAtom, atom } from 'jotai';
-import { useDebugMode } from '@/hooks/useDebugMode';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Component } from '@/types/types';
-import { format } from 'date-fns';
-import Link from 'next/link';
-import { UserAvatar } from '@/components/UserAvatar';
+import { SandpackProviderProps } from "@codesandbox/sandpack-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { useAtom, atom } from "jotai"
+import { useDebugMode } from "@/hooks/useDebugMode"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Component } from "@/types/types"
+import { format } from "date-fns"
+import Link from "next/link"
+import { UserAvatar } from "@/components/UserAvatar"
 
-const copiedAtom = atom(false);
-const codeCopiedAtom = atom(false);
-const isHoveringAtom = atom(false);
-const activeFileAtom = atom('');
-const isComponentsLoadedAtom = atom(false);
+const copiedAtom = atom(false)
+const codeCopiedAtom = atom(false)
+const isHoveringAtom = atom(false)
+const activeFileAtom = atom("")
+const isComponentsLoadedAtom = atom(false)
 
 interface SandpackProviderClientProps {
-  files: Record<string, string>;
-  dependencies: Record<string, string>;
-  demoDependencies: Record<string, string>;
-  demoComponentName: string;
-  internalDependencies: Record<string, string>;
-  showCode: boolean;
-  installUrl: string;
-  componentSlug: string;
-  componentInfo: Component;
+  files: Record<string, string>
+  dependencies: Record<string, string>
+  demoDependencies: Record<string, string>
+  demoComponentName: string
+  internalDependencies: Record<string, string>
+  showCode: boolean
+  installUrl: string
+  componentSlug: string
+  componentInfo: Component
 }
 
-const LazyPreview = React.lazy(() => import("@codesandbox/sandpack-react/unstyled").then(module => ({ default: module.SandpackPreview })));
+const LazyPreview = React.lazy(() =>
+  import("@codesandbox/sandpack-react/unstyled").then((module) => ({
+    default: module.SandpackPreview,
+  })),
+)
 
 const LoadingSpinner = () => (
   <div className="absolute inset-0 flex items-center justify-center bg-white">
     <Loader2 className="w-5 h-5 text-gray-600 animate-spin" />
     <span className="ml-2 text-gray-600">Loading...</span>
   </div>
-);
+)
 
 const Info: React.FC<{ info: Component }> = ({ info }) => {
-  const [copiedDependencies, setCopiedDependencies] = useState(false);
+  const [copiedDependencies, setCopiedDependencies] = useState(false)
 
   const parseDependencies = (deps: any): Record<string, string> => {
-    if (typeof deps === 'string') {
+    if (typeof deps === "string") {
       try {
-        return JSON.parse(deps);
+        return JSON.parse(deps)
       } catch (e) {
-        console.error('Failed to parse dependencies:', e);
-        return {};
+        console.error("Failed to parse dependencies:", e)
+        return {}
       }
     }
-    return deps || {};
-  };
+    return deps || {}
+  }
 
   const allDependencies = {
     ...parseDependencies(info.dependencies),
     ...parseDependencies(info.demo_dependencies),
-    ...parseDependencies(info.internal_dependencies)
-  };
+    ...parseDependencies(info.internal_dependencies),
+  }
 
   const copyAllDependencies = () => {
     const dependenciesString = Object.entries(allDependencies)
       .map(([dep, version]) => `"${dep}": "${version}"`)
-      .join(',\n');
-    navigator.clipboard.writeText(`{\n${dependenciesString}\n}`);
-    setCopiedDependencies(true);
-    setTimeout(() => setCopiedDependencies(false), 2000);
-  };
+      .join(",\n")
+    navigator.clipboard.writeText(`{\n${dependenciesString}\n}`)
+    setCopiedDependencies(true)
+    setTimeout(() => setCopiedDependencies(false), 2000)
+  }
 
   return (
     <div className="p-4 space-y-4 text-sm">
       {info.name && (
         <div className="flex items-center">
           <span className="text-gray-500 w-1/3">Name:</span>
-          <span className="text-black w-2/3 font-semibold text-right">{info.name}</span>
+          <span className="text-black w-2/3 font-semibold text-right">
+            {info.name}
+          </span>
         </div>
       )}
       {info.user && (
         <div className="flex items-center">
           <span className="text-gray-500 w-1/3">Created by:</span>
           <div className="flex items-center w-2/3 justify-end font-semibold">
-            <Link href={`/${info.user.username}`} className="flex items-center text-blue-500 hover:underline">
-              <UserAvatar 
-                src={info.user.image_url || "/placeholder.svg"} 
-                alt={info.user.name || info.user.username} 
-                size={24} 
+            <Link
+              href={`/${info.user.username}`}
+              className="flex items-center text-blue-500 hover:underline"
+            >
+              <UserAvatar
+                src={info.user.image_url || "/placeholder.svg"}
+                alt={info.user.name || info.user.username}
+                size={24}
               />
-              <span className="ml-2">{info.user.name || info.user.username}</span>
+              <span className="ml-2">
+                {info.user.name || info.user.username}
+              </span>
             </Link>
           </div>
         </div>
@@ -103,13 +114,17 @@ const Info: React.FC<{ info: Component }> = ({ info }) => {
       {info.description && (
         <div className="flex">
           <span className="text-gray-500 w-1/3">Description:</span>
-          <span className="text-black w-2/3 font-semibold text-right">{info.description}</span>
+          <span className="text-black w-2/3 font-semibold text-right">
+            {info.description}
+          </span>
         </div>
       )}
       {info.created_at && (
         <div className="flex">
           <span className="text-gray-500 w-1/3">Created:</span>
-          <span className="text-black w-2/3 font-semibold text-right">{format(new Date(info.created_at), 'PPP')}</span>
+          <span className="text-black w-2/3 font-semibold text-right">
+            {format(new Date(info.created_at), "PPP")}
+          </span>
         </div>
       )}
       {info.tags && info.tags.length > 0 && (
@@ -117,7 +132,10 @@ const Info: React.FC<{ info: Component }> = ({ info }) => {
           <span className="text-gray-500 w-1/3">Tags:</span>
           <div className="w-2/3 flex flex-wrap gap-2 font-semibold justify-end">
             {info.tags.map((tag) => (
-              <span key={tag.slug} className="bg-gray-200 px-2 py-1 rounded-md text-black">
+              <span
+                key={tag.slug}
+                className="bg-gray-200 px-2 py-1 rounded-md text-black"
+              >
                 {tag.name}
               </span>
             ))}
@@ -128,27 +146,27 @@ const Info: React.FC<{ info: Component }> = ({ info }) => {
         <div className="flex">
           <span className="text-gray-500 w-1/3">Dependencies:</span>
           <div className="w-2/3 hover:underline">
-          {copiedDependencies ? (
-            <div className="font-mono text-ellipsis font-semibold text-right">
-              Copied!
-            </div>
-          ) : (
-            Object.entries(allDependencies).map(([dep]) => (
-              <div
-                key={dep}
-                className="font-mono text-blue-500 cursor-pointer font-semibold text-ellipsis text-right"
-                onClick={copyAllDependencies}
-              >
-                {dep}
+            {copiedDependencies ? (
+              <div className="font-mono text-ellipsis font-semibold text-right">
+                Copied!
               </div>
-            ))
-          )}
+            ) : (
+              Object.entries(allDependencies).map(([dep]) => (
+                <div
+                  key={dep}
+                  className="font-mono text-blue-500 cursor-pointer font-semibold text-ellipsis text-right"
+                  onClick={copyAllDependencies}
+                >
+                  {dep}
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
 export default function SandpackProviderClient({
   files,
@@ -159,14 +177,16 @@ export default function SandpackProviderClient({
   componentSlug,
   componentInfo,
 }: SandpackProviderClientProps) {
-  const [copied, setCopied] = useAtom(copiedAtom);
-  const [codeCopied, setCodeCopied] = useAtom(codeCopiedAtom);
-  const [isHovering, setIsHovering] = useAtom(isHoveringAtom);
-  const sandpackRef = useRef<HTMLDivElement>(null);
-  const [activeFile, setActiveFile] = useAtom(activeFileAtom);
-  const [isComponentsLoaded, setIsComponentsLoaded] = useAtom(isComponentsLoadedAtom);
-  const isDebug = useDebugMode();
-  const installUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/r/${componentSlug}`;
+  const [copied, setCopied] = useAtom(copiedAtom)
+  const [codeCopied, setCodeCopied] = useAtom(codeCopiedAtom)
+  const [isHovering, setIsHovering] = useAtom(isHoveringAtom)
+  const sandpackRef = useRef<HTMLDivElement>(null)
+  const [activeFile, setActiveFile] = useAtom(activeFileAtom)
+  const [isComponentsLoaded, setIsComponentsLoaded] = useAtom(
+    isComponentsLoadedAtom,
+  )
+  const isDebug = useDebugMode()
+  const installUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/r/${componentSlug}`
   const tsConfig = {
     compilerOptions: {
       jsx: "react-jsx",
@@ -176,13 +196,13 @@ export default function SandpackProviderClient({
         "@/*": ["./*"],
       },
     },
-  };
+  }
 
   const utilsContent = `
 export function cn(...inputs: (string | undefined)[]) {
   return inputs.filter(Boolean).join(' ');
 }
-  `;
+  `
 
   const updatedIndexContent = `
 import React from 'react';
@@ -195,7 +215,7 @@ root.render(
     <App />
   </React.StrictMode>
 );
-  `;
+  `
 
   const updatedFiles: Record<string, string> = {
     ...files,
@@ -203,54 +223,66 @@ root.render(
     "/tsconfig.json": JSON.stringify(tsConfig, null, 2),
     "/lib/utils.ts": utilsContent,
     "/index.tsx": updatedIndexContent,
-  };
+  }
 
   Object.entries(internalDependencies).forEach(([path, code]) => {
-    const fullPath = path.startsWith('/') ? path : `/${path}`;
-    updatedFiles[fullPath] = code;
-  });
+    const fullPath = path.startsWith("/") ? path : `/${path}`
+    updatedFiles[fullPath] = code
+  })
 
-  const mainComponentFile = Object.keys(updatedFiles).find(file => file.endsWith(`${componentSlug}.tsx`)) || 
-                            Object.keys(updatedFiles)[0];
+  const mainComponentFile =
+    Object.keys(updatedFiles).find((file) =>
+      file.endsWith(`${componentSlug}.tsx`),
+    ) || Object.keys(updatedFiles)[0]
 
   useEffect(() => {
     if (mainComponentFile) {
-      setActiveFile(mainComponentFile);
+      setActiveFile(mainComponentFile)
     }
-  }, [mainComponentFile, setActiveFile]);
+  }, [mainComponentFile, setActiveFile])
 
   const visibleFiles = [
     mainComponentFile,
-    ...Object.keys(internalDependencies)
-  ].filter((file): file is string => file !== undefined);
+    ...Object.keys(internalDependencies),
+  ].filter((file): file is string => file !== undefined)
 
   const customFileLabels = Object.fromEntries(
-    Object.keys(internalDependencies).map(path => {
-      const parts = path.split('/');
-      const fileName = parts[parts.length - 1];
-      return [path, `${fileName} (dependencies)`];
-    })
-  );
+    Object.keys(internalDependencies).map((path) => {
+      const parts = path.split("/")
+      const fileName = parts[parts.length - 1]
+      return [path, `${fileName} (dependencies)`]
+    }),
+  )
 
   // Function to extract dependencies from internal component code
-  const extractInternalDependencies = (code: string): Record<string, string> => {
-    const deps: Record<string, string> = {};
-    const lines = code.split('\n');
-    lines.forEach(line => {
-      if (line.startsWith('import') && !line.includes('./') && !line.includes('../') && !line.includes('@/')) {
-        const match = line.match(/from\s+['"](.+)['"]/);
+  const extractInternalDependencies = (
+    code: string,
+  ): Record<string, string> => {
+    const deps: Record<string, string> = {}
+    const lines = code.split("\n")
+    lines.forEach((line) => {
+      if (
+        line.startsWith("import") &&
+        !line.includes("./") &&
+        !line.includes("../") &&
+        !line.includes("@/")
+      ) {
+        const match = line.match(/from\s+['"](.+)['"]/)
         if (match && match[1]) {
-          deps[match[1]] = 'latest';
+          deps[match[1]] = "latest"
         }
       }
-    });
-    return deps;
-  };
+    })
+    return deps
+  }
 
   // Collect all dependencies from internal components
-  const allInternalDependencies = Object.values(internalDependencies).reduce((acc, code) => {
-    return { ...acc, ...extractInternalDependencies(code) };
-  }, {});
+  const allInternalDependencies = Object.values(internalDependencies).reduce(
+    (acc, code) => {
+      return { ...acc, ...extractInternalDependencies(code) }
+    },
+    {},
+  )
 
   const providerProps: SandpackProviderProps = {
     theme: "light",
@@ -270,97 +302,100 @@ root.render(
     options: {
       externalResources: [
         "https://cdn.tailwindcss.com",
-        "https://vucvdpamtrjkzmubwlts.supabase.co/storage/v1/object/public/css/compiled-tailwind.css"
+        "https://vucvdpamtrjkzmubwlts.supabase.co/storage/v1/object/public/css/compiled-tailwind.css",
       ],
-      activeFile: activeFile || mainComponentFile || '',
+      activeFile: activeFile || mainComponentFile || "",
       visibleFiles,
     },
-    ...({fileLabels: customFileLabels} as any),
-  };
+    ...({ fileLabels: customFileLabels } as any),
+  }
 
   const copyCommand = () => {
-    const command = `npx shadcn@latest add "${installUrl}"`;
-    navigator.clipboard.writeText(command);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1000);
-  };
+    const command = `npx shadcn@latest add "${installUrl}"`
+    navigator.clipboard.writeText(command)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1000)
+  }
 
   const copyCode = () => {
-    const codeElement = sandpackRef.current?.querySelector('.sp-code-editor');
+    const codeElement = sandpackRef.current?.querySelector(".sp-code-editor")
     if (codeElement) {
-      const code = codeElement.textContent;
-      navigator.clipboard.writeText(code || '');
-      setCodeCopied(true);
-      setTimeout(() => setCodeCopied(false), 2000);
+      const code = codeElement.textContent
+      navigator.clipboard.writeText(code || "")
+      setCodeCopied(true)
+      setTimeout(() => setCodeCopied(false), 2000)
     }
-  };
+  }
 
   useEffect(() => {
     const updateHeight = () => {
-      const vh = window.innerHeight * 0.01;
-      document.documentElement.style.setProperty('--vh', `${vh}px`);
-    };
+      const vh = window.innerHeight * 0.01
+      document.documentElement.style.setProperty("--vh", `${vh}px`)
+    }
 
-    updateHeight();
-    window.addEventListener('resize', updateHeight);
+    updateHeight()
+    window.addEventListener("resize", updateHeight)
 
-    return () => window.removeEventListener('resize', updateHeight);
-  }, []);
+    return () => window.removeEventListener("resize", updateHeight)
+  }, [])
 
   useEffect(() => {
     const updateTabLabels = () => {
       if (sandpackRef.current) {
-        const tabs = sandpackRef.current.querySelectorAll('.sp-tab-button');
+        const tabs = sandpackRef.current.querySelectorAll(".sp-tab-button")
         tabs.forEach((tab: Element) => {
           if (tab instanceof HTMLElement) {
-            const fileName = tab.getAttribute('title');
-            if (fileName && Object.keys(internalDependencies).includes(fileName)) {
-              if (!tab.querySelector('.dependencies-label')) {
-                const span = document.createElement('span');
-                span.className = 'dependencies-label text-[#808080] ml-1';
-                span.textContent = '(dependencies)';
-                tab.appendChild(span);
+            const fileName = tab.getAttribute("title")
+            if (
+              fileName &&
+              Object.keys(internalDependencies).includes(fileName)
+            ) {
+              if (!tab.querySelector(".dependencies-label")) {
+                const span = document.createElement("span")
+                span.className = "dependencies-label text-[#808080] ml-1"
+                span.textContent = "(dependencies)"
+                tab.appendChild(span)
               }
             }
-            
-            tab.addEventListener('click', () => {
+
+            tab.addEventListener("click", () => {
               if (fileName) {
-                setActiveFile(fileName);
+                setActiveFile(fileName)
               }
-            });
+            })
           }
-        });
+        })
       }
-    };
+    }
 
-    updateTabLabels();
-    const interval = setInterval(updateTabLabels, 100);
-    setTimeout(() => clearInterval(interval), 1000);
+    updateTabLabels()
+    const interval = setInterval(updateTabLabels, 100)
+    setTimeout(() => clearInterval(interval), 1000)
 
-    return () => clearInterval(interval);
-  }, [internalDependencies, showCode]);
+    return () => clearInterval(interval)
+  }, [internalDependencies, showCode])
 
-  const [showLoading, setShowLoading] = useState(false);
+  const [showLoading, setShowLoading] = useState(false)
 
   useEffect(() => {
     const checkComponentsLoaded = async () => {
       try {
-        const loadingTimeout = setTimeout(() => setShowLoading(true), 1000);
-        await import("@codesandbox/sandpack-react/unstyled");
-        clearTimeout(loadingTimeout);
-        setIsComponentsLoaded(true);
+        const loadingTimeout = setTimeout(() => setShowLoading(true), 1000)
+        await import("@codesandbox/sandpack-react/unstyled")
+        clearTimeout(loadingTimeout)
+        setIsComponentsLoaded(true)
       } catch (error) {
-        console.error("Error loading components:", error);
+        console.error("Error loading components:", error)
       } finally {
-        setShowLoading(false);
+        setShowLoading(false)
       }
-    };
+    }
 
-    checkComponentsLoaded();
-  }, []);
+    checkComponentsLoaded()
+  }, [])
 
   if (!isComponentsLoaded && showLoading) {
-    return <LoadingSpinner />;
+    return <LoadingSpinner />
   }
 
   return (
@@ -388,7 +423,9 @@ root.render(
             <SandpackProvider {...providerProps}>
               <div ref={sandpackRef} className="h-full w-full flex relative">
                 <SandpackLayout className="flex w-full flex-row gap-4">
-                  <div className={`flex flex-col w-full ${styles.customScroller}`}>
+                  <div
+                    className={`flex flex-col w-full ${styles.customScroller}`}
+                  >
                     <div className="flex w-full flex-col">
                       <Tabs defaultValue="code" className="w-full">
                         <TabsList className="grid w-full grid-cols-2">
@@ -396,55 +433,66 @@ root.render(
                           <TabsTrigger value="info">Info</TabsTrigger>
                         </TabsList>
                         <TabsContent value="code">
-                        <>
-                      <div className="px-4 py-2">
-                        <p className="text-[17px] font-medium mb-4 whitespace-nowrap overflow-hidden text-ellipsis">Add component to project</p>
-                        <div className="mb-2 mt-4 p-4 h-14 rounded-lg border bg-zinc-950 dark:bg-zinc-900 flex items-center">
-                          <div className="flex items-center justify-center text-white w-5 h-5 mr-3">
-                            <Terminal size={20} />
-                          </div>
-                          <div className="flex-grow overflow-hidden">
-                            <code className="flex items-center whitespace-nowrap font-mono text-sm">
-                              <span className="mr-2 text-white">npx</span>
-                              <span className="text-gray-400">shadcn@latest add "{installUrl}"</span>
-                            </code>
-                          </div>
-                          <button 
-                            onClick={copyCommand}
-                            className="flex-shrink-0 ml-3 flex items-center justify-center p-1 hover:bg-zinc-800 text-white w-8 h-8 rounded-md"
-                          >
-                            {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
-                          </button>
-                        </div>
-                      </div>
-                      {isDebug && (
-                        <SandpackFileExplorer />
-                      )}
-                      <div 
-                        className={`overflow-auto ${styles.codeViewerWrapper} relative`}
-                        onMouseEnter={() => setIsHovering(true)}
-                        onMouseLeave={() => setIsHovering(false)}
-                      >
-                        <AnimatePresence>
-                          {isHovering && (
-                            <motion.button 
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              onClick={copyCode}
-                              className={`absolute flex items-center gap-2 ${visibleFiles.length > 1 ? 'top-12' : 'top-2'} right-2 z-10 p-1 px-2 bg-white border text-gray-500 border-[#efefef] rounded-md hover:bg-gray-100 transition-colors ${codeCopied ? 'opacity-0' : 'opacity-100'}`}
+                          <>
+                            <div className="px-4 py-2">
+                              <p className="text-[17px] font-medium mb-4 whitespace-nowrap overflow-hidden text-ellipsis">
+                                Add component to project
+                              </p>
+                              <div className="mb-2 mt-4 p-4 h-14 rounded-lg border bg-zinc-950 dark:bg-zinc-900 flex items-center">
+                                <div className="flex items-center justify-center text-white w-5 h-5 mr-3">
+                                  <Terminal size={20} />
+                                </div>
+                                <div className="flex-grow overflow-hidden">
+                                  <code className="flex items-center whitespace-nowrap font-mono text-sm">
+                                    <span className="mr-2 text-white">npx</span>
+                                    <span className="text-gray-400">
+                                      shadcn@latest add "{installUrl}"
+                                    </span>
+                                  </code>
+                                </div>
+                                <button
+                                  onClick={copyCommand}
+                                  className="flex-shrink-0 ml-3 flex items-center justify-center p-1 hover:bg-zinc-800 text-white w-8 h-8 rounded-md"
+                                >
+                                  {copied ? (
+                                    <CheckIcon size={16} />
+                                  ) : (
+                                    <CopyIcon size={16} />
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                            {isDebug && <SandpackFileExplorer />}
+                            <div
+                              className={`overflow-auto ${styles.codeViewerWrapper} relative`}
+                              onMouseEnter={() => setIsHovering(true)}
+                              onMouseLeave={() => setIsHovering(false)}
                             >
-                              Copy Code {codeCopied ? <CheckIcon size={16} /> : <Clipboard size={16} />}
-                            </motion.button>
-                          )}
-                        </AnimatePresence>
-                        
-                        <SandpackCodeViewer
-                          showLineNumbers={true}
-                          wrapContent={true}
-                        />
-                      </div>
-                      </>
+                              <AnimatePresence>
+                                {isHovering && (
+                                  <motion.button
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    onClick={copyCode}
+                                    className={`absolute flex items-center gap-2 ${visibleFiles.length > 1 ? "top-12" : "top-2"} right-2 z-10 p-1 px-2 bg-white border text-gray-500 border-[#efefef] rounded-md hover:bg-gray-100 transition-colors ${codeCopied ? "opacity-0" : "opacity-100"}`}
+                                  >
+                                    Copy Code{" "}
+                                    {codeCopied ? (
+                                      <CheckIcon size={16} />
+                                    ) : (
+                                      <Clipboard size={16} />
+                                    )}
+                                  </motion.button>
+                                )}
+                              </AnimatePresence>
+
+                              <SandpackCodeViewer
+                                showLineNumbers={true}
+                                wrapContent={true}
+                              />
+                            </div>
+                          </>
                         </TabsContent>
                         <TabsContent value="info">
                           <Info info={componentInfo} />
@@ -464,5 +512,5 @@ root.render(
         </div>
       )}
     </div>
-  );
+  )
 }

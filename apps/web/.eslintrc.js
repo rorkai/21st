@@ -8,11 +8,11 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['tailwind.config.js'],
-      parser: 'espree',
+      files: ["tailwind.config.js"],
+      parser: "espree",
       parserOptions: {
         ecmaVersion: 2020,
       },
     },
   ],
-};
+}

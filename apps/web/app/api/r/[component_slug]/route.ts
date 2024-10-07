@@ -1,57 +1,62 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/utils/supabase';
+import { NextRequest, NextResponse } from "next/server"
+import { supabase } from "@/utils/supabase"
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { component_slug: string } }
+  { params }: { params: { component_slug: string } },
 ) {
-  const component_slug = params.component_slug;
+  const component_slug = params.component_slug
 
   try {
     const { data: component, error } = await supabase
-      .from('components')
-      .select('*')
-      .eq('component_slug', component_slug)
-      .single();
+      .from("components")
+      .select("*")
+      .eq("component_slug", component_slug)
+      .single()
 
-    if (error) throw error;
+    if (error) throw error
 
     if (!component) {
-      return NextResponse.json({ error: 'Component not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Component not found" },
+        { status: 404 },
+      )
     }
 
-    const codePath = `${component_slug}-code.tsx`;
+    const codePath = `${component_slug}-code.tsx`
 
     const { data: codeContent, error: codeError } = await supabase.storage
-      .from('components')
-      .download(codePath);
+      .from("components")
+      .download(codePath)
 
-    if (codeError) throw codeError;
+    if (codeError) throw codeError
 
-    const code = await codeContent.text();
+    const code = await codeContent.text()
 
-
-/*     const escapedCode = JSON.stringify(code); */
+    /*     const escapedCode = JSON.stringify(code); */
 
     const responseData = {
       name: component_slug,
-      type: 'registry:ui',
+      type: "registry:ui",
       files: [
         {
           path: `cc/${component_slug}.tsx`,
           content: code,
-          type: 'registry:ui',
-          target: '',
+          type: "registry:ui",
+          target: "",
         },
       ],
-    };
-
-    return NextResponse.json(responseData);
-  } catch (error: unknown) {
-    console.error('Unexpected error:', error);
-    if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
+
+    return NextResponse.json(responseData)
+  } catch (error: unknown) {
+    console.error("Unexpected error:", error)
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+    return NextResponse.json(
+      { error: "An unexpected error occurred" },
+      { status: 500 },
+    )
   }
 }

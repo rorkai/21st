@@ -1,6 +1,6 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react"
 
 interface ComponentPreviewImageProps {
   src: string
@@ -9,7 +9,12 @@ interface ComponentPreviewImageProps {
   className?: string
 }
 
-export default function ComponentPreviewImage({ src, alt, fallbackSrc, className }: ComponentPreviewImageProps) {
+export default function ComponentPreviewImage({
+  src,
+  alt,
+  fallbackSrc,
+  className,
+}: ComponentPreviewImageProps) {
   const [imgSrc, setImgSrc] = useState(src)
   const [isPlaceholder, setIsPlaceholder] = useState(src === fallbackSrc)
 
@@ -27,11 +32,11 @@ export default function ComponentPreviewImage({ src, alt, fallbackSrc, className
         setImgSrc(fallbackSrc)
         setIsPlaceholder(true)
       }}
-      style={{ 
-        width: '100%', 
-        height: '100%', 
-        objectFit: isPlaceholder ? 'cover' : 'contain',
-        backgroundColor: isPlaceholder ? 'transparent' : '' 
+      style={{
+        width: "100%",
+        height: "100%",
+        objectFit: isPlaceholder ? "cover" : "contain",
+        backgroundColor: isPlaceholder ? "transparent" : "",
       }}
     />
   )

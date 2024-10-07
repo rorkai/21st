@@ -1,16 +1,16 @@
 /* eslint-disable @next/next/no-img-element */
-import Link from "next/link";
-import { Heart, Download } from "lucide-react";
-import ComponentPreviewImage from "./ComponentPreviewImage";
-import { Component } from '../types/types';
-import { UserAvatar } from "./UserAvatar";
+import Link from "next/link"
+import { Heart, Download } from "lucide-react"
+import ComponentPreviewImage from "./ComponentPreviewImage"
+import { Component } from "../types/types"
+import { UserAvatar } from "./UserAvatar"
 
 interface ComponentCardProps {
-  component: Component;
+  component: Component
 }
 
 export function ComponentCard({ component }: ComponentCardProps) {
-  const componentUrl = `/${component.user.username}/${component.component_slug}`;
+  const componentUrl = `/${component.user.username}/${component.component_slug}`
 
   return (
     <Link href={componentUrl} className="block">
@@ -24,7 +24,11 @@ export function ComponentCard({ component }: ComponentCardProps) {
           />
         </div>
         <div className="flex items-center space-x-3">
-          <UserAvatar src={component.user.image_url || "/placeholder.svg"} alt={component.user.name} size={24} />
+          <UserAvatar
+            src={component.user.image_url || "/placeholder.svg"}
+            alt={component.user.name}
+            size={24}
+          />
           <h2 className="text-sm font-medium text-gray-900 truncate flex-grow">
             {component.name}
           </h2>
@@ -41,5 +45,5 @@ export function ComponentCard({ component }: ComponentCardProps) {
         </div>
       </div>
     </Link>
-  );
+  )
 }

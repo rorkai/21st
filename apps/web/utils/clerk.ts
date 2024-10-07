@@ -1,10 +1,10 @@
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { useSession } from "@clerk/nextjs";
+import { createClient, SupabaseClient } from "@supabase/supabase-js"
+import { useSession } from "@clerk/nextjs"
 
-let supabaseClient: SupabaseClient | null = null;
+let supabaseClient: SupabaseClient | null = null
 
 export function useClerkSupabaseClient() {
-  const { session } = useSession();
+  const { session } = useSession()
 
   if (!supabaseClient) {
     supabaseClient = createClient(
@@ -15,21 +15,20 @@ export function useClerkSupabaseClient() {
           fetch: async (url, options = {}) => {
             const clerkToken = await session?.getToken({
               template: "supabase",
-            });
+            })
 
-            const headers = new Headers(options?.headers);
-            headers.set("Authorization", `Bearer ${clerkToken}`);
+            const headers = new Headers(options?.headers)
+            headers.set("Authorization", `Bearer ${clerkToken}`)
 
             return fetch(url, {
               ...options,
               headers,
-            });
+            })
           },
         },
-      }
-    );
+      },
+    )
   }
 
-  return supabaseClient;
+  return supabaseClient
 }
-

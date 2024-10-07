@@ -1,9 +1,9 @@
-import React from 'react';
-import { ComponentCard } from './ComponentCard';
-import { Component } from '../types/types';
+import React from "react"
+import { ComponentCard } from "./ComponentCard"
+import { Component } from "../types/types"
 
 interface ComponentsListProps {
-  components: Component[];
+  components: Component[]
 }
 
 export function ComponentsList({ components }: ComponentsListProps) {
@@ -13,5 +13,5 @@ export function ComponentsList({ components }: ComponentsListProps) {
         <ComponentCard key={component.id} component={component} />
       ))}
     </div>
-  );
+  )
 }

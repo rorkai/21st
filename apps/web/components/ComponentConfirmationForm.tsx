@@ -84,10 +84,7 @@ export default function ComponentConfirmationForm({
     <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Confirm component details</DialogTitle>
-          <DialogDescription>
-            Please check and confirm your component details.
-          </DialogDescription>
+          <DialogTitle>Component Details</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-4 py-4">
           <div className="w-full">
@@ -192,8 +189,8 @@ export default function ComponentConfirmationForm({
             <label
               htmlFor="tags"
               className="block text-sm font-medium text-gray-700"
-            >
-              Tags
+            > 
+              Tags (optional)
             </label>
             <Controller
               name="tags"

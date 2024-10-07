@@ -1,6 +1,7 @@
 import { supabase } from "@/utils/supabase"
 import { Component, Tag, User } from "@/types/types"
 import { useQuery } from "@tanstack/react-query"
+import { generateSlug } from "@/hooks/useComponentSlug"
 
 const userFields = `
   id,
@@ -143,5 +144,79 @@ export function useComponentTags(componentId: string) {
   return useQuery<Tag[] | null, Error>({
     queryKey: ["componentTags", componentId],
     queryFn: () => getComponentTags(componentId),
+  })
+}
+
+export async function addComponent(componentData: any) {
+  const { data, error } = await supabase
+    .from("components")
+    .insert(componentData)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+export async function addTagsToComponent(componentId: number, tags: Tag[]) {
+  for (const tag of tags) {
+    let tagId: number
+
+    if (tag.id) {
+      tagId = tag.id
+    } else {
+      const slug = generateSlug(tag.name)
+      const { data: existingTag, error: selectError } = await supabase
+        .from("tags")
+        .select("id")
+        .eq("slug", slug)
+        .single()
+
+      if (existingTag) {
+        tagId = existingTag.id
+      } else {
+        const { data: newTag, error: insertError } = await supabase
+          .from("tags")
+          .insert({ name: tag.name, slug })
+          .single()
+
+        if (insertError) {
+          console.error("Error inserting tag:", insertError)
+          continue
+        }
+        if (newTag && typeof newTag === "object" && "id" in newTag) {
+          tagId = (newTag as { id: number }).id
+        } else {
+          console.error("New tag was not created or does not have an id")
+          continue
+        }
+      }
+    }
+
+    const { error: linkError } = await supabase
+      .from("component_tags")
+      .insert({ component_id: componentId, tag_id: tagId })
+
+    if (linkError) {
+      console.error("Error linking tag to component:", linkError)
+    }
+  }
+}
+
+export async function getAvailableTags(): Promise<Tag[]> {
+  const { data, error } = await supabase.from("tags").select("*").order("name")
+
+  if (error) {
+    console.error("Error loading tags:", error)
+    return []
+  }
+
+  return data || []
+}
+
+export function useAvailableTags() {
+  return useQuery<Tag[], Error>({
+    queryKey: ["availableTags"],
+    queryFn: getAvailableTags,
   })
 }

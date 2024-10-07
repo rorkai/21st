@@ -1,19 +1,39 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react"
-import { useForm, Controller } from "react-hook-form"
+import React, { useCallback, useMemo } from "react"
+import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
+import { useRouter } from "next/navigation"
+import { useComponentFormState } from "./ComponentFormHooks"
+import { uploadToStorage, uploadPreviewImage } from "./ComponentFormHelpers"
+import {
+  formSchema,
+  FormData,
+  isFormValid,
+  formatComponentName,
+  TagOption,
+} from "./ComponentFormUtils"
+import { useState, useEffect, useRef } from "react"
+import {
+  extractComponentNames,
+  extractDemoComponentName,
+  parseDependencies,
+  parseInternalDependencies,
+  removeComponentImports,
+} from "@/utils/parsers"
+import { generateSlug, isValidSlug } from "@/hooks/useComponentSlug"
+import Editor from "react-simple-code-editor"
+import { highlight, languages } from "prismjs"
+import "prismjs/components/prism-typescript"
+import "prismjs/components/prism-jsx"
+import "prismjs/themes/prism.css"
+import Image from "next/image"
+import { SandpackProvider as SandpackProviderUnstyled } from "@codesandbox/sandpack-react/unstyled"
+import CreatableSelect from "react-select/creatable"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert } from "@/components/ui/alert"
-import { useAtom, atom } from "jotai"
-import { useDebugMode } from "@/hooks/useDebugMode"
-import React from "react"
-import { useUser } from "@clerk/nextjs"
-import { useRouter } from "next/navigation"
-import { SandpackProvider as SandpackProviderUnstyled } from "@codesandbox/sandpack-react/unstyled"
 import {
   Dialog,
   DialogContent,
@@ -22,21 +42,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import CreatableSelect from "react-select/creatable"
-import { Tag } from "@/types/types"
-import { useClerkSupabaseClient } from "@/utils/clerk"
-import {
-  extractComponentNames,
-  extractDemoComponentName,
-  parseDependencies,
-  parseInternalDependencies,
-  removeComponentImports,
-} from "@/utils/parsers"
-import {
-  useComponentSlug,
-  generateSlug,
-  isValidSlug,
-} from "@/hooks/useComponentSlug"
 import {
   Form,
   FormControl,
@@ -45,60 +50,16 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { useValidTags } from "@/hooks/useValidateTags"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import Editor from "react-simple-code-editor"
-import { highlight, languages } from "prismjs"
-import "prismjs/components/prism-typescript"
-import "prismjs/components/prism-jsx"
-import "prismjs/themes/prism.css"
-import Image from "next/image"
 
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
-  component_slug: z.string().min(2, {
-    message: "Slug must be at least 2 characters.",
-  }),
-  code: z.string().min(1, {
-    message: "Component code is required.",
-  }),
-  demo_code: z.string().min(1, {
-    message: "Demo code is required.",
-  }),
-  description: z.string().optional(),
-  tags: z
-    .array(
-      z.object({
-        id: z.number().optional(),
-        name: z.string(),
-        slug: z.string(),
-      }),
-    )
-    .optional()
-    .default([]),
-  is_public: z.boolean().default(true),
-  preview_url: z.instanceof(File).optional(),
-})
-
-type FormData = z.infer<typeof formSchema>
-
-// Define the TagOption interface at the top of the file or import it if it's defined elsewhere
-interface TagOption {
-  value: number
-  label: string
-  __isNew__?: boolean
-}
-
-const demoCodeErrorAtom = atom<string | null>(null)
-const parsedDependenciesAtom = atom<Record<string, string>>({})
-const parsedComponentNamesAtom = atom<string[]>([])
-const parsedDemoDependenciesAtom = atom<Record<string, string>>({})
-const internalDependenciesAtom = atom<Record<string, string>>({})
-const importsToRemoveAtom = atom<string[]>([])
-const parsedDemoComponentNameAtom = atom<string>("")
+import { prepareFilesForPreview } from "./ComponentFormUtils"
+import { Tag } from "@/types/types"
+import {
+  addComponent,
+  addTagsToComponent,
+  useAvailableTags,
+} from "@/utils/dataFetchers"
 
 export default function ComponentForm() {
   const form = useForm<FormData>({
@@ -113,46 +74,55 @@ export default function ComponentForm() {
       is_public: true,
     },
   })
-  const [isLoading, setIsLoading] = useState(false)
+
   const {
+    isLoading,
+    setIsLoading,
+    step,
+    setStep,
+    isSuccessDialogOpen,
+    setIsSuccessDialogOpen,
+    newComponentSlug,
+    setNewComponentSlug,
+    isConfirmDialogOpen,
+    setIsConfirmDialogOpen,
+    isSlugManuallyEdited,
+    setIsSlugManuallyEdited,
+    previewImage,
+    setPreviewImage,
+    demoCodeError,
+    setDemoCodeError,
+    parsedDependencies,
+    setParsedDependencies,
+    parsedComponentNames,
+    setParsedComponentNames,
+    parsedDemoDependencies,
+    setParsedDemoDependencies,
+    internalDependencies,
+    setInternalDependencies,
+    importsToRemove,
+    setImportsToRemove,
+    parsedDemoComponentName,
+    setParsedDemoComponentName,
+    user,
+    client,
+    isDebug,
     slugAvailable,
     slugChecking,
     slugError,
     generateUniqueSlug,
     checkSlug,
-  } = useComponentSlug()
-  const [demoCodeError, setDemoCodeError] = useAtom(demoCodeErrorAtom)
-  const [parsedDependencies, setParsedDependencies] = useAtom(
-    parsedDependenciesAtom,
-  )
-  const [parsedComponentNames, setParsedComponentNames] = useAtom(
-    parsedComponentNamesAtom,
-  )
-  const [parsedDemoDependencies, setParsedDemoDependencies] = useAtom(
-    parsedDemoDependenciesAtom,
-  )
-  const [internalDependencies, setInternalDependencies] = useAtom(
-    internalDependenciesAtom,
-  )
-  const [importsToRemove, setImportsToRemove] = useAtom(importsToRemoveAtom)
-  const [parsedDemoComponentName, setParsedDemoComponentName] = useAtom(
-    parsedDemoComponentNameAtom,
-  )
-  const isDebug = useDebugMode()
-  const { user } = useUser()
-  const client = useClerkSupabaseClient()
-  const [step, setStep] = useState(1)
+    validTags,
+    name,
+    componentSlug,
+    code,
+    demoCode,
+  } = useComponentFormState(form)
+
   const router = useRouter()
-  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false)
-  const [newComponentSlug, setNewComponentSlug] = useState("")
-  const [availableTags, setAvailableTags] = useState<Tag[]>([])
-  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
   const descriptionRef = useRef<HTMLInputElement>(null)
 
-  const name = form.watch("name")
-  const componentSlug = form.watch("component_slug")
-
-  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false)
+  const { data: availableTags = [] } = useAvailableTags()
 
   useEffect(() => {
     if (user) {
@@ -181,9 +151,6 @@ export default function ComponentForm() {
       return () => clearTimeout(timer)
     }
   }, [componentSlug, checkSlug, isSlugManuallyEdited])
-
-  const code = form.watch("code")
-  const demoCode = form.watch("demo_code")
 
   useEffect(() => {
     setParsedComponentNames(code ? extractComponentNames(code) : [])
@@ -243,105 +210,6 @@ export default function ComponentForm() {
     setDemoCodeError(null)
   }
 
-  const loadAvailableTags = useCallback(async () => {
-    const { data, error } = await client.from("tags").select("*").order("name")
-
-    if (error) {
-      console.error("Error loading tags:", error)
-    } else {
-      setAvailableTags(data || [])
-    }
-  }, [client])
-
-  useEffect(() => {
-    loadAvailableTags()
-  }, [loadAvailableTags])
-
-  const addTagsToComponent = async (componentId: number, tags: Tag[]) => {
-    for (const tag of tags) {
-      let tagId: number
-
-      if (tag.id) {
-        tagId = tag.id
-      } else {
-        const slug = generateSlug(tag.name)
-        const { data: existingTag, error: selectError } = await client
-          .from("tags")
-          .select("id")
-          .eq("slug", slug)
-          .single()
-
-        if (existingTag) {
-          tagId = existingTag.id
-        } else {
-          const { data: newTag, error: insertError } = await client
-            .from("tags")
-            .insert({ name: tag.name, slug })
-            .single()
-
-          if (insertError) {
-            console.error("Error inserting tag:", insertError)
-            continue
-          }
-          if (newTag && typeof newTag === "object" && "id" in newTag) {
-            tagId = (newTag as { id: number }).id
-          } else {
-            console.error("New tag was not created or does not have an id")
-            continue
-          }
-        }
-      }
-
-      const { error: linkError } = await client
-        .from("component_tags")
-        .insert({ component_id: componentId, tag_id: tagId })
-
-      if (linkError) {
-        console.error("Error linking tag to component:", linkError)
-      }
-    }
-  }
-
-  const { data: validTags, isLoading: isValidatingTags } = useValidTags(
-    form.watch("tags"),
-  )
-
-  const isFormValid = useCallback(() => {
-    const { name, component_slug, code, demo_code } = form.getValues()
-    const valid =
-      name.length >= 2 &&
-      component_slug.length >= 2 &&
-      code.length > 0 &&
-      demo_code.length > 0 &&
-      !demoCodeError &&
-      Object.values(internalDependencies).every((slug) => slug) &&
-      (slugAvailable || !isSlugManuallyEdited)
-
-    return valid
-  }, [
-    form,
-    demoCodeError,
-    internalDependencies,
-    slugAvailable,
-    isSlugManuallyEdited,
-  ])
-
-  const [previewImage, setPreviewImage] = useState<string | null>(null)
-
-  const uploadPreviewImage = async (file: File): Promise<string> => {
-    const fileExtension = file.name.split(".").pop()
-    const fileName = `${componentSlug}-preview-${Date.now()}.${fileExtension}`
-    const { error } = await client.storage
-      .from("components")
-      .upload(fileName, file, { upsert: true })
-
-    if (error) throw error
-
-    const { data } = client.storage.from("components").getPublicUrl(fileName)
-
-    return data.publicUrl
-  }
-
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
@@ -391,20 +259,6 @@ export default function ComponentForm() {
 
     setIsLoading(true)
     try {
-      const { data: userData, error: userError } = await client
-        .from("users")
-        .select("id")
-        .eq("id", user.id)
-        .single()
-
-      if (userError || !userData) {
-        console.error("User not found in Supabase:", userError)
-        alert(
-          "There was an error with your account. Please try logging out and back in.",
-        )
-        return
-      }
-
       const componentNames = extractComponentNames(data.code)
       const demoComponentName = extractDemoComponentName(data.demo_code)
       const dependencies = parseDependencies(data.code)
@@ -418,39 +272,39 @@ export default function ComponentForm() {
       const demoCodeFileName = `${data.component_slug}-demo.tsx`
 
       const [codeUrl, demoCodeUrl] = await Promise.all([
-        uploadToStorage(codeFileName, data.code),
-        uploadToStorage(demoCodeFileName, cleanedDemoCode),
+        uploadToStorage(client, codeFileName, data.code),
+        uploadToStorage(client, demoCodeFileName, cleanedDemoCode),
       ])
 
       const installUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/r/${data.component_slug}`
 
       let previewImageUrl = ""
       if (data.preview_url) {
-        previewImageUrl = await uploadPreviewImage(data.preview_url)
+        previewImageUrl = await uploadPreviewImage(
+          client,
+          data.preview_url,
+          data.component_slug,
+        )
       }
 
-      const { data: insertedData, error } = await client
-        .from("components")
-        .insert({
-          name: data.name,
-          component_name: JSON.stringify(componentNames),
-          demo_component_name: demoComponentName,
-          component_slug: data.component_slug,
-          code: codeUrl,
-          demo_code: demoCodeUrl,
-          description: data.description,
-          install_url: installUrl,
-          user_id: user?.id,
-          dependencies: JSON.stringify(dependencies),
-          demo_dependencies: JSON.stringify(parsedDemoDependencies),
-          internal_dependencies: JSON.stringify(internalDependencies),
-          is_public: data.is_public,
-          preview_url: previewImageUrl,
-        })
-        .select()
-        .single()
+      const componentData = {
+        name: data.name,
+        component_name: JSON.stringify(componentNames),
+        demo_component_name: demoComponentName,
+        component_slug: data.component_slug,
+        code: codeUrl,
+        demo_code: demoCodeUrl,
+        description: data.description,
+        install_url: installUrl,
+        user_id: user?.id,
+        dependencies: JSON.stringify(dependencies),
+        demo_dependencies: JSON.stringify(parsedDemoDependencies),
+        internal_dependencies: JSON.stringify(internalDependencies),
+        is_public: data.is_public,
+        preview_url: previewImageUrl,
+      }
 
-      if (error) throw error
+      const insertedData = await addComponent(componentData)
 
       if (insertedData) {
         await addTagsToComponent(insertedData.id, validTags || [])
@@ -469,27 +323,6 @@ export default function ComponentForm() {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const uploadToStorage = async (fileName: string, content: string) => {
-    const { error } = await client.storage
-      .from("components")
-      .upload(fileName, content, {
-        contentType: "text/plain",
-        upsert: true,
-      })
-
-    if (error) throw error
-
-    const { data: publicUrlData } = client.storage
-      .from("components")
-      .getPublicUrl(fileName)
-
-    return publicUrlData.publicUrl
-  }
-
-  const formatComponentName = (name: string): string => {
-    return name.replace(/([A-Z])/g, " $1").trim()
   }
 
   useEffect(() => {
@@ -572,76 +405,6 @@ export default function ComponentForm() {
     )
   }
 
-  const prepareFilesForPreview = (code: string, demoCode: string) => {
-    const componentNames = extractComponentNames(code)
-    const demoComponentName = extractDemoComponentName(demoCode)
-
-    const updatedDemoCode = `import { ${componentNames.join(", ")} } from "./Component";\n${demoCode}`
-
-    const files = {
-      "/App.tsx": `
-import React from 'react';
-import { ${demoComponentName} } from './Demo';
-
-export default function App() {
-  return (
-    <div className="flex justify-center items-center h-screen p-4 relative">
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        zIndex: -1,
-        opacity: 0.5,
-        width: '100%',
-        height: '100%',
-        background: 'radial-gradient(#00000055 1px, transparent 1px)',
-        backgroundSize: '16px 16px'
-      }}>
-        <style>{
-          \`@media (prefers-color-scheme: dark) {
-            div {
-              background: radial-gradient(#ffffff22 1px, transparent 1px);
-            }
-          }\`
-        }</style>
-      </div>
-      <div className="flex justify-center items-center max-w-[600px] w-full h-full max-h-[600px] p-4 relative">
-      <${demoComponentName} />
-      </div>
-    </div>
-  );
-}
-`,
-      "/Component.tsx": code,
-      "/Demo.tsx": updatedDemoCode,
-      "/lib/utils.ts": `
-export function cn(...inputs: (string | undefined)[]) {
-  return inputs.filter(Boolean).join(' ');
-}
-`,
-      "/tsconfig.json": JSON.stringify(
-        {
-          compilerOptions: {
-            jsx: "react-jsx",
-            esModuleInterop: true,
-            baseUrl: ".",
-            paths: {
-              "@/*": ["./*"],
-            },
-          },
-        },
-        null,
-        2,
-      ),
-    }
-
-    const dependencies = {
-      ...parseDependencies(code),
-      ...parseDependencies(demoCode),
-    }
-
-    return { files, dependencies }
-  }
-
   const [previewProps, setPreviewProps] = useState<{
     files: Record<string, string>
     dependencies: Record<string, string>
@@ -679,17 +442,31 @@ export function cn(...inputs: (string | undefined)[]) {
   const handleSubmit = useCallback(
     (event: React.FormEvent) => {
       event.preventDefault()
-      console.log("handleSubmit called, form validity:", isFormValid())
-      if (isFormValid()) {
+      if (
+        isFormValid(
+          form,
+          demoCodeError,
+          internalDependencies,
+          slugAvailable,
+          isSlugManuallyEdited,
+        )
+      ) {
         const formData = form.getValues()
-        console.log("Form data:", formData)
         onSubmit(formData)
       } else {
         console.error("Form is not valid")
         alert("Please fill in all required fields correctly before submitting.")
       }
     },
-    [isFormValid, onSubmit, form],
+    [
+      isFormValid,
+      onSubmit,
+      form,
+      demoCodeError,
+      internalDependencies,
+      slugAvailable,
+      isSlugManuallyEdited,
+    ],
   )
 
   return (
@@ -1078,7 +855,16 @@ export function cn(...inputs: (string | undefined)[]) {
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={isLoading || !isFormValid()}
+              disabled={
+                isLoading ||
+                !isFormValid(
+                  form,
+                  demoCodeError,
+                  internalDependencies,
+                  slugAvailable,
+                  isSlugManuallyEdited,
+                )
+              }
             >
               {isLoading ? "Adding..." : "Add component"}
             </Button>

@@ -19,7 +19,6 @@ async function validateTags(tags: Tag[]): Promise<Tag[]> {
     return data.validTags
   } catch (error) {
     console.error("Error validating tags:", error)
-    // В случае ошибки возвращаем исходные теги
     return tags
   }
 }

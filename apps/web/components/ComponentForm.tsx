@@ -1,35 +1,32 @@
 "use client"
 
-import React, { useCallback, useMemo } from "react"
-import { Controller, useForm } from "react-hook-form"
+import React, { useCallback, useMemo, useState, useEffect, useRef } from "react"
+import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { useComponentFormState } from "./ComponentFormHooks"
-import { uploadToStorage, uploadPreviewImage } from "./ComponentFormHelpers"
+import {
+  uploadToStorage,
+  uploadPreviewImage,
+  checkDemoCode,
+  handleApproveDelete,
+  handleFileChange,
+  generateAndSetSlug,
+  updateDependencies,
+} from "./ComponentFormHelpers"
 import {
   formSchema,
   FormData,
   isFormValid,
   formatComponentName,
-  TagOption,
+  prepareFilesForPreview,
 } from "./ComponentFormUtils"
-import { useState, useEffect, useRef } from "react"
-import {
-  extractComponentNames,
-  extractDemoComponentName,
-  parseDependencies,
-  parseInternalDependencies,
-  removeComponentImports,
-} from "@/utils/parsers"
-import { generateSlug, isValidSlug } from "@/hooks/useComponentSlug"
 import Editor from "react-simple-code-editor"
 import { highlight, languages } from "prismjs"
 import "prismjs/components/prism-typescript"
 import "prismjs/components/prism-jsx"
 import "prismjs/themes/prism.css"
-import Image from "next/image"
 import { SandpackProvider as SandpackProviderUnstyled } from "@codesandbox/sandpack-react/unstyled"
-import CreatableSelect from "react-select/creatable"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -50,16 +47,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 
-import { prepareFilesForPreview } from "./ComponentFormUtils"
-import { Tag } from "@/types/types"
 import {
   addComponent,
   addTagsToComponent,
   useAvailableTags,
 } from "@/utils/dataFetchers"
+
+import ComponentConfirmationForm from "./ComponentConfirmationForm"
 
 export default function ComponentForm() {
   const form = useForm<FormData>({
@@ -120,7 +115,6 @@ export default function ComponentForm() {
   } = useComponentFormState(form)
 
   const router = useRouter()
-  const descriptionRef = useRef<HTMLInputElement>(null)
 
   const { data: availableTags = [] } = useAvailableTags()
 
@@ -134,14 +128,13 @@ export default function ComponentForm() {
   useEffect(() => {
     const updateSlug = async () => {
       if (name && !componentSlug) {
-        const newSlug = await generateUniqueSlug(name)
-        form.setValue("component_slug", newSlug)
+        await generateAndSetSlug(name, generateUniqueSlug, form)
         setIsSlugManuallyEdited(false)
       }
     }
 
     updateSlug()
-  }, [name, componentSlug, form.setValue, generateUniqueSlug])
+  }, [name, componentSlug, form, generateUniqueSlug, setIsSlugManuallyEdited])
 
   useEffect(() => {
     if (componentSlug && isSlugManuallyEdited) {
@@ -153,79 +146,43 @@ export default function ComponentForm() {
   }, [componentSlug, checkSlug, isSlugManuallyEdited])
 
   useEffect(() => {
-    setParsedComponentNames(code ? extractComponentNames(code) : [])
-    setParsedDependencies(code ? parseDependencies(code) : {})
-    setParsedDemoDependencies(demoCode ? parseDependencies(demoCode) : {})
+    updateDependencies(
+      code,
+      demoCode,
+      setParsedComponentNames,
+      setParsedDependencies,
+      setParsedDemoDependencies,
+      setParsedDemoComponentName,
+      setInternalDependencies,
+    )
   }, [code, demoCode])
 
   useEffect(() => {
-    setParsedDemoComponentName(
-      demoCode ? extractDemoComponentName(demoCode) : "",
-    )
-  }, [demoCode])
-
-  const checkDemoCode = useCallback(
-    (demoCode: string, componentNames: string[]) => {
-      const { removedImports } = removeComponentImports(
+    const componentNames = parsedComponentNames
+    if (componentNames.length > 0 && demoCode) {
+      checkDemoCode(
         demoCode,
         componentNames,
+        setImportsToRemove,
+        setDemoCodeError,
       )
-
-      if (removedImports.length > 0) {
-        setImportsToRemove(removedImports)
-        setDemoCodeError(
-          "Component imports in the Demo component are automatic. Please confirm deletion.",
-        )
-      } else {
-        setImportsToRemove([])
-        setDemoCodeError(null)
-      }
-    },
-    [],
-  )
-
-  useEffect(() => {
-    const componentNames = extractComponentNames(code)
-    if (componentNames.length > 0 && demoCode) {
-      checkDemoCode(demoCode, componentNames)
     }
-  }, [code, demoCode, checkDemoCode])
+  }, [code, demoCode, parsedComponentNames])
 
-  useEffect(() => {
-    const componentDeps = parseInternalDependencies(code)
-    const demoDeps = parseInternalDependencies(demoCode)
-
-    const combinedDeps = { ...componentDeps, ...demoDeps }
-
-    setInternalDependencies(combinedDeps)
-  }, [code, demoCode])
-
-  const handleApproveDelete = () => {
-    const { modifiedCode } = removeComponentImports(
+  const handleApproveDeleteWrapper = () => {
+    handleApproveDelete(
       demoCode,
       parsedComponentNames,
+      form,
+      setImportsToRemove,
+      setDemoCodeError,
     )
-    form.setValue("demo_code", modifiedCode)
-    setImportsToRemove([])
-    setDemoCodeError(null)
   }
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert("File is too large. Maximum size is 5 MB.")
-        return
-      }
-
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setPreviewImage(e.target?.result as string)
-      }
-      reader.readAsDataURL(file)
-
-      form.setValue("preview_url", file)
-    }
+  const handleFileChangeWrapper = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    handleFileChange(event, setPreviewImage, form)
   }
 
   const onSubmit = async (data: FormData) => {
@@ -259,14 +216,11 @@ export default function ComponentForm() {
 
     setIsLoading(true)
     try {
-      const componentNames = extractComponentNames(data.code)
-      const demoComponentName = extractDemoComponentName(data.demo_code)
-      const dependencies = parseDependencies(data.code)
+      const componentNames = parsedComponentNames
+      const demoComponentName = parsedDemoComponentName
+      const dependencies = parsedDependencies
 
-      const cleanedDemoCode = removeComponentImports(
-        data.demo_code,
-        componentNames,
-      ).modifiedCode
+      const cleanedDemoCode = demoCode
 
       const codeFileName = `${data.component_slug}-code.tsx`
       const demoCodeFileName = `${data.component_slug}-demo.tsx`
@@ -329,14 +283,9 @@ export default function ComponentForm() {
     if (step === 2 && parsedComponentNames.length > 0) {
       const formattedName = formatComponentName(parsedComponentNames[0] || "")
       form.setValue("name", formattedName)
-      generateAndSetSlug(formattedName)
+      generateAndSetSlug(formattedName, generateUniqueSlug, form)
     }
-  }, [step, parsedComponentNames, form.setValue])
-
-  const generateAndSetSlug = async (name: string) => {
-    const newSlug = await generateUniqueSlug(name)
-    form.setValue("component_slug", newSlug)
-  }
+  }, [step, parsedComponentNames, form, generateUniqueSlug])
 
   const handleGoToComponent = () => {
     if (user) {
@@ -500,8 +449,8 @@ export default function ComponentForm() {
                           fontSize: 12,
                           backgroundColor: "#f5f5f5",
                           borderRadius: "0.375rem",
-                          minHeight: "calc(100vh/3)",
-                          maxHeight: "calc(100vh/3)",
+                          height: "calc(100vh/3)",
+                          overflow: "auto",
                         }}
                         className="mt-1 w-full border border-input"
                       />
@@ -533,8 +482,8 @@ export default function ComponentForm() {
                           fontSize: 12,
                           backgroundColor: "#f5f5f5",
                           borderRadius: "0.375rem",
-                          minHeight: "calc(100vh/3)",
-                          maxHeight: "calc(100vh/3)",
+                          height: "calc(100vh/3)",
+                          overflow: "auto",
                         }}
                         className={`mt-1 w-full border border-input ${demoCodeError ? "border-yellow-500" : ""}`}
                       />
@@ -553,7 +502,7 @@ export default function ComponentForm() {
                           >
                             <code className="mb-2">{importStr}</code>
                             <Button
-                              onClick={handleApproveDelete}
+                              onClick={handleApproveDeleteWrapper}
                               size="sm"
                               className="self-end"
                             >
@@ -669,208 +618,28 @@ export default function ComponentForm() {
         </form>
       </Form>
 
-      <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Confirm Component Details</DialogTitle>
-            <DialogDescription>
-              Please check and confirm the details of your component.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-4 py-4">
-            <div className="w-full">
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Name
-              </label>
-              <Input
-                id="name"
-                {...form.register("name", { required: true })}
-                className="mt-1 w-full"
-                onChange={(e) => {
-                  form.setValue("name", e.target.value)
-                  generateAndSetSlug(e.target.value)
-                }}
-              />
-            </div>
-
-            <div className="w-full">
-              <label
-                htmlFor="component_slug"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Slug
-              </label>
-              <Input
-                id="component_slug"
-                {...form.register("component_slug", {
-                  required: true,
-                  validate: isValidSlug,
-                })}
-                className="mt-1 w-full"
-                onChange={(e) => {
-                  setIsSlugManuallyEdited(true)
-                  checkSlug(e.target.value)
-                }}
-              />
-              {isSlugManuallyEdited && (
-                <>
-                  {slugChecking ? (
-                    <p className="text-gray-500 text-sm mt-1">
-                      Checking availability...
-                    </p>
-                  ) : slugError ? (
-                    <p className="text-red-500 text-sm mt-1">{slugError}</p>
-                  ) : slugAvailable ? (
-                    <p className="text-green-500 text-sm mt-1">
-                      This slug is available
-                    </p>
-                  ) : null}
-                </>
-              )}
-            </div>
-
-            <div className="w-full">
-              <label
-                htmlFor="description"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Description (optional)
-              </label>
-              <Input
-                id="description"
-                {...form.register("description")}
-                className="mt-1 w-full"
-                ref={descriptionRef}
-              />
-            </div>
-
-            <div className="w-full">
-              <label
-                htmlFor="tags"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Tags
-              </label>
-              <Controller
-                name="tags"
-                control={form.control}
-                defaultValue={[]}
-                render={({ field }) => {
-                  const [tags, setTags] = useState(field.value)
-
-                  const selectOptions = useMemo(
-                    () =>
-                      availableTags.map((tag) => ({
-                        value: tag.id,
-                        label: tag.name,
-                      })),
-                    [availableTags],
-                  )
-
-                  return (
-                    <CreatableSelect<TagOption, true>
-                      {...field}
-                      isMulti
-                      options={selectOptions}
-                      className="mt-1 w-full rounded-md border border-input bg-transparent text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                      placeholder="Select or create tags"
-                      formatCreateLabel={(inputValue: string) =>
-                        `Create "${inputValue}"`
-                      }
-                      onChange={(newValue) => {
-                        const formattedValue = newValue.map((item: any) => ({
-                          id: item.__isNew__ ? undefined : item.value,
-                          name: item.label,
-                          slug: generateSlug(item.label),
-                        }))
-                        setTags(formattedValue)
-                        field.onChange(formattedValue)
-                      }}
-                      value={tags.map((tag) => ({
-                        value: tag.id ?? -1,
-                        label: tag.name,
-                      }))}
-                      menuPortalTarget={document.body}
-                      styles={{
-                        menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                      }}
-                    />
-                  )
-                }}
-              />
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="is_public"
-                checked={form.watch("is_public")}
-                onCheckedChange={(checked) =>
-                  form.setValue("is_public", checked)
-                }
-              />
-              <Label htmlFor="is_public">Public component</Label>
-            </div>
-            <Label htmlFor="is_public">
-              {form.watch("is_public")
-                ? "This component will be visible to everyone"
-                : "This component will be visible only to you"}
-            </Label>
-
-            <div className="w-full">
-              <Label
-                htmlFor="preview_image"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Preview image (recommended resolution: 1200x900 or higher)
-              </Label>
-              <Input
-                id="preview_image"
-                type="file"
-                accept="image/png,image/jpeg,image/gif"
-                onChange={handleFileChange}
-                className="mt-1 w-full"
-              />
-              {previewImage && (
-                <div className="mt-2">
-                  <Image
-                    src={previewImage}
-                    alt="Preview"
-                    width={300}
-                    height={225}
-                    className="rounded-md"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              onClick={() => setIsConfirmDialogOpen(false)}
-              variant="outline"
-            >
-              Back
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={
-                isLoading ||
-                !isFormValid(
-                  form,
-                  demoCodeError,
-                  internalDependencies,
-                  slugAvailable,
-                  isSlugManuallyEdited,
-                )
-              }
-            >
-              {isLoading ? "Adding..." : "Add component"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ComponentConfirmationForm
+        isConfirmDialogOpen={isConfirmDialogOpen}
+        setIsConfirmDialogOpen={setIsConfirmDialogOpen}
+        form={form}
+        isSlugManuallyEdited={isSlugManuallyEdited}
+        setIsSlugManuallyEdited={setIsSlugManuallyEdited}
+        slugChecking={slugChecking}
+        slugError={slugError}
+        slugAvailable={slugAvailable}
+        checkSlug={checkSlug}
+        generateAndSetSlug={(name) =>
+          generateAndSetSlug(name, generateUniqueSlug, form)
+        }
+        availableTags={availableTags}
+        previewImage={previewImage}
+        handleFileChange={handleFileChangeWrapper}
+        handleSubmit={handleSubmit}
+        isLoading={isLoading}
+        isFormValid={isFormValid}
+        demoCodeError={demoCodeError}
+        internalDependencies={internalDependencies}
+      />
 
       <Dialog open={isSuccessDialogOpen} onOpenChange={setIsSuccessDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">

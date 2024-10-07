@@ -46,6 +46,15 @@ button.sp-icon-standalone.sp-button {
   z-index: 1000;
 }
 
+.css-1p3m7a8-multiValue {
+  background-color: #F4F4F4 !important;
+  border-radius: 4px !important;
+}
+
+.css-v7duua:hover {
+  background-color: #ffe4dd !important;
+}
+
 .sp-preview-container {
   background: white;
   border: 1px solid #E5E5E5;

@@ -3,62 +3,27 @@ import traverse from "@babel/traverse"
 import * as t from "@babel/types"
 
 export function extractComponentNames(code: string): string[] {
-  if (!code) return []
-  const ast = parse(code, {
-    sourceType: "module",
-    plugins: ["typescript", "jsx"],
+  const componentRegex =
+    /export\s+(?:default\s+)?(?:function|const|class|let|var)\s+(\w+)|export\s*{\s*([^}]+)\s*}/g
+
+  const matches = Array.from(code.matchAll(componentRegex))
+  const componentNames = matches.flatMap((match) => {
+    if (match[1]) {
+      // Это экспорт функции, класса или переменной
+      return [match[1]]
+    } else if (match[2]) {
+      // Это экспорт объекта
+      return match[2].split(",").map((name) => name.trim().split(/\s+as\s+/)[0])
+    }
+    return []
   })
 
-  const exportedComponents: string[] = []
+  // Удаляем дубликаты
+  const uniqueNames = [...new Set(componentNames)]
 
-  traverse(ast, {
-    ExportNamedDeclaration(path) {
-      const declaration = path.node.declaration
-      if (declaration) {
-        if (t.isFunctionDeclaration(declaration) && declaration.id) {
-          exportedComponents.push(declaration.id.name)
-        } else if (t.isVariableDeclaration(declaration)) {
-          declaration.declarations.forEach((d) => {
-            if (t.isIdentifier(d.id)) {
-              exportedComponents.push(d.id.name)
-            }
-          })
-        } else if (t.isClassDeclaration(declaration) && declaration.id) {
-          exportedComponents.push(declaration.id.name)
-        }
-      } else if (path.node.specifiers) {
-        path.node.specifiers.forEach((specifier) => {
-          if (t.isExportSpecifier(specifier)) {
-            if (t.isIdentifier(specifier.exported)) {
-              exportedComponents.push(specifier.exported.name)
-            }
-          }
-        })
-      }
-    },
-    ExportDefaultDeclaration(path) {
-      const declaration = path.node.declaration
-      if (t.isIdentifier(declaration)) {
-        exportedComponents.push(declaration.name)
-      } else if (t.isFunctionDeclaration(declaration) && declaration.id) {
-        exportedComponents.push(declaration.id.name)
-      } else if (t.isClassDeclaration(declaration) && declaration.id) {
-        exportedComponents.push(declaration.id.name)
-      }
-    },
-    VariableDeclarator(path) {
-      if (
-        t.isIdentifier(path.node.id) &&
-        t.isVariableDeclaration(path.parent) &&
-        path.parentPath &&
-        t.isExportNamedDeclaration(path.parentPath.parent)
-      ) {
-        exportedComponents.push(path.node.id.name)
-      }
-    },
-  })
+  console.log("Extracted exported names:", uniqueNames)
 
-  return exportedComponents
+  return uniqueNames.filter((name): name is string => name !== undefined)
 }
 
 export function extractDemoComponentName(code: string): string {
@@ -67,7 +32,8 @@ export function extractDemoComponentName(code: string): string {
   return match && match[1] ? match[1] : ""
 }
 
-export function parseDependencies(code: string): Record<string, string> {
+// Переименуем функцию parseDependencies в extractDependencies и экспортируем ее
+export function extractDependencies(code: string): Record<string, string> {
   const dependencies: Record<string, string> = {}
   try {
     const ast = parse(code, {
@@ -130,35 +96,20 @@ export function parseDependencies(code: string): Record<string, string> {
   return dependencies
 }
 
-export function parseInternalDependencies(
-  code: string,
+// Переименуем функцию parseInternalDependencies в findInternalDependencies и экспортируем ее
+export function findInternalDependencies(
+  componentDependencies: Record<string, string>,
+  demoDependencies: Record<string, string>,
 ): Record<string, string> {
   const internalDeps: Record<string, string> = {}
-  try {
-    const ast = parse(code, {
-      sourceType: "module",
-      plugins: [
-        "typescript",
-        "jsx",
-        "decorators-legacy",
-        "classProperties",
-        "objectRestSpread",
-        "dynamicImport",
-      ],
-    })
 
-    traverse(ast, {
-      ImportDeclaration({ node }) {
-        const source = node.source.value
-        if (typeof source === "string" && source.startsWith("@/components/")) {
-          if (!internalDeps[source]) {
-            internalDeps[source] = ""
-          }
-        }
-      },
-    })
-  } catch (error) {
-    console.error("Error parsing internal dependencies:", error)
+  // Объединяем зависимости из компонента и демо-кода
+  const allDependencies = { ...componentDependencies, ...demoDependencies }
+
+  for (const [source, version] of Object.entries(allDependencies)) {
+    if (source.startsWith("@/components/")) {
+      internalDeps[source] = version
+    }
   }
 
   return internalDeps
@@ -168,42 +119,48 @@ export function removeComponentImports(
   demoCode: string,
   componentNames: string[],
 ): { modifiedCode: string; removedImports: string[] } {
-  const ast = parse(demoCode, {
-    sourceType: "module",
-    plugins: ["typescript", "jsx"],
-  })
+  try {
+    const ast = parse(demoCode, {
+      sourceType: "module",
+      plugins: ["typescript", "jsx"],
+      errorRecovery: true, // Добавляем эту опцию для более устойчивого парсинга
+    })
 
-  const importsToDrop: { start: number; end: number; text: string }[] = []
+    const importsToDrop: { start: number; end: number; text: string }[] = []
 
-  traverse(ast, {
-    ImportDeclaration(path) {
-      const specifiers = path.node.specifiers
-      const importedNames = specifiers.map((s) =>
-        t.isImportSpecifier(s) && t.isIdentifier(s.imported)
-          ? s.imported.name
-          : "",
-      )
+    traverse(ast, {
+      ImportDeclaration(path) {
+        const specifiers = path.node.specifiers
+        const importedNames = specifiers.map((s) =>
+          t.isImportSpecifier(s) && t.isIdentifier(s.imported)
+            ? s.imported.name
+            : "",
+        )
 
-      if (importedNames.some((name) => componentNames.includes(name))) {
-        importsToDrop.push({
-          start: path.node.start!,
-          end: path.node.end!,
-          text: demoCode.slice(path.node.start!, path.node.end!),
-        })
+        if (importedNames.some((name) => componentNames.includes(name))) {
+          importsToDrop.push({
+            start: path.node.start!,
+            end: path.node.end!,
+            text: demoCode.slice(path.node.start!, path.node.end!),
+          })
+        }
+      },
+    })
+
+    let modifiedCode = demoCode
+    const removedImports: string[] = []
+    for (let i = importsToDrop.length - 1; i >= 0; i--) {
+      const importToDrop = importsToDrop[i]
+      if (importToDrop) {
+        const { start, end, text } = importToDrop
+        modifiedCode = modifiedCode.slice(0, start) + modifiedCode.slice(end)
+        removedImports.push(text)
       }
-    },
-  })
-
-  let modifiedCode = demoCode
-  const removedImports: string[] = []
-  for (let i = importsToDrop.length - 1; i >= 0; i--) {
-    const importToDrop = importsToDrop[i]
-    if (importToDrop) {
-      const { start, end, text } = importToDrop
-      modifiedCode = modifiedCode.slice(0, start) + modifiedCode.slice(end)
-      removedImports.push(text)
     }
-  }
 
-  return { modifiedCode: modifiedCode.trim(), removedImports }
+    return { modifiedCode: modifiedCode.trim(), removedImports }
+  } catch (error) {
+    console.error("Error parsing demo code:", error)
+    return { modifiedCode: demoCode, removedImports: [] }
+  }
 }

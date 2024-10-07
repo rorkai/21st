@@ -157,16 +157,16 @@ export default function App() {
         background: 'radial-gradient(#00000055 1px, transparent 1px)',
         backgroundSize: '16px 16px'
       }}>
-        <style>{
-          \`@media (prefers-color-scheme: dark) {
+        <style>{\`
+          @media (prefers-color-scheme: dark) {
             div {
               background: radial-gradient(#ffffff22 1px, transparent 1px);
             }
-          }\`
-        }</style>
+          }
+        \`}</style>
       </div>
       <div className="flex justify-center items-center max-w-[600px] w-full h-full max-h-[600px] p-4 relative">
-      <${demoComponentName} />
+        <${demoComponentName} />
       </div>
     </div>
   );

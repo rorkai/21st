@@ -533,7 +533,8 @@ export default function ComponentForm() {
       },
       options: {
         externalResources: [
-          "https://vucvdpamtrjkzmubwlts.supabase.co/storage/v1/object/public/css/compiled-tailwind.css"
+          "https://cdn.tailwindcss.com",
+           "https://vucvdpamtrjkzmubwlts.supabase.co/storage/v1/object/public/css/compiled-tailwind.css"
         ],
       },
     };

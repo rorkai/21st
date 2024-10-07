@@ -37,6 +37,7 @@
     "framer-motion": "^11.9.0",
     "fs": "0.0.1-security",
     "lucide-react": "^0.446.0",
+    "micro": "^10.0.1",
     "next": "14.2.6",
     "prismjs": "^1.29.0",
     "react": "18.3.1",

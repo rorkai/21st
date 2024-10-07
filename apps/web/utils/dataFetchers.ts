@@ -1,6 +1,6 @@
 import { supabase } from '@/utils/supabase';
 import { Component, Tag, User } from '@/types/types';
-import { useQuery, UseQueryOptions } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 const userFields = `
   id,
@@ -16,9 +16,6 @@ const componentFields = `
   *,
   user:users!user_id (${userFields})
 `;
-
-// Удалим эту строку
-// console.log('componentFields:', componentFields);
 
 export async function getComponent(username: string, slug: string): Promise<Component | null> {
   console.log('getComponent called with username:', username, 'and slug:', slug);
@@ -71,7 +68,6 @@ export async function getUserData(username: string): Promise<User | null> {
   }
 }
 
-// Хук useUserData для клиентских компонентов
 export function useUserData(username: string) {
   return useQuery<User | null, Error>({
     queryKey: ['user', username],
@@ -107,7 +103,6 @@ export async function getComponents(): Promise<Component[]> {
     .limit(1000);
 
   if (error) {
-    console.error('Ошибка при получении компонентов:', error);
     return [];
   }
 

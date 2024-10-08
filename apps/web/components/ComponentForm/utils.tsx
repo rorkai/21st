@@ -1,18 +1,9 @@
-import { atom } from "jotai"
 import { z } from "zod"
 import {
   extractComponentNames,
   extractDemoComponentName,
   extractDependencies,
 } from "@/utils/parsers"
-
-export const demoCodeErrorAtom = atom<string | null>(null)
-export const parsedDependenciesAtom = atom<Record<string, string>>({})
-export const parsedComponentNamesAtom = atom<string[]>([])
-export const parsedDemoDependenciesAtom = atom<Record<string, string>>({})
-export const internalDependenciesAtom = atom<Record<string, string>>({})
-export const importsToRemoveAtom = atom<string[]>([])
-export const parsedDemoComponentNameAtom = atom<string>("")
 
 export const formSchema = z.object({
   name: z.string().min(2, {
@@ -127,10 +118,8 @@ export function cn(...inputs: (string | undefined)[]) {
 
 export const isFormValid = (
   form: any,
-  demoCodeError: string | null,
   internalDependencies: Record<string, string>,
-  slugAvailable: boolean | null,
-  isSlugManuallyEdited: boolean,
+  slugAvailable: boolean | undefined,
 ) => {
   const { name, component_slug, code, demo_code } = form.getValues()
   return (
@@ -138,8 +127,7 @@ export const isFormValid = (
     component_slug.length >= 2 &&
     code.length > 0 &&
     demo_code.length > 0 &&
-    !demoCodeError &&
     Object.values(internalDependencies).every((slug) => slug) &&
-    (slugAvailable === true || !isSlugManuallyEdited)
+    slugAvailable === true
   )
 }

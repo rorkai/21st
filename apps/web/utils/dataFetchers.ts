@@ -1,6 +1,6 @@
 import { Component, Tag, User } from "@/types/types"
 import { useQuery } from "@tanstack/react-query"
-import { generateSlug } from "@/hooks/useComponentSlug"
+import { generateSlug } from "@/components/ComponentForm/useIsCheckSlugAvailable"
 import { SupabaseClient } from "@supabase/supabase-js"
 import { useClerkSupabaseClient } from "./clerk"
 
@@ -23,10 +23,10 @@ export async function getComponent(
   supabase: SupabaseClient | null,
   username: string,
   slug: string,
-): Promise<Component | null> {
+): Promise<{ data: Component | null; error: Error | null }> {
   if (!supabase) {
     console.error("Supabase client is null")
-    return null
+    return { data: null, error: new Error("Supabase client is null") }
   }
 
   console.log("getComponent called with username:", username, "and slug:", slug)
@@ -44,25 +44,28 @@ export async function getComponent(
 
   if (error) {
     console.error("Error fetching component:", error)
-    return null
+    return { data: null, error: new Error(error.message) }
   }
 
   if (data && data.tags) {
     data.tags = data.tags.map((tag: any) => tag.tags)
   }
 
-  return data
+  return { data, error }
 }
 
-export function useComponent(username: string, slug: string) {
+export function useCcomponent(username: string, slug: string) {
   const supabase = useClerkSupabaseClient()
-  return useQuery<Component | null, Error>({
+  return useQuery<{ data: Component | null; error: Error | null }, Error>({
     queryKey: ["component", username, slug],
     queryFn: () => getComponent(supabase, username, slug),
   })
 }
 
-export async function getUserData(supabase: SupabaseClient, username: string): Promise<User | null> {
+export async function getUserData(
+  supabase: SupabaseClient,
+  username: string,
+): Promise<User | null> {
   try {
     const { data, error } = await supabase
       .from("users")
@@ -91,9 +94,9 @@ export function useUserData(username: string) {
 }
 
 export async function getUserComponents(
+  supabase: SupabaseClient,
   userId: string,
 ): Promise<Component[] | null> {
-  const supabase = useClerkSupabaseClient()
   const { data, error } = await supabase
     .from("components")
     .select(componentFields)
@@ -108,14 +111,16 @@ export async function getUserComponents(
 }
 
 export function useUserComponents(userId: string) {
+  const supabase = useClerkSupabaseClient()
   return useQuery<Component[] | null, Error>({
     queryKey: ["userComponents", userId],
-    queryFn: () => getUserComponents(userId),
+    queryFn: () => getUserComponents(supabase, userId),
   })
 }
 
-export async function getComponents(): Promise<Component[]> {
-  const supabase = useClerkSupabaseClient()
+export async function getComponents(
+  supabase: SupabaseClient,
+): Promise<Component[]> {
   const { data, error } = await supabase
     .from("components")
     .select(componentFields)
@@ -129,9 +134,10 @@ export async function getComponents(): Promise<Component[]> {
 }
 
 export function useComponents() {
+  const supabase = useClerkSupabaseClient()
   return useQuery<Component[], Error>({
     queryKey: ["components"],
-    queryFn: getComponents,
+    queryFn: () => getComponents(supabase),
     staleTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
@@ -162,7 +168,10 @@ export function useComponentTags(componentId: string) {
   })
 }
 
-export async function addComponent(supabase: SupabaseClient, componentData: any) {
+export async function addComponent(
+  supabase: SupabaseClient,
+  componentData: any,
+) {
   const { data, error } = await supabase
     .from("components")
     .insert(componentData)
@@ -173,7 +182,11 @@ export async function addComponent(supabase: SupabaseClient, componentData: any)
   return data
 }
 
-export async function addTagsToComponent(supabase: SupabaseClient, componentId: number, tags: Tag[]) {
+export async function addTagsToComponent(
+  supabase: SupabaseClient,
+  componentId: number,
+  tags: Tag[],
+) {
   for (const tag of tags) {
     let tagId: number
 

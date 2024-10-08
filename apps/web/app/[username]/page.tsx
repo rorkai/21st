@@ -4,13 +4,14 @@ import { ComponentsList } from "@/components/ComponentsList"
 import { Header } from "@/components/Header"
 import { getUserData, getUserComponents } from "@/utils/dataFetchers"
 import { UserAvatar } from "@/components/UserAvatar"
+import { supabaseWithAdminAccess } from "@/utils/supabase"
 
 export const generateMetadata = async ({
   params,
 }: {
   params: { username: string }
-}) => {
-  const user = await getUserData(params.username)
+  }) => {
+  const user = await getUserData(supabaseWithAdminAccess, params.username)
   return {
     title: user
       ? `${user.name}'s Profile | Component Library`
@@ -22,14 +23,14 @@ export default async function UserProfile({
   params,
 }: {
   params: { username: string }
-}) {
-  const user = await getUserData(params.username)
+  }) {
+  const user = await getUserData(supabaseWithAdminAccess, params.username)
 
-  if (!user) {
+  if (!user) {  
     return <div>User not found</div>
   }
 
-  const components = await getUserComponents(user.id)
+  const components = await getUserComponents(supabaseWithAdminAccess, user.id)
 
   return (
     <>

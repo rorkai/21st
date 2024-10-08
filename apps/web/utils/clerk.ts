@@ -40,7 +40,7 @@ const supabaseClientAtom = atom<SupabaseClient>(
   createSupabaseClerkClient(),
 )
 
-export function useClerkSupabaseClient() {
+export function useClerkSupabaseClient(): SupabaseClient {
   const { session } = useSession()
   const [supabaseClient, setSupabaseClient] = useAtom(supabaseClientAtom)
 

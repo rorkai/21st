@@ -1,36 +1,32 @@
 "use client"
 
-import React, { useCallback, useState, useEffect, useLayoutEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
-import { useComponentFormState } from "./ComponentFormHooks"
 import {
   uploadToStorage,
   uploadPreviewImage,
-  checkDemoCode,
-  handleApproveDelete,
   handleFileChange,
-} from "./ComponentFormHelpers"
+} from "./actions"
 import {
   formSchema,
   FormData,
   isFormValid,
-  formatComponentName,
   prepareFilesForPreview,
-} from "./ComponentFormUtils"
+} from "./utils"
 import {
   extractComponentNames,
   extractDependencies,
   extractDemoComponentName,
   findInternalDependencies,
+  removeComponentImports,
 } from "../../utils/parsers"
 import Editor from "react-simple-code-editor"
 import { highlight, languages } from "prismjs"
 import "prismjs/components/prism-typescript"
 import "prismjs/components/prism-jsx"
 import "prismjs/themes/prism.css"
-import { SandpackProvider } from "@codesandbox/sandpack-react/unstyled"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -55,27 +51,17 @@ import {
 import {
   addComponent,
   addTagsToComponent,
-  useAvailableTags,
 } from "@/utils/dataFetchers"
 
 import { ComponentDetails } from "./ComponentDetails"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
-import { useAtom } from "jotai"
-import {
-  isSlugManuallyEditedAtom,
-  slugAvailableAtom,
-  demoCodeErrorAtom,
-  internalDependenciesAtom,
-} from "./ComponentFormAtoms"
 import { FileTerminal, SunMoon, Codepen } from "lucide-react"
 import { useClerkSupabaseClient } from "@/utils/clerk"
-
-const ComponentPreview = React.lazy(() =>
-  import("@codesandbox/sandpack-react/unstyled").then((module) => ({
-    default: module.SandpackPreview,
-  })),
-)
+import { useUser } from "@clerk/nextjs"
+import { useDebugMode } from "@/hooks/useDebugMode"
+import { Tag } from "@/types/types"
+import { Preview } from "./preview"
 
 export default function ComponentForm() {
   const form = useForm<FormData>({
@@ -92,92 +78,52 @@ export default function ComponentForm() {
     },
   })
 
+  const isDebug = useDebugMode()
+  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false)
+  const [componentDependencies, setComponentDependencies] = useState<{
+    dependencies: Record<string, string>
+    demoDependencies: Record<string, string>
+    internalDependencies: Record<string, string>
+    componentNames: string[]
+    demoComponentName: string
+  }>({
+    dependencies: {},
+    demoDependencies: {},
+    internalDependencies: {},
+    componentNames: [],
+    demoComponentName: "",
+  })
+
   const {
-    isLoading,
-    setIsLoading,
-    step,
-    setStep,
-    isSuccessDialogOpen,
-    setIsSuccessDialogOpen,
-    newComponentSlug,
-    setNewComponentSlug,
-    isConfirmDialogOpen,
-    setIsConfirmDialogOpen,
-    previewImage,
-    setPreviewImage,
-    parsedDependencies,
-    setParsedDependencies,
-    parsedComponentNames,
-    setParsedComponentNames,
-    parsedDemoDependencies,
-    setParsedDemoDependencies,
-    importsToRemove,
-    setImportsToRemove,
-    parsedDemoComponentName,
-    setParsedDemoComponentName,
-    user,
-    client,
-    isDebug,
-    generateUniqueSlug,
-    generateAndSetSlug,
-    checkSlug,
-    validTags,
+    dependencies: parsedDependencies,
+    demoDependencies: parsedDemoDependencies,
+    internalDependencies: internalDependencies,
+    componentNames: parsedComponentNames,
+    demoComponentName: parsedDemoComponentName,
+  } = componentDependencies || {}
+
+  const {
     name,
-    componentSlug,
+    component_slug: componentSlug,
     code,
-    demoCode,
-  } = useComponentFormState(form)
-  const supabase = useClerkSupabaseClient()
+    demo_code: demoCode,
+    tags: validTags,
+  } = form.getValues()
+
+  const { user } = useUser()
+  const client = useClerkSupabaseClient()
 
   const router = useRouter()
 
-  const { data: availableTags = [] } = useAvailableTags()
-
-  const [isCodeUploaded, setIsCodeUploaded] = useState(false)
-
-  const [isComponentCodeEntered, setIsComponentCodeEntered] = useState(false)
-
-  const [isDemoCodeCollapsed, setIsDemoCodeCollapsed] = useState(false)
   const [showComponentDetails, setShowComponentDetails] = useState(false)
 
-  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useAtom(
-    isSlugManuallyEditedAtom,
-  )
-
-  const [slugAvailable] = useAtom(slugAvailableAtom)
-  const [demoCodeError, setDemoCodeError] = useAtom(demoCodeErrorAtom)
-  const [internalDependencies, setInternalDependencies] = useAtom(
-    internalDependenciesAtom,
-  )
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
 
   const [isEditMode, setIsEditMode] = useState(false)
 
-  useEffect(() => {
-    if (user) {
-      console.log("Current user:", user)
-      console.log("User username:", user.username)
-    }
-  }, [user])
+  const [isLoading, setIsLoading] = useState(false)
 
-  useEffect(() => {
-    const updateSlug = async () => {
-      if (name && !componentSlug) {
-        await generateAndSetSlug(name)
-        setIsSlugManuallyEdited(false)
-      }
-    }
-
-    updateSlug()
-  }, [name, componentSlug, generateAndSetSlug, setIsSlugManuallyEdited])
-
-  useEffect(() => {
-    if (componentSlug && isSlugManuallyEdited) {
-      const timer = setTimeout(() => {
-        checkSlug(componentSlug)
-      }, 500)
-      return () => clearTimeout(timer)
-    }
-  }, [componentSlug, checkSlug, isSlugManuallyEdited])
+  const [importsToRemove, setImportsToRemove] = useState<string[] | undefined>(undefined)
 
   useEffect(() => {
     const updateDependencies = () => {
@@ -185,20 +131,21 @@ export default function ComponentForm() {
         console.log("Full component code:", code)
         const componentNames = extractComponentNames(code)
         console.log("Parsed exported component names:", componentNames)
-        setParsedComponentNames(componentNames)
-
         const dependencies = extractDependencies(code)
-        setParsedDependencies(dependencies)
-
         const demoDependencies = extractDependencies(demoCode)
-        setParsedDemoDependencies(demoDependencies)
-
         const demoComponentName = extractDemoComponentName(demoCode)
-        setParsedDemoComponentName(demoComponentName)
-
-        setInternalDependencies(
-          findInternalDependencies(dependencies, demoDependencies),
+        const internalDependencies = findInternalDependencies(
+          dependencies,
+          demoDependencies,
         )
+
+        setComponentDependencies({
+          dependencies,
+          demoDependencies,
+          componentNames,
+          demoComponentName,
+          internalDependencies,
+        })
       } catch (error) {
         console.error("Error updating dependencies:", error)
       }
@@ -206,50 +153,6 @@ export default function ComponentForm() {
 
     updateDependencies()
   }, [code, demoCode])
-
-  useEffect(() => {
-    const componentNames = parsedComponentNames
-    if (componentNames.length > 0 && demoCode) {
-      checkDemoCode(
-        demoCode,
-        componentNames,
-        setImportsToRemove,
-        setDemoCodeError,
-      )
-    }
-  }, [code, demoCode, parsedComponentNames])
-
-  const handleApproveDeleteWrapper = async () => {
-    const updatedDemoCode = await handleApproveDelete(
-      demoCode,
-      parsedComponentNames,
-      form,
-      setImportsToRemove,
-      setDemoCodeError,
-    )
-
-    if (updatedDemoCode) {
-      form.setValue("demo_code", updatedDemoCode)
-
-      setImportsToRemove([])
-      setDemoCodeError(null)
-
-      if (updatedDemoCode.trim()) {
-        setIsDemoCodeCollapsed(true)
-        setIsPreviewReady(true)
-        setShowComponentDetails(true)
-      }
-    }
-  }
-
-  const checkAndCollapseDemoCode = (code: string) => {
-    if (code.trim()) {
-      setIsDemoCodeCollapsed(true)
-      setIsPreviewReady(true)
-      setShowComponentDetails(true)
-      form.setValue("demo_code", code)
-    }
-  }
 
   const handleFileChangeWrapper = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -266,21 +169,7 @@ export default function ComponentForm() {
 
     console.log("onSubmit called with data:", data)
 
-    if (!slugAvailable && isSlugManuallyEdited) {
-      console.error("Slug is not available")
-      alert("The chosen slug is not available. Please choose a different one.")
-      return
-    }
-
-    if (demoCodeError) {
-      console.error("Demo code error:", demoCodeError)
-      alert(
-        "There's an error in the demo code. Please fix it before submitting.",
-      )
-      return
-    }
-
-    if (Object.values(internalDependencies).some((slug) => !slug)) {
+    if (Object.values(internalDependencies ?? {}).some((slug) => !slug)) {
       console.error("Internal dependencies not specified")
       alert("Please specify the slug for all internal dependencies")
       return
@@ -330,13 +219,10 @@ export default function ComponentForm() {
         preview_url: previewImageUrl,
       }
 
-      const insertedData = await addComponent(supabase, componentData)
+      const insertedData = await addComponent(client, componentData)
 
-      if (insertedData) {
-        await addTagsToComponent(supabase, insertedData.id, validTags || [])
-
-        setNewComponentSlug(data.component_slug)
-        setIsConfirmDialogOpen(false)
+      if (insertedData && validTags) {
+        await addTagsToComponent(client, insertedData.id, validTags.filter((tag) => !!tag.slug) as Tag[])
         setIsSuccessDialogOpen(true)
       }
     } catch (error) {
@@ -351,75 +237,16 @@ export default function ComponentForm() {
     }
   }
 
-  useEffect(() => {
-    if (step === 2 && parsedComponentNames.length > 0) {
-      const formattedName = formatComponentName(parsedComponentNames[0] || "")
-      form.setValue("name", formattedName)
-      generateAndSetSlug(formattedName)
-    }
-  }, [step, parsedComponentNames, form, generateUniqueSlug])
-
   const handleGoToComponent = () => {
     if (user) {
-      router.push(`/${user.username}/${newComponentSlug}`)
+      router.push(`/${user.username}/${componentSlug}`)
     }
     setIsSuccessDialogOpen(false)
   }
 
   const handleAddAnother = () => {
     form.reset()
-    setStep(1)
     setIsSuccessDialogOpen(false)
-  }
-
-  function Preview({
-    files,
-    dependencies,
-  }: {
-    files: Record<string, string>
-    dependencies: Record<string, string>
-  }) {
-    const [isComponentsLoaded, setIsComponentsLoaded] = useState(false)
-
-    useEffect(() => {
-      const loadComponents = async () => {
-        await import("@codesandbox/sandpack-react/unstyled")
-        setIsComponentsLoaded(true)
-      }
-      loadComponents()
-    }, [])
-
-    if (!isComponentsLoaded) {
-      return <div>Loading preview...</div>
-    }
-
-    const providerProps = {
-      template: "react-ts" as const,
-      files,
-      customSetup: {
-        dependencies: {
-          react: "^18.0.0",
-          "react-dom": "^18.0.0",
-          "lucide-react": "^0.446.0",
-          "framer-motion": "latest",
-          ...dependencies,
-        },
-      },
-      options: {
-        externalResources: [
-          "https://cdn.tailwindcss.com",
-          "https://vucvdpamtrjkzmubwlts.supabase.co/storage/v1/object/public/css/compiled-tailwind.css",
-        ],
-      },
-    }
-
-    return (
-      <div className="w-full bg-[#FAFAFA] rounded-lg">
-        <SandpackProvider {...providerProps}>
-          <ComponentPreview />
-        </SandpackProvider>
-      </div>
-    )
   }
 
   const [previewProps, setPreviewProps] = useState<{
@@ -431,10 +258,8 @@ export default function ComponentForm() {
     if (
       code &&
       demoCode &&
-      Object.keys(internalDependencies).length === 0 &&
-      !isConfirmDialogOpen &&
-      !demoCodeError &&
-      importsToRemove.length === 0
+      Object.keys(internalDependencies ?? {}).length === 0 &&
+      importsToRemove?.length === 0
     ) {
       const { files, dependencies } = prepareFilesForPreview(code, demoCode)
       setPreviewProps({ files, dependencies })
@@ -445,115 +270,39 @@ export default function ComponentForm() {
     code,
     demoCode,
     internalDependencies,
-    isConfirmDialogOpen,
-    demoCodeError,
     importsToRemove,
   ])
 
-  useEffect(() => {
-    console.log("Preview conditions:", {
-      previewProps: !!previewProps,
-      internalDependencies: Object.keys(internalDependencies).length,
-      isConfirmDialogOpen,
-      demoCodeError,
-      importsToRemove: importsToRemove.length,
-      code: !!code,
-      demoCode: !!demoCode,
-    })
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault()
+    const formData = form.getValues()
+    onSubmit(formData)
+  }
 
-    if (
-      previewProps &&
-      Object.keys(internalDependencies).length === 0 &&
-      !isConfirmDialogOpen &&
-      !demoCodeError &&
-      importsToRemove.length === 0 &&
-      code &&
-      demoCode
-    ) {
-      setIsPreviewReady(true)
-    } else {
-      setIsPreviewReady(false)
-    }
-  }, [
-    previewProps,
-    internalDependencies,
-    isConfirmDialogOpen,
-    demoCodeError,
-    importsToRemove,
-    code,
-    demoCode,
-  ])
+  const isPreviewReady =
+    !!previewProps &&
+    Object.keys(internalDependencies).length === 0 &&
+    importsToRemove !== undefined &&
+    !!code.length &&
+    !!demoCode.length
 
-  const handleSubmit = useCallback(
-    (event: React.FormEvent) => {
-      event.preventDefault()
-      if (
-        isFormValid(
-          form,
-          demoCodeError,
-          internalDependencies,
-          slugAvailable,
-          isSlugManuallyEdited,
-        )
-      ) {
-        const formData = form.getValues()
-        onSubmit(formData)
-      } else {
-        console.error("Form is not valid")
-        alert("Please fill in all required fields correctly before submitting.")
-      }
-    },
-    [
-      isFormValid,
-      onSubmit,
-      form,
-      demoCodeError,
-      internalDependencies,
-      slugAvailable,
-      isSlugManuallyEdited,
-    ],
-  )
-
-  const [isPreviewReady, setIsPreviewReady] = useState(false)
-  const [, setIsMounted] = useState(false)
+  console.log(`isPreviewReady: ${isPreviewReady}`)
 
   useEffect(() => {
-    setIsMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (
-      previewProps &&
-      Object.keys(internalDependencies).length === 0 &&
-      !isConfirmDialogOpen &&
-      !demoCodeError &&
-      importsToRemove.length === 0 &&
-      code &&
-      demoCode &&
-      isDemoCodeCollapsed
-    ) {
-      setIsPreviewReady(true)
-    } else {
-      setIsPreviewReady(false)
+    if (!parsedComponentNames)
+      return
+    const demoCode = form.getValues("demo_code")
+    const { modifiedCode, removedImports } = removeComponentImports(
+      demoCode,
+      parsedComponentNames,
+    )
+    setImportsToRemove(removedImports)
+    const demoComponentName = extractDemoComponentName(modifiedCode)
+    if (demoComponentName) {
+      setShowComponentDetails(true)
+      form.setValue("demo_code", modifiedCode)
     }
-  }, [
-    previewProps,
-    internalDependencies,
-    isConfirmDialogOpen,
-    demoCodeError,
-    importsToRemove,
-    code,
-    demoCode,
-    isDemoCodeCollapsed,
-  ])
-
-  useLayoutEffect(() => {
-    if (code.trim().length > 0) {
-      setIsComponentCodeEntered(true)
-    } else {
-      setIsComponentCodeEntered(false)
-    }
-  }, [code])
+  }, [form.watch("demo_code")])
 
   return (
     <>
@@ -565,7 +314,7 @@ export default function ComponentForm() {
           <AnimatePresence>
             <div className={`flex gap-4 items-center h-full w-full mt-2`}>
               <motion.div
-                className={`flex flex-col items-start gap-2 py-10 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[400px] ${isPreviewReady ? "ml-0" : "mx-auto"}`}
+                className={`flex flex-col items-start gap-2 py-10 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[400px] ${showComponentDetails ? "ml-0" : "mx-auto"}`}
                 layout
                 transition={{ duration: isPreviewReady ? 0.6 : 0.3 }}
               >
@@ -580,13 +329,13 @@ export default function ComponentForm() {
                           animate={{
                             height: isEditMode
                               ? "33vh"
-                              : isCodeUploaded
+                              : parsedComponentNames?.length
                                 ? "64px"
                                 : "50px",
                           }}
                           transition={{ duration: 0.6 }}
                         >
-                          {!isCodeUploaded &&
+                          {!parsedComponentNames?.length &&
                             !isPreviewReady &&
                             !isEditMode && (
                               <div className="absolute inset-0 w-full h-full text-gray-400 text-[20px] flex items-center justify-center">
@@ -597,8 +346,7 @@ export default function ComponentForm() {
                             value={field.value}
                             onValueChange={(code) => {
                               field.onChange(code)
-                              setIsCodeUploaded(code.trim().length > 0)
-                              setIsComponentCodeEntered(code.trim().length > 0)
+
                               if (code.trim()) {
                                 setIsEditMode(false)
                               }
@@ -613,8 +361,8 @@ export default function ComponentForm() {
                             padding={10}
                             style={{
                               fontFamily: '"Fira code", "Fira Mono", monospace',
-                              fontSize: isCodeUploaded ? 12 : 20,
-                              backgroundColor: isCodeUploaded
+                              fontSize: code.length ? 12 : 20,
+                              backgroundColor: code.length
                                 ? "#f5f5f5"
                                 : "transparent",
                               borderRadius: "0.375rem",
@@ -622,9 +370,9 @@ export default function ComponentForm() {
                               overflow: "auto",
                               outline: "black !important",
                             }}
-                            className={`mt-1 w-full border-input ${isCodeUploaded ? "border" : ""}`}
+                            className={`mt-1 w-full border-input ${code.length ? "border" : ""}`}
                           />
-                          {isCodeUploaded && !isEditMode && (
+                          {!!parsedComponentNames?.length && !isEditMode && (
                             <motion.div
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
@@ -673,7 +421,7 @@ export default function ComponentForm() {
                   )}
                 />
 
-                {isComponentCodeEntered && (
+                {!!parsedComponentNames?.length && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -686,14 +434,14 @@ export default function ComponentForm() {
                       name="demo_code"
                       render={({ field }) => (
                         <FormItem className="w-full relative">
-                          {!isDemoCodeCollapsed && (
+                          {!showComponentDetails && (
                             <FormLabel>PASTE DEMO CODE HERE [⌘ V]</FormLabel>
                           )}
                           <FormControl>
                             <motion.div
                               className="relative"
                               animate={{
-                                height: isDemoCodeCollapsed
+                                height: showComponentDetails
                                   ? "64px"
                                   : "calc(100vh/3)",
                               }}
@@ -703,19 +451,6 @@ export default function ComponentForm() {
                                 value={field.value}
                                 onValueChange={(code) => {
                                   field.onChange(code)
-                                  const { modifiedCode, removedImports } =
-                                    checkDemoCode(
-                                      code,
-                                      parsedComponentNames,
-                                      setImportsToRemove,
-                                      setDemoCodeError,
-                                    )
-                                  if (
-                                    removedImports.length === 0 &&
-                                    !demoCodeError
-                                  ) {
-                                    checkAndCollapseDemoCode(modifiedCode)
-                                  }
                                 }}
                                 highlight={(code) => {
                                   const grammar =
@@ -737,7 +472,7 @@ export default function ComponentForm() {
                                 }}
                                 className="mt-1 w-full border border-input"
                               />
-                              {isDemoCodeCollapsed && (
+                              {showComponentDetails && (
                                 <motion.div
                                   initial={{ opacity: 0 }}
                                   animate={{ opacity: 1 }}
@@ -767,7 +502,7 @@ export default function ComponentForm() {
                                       </div>
                                       <Button
                                         onClick={() =>
-                                          setIsDemoCodeCollapsed(false)
+                                          setShowComponentDetails(false)
                                         }
                                         variant="default"
                                       >
@@ -780,41 +515,18 @@ export default function ComponentForm() {
                             </motion.div>
                           </FormControl>
                           <FormMessage />
-                          {demoCodeError && !isDemoCodeCollapsed && (
-                            <Alert
-                              variant="default"
-                              className="mt-2 text-[14px] w-full"
-                            >
-                              <p>{demoCodeError}</p>
-                              {importsToRemove.map((importStr, index) => (
-                                <div
-                                  key={index}
-                                  className="bg-gray-100 p-2 mt-2 rounded flex flex-col w-full"
-                                >
-                                  <code className="mb-2">{importStr}</code>
-                                  <Button
-                                    onClick={handleApproveDeleteWrapper}
-                                    size="sm"
-                                    className="self-end"
-                                  >
-                                    Delete
-                                  </Button>
-                                </div>
-                              ))}
-                            </Alert>
-                          )}
                         </FormItem>
                       )}
                     />
                   </motion.div>
                 )}
 
-                {Object.keys(internalDependencies).length > 0 && (
+                {Object.keys(internalDependencies ?? {}).length > 0 && (
                   <div className="w-full">
                     <h3 className="text-lg font-semibold mb-2">
                       Internal dependencies
                     </h3>
-                    {Object.entries(internalDependencies).map(
+                    {Object.entries(internalDependencies ?? {}).map(
                       ([path, slug]) => (
                         <div key={path} className="mb-2 w-full">
                           <label className="block text-sm font-medium text-gray-700">
@@ -823,9 +535,12 @@ export default function ComponentForm() {
                           <Input
                             value={slug}
                             onChange={(e) => {
-                              setInternalDependencies((prev) => ({
+                              setComponentDependencies((prev) => ({
                                 ...prev,
-                                [path]: e.target.value,
+                                internalDependencies: {
+                                  ...prev?.internalDependencies,
+                                  [path]: e.target.value!!,
+                                },
                               }))
                             }}
                             placeholder="Enter component slug"
@@ -855,7 +570,7 @@ export default function ComponentForm() {
                         Component names
                       </label>
                       <Textarea
-                        value={parsedComponentNames.join(", ")}
+                        value={parsedComponentNames?.join(", ")}
                         readOnly
                         className="mt-1 w-full bg-gray-100"
                       />
@@ -875,7 +590,7 @@ export default function ComponentForm() {
                         Component dependencies
                       </label>
                       <Textarea
-                        value={Object.entries(parsedDependencies)
+                        value={Object.entries(parsedDependencies ?? {})
                           .map(([key, value]) => `${key}: ${value}`)
                           .join("\n")}
                         readOnly
@@ -887,7 +602,7 @@ export default function ComponentForm() {
                         Demo dependencies
                       </label>
                       <Textarea
-                        value={Object.entries(parsedDemoDependencies)
+                        value={Object.entries(parsedDemoDependencies ?? {})
                           .map(([key, value]) => `${key}: ${value}`)
                           .join("\n")}
                         readOnly
@@ -907,22 +622,18 @@ export default function ComponentForm() {
                   >
                     <ComponentDetails
                       form={form}
-                      checkSlug={checkSlug}
-                      generateAndSetSlug={generateAndSetSlug}
-                      availableTags={availableTags}
                       previewImage={previewImage}
                       handleFileChange={handleFileChangeWrapper}
                       handleSubmit={handleSubmit}
                       isLoading={isLoading}
                       isFormValid={isFormValid}
-                      demoCodeError={demoCodeError}
-                      internalDependencies={internalDependencies}
+                      internalDependencies={internalDependencies ?? {}}
                     />
                   </motion.div>
                 )}
               </motion.div>
 
-              {previewProps && isPreviewReady && (
+              {previewProps && isPreviewReady && showComponentDetails && (
                 <motion.div
                   initial={{ opacity: 0.01 }}
                   animate={{ opacity: 1 }}
@@ -962,7 +673,7 @@ export default function ComponentForm() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {!isCodeUploaded && !isPreviewReady && !isEditMode && (
+      {!parsedComponentNames?.length && !isPreviewReady && !isEditMode && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -981,7 +692,7 @@ export default function ComponentForm() {
           </Alert>
         </motion.div>
       )}
-      {!isDemoCodeCollapsed && isComponentCodeEntered && (
+      {!showComponentDetails && !!code.length && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

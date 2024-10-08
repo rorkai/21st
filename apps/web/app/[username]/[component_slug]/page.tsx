@@ -4,16 +4,14 @@ import { Header } from "@/components/Header"
 import React from "react"
 import { notFound } from "next/navigation"
 import { getComponent } from "@/utils/dataFetchers"
-import { createSupabaseClerkClient } from "@/utils/clerk"
 import { supabaseWithAdminAccess } from "@/utils/supabase"
-import { auth } from "@clerk/nextjs/server"
 
 export const generateMetadata = async ({
   params,
 }: {
   params: { username: string; component_slug: string }
   }) => {
-  const component = await getComponent(
+  const { data: component } = await getComponent(
     supabaseWithAdminAccess,
     params.username,
     params.component_slug,
@@ -28,13 +26,15 @@ export default async function ComponentPage({
 }: {
   params: { username: string; component_slug: string }
   }) {
-  const { getToken } = auth()
   const { username, component_slug } = params
-  const supabase = createSupabaseClerkClient(getToken)
 
   console.log("ComponentPage called with params:", params)
 
-  const component = await getComponent(supabase, username, component_slug)
+  const { data: component, error } = await getComponent(supabaseWithAdminAccess, username, component_slug)
+  
+  if (error) {
+    return <div>Error: {error.message}</div>
+  }
 
   if (!component) {
     console.log("Component not found, redirecting to 404")
@@ -48,7 +48,7 @@ export default async function ComponentPage({
         isPublic={component.is_public}
       />
       <div className="w-full ">
-        <ComponentPreview supabase={supabase} component={component} />
+        <ComponentPreview component={component} />
       </div>
     </>
   )

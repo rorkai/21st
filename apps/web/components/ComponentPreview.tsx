@@ -11,7 +11,7 @@ import { atom } from "jotai"
 import { isClientAtom, isLoadingAtom, showLoadingAtom } from "@/lib/atoms"
 import { Component } from "@/types/types"
 import { UserAvatar } from "./UserAvatar"
-import { SupabaseClient } from "@supabase/supabase-js"
+import { useClerkSupabaseClient } from "@/utils/clerk"
 
 const codeAtom = atom("")
 const demoCodeAtom = atom("")
@@ -28,12 +28,11 @@ const SandpackProviderClient = dynamic(
 )
 
 export default function ComponentPreview({
-  supabase,
   component,
 }: {
-  supabase: SupabaseClient
   component: Component
-}) {
+  }) {
+  const supabase = useClerkSupabaseClient()
   const [isClient, setIsClient] = useAtom(isClientAtom)
   const [isLoading, setIsLoading] = useAtom(isLoadingAtom)
   const [showLoading, setShowLoading] = useAtom(showLoadingAtom)

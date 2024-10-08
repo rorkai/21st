@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useClerkSupabaseClient } from "@/utils/clerk"
 import {
   extractComponentNames,

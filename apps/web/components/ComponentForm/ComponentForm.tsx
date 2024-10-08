@@ -34,7 +34,7 @@ import { SandpackProvider } from "@codesandbox/sandpack-react/unstyled"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Alert } from "@/components/ui/alert"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
   Dialog,
   DialogContent,
@@ -68,6 +68,7 @@ import {
   demoCodeErrorAtom,
   internalDependenciesAtom,
 } from "./ComponentFormAtoms"
+import { Terminal, SunMoon } from "lucide-react"
 
 const ComponentPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react/unstyled").then((module) => ({
@@ -681,7 +682,19 @@ export default function ComponentForm() {
                       render={({ field }) => (
                         <FormItem className="w-full relative">
                           {!isDemoCodeCollapsed && (
-                            <FormLabel>PASTE DEMO CODE HERE [⌘ V]</FormLabel>
+                            <>
+                              <FormLabel>PASTE DEMO CODE HERE [⌘ V]</FormLabel>
+                              <div className="absolute bottom-2 mx-auto">
+                                <Alert>
+                                  <Terminal className="h-4 w-4" />
+                                  <AlertTitle>Heads up!</AlertTitle>
+                                  <AlertDescription>
+                                    You can add components and dependencies to
+                                    your app using the cli.
+                                  </AlertDescription>
+                                </Alert>
+                              </div>
+                            </>
                           )}
                           <FormControl>
                             <motion.div
@@ -945,6 +958,46 @@ export default function ComponentForm() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {!isCodeUploaded && !isPreviewReady && !isEditMode && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          transition={{ duration: 0.3 }}
+          className="absolute bottom-4 mx-auto"
+        >
+          <Alert>
+            <Terminal className="h-4 w-4" />
+            <AlertTitle>Entire code should be in a single file</AlertTitle>
+            <AlertDescription>
+              Ensure to include all necessary dependencies to enable everyone{" "}
+              <br />
+              to use this component and install it seamlessly via the CLI.
+            </AlertDescription>
+          </Alert>
+        </motion.div>
+      )}
+      {!isDemoCodeCollapsed && isComponentCodeEntered && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          transition={{ duration: 0.3, delay: 1 }}
+          className="absolute bottom-4 mx-auto"
+        >
+          <Alert>
+            <SunMoon className="h-4 w-4" />
+            <AlertTitle>
+              Demo should demonstrate how it functions and appears
+            </AlertTitle>
+            <AlertDescription>
+              Do not add an import statement for the Component,
+              <br />
+              as it will be imported automatically.
+            </AlertDescription>
+          </Alert>
+        </motion.div>
+      )}
     </>
   )
 }

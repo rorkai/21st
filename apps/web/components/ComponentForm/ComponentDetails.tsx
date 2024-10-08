@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useMemo, useCallback, useEffect } from "react"
 import { Controller, UseFormReturn } from "react-hook-form"
 import { Button } from "@/components/ui/button"
@@ -130,7 +131,7 @@ export function ComponentDetails({
           htmlFor="preview_image"
           className="block text-sm font-medium text-gray-700"
         >
-          Cover
+          Cover Image (1200x900 recommended)
         </Label>
         {!previewImage ? (
           <div

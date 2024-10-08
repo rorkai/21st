@@ -20,7 +20,6 @@ import {
   checkDemoCode,
   handleApproveDelete,
   handleFileChange,
-  generateAndSetSlug,
   updateDependencies,
 } from "./ComponentFormHelpers"
 import {
@@ -35,7 +34,7 @@ import {
   extractDependencies,
   extractDemoComponentName,
   findInternalDependencies,
-} from "../utils/parsers"
+} from "../../utils/parsers"
 import Editor from "react-simple-code-editor"
 import { highlight, languages } from "prismjs"
 import "prismjs/components/prism-typescript"
@@ -72,6 +71,15 @@ import {
 import { ComponentDetails } from "./ComponentDetails"
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion"
 import Image from "next/image"
+import { useAtom } from "jotai"
+import {
+  isSlugManuallyEditedAtom,
+  slugCheckingAtom,
+  slugErrorAtom,
+  slugAvailableAtom,
+  demoCodeErrorAtom,
+  internalDependenciesAtom,
+} from "./ComponentFormAtoms"
 
 const ComponentPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react/unstyled").then((module) => ({
@@ -84,7 +92,7 @@ export default function ComponentForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      component_slug: "",
+      component_slug: "", // Убедитесь, что поле инициализиовано
       code: "",
       demo_code: "",
       description: "",
@@ -104,20 +112,14 @@ export default function ComponentForm() {
     setNewComponentSlug,
     isConfirmDialogOpen,
     setIsConfirmDialogOpen,
-    isSlugManuallyEdited,
-    setIsSlugManuallyEdited,
     previewImage,
     setPreviewImage,
-    demoCodeError,
-    setDemoCodeError,
     parsedDependencies,
     setParsedDependencies,
     parsedComponentNames,
     setParsedComponentNames,
     parsedDemoDependencies,
     setParsedDemoDependencies,
-    internalDependencies,
-    setInternalDependencies,
     importsToRemove,
     setImportsToRemove,
     parsedDemoComponentName,
@@ -125,10 +127,8 @@ export default function ComponentForm() {
     user,
     client,
     isDebug,
-    slugAvailable,
-    slugChecking,
-    slugError,
     generateUniqueSlug,
+    generateAndSetSlug,
     checkSlug,
     validTags,
     name,
@@ -149,6 +149,18 @@ export default function ComponentForm() {
   const [isDemoCodeCollapsed, setIsDemoCodeCollapsed] = useState(false)
   const [showComponentDetails, setShowComponentDetails] = useState(false)
 
+  // Замена useState на useAtom для общих состояний
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useAtom(
+    isSlugManuallyEditedAtom,
+  )
+  const [slugChecking, setSlugChecking] = useAtom(slugCheckingAtom)
+  const [slugError, setSlugError] = useAtom(slugErrorAtom)
+  const [slugAvailable, setSlugAvailable] = useAtom(slugAvailableAtom)
+  const [demoCodeError, setDemoCodeError] = useAtom(demoCodeErrorAtom)
+  const [internalDependencies, setInternalDependencies] = useAtom(
+    internalDependenciesAtom,
+  )
+
   useEffect(() => {
     if (user) {
       console.log("Current user:", user)
@@ -159,13 +171,13 @@ export default function ComponentForm() {
   useEffect(() => {
     const updateSlug = async () => {
       if (name && !componentSlug) {
-        await generateAndSetSlug(name, generateUniqueSlug, form)
+        await generateAndSetSlug(name)
         setIsSlugManuallyEdited(false)
       }
     }
 
     updateSlug()
-  }, [name, componentSlug, form, generateUniqueSlug, setIsSlugManuallyEdited])
+  }, [name, componentSlug, generateAndSetSlug, setIsSlugManuallyEdited])
 
   useEffect(() => {
     if (componentSlug && isSlugManuallyEdited) {
@@ -355,7 +367,7 @@ export default function ComponentForm() {
     if (step === 2 && parsedComponentNames.length > 0) {
       const formattedName = formatComponentName(parsedComponentNames[0] || "")
       form.setValue("name", formattedName)
-      generateAndSetSlug(formattedName, generateUniqueSlug, form)
+      generateAndSetSlug(formattedName)
     }
   }, [step, parsedComponentNames, form, generateUniqueSlug])
 
@@ -563,7 +575,7 @@ export default function ComponentForm() {
           <AnimatePresence>
             <div className={`flex gap-4 items-center h-full w-full mt-2`}>
               <motion.div
-                className={`flex flex-col items-start gap-2 py-10 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 ${isPreviewReady ? "ml-0" : "mx-auto"}`}
+                className={`flex flex-col items-start gap-2 py-10 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[400px] ${isPreviewReady ? "ml-0" : "mx-auto"}`}
                 layout
                 transition={{ duration: isPreviewReady ? 1 : 0.3 }}
               >
@@ -877,15 +889,8 @@ export default function ComponentForm() {
                   >
                     <ComponentDetails
                       form={form}
-                      isSlugManuallyEdited={isSlugManuallyEdited}
-                      setIsSlugManuallyEdited={setIsSlugManuallyEdited}
-                      slugChecking={slugChecking}
-                      slugError={slugError}
-                      slugAvailable={slugAvailable}
                       checkSlug={checkSlug}
-                      generateAndSetSlug={(name) =>
-                        generateAndSetSlug(name, generateUniqueSlug, form)
-                      }
+                      generateAndSetSlug={generateAndSetSlug}
                       availableTags={availableTags}
                       previewImage={previewImage}
                       handleFileChange={handleFileChangeWrapper}

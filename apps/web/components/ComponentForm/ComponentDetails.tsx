@@ -11,16 +11,18 @@ import { Globe, Lock } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useDropzone } from "react-dropzone"
 import { CloudUpload } from "lucide-react"
+import { useAtom } from "jotai"
+import {
+  isSlugManuallyEditedAtom,
+  slugCheckingAtom,
+  slugErrorAtom,
+  slugAvailableAtom,
+} from "./ComponentFormAtoms"
 
 interface ComponentDetailsProps {
   form: UseFormReturn<FormData>
-  isSlugManuallyEdited: boolean
-  setIsSlugManuallyEdited: (edited: boolean) => void
-  slugChecking: boolean
-  slugError: string | null
-  slugAvailable: boolean | null
   checkSlug: (slug: string) => void
-  generateAndSetSlug: (name: string) => void
+  generateAndSetSlug: (name: string) => Promise<void>
   availableTags: { id: number; name: string }[]
   previewImage: string | null
   handleFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void
@@ -33,11 +35,6 @@ interface ComponentDetailsProps {
 
 export function ComponentDetails({
   form,
-  isSlugManuallyEdited,
-  setIsSlugManuallyEdited,
-  slugChecking,
-  slugError,
-  slugAvailable,
   checkSlug,
   generateAndSetSlug,
   availableTags,
@@ -50,6 +47,12 @@ export function ComponentDetails({
   internalDependencies,
 }: ComponentDetailsProps) {
   const [isPublic, setIsPublic] = useState(form.watch("is_public"))
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useAtom(
+    isSlugManuallyEditedAtom,
+  )
+  const [slugChecking, setSlugChecking] = useAtom(slugCheckingAtom)
+  const [slugError, setSlugError] = useAtom(slugErrorAtom)
+  const [slugAvailable, setSlugAvailable] = useAtom(slugAvailableAtom)
 
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
@@ -60,10 +63,13 @@ export function ComponentDetails({
     return () => subscription.unsubscribe()
   }, [form])
 
-  const togglePublic = useCallback((value: boolean) => {
-    setIsPublic(value)
-    form.setValue("is_public", value)
-  }, [form])
+  const togglePublic = useCallback(
+    (value: boolean) => {
+      setIsPublic(value)
+      form.setValue("is_public", value)
+    },
+    [form],
+  )
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {

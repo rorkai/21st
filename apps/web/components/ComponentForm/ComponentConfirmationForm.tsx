@@ -20,18 +20,23 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useDropzone } from "react-dropzone"
 import { CloudUpload } from "lucide-react"
 import { X } from "lucide-react"
+import { useAtom } from "jotai"
+import {
+  isSlugManuallyEditedAtom,
+  slugCheckingAtom,
+  slugErrorAtom,
+  slugAvailableAtom,
+} from "./ComponentFormAtoms"
 
 interface ComponentConfirmationFormProps {
   isConfirmDialogOpen: boolean
   setIsConfirmDialogOpen: (open: boolean) => void
   form: UseFormReturn<FormData>
-  isSlugManuallyEdited: boolean
-  setIsSlugManuallyEdited: (edited: boolean) => void
   slugChecking: boolean
   slugError: string | null
   slugAvailable: boolean | null
   checkSlug: (slug: string) => void
-  generateAndSetSlug: (name: string) => void
+  generateAndSetSlug: (name: string) => Promise<void>
   availableTags: { id: number; name: string }[]
   previewImage: string | null
   handleFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void
@@ -46,11 +51,6 @@ export default function ComponentConfirmationForm({
   isConfirmDialogOpen,
   setIsConfirmDialogOpen,
   form,
-  isSlugManuallyEdited,
-  setIsSlugManuallyEdited,
-  slugChecking,
-  slugError,
-  slugAvailable,
   checkSlug,
   generateAndSetSlug,
   availableTags,
@@ -62,6 +62,13 @@ export default function ComponentConfirmationForm({
   demoCodeError,
   internalDependencies,
 }: ComponentConfirmationFormProps) {
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useAtom(
+    isSlugManuallyEditedAtom,
+  )
+  const [slugChecking, setSlugChecking] = useAtom(slugCheckingAtom)
+  const [slugError, setSlugError] = useAtom(slugErrorAtom)
+  const [slugAvailable, setSlugAvailable] = useAtom(slugAvailableAtom)
+
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
@@ -189,7 +196,7 @@ export default function ComponentConfirmationForm({
             <label
               htmlFor="tags"
               className="block text-sm font-medium text-gray-700"
-            > 
+            >
               Tags (optional)
             </label>
             <Controller

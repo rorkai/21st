@@ -21,7 +21,7 @@ import {
   parsedDemoComponentNameAtom,
   FormData,
   formatComponentName,
-} from "./ComponentForm/ComponentFormUtils"
+} from "./ComponentFormUtils"
 import { Tag } from "@/types/types"
 import {
   extractComponentNames,
@@ -29,8 +29,14 @@ import {
   extractDemoComponentName,
   findInternalDependencies,
   removeComponentImports,
-} from "../utils/parsers"
+} from "../../utils/parsers"
 import { UseFormReturn } from "react-hook-form"
+import {
+  isSlugManuallyEditedAtom,
+  slugCheckingAtom,
+  slugErrorAtom,
+  slugAvailableAtom,
+} from "./ComponentFormAtoms"
 
 type ComponentFormState = {
   isLoading: boolean
@@ -91,10 +97,19 @@ export const useComponentFormState = (
   const [newComponentSlug, setNewComponentSlug] = useState("")
   const [availableTags, setAvailableTags] = useState<Tag[]>([])
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
-  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
 
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useAtom(
+    isSlugManuallyEditedAtom,
+  )
+  const [slugChecking, setSlugChecking] = useAtom(slugCheckingAtom)
+  const [slugError, setSlugError] = useAtom(slugErrorAtom)
+  const [slugAvailable, setSlugAvailable] = useAtom(slugAvailableAtom)
   const [demoCodeError, setDemoCodeError] = useAtom(demoCodeErrorAtom)
+  const [internalDependencies, setInternalDependencies] = useAtom(
+    internalDependenciesAtom,
+  )
+
   const [parsedDependencies, setParsedDependencies] = useAtom(
     parsedDependenciesAtom,
   )
@@ -104,9 +119,6 @@ export const useComponentFormState = (
   const [parsedDemoDependencies, setParsedDemoDependencies] = useAtom(
     parsedDemoDependenciesAtom,
   )
-  const [internalDependencies, setInternalDependencies] = useAtom(
-    internalDependenciesAtom,
-  )
   const [importsToRemove, setImportsToRemove] = useAtom(importsToRemoveAtom)
   const [parsedDemoComponentName, setParsedDemoComponentName] = useAtom(
     parsedDemoComponentNameAtom,
@@ -115,13 +127,7 @@ export const useComponentFormState = (
   const { user } = useUser()
   const client = useClerkSupabaseClient()
   const isDebug = useDebugMode()
-  const {
-    slugAvailable,
-    slugChecking,
-    slugError,
-    generateUniqueSlug,
-    checkSlug,
-  } = useComponentSlug()
+  const { generateUniqueSlug, checkSlug } = useComponentSlug()
   const { data: validTags, isLoading: isValidatingTags } = useValidTags(
     form.watch("tags"),
   )
@@ -225,8 +231,9 @@ export const useComponentFormState = (
     async (name: string) => {
       const newSlug = await generateUniqueSlug(name)
       form.setValue("component_slug", newSlug)
+      setIsSlugManuallyEdited(false)
     },
-    [generateUniqueSlug, form],
+    [generateUniqueSlug, form, setIsSlugManuallyEdited]
   )
 
   const loadAvailableTags = useCallback(async () => {

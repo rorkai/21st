@@ -108,15 +108,6 @@ export const handleFileChange = (
   }
 }
 
-export const generateAndSetSlug = async (
-  name: string,
-  generateUniqueSlug: (name: string) => Promise<string>,
-  form: UseFormReturn<FormData>,
-) => {
-  const newSlug = await generateUniqueSlug(name)
-  form.setValue("component_slug", newSlug)
-}
-
 export const updateDependencies = (
   code: string,
   demoCode: string,

@@ -1,27 +1,19 @@
-import { createClient } from "@supabase/supabase-js"
+import { createClient, SupabaseClient } from "@supabase/supabase-js"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_KEY
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!supabaseUrl || !supabaseKey) {
   throw new Error("Missing Supabase environment variables")
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: false,
-  },
-})
-
-supabase.auth
-  .getSession()
-  .then(({ error }) => {
-    if (error) {
-      console.error("Error connecting to Supabase:", error)
-    } else {
-      console.error("Successfully connected to Supabase")
-    }
-  })
-  .catch((error) => {
-    console.error("Unexpected error during Supabase connection:", error)
-  })
+export const supabaseWithAdminAccess: SupabaseClient = createClient(
+  supabaseUrl,
+  supabaseKey,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  }
+)

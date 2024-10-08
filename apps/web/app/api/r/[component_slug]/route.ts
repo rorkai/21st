@@ -1,5 +1,5 @@
+import { supabaseWithAdminAccess } from "@/utils/supabase"
 import { NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/utils/supabase"
 
 export async function GET(
   request: NextRequest,
@@ -8,7 +8,7 @@ export async function GET(
   const component_slug = params.component_slug
 
   try {
-    const { data: component, error } = await supabase
+    const { data: component, error } = await supabaseWithAdminAccess
       .from("components")
       .select("*")
       .eq("component_slug", component_slug)
@@ -25,15 +25,15 @@ export async function GET(
 
     const codePath = `${component_slug}-code.tsx`
 
-    const { data: codeContent, error: codeError } = await supabase.storage
-      .from("components")
-      .download(codePath)
+    const { data: codeContent, error: codeError } =
+      await supabaseWithAdminAccess
+        .storage
+        .from("components")
+        .download(codePath)
 
     if (codeError) throw codeError
 
     const code = await codeContent.text()
-
-    /*     const escapedCode = JSON.stringify(code); */
 
     const responseData = {
       name: component_slug,

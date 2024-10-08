@@ -3,7 +3,6 @@
 
 import React, { useEffect } from "react"
 import dynamic from "next/dynamic"
-import { supabase } from "@/utils/supabase"
 import { Button } from "./ui/button"
 import { LayoutTemplate, CodeXml, Link, Tag } from "lucide-react"
 import { LoadingSpinner } from "./Loading"
@@ -12,6 +11,7 @@ import { atom } from "jotai"
 import { isClientAtom, isLoadingAtom, showLoadingAtom } from "@/lib/atoms"
 import { Component } from "@/types/types"
 import { UserAvatar } from "./UserAvatar"
+import { SupabaseClient } from "@supabase/supabase-js"
 
 const codeAtom = atom("")
 const demoCodeAtom = atom("")
@@ -28,8 +28,10 @@ const SandpackProviderClient = dynamic(
 )
 
 export default function ComponentPreview({
+  supabase,
   component,
 }: {
+  supabase: SupabaseClient
   component: Component
 }) {
   const [isClient, setIsClient] = useAtom(isClientAtom)

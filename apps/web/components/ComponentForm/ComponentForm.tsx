@@ -69,6 +69,7 @@ import {
   internalDependenciesAtom,
 } from "./ComponentFormAtoms"
 import { FileTerminal, SunMoon, Codepen } from "lucide-react"
+import { useClerkSupabaseClient } from "@/utils/clerk"
 
 const ComponentPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react/unstyled").then((module) => ({
@@ -126,6 +127,7 @@ export default function ComponentForm() {
     code,
     demoCode,
   } = useComponentFormState(form)
+  const supabase = useClerkSupabaseClient()
 
   const router = useRouter()
 
@@ -328,10 +330,10 @@ export default function ComponentForm() {
         preview_url: previewImageUrl,
       }
 
-      const insertedData = await addComponent(componentData)
+      const insertedData = await addComponent(supabase, componentData)
 
       if (insertedData) {
-        await addTagsToComponent(insertedData.id, validTags || [])
+        await addTagsToComponent(supabase, insertedData.id, validTags || [])
 
         setNewComponentSlug(data.component_slug)
         setIsConfirmDialogOpen(false)

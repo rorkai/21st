@@ -54,7 +54,7 @@ export function ComponentDetails({
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (name === "is_public") {
-        setIsPublic(value.is_public)
+        setIsPublic(value.is_public ?? false)
       }
     })
     return () => subscription.unsubscribe()

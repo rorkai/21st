@@ -82,7 +82,7 @@ const Info: React.FC<{ info: Component }> = ({ info }) => {
     Object.entries(componentDependencies).map(([key, slug], index) => [
       key,
       dependencyQueries[index]?.data
-        ? `/${dependencyQueries[index].data}/${slug}`
+        ? `/${dependencyQueries[index]?.data}/${slug}`
         : "#",
     ]),
   )
@@ -184,7 +184,9 @@ const Info: React.FC<{ info: Component }> = ({ info }) => {
 
       {Object.keys(componentDependencies).length > 0 && (
         <div className="flex">
-          <span className="text-gray-500 w-1/3">Deps to another components</span>
+          <span className="text-gray-500 w-1/3">
+            Deps to another components
+          </span>
           <div className="w-2/3">
             {isLoading ? (
               <LoadingSpinner />

@@ -121,6 +121,9 @@ export function useComponents() {
   return useQuery<Component[], Error>({
     queryKey: ["components"],
     queryFn: getComponents,
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   })
 }
 

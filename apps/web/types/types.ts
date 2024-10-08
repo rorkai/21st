@@ -28,6 +28,7 @@ export interface Component {
   demo_dependencies: any // jsonb
   internal_dependencies: any // jsonb
   preview_url: string
+  license: string
   user: User
   tags: Tag[]
 }

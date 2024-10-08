@@ -68,7 +68,7 @@ import {
   demoCodeErrorAtom,
   internalDependenciesAtom,
 } from "./ComponentFormAtoms"
-import { FileTerminal, SunMoon } from "lucide-react"
+import { FileTerminal, SunMoon, Codepen } from "lucide-react"
 
 const ComponentPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react/unstyled").then((module) => ({
@@ -87,6 +87,7 @@ export default function ComponentForm() {
       description: "",
       tags: [],
       is_public: true,
+      license: "mit",
     },
   })
 
@@ -815,7 +816,7 @@ export default function ComponentForm() {
                       ([path, slug]) => (
                         <div key={path} className="mb-2 w-full">
                           <label className="block text-sm font-medium text-gray-700">
-                            {path}
+                            Add slug for {path}
                           </label>
                           <Input
                             value={slug}
@@ -828,6 +829,17 @@ export default function ComponentForm() {
                             placeholder="Enter component slug"
                             className="mt-1 w-full"
                           />
+                          <Alert className="mt-4">
+                            <Codepen className="h-4 w-4" />
+                            <AlertTitle>Internal dependencies</AlertTitle>
+                            <AlertDescription>
+                              To use another component within your component:
+                              <br />
+                              1. Add it to the Component Community first.
+                              <br />
+                              2. Enter its slug here.
+                            </AlertDescription>
+                          </Alert>
                         </div>
                       ),
                     )}

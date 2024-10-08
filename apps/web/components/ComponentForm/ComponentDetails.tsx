@@ -19,6 +19,21 @@ import {
   slugErrorAtom,
   slugAvailableAtom,
 } from "./ComponentFormAtoms"
+import { Check, ChevronsUpDown } from "lucide-react"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 
 interface ComponentDetailsProps {
   form: UseFormReturn<FormData>
@@ -33,6 +48,16 @@ interface ComponentDetailsProps {
   demoCodeError: string | null
   internalDependencies: Record<string, string>
 }
+
+const licenses = [
+  { value: "mit", label: "MIT License" },
+  { value: "apache-2.0", label: "Apache License 2.0" },
+  { value: "bsd-3-clause", label: "BSD 3-Clause License" },
+  { value: "lgpl", label: "GNU Lesser General Public License (LGPL)" },
+  { value: "mpl-2.0", label: "Mozilla Public License 2.0 (MPL)" },
+  { value: "isc", label: "ISC License" },
+  { value: "unlicense", label: "Unlicense" },
+]
 
 export function ComponentDetails({
   form,
@@ -54,6 +79,8 @@ export function ComponentDetails({
   const [slugChecking, setSlugChecking] = useAtom(slugCheckingAtom)
   const [slugError, setSlugError] = useAtom(slugErrorAtom)
   const [slugAvailable, setSlugAvailable] = useAtom(slugAvailableAtom)
+  const [license, setLicense] = useState("mit")
+  const [open, setOpen] = useState(false)
 
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
@@ -188,6 +215,62 @@ export function ComponentDetails({
             </div>
           </div>
         )}
+      </div>
+
+      <div className="w-full mt-4">
+        <label
+          htmlFor="license"
+          className="block text-sm font-medium text-gray-700"
+        >
+          License
+        </label>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="w-full justify-between mt-1"
+            >
+              {license
+                ? licenses.find((l) => l.value === license)?.label
+                : "Select license..."}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-full p-0">
+            <Command>
+              <CommandInput placeholder="Select license..." />
+              <CommandList>
+                <CommandEmpty>No licenses found</CommandEmpty>
+                <CommandGroup>
+                  {licenses.map((l) => (
+                    <CommandItem
+                      key={l.value}
+                      value={l.value}
+                      onSelect={(currentValue) => {
+                        setLicense(currentValue === license ? "" : currentValue)
+                        form.setValue(
+                          "license",
+                          currentValue === license ? "" : currentValue,
+                        )
+                        setOpen(false)
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          license === l.value ? "opacity-100" : "opacity-0",
+                        )}
+                      />
+                      {l.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
       </div>
 
       <div className="w-full">

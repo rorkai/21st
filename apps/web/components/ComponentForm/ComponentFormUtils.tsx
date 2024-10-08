@@ -40,6 +40,7 @@ export const formSchema = z.object({
     .default([]),
   is_public: z.boolean().default(true),
   preview_url: z.instanceof(File).optional(),
+  license: z.string().optional(),
 })
 
 export type FormData = z.infer<typeof formSchema>

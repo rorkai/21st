@@ -54,7 +54,6 @@ const LoadingSpinner = () => (
 
 const Info: React.FC<{ info: Component }> = ({ info }) => {
   const [copiedLibDependencies, setCopiedLibDependencies] = useState(false)
-  const [copiedDemoDependencies, setCopiedDemoDependencies] = useState(false)
 
   const parseDependencies = (deps: any): Record<string, string> => {
     if (typeof deps === "string") {
@@ -69,8 +68,6 @@ const Info: React.FC<{ info: Component }> = ({ info }) => {
   }
 
   const libDependencies = parseDependencies(info.dependencies)
-
-  const demoDependencies = parseDependencies(info.demo_dependencies)
 
   const componentDependencies = parseDependencies(info.internal_dependencies)
 
@@ -99,17 +96,6 @@ const Info: React.FC<{ info: Component }> = ({ info }) => {
     navigator.clipboard.writeText(`{\n${dependenciesString}\n}`)
     setCopiedLibDependencies(true)
     setTimeout(() => setCopiedLibDependencies(false), 2000)
-  }
-
-  const copyDemoDependencies = () => {
-    const dependenciesString = Object.entries({
-      ...demoDependencies,
-    })
-      .map(([dep, version]) => `"${dep}": "${version}"`)
-      .join(",\n")
-    navigator.clipboard.writeText(`{\n${dependenciesString}\n}`)
-    setCopiedDemoDependencies(true)
-    setTimeout(() => setCopiedDemoDependencies(false), 2000)
   }
 
   return (
@@ -196,37 +182,14 @@ const Info: React.FC<{ info: Component }> = ({ info }) => {
         </div>
       )}
 
-      {Object.keys(demoDependencies).length > 0 && (
-        <div className="flex">
-          <span className="text-gray-500 w-1/3">Demo deps:</span>
-          <div className="w-2/3 hover:underline">
-            {copiedDemoDependencies ? (
-              <div className="font-mono text-ellipsis font-semibold text-right">
-                Copied!
-              </div>
-            ) : (
-              Object.entries(demoDependencies).map(([dep]) => (
-                <div
-                  key={dep}
-                  className="font-mono text-blue-500 cursor-pointer font-semibold text-ellipsis text-right"
-                  onClick={copyDemoDependencies}
-                >
-                  {dep}
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-
       {Object.keys(componentDependencies).length > 0 && (
         <div className="flex">
-          <span className="text-gray-500 w-1/3">Зависимости компонента:</span>
+          <span className="text-gray-500 w-1/3">Deps to another components</span>
           <div className="w-2/3">
             {isLoading ? (
-              <span>Загрузка зависимостей...</span>
+              <LoadingSpinner />
             ) : isError ? (
-              <span>Ошибка при загрузке зависимостей</span>
+              <span>Error</span>
             ) : (
               Object.entries(componentDependencies).map(([key, slug]) => (
                 <Link
@@ -506,7 +469,7 @@ root.render(
                   >
                     <div className="flex w-full flex-col">
                       <Tabs defaultValue="code" className="w-full">
-                        <TabsList className="grid w-full grid-cols-2">
+                        <TabsList className="grid grid-cols-2 m-1 max-w-full">
                           <TabsTrigger value="code">Code</TabsTrigger>
                           <TabsTrigger value="info">Info</TabsTrigger>
                         </TabsList>

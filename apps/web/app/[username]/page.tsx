@@ -36,7 +36,7 @@ export default async function UserProfile({
       <Header />
       <div className="flex mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row gap-8">
-          <div className="flex md:w-[30%] flex-col items-center w-full">
+          <div className="flex md:w-[30%] md:min-w-[300px] flex-col items-center w-full ">
             <div className="flex flex-col items-center md:items-start">
               <UserAvatar
                 src={user.image_url || "/placeholder.svg"}

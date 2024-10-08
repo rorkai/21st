@@ -1,15 +1,6 @@
 "use client"
 
-import React, {
-  useCallback,
-  useMemo,
-  useState,
-  useEffect,
-  useRef,
-  lazy,
-  Suspense,
-  useLayoutEffect,
-} from "react"
+import React, { useCallback, useState, useEffect, useLayoutEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
@@ -20,7 +11,6 @@ import {
   checkDemoCode,
   handleApproveDelete,
   handleFileChange,
-  updateDependencies,
 } from "./ComponentFormHelpers"
 import {
   formSchema,
@@ -69,13 +59,11 @@ import {
 } from "@/utils/dataFetchers"
 
 import { ComponentDetails } from "./ComponentDetails"
-import { motion, AnimatePresence, LayoutGroup } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { useAtom } from "jotai"
 import {
   isSlugManuallyEditedAtom,
-  slugCheckingAtom,
-  slugErrorAtom,
   slugAvailableAtom,
   demoCodeErrorAtom,
   internalDependenciesAtom,
@@ -92,7 +80,7 @@ export default function ComponentForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      component_slug: "", // Убедитесь, что поле инициализиовано
+      component_slug: "",
       code: "",
       demo_code: "",
       description: "",
@@ -143,23 +131,22 @@ export default function ComponentForm() {
 
   const [isCodeUploaded, setIsCodeUploaded] = useState(false)
 
-  // Добавьте новое состояние для отслеживания, был ли вставлен код компонента
   const [isComponentCodeEntered, setIsComponentCodeEntered] = useState(false)
 
   const [isDemoCodeCollapsed, setIsDemoCodeCollapsed] = useState(false)
   const [showComponentDetails, setShowComponentDetails] = useState(false)
 
-  // Замена useState на useAtom для общих состояний
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useAtom(
     isSlugManuallyEditedAtom,
   )
-  const [slugChecking, setSlugChecking] = useAtom(slugCheckingAtom)
-  const [slugError, setSlugError] = useAtom(slugErrorAtom)
-  const [slugAvailable, setSlugAvailable] = useAtom(slugAvailableAtom)
+
+  const [slugAvailable] = useAtom(slugAvailableAtom)
   const [demoCodeError, setDemoCodeError] = useAtom(demoCodeErrorAtom)
   const [internalDependencies, setInternalDependencies] = useAtom(
     internalDependenciesAtom,
   )
+
+  const [isEditMode, setIsEditMode] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -238,14 +225,11 @@ export default function ComponentForm() {
     )
 
     if (updatedDemoCode) {
-      // Сразу устанавливаем новое значение в форму
       form.setValue("demo_code", updatedDemoCode)
 
-      // Обновляем состояния
       setImportsToRemove([])
       setDemoCodeError(null)
 
-      // Проверяем условия для сворачивания кода
       if (updatedDemoCode.trim()) {
         setIsDemoCodeCollapsed(true)
         setIsPreviewReady(true)
@@ -525,7 +509,7 @@ export default function ComponentForm() {
   )
 
   const [isPreviewReady, setIsPreviewReady] = useState(false)
-  const [isMounted, setIsMounted] = useState(false)
+  const [, setIsMounted] = useState(false)
 
   useEffect(() => {
     setIsMounted(true)
@@ -577,30 +561,41 @@ export default function ComponentForm() {
               <motion.div
                 className={`flex flex-col items-start gap-2 py-10 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[400px] ${isPreviewReady ? "ml-0" : "mx-auto"}`}
                 layout
-                transition={{ duration: isPreviewReady ? 1 : 0.3 }}
+                transition={{ duration: isPreviewReady ? 0.6 : 0.3 }}
               >
                 <FormField
                   control={form.control}
                   name="code"
                   render={({ field }) => (
                     <FormItem className="w-full relative">
-                      {!isCodeUploaded && (
-                        <FormLabel>Paste component code</FormLabel>
-                      )}
                       <FormControl>
                         <motion.div
                           className="relative"
                           animate={{
-                            height: isCodeUploaded ? "64px" : "calc(100vh/3)",
+                            height: isEditMode
+                              ? "33vh"
+                              : isCodeUploaded
+                                ? "64px"
+                                : "50px",
                           }}
-                          transition={{ duration: 0.5 }}
+                          transition={{ duration: 0.6 }}
                         >
+                          {!isCodeUploaded &&
+                            !isPreviewReady &&
+                            !isEditMode && (
+                              <div className="absolute inset-0 w-full h-full text-gray-400 text-[20px] flex items-center justify-center">
+                                PASTE COMPONENT .TSX CODE HERE
+                              </div>
+                            )}
                           <Editor
                             value={field.value}
                             onValueChange={(code) => {
                               field.onChange(code)
                               setIsCodeUploaded(code.trim().length > 0)
                               setIsComponentCodeEntered(code.trim().length > 0)
+                              if (code.trim()) {
+                                setIsEditMode(false)
+                              }
                             }}
                             highlight={(code) => {
                               const grammar =
@@ -612,16 +607,18 @@ export default function ComponentForm() {
                             padding={10}
                             style={{
                               fontFamily: '"Fira code", "Fira Mono", monospace',
-                              fontSize: 12,
-                              backgroundColor: "#f5f5f5",
+                              fontSize: isCodeUploaded ? 12 : 20,
+                              backgroundColor: isCodeUploaded
+                                ? "#f5f5f5"
+                                : "transparent",
                               borderRadius: "0.375rem",
                               height: "100%",
                               overflow: "auto",
-                              outline: "none !important",
+                              outline: "black !important",
                             }}
-                            className="mt-1 w-full border border-input"
+                            className={`mt-1 w-full border-input ${isCodeUploaded ? "border" : ""}`}
                           />
-                          {isCodeUploaded && (
+                          {isCodeUploaded && !isEditMode && (
                             <motion.div
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
@@ -645,12 +642,16 @@ export default function ComponentForm() {
                                         Component code
                                       </p>
                                       <p className="text-sm text-gray-600">
-                                        {parsedComponentNames.join(", ")}
+                                        {parsedComponentNames
+                                          .slice(0, 2)
+                                          .join(", ")}
+                                        {parsedComponentNames.length > 2 &&
+                                          ` +${parsedComponentNames.length - 2}`}
                                       </p>
                                     </div>
                                   </div>
                                   <Button
-                                    onClick={() => setIsCodeUploaded(false)}
+                                    onClick={() => setIsEditMode(true)}
                                     variant="default"
                                   >
                                     Edit
@@ -680,7 +681,7 @@ export default function ComponentForm() {
                       render={({ field }) => (
                         <FormItem className="w-full relative">
                           {!isDemoCodeCollapsed && (
-                            <FormLabel>Paste demo code</FormLabel>
+                            <FormLabel>PASTE DEMO CODE HERE [⌘ V]</FormLabel>
                           )}
                           <FormControl>
                             <motion.div

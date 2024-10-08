@@ -233,7 +233,7 @@ export const useComponentFormState = (
       form.setValue("component_slug", newSlug)
       setIsSlugManuallyEdited(false)
     },
-    [generateUniqueSlug, form, setIsSlugManuallyEdited]
+    [generateUniqueSlug, form, setIsSlugManuallyEdited],
   )
 
   const loadAvailableTags = useCallback(async () => {

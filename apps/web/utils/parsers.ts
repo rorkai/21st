@@ -9,16 +9,13 @@ export function extractComponentNames(code: string): string[] {
   const matches = Array.from(code.matchAll(componentRegex))
   const componentNames = matches.flatMap((match) => {
     if (match[1]) {
-      // Это экспорт функции, класса или переменной
       return [match[1]]
     } else if (match[2]) {
-      // Это экспорт объекта
       return match[2].split(",").map((name) => name.trim().split(/\s+as\s+/)[0])
     }
     return []
   })
 
-  // Удаляем дубликаты
   const uniqueNames = [...new Set(componentNames)]
 
   console.log("Extracted exported names:", uniqueNames)
@@ -32,7 +29,6 @@ export function extractDemoComponentName(code: string): string {
   return match && match[1] ? match[1] : ""
 }
 
-// Переименуем функцию parseDependencies в extractDependencies и экспортируем ее
 export function extractDependencies(code: string): Record<string, string> {
   const dependencies: Record<string, string> = {}
   try {
@@ -96,14 +92,12 @@ export function extractDependencies(code: string): Record<string, string> {
   return dependencies
 }
 
-// Переименуем функцию parseInternalDependencies в findInternalDependencies и экспортируем ее
 export function findInternalDependencies(
   componentDependencies: Record<string, string>,
   demoDependencies: Record<string, string>,
 ): Record<string, string> {
   const internalDeps: Record<string, string> = {}
 
-  // Объединяем зависимости из компонента и демо-кода
   const allDependencies = { ...componentDependencies, ...demoDependencies }
 
   for (const [source, version] of Object.entries(allDependencies)) {
@@ -123,7 +117,7 @@ export function removeComponentImports(
     const ast = parse(demoCode, {
       sourceType: "module",
       plugins: ["typescript", "jsx"],
-      errorRecovery: true, // Добавляем эту опцию для более устойчивого парсинга
+      errorRecovery: true,
     })
 
     const importsToDrop: { start: number; end: number; text: string }[] = []

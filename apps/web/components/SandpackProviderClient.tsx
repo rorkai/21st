@@ -19,6 +19,7 @@ import { Component } from "@/types/types"
 import { format } from "date-fns"
 import Link from "next/link"
 import { UserAvatar } from "@/components/UserAvatar"
+import { useComponentOwnerUsername } from "@/utils/dataFetchers"
 
 const copiedAtom = atom(false)
 const codeCopiedAtom = atom(false)
@@ -52,7 +53,8 @@ const LoadingSpinner = () => (
 )
 
 const Info: React.FC<{ info: Component }> = ({ info }) => {
-  const [copiedDependencies, setCopiedDependencies] = useState(false)
+  const [copiedLibDependencies, setCopiedLibDependencies] = useState(false)
+  const [copiedDemoDependencies, setCopiedDemoDependencies] = useState(false)
 
   const parseDependencies = (deps: any): Record<string, string> => {
     if (typeof deps === "string") {
@@ -66,19 +68,48 @@ const Info: React.FC<{ info: Component }> = ({ info }) => {
     return deps || {}
   }
 
-  const allDependencies = {
-    ...parseDependencies(info.dependencies),
-    ...parseDependencies(info.demo_dependencies),
-    ...parseDependencies(info.internal_dependencies),
-  }
+  const libDependencies = parseDependencies(info.dependencies)
 
-  const copyAllDependencies = () => {
-    const dependenciesString = Object.entries(allDependencies)
+  const demoDependencies = parseDependencies(info.demo_dependencies)
+
+  const componentDependencies = parseDependencies(info.internal_dependencies)
+
+  const dependencyQueries = Object.values(componentDependencies).map((slug) =>
+    useComponentOwnerUsername(slug),
+  )
+
+  const isLoading = dependencyQueries.some((query) => query.isLoading)
+  const isError = dependencyQueries.some((query) => query.isError)
+
+  const componentLinks = Object.fromEntries(
+    Object.entries(componentDependencies).map(([key, slug], index) => [
+      key,
+      dependencyQueries[index]?.data
+        ? `/${dependencyQueries[index].data}/${slug}`
+        : "#",
+    ]),
+  )
+
+  const copyDependencies = () => {
+    const dependenciesString = Object.entries({
+      ...libDependencies,
+    })
       .map(([dep, version]) => `"${dep}": "${version}"`)
       .join(",\n")
     navigator.clipboard.writeText(`{\n${dependenciesString}\n}`)
-    setCopiedDependencies(true)
-    setTimeout(() => setCopiedDependencies(false), 2000)
+    setCopiedLibDependencies(true)
+    setTimeout(() => setCopiedLibDependencies(false), 2000)
+  }
+
+  const copyDemoDependencies = () => {
+    const dependenciesString = Object.entries({
+      ...demoDependencies,
+    })
+      .map(([dep, version]) => `"${dep}": "${version}"`)
+      .join(",\n")
+    navigator.clipboard.writeText(`{\n${dependenciesString}\n}`)
+    setCopiedDemoDependencies(true)
+    setTimeout(() => setCopiedDemoDependencies(false), 2000)
   }
 
   return (
@@ -142,23 +173,69 @@ const Info: React.FC<{ info: Component }> = ({ info }) => {
           </div>
         </div>
       )}
-      {Object.keys(allDependencies).length > 0 && (
+      {Object.keys(libDependencies).length > 0 && (
         <div className="flex">
-          <span className="text-gray-500 w-1/3">Dependencies:</span>
+          <span className="text-gray-500 w-1/3">Lib deps:</span>
           <div className="w-2/3 hover:underline">
-            {copiedDependencies ? (
+            {copiedLibDependencies ? (
               <div className="font-mono text-ellipsis font-semibold text-right">
                 Copied!
               </div>
             ) : (
-              Object.entries(allDependencies).map(([dep]) => (
+              Object.entries(libDependencies).map(([dep]) => (
                 <div
                   key={dep}
                   className="font-mono text-blue-500 cursor-pointer font-semibold text-ellipsis text-right"
-                  onClick={copyAllDependencies}
+                  onClick={copyDependencies}
                 >
                   {dep}
                 </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {Object.keys(demoDependencies).length > 0 && (
+        <div className="flex">
+          <span className="text-gray-500 w-1/3">Demo deps:</span>
+          <div className="w-2/3 hover:underline">
+            {copiedDemoDependencies ? (
+              <div className="font-mono text-ellipsis font-semibold text-right">
+                Copied!
+              </div>
+            ) : (
+              Object.entries(demoDependencies).map(([dep]) => (
+                <div
+                  key={dep}
+                  className="font-mono text-blue-500 cursor-pointer font-semibold text-ellipsis text-right"
+                  onClick={copyDemoDependencies}
+                >
+                  {dep}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {Object.keys(componentDependencies).length > 0 && (
+        <div className="flex">
+          <span className="text-gray-500 w-1/3">Зависимости компонента:</span>
+          <div className="w-2/3">
+            {isLoading ? (
+              <span>Загрузка зависимостей...</span>
+            ) : isError ? (
+              <span>Ошибка при загрузке зависимостей</span>
+            ) : (
+              Object.entries(componentDependencies).map(([key, slug]) => (
+                <Link
+                  key={slug}
+                  href={componentLinks[key] || "#"}
+                  className="font-mono text-blue-500 hover:underline cursor-pointer font-semibold text-ellipsis text-right block"
+                >
+                  {slug}
+                </Link>
               ))
             )}
           </div>
@@ -294,6 +371,7 @@ root.render(
         react: "^18.0.0",
         "react-dom": "^18.0.0",
         "lucide-react": "^0.446.0",
+        "framer-motion": "latest",
         ...dependencies,
         ...demoDependencies,
         ...allInternalDependencies, // Add internal component dependencies

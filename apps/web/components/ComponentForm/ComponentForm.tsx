@@ -68,7 +68,7 @@ import {
   demoCodeErrorAtom,
   internalDependenciesAtom,
 } from "./ComponentFormAtoms"
-import { Terminal, SunMoon } from "lucide-react"
+import { FileTerminal, SunMoon } from "lucide-react"
 
 const ComponentPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react/unstyled").then((module) => ({
@@ -397,6 +397,8 @@ export default function ComponentForm() {
         dependencies: {
           react: "^18.0.0",
           "react-dom": "^18.0.0",
+          "lucide-react": "^0.446.0",
+          "framer-motion": "latest",
           ...dependencies,
         },
       },
@@ -682,19 +684,7 @@ export default function ComponentForm() {
                       render={({ field }) => (
                         <FormItem className="w-full relative">
                           {!isDemoCodeCollapsed && (
-                            <>
-                              <FormLabel>PASTE DEMO CODE HERE [⌘ V]</FormLabel>
-                              <div className="absolute bottom-2 mx-auto">
-                                <Alert>
-                                  <Terminal className="h-4 w-4" />
-                                  <AlertTitle>Heads up!</AlertTitle>
-                                  <AlertDescription>
-                                    You can add components and dependencies to
-                                    your app using the cli.
-                                  </AlertDescription>
-                                </Alert>
-                              </div>
-                            </>
+                            <FormLabel>PASTE DEMO CODE HERE [⌘ V]</FormLabel>
                           )}
                           <FormControl>
                             <motion.div
@@ -967,7 +957,7 @@ export default function ComponentForm() {
           className="absolute bottom-4 mx-auto"
         >
           <Alert>
-            <Terminal className="h-4 w-4" />
+            <FileTerminal className="h-4 w-4" />
             <AlertTitle>Entire code should be in a single file</AlertTitle>
             <AlertDescription>
               Ensure to include all necessary dependencies to enable everyone{" "}

@@ -220,3 +220,34 @@ export function useAvailableTags() {
     queryFn: getAvailableTags,
   })
 }
+
+export function useComponentOwnerUsername(slug: string) {
+  return useQuery<string | null, Error>({
+    queryKey: ["componentOwner", slug],
+    queryFn: async () => {
+      const { data: component, error: componentError } = await supabase
+        .from("components")
+        .select("user_id")
+        .eq("component_slug", slug)
+        .single()
+
+      if (componentError || !component) {
+        console.error("Error fetching component:", componentError)
+        return null
+      }
+
+      const { data: user, error: userError } = await supabase
+        .from("users")
+        .select("username")
+        .eq("id", component.user_id)
+        .single()
+
+      if (userError || !user) {
+        console.error("Error fetching user:", userError)
+        return null
+      }
+
+      return user.username
+    },
+  })
+}

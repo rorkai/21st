@@ -110,6 +110,10 @@ overflow: auto;
   max-height: 100%;
 }
 
+.sp-loading {
+  display: none !important;
+}
+
 .cm-scroller {
   max-height: 100%;
   overflow-y: auto;

@@ -12,6 +12,7 @@ import { isClientAtom, isLoadingAtom, showLoadingAtom } from "@/lib/atoms"
 import { Component } from "@/types/types"
 import { UserAvatar } from "./UserAvatar"
 import { useClerkSupabaseClient } from "@/utils/clerk"
+import { generateFiles } from "@/utils/generateFiles"
 
 const codeAtom = atom("")
 const demoCodeAtom = atom("")
@@ -138,42 +139,12 @@ export default function ComponentPreview({
 
   const demoComponentName = component.demo_component_name
 
-  const files = {
-    "/App.tsx": `
-import React from 'react';
-import { ${demoComponentName} } from './Demo';
-
-export default function App() {
-  return (
-    <div className="flex justify-center items-center h-screen p-4 relative">
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        zIndex: -1,
-        opacity: 0.5,
-        width: '100%',
-        height: '100%',
-        background: 'radial-gradient(#00000055 1px, transparent 1px)',
-        backgroundSize: '16px 16px'
-      }}>
-        <style>{\`
-          @media (prefers-color-scheme: dark) {
-            div {
-              background: radial-gradient(#ffffff22 1px, transparent 1px);
-            }
-          }
-        \`}</style>
-      </div>
-      <div className="flex justify-center items-center max-w-[600px] w-full h-full max-h-[600px] p-4 relative">
-        <${demoComponentName} />
-      </div>
-    </div>
-  );
-}
-`,
-    [`/${component.component_slug}.tsx`]: code,
-    "/Demo.tsx": demoCode,
-  }
+  const files = generateFiles({
+    demoComponentName,
+    componentSlug: component.component_slug,
+    code,
+    demoCode,
+  })
 
   const handleShareClick = async () => {
     setIsSharing(true)

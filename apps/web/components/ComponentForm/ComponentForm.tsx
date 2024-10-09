@@ -323,7 +323,7 @@ export default function ComponentForm() {
                                 ? "64px"
                                 : "50px",
                           }}
-                          transition={{ duration: 0.6 }}
+                          transition={{ duration: 0.3 }}
                         >
                           {!parsedComponentNames?.length &&
                             !isPreviewReady &&
@@ -367,7 +367,7 @@ export default function ComponentForm() {
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
                               exit={{ opacity: 0 }}
-                              transition={{ duration: 0.3, delay: 0.2 }}
+                              transition={{ duration: 0.3, delay: 0.3 }}
                               className="absolute p-2 border  rounded-md inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-start"
                             >
                               <div className="flex items-center gap-2 w-full">
@@ -416,7 +416,7 @@ export default function ComponentForm() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.5, delay: 1 }}
+                    transition={{ duration: 0.3, delay: 0.3 }}
                     className="w-full"
                   >
                     <FormField
@@ -435,7 +435,7 @@ export default function ComponentForm() {
                                   ? "64px"
                                   : "calc(100vh/3)",
                               }}
-                              transition={{ duration: 0.5 }}
+                              transition={{ duration: 0.3 }}
                             >
                               <Editor
                                 value={field.value}
@@ -467,7 +467,7 @@ export default function ComponentForm() {
                                   initial={{ opacity: 0 }}
                                   animate={{ opacity: 1 }}
                                   exit={{ opacity: 0 }}
-                                  transition={{ duration: 0.3, delay: 0.2 }}
+                                  transition={{ duration: 0.3, delay: 0.3 }}
                                   className="absolute p-2 border  rounded-md inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-start"
                                 >
                                   <div className="flex items-center gap-2 w-full">
@@ -607,7 +607,7 @@ export default function ComponentForm() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3, delay: 0.2 }}
+                    transition={{ duration: 0.3, delay: 0.3 }}
                     className="w-full"
                   >
                     <ComponentDetails
@@ -687,7 +687,7 @@ export default function ComponentForm() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
-          transition={{ duration: 0.3, delay: 1 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
           className="absolute bottom-4 mx-auto"
         >
           <Alert>

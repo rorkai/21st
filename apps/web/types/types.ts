@@ -19,7 +19,7 @@ export interface Component {
   user_id: string
   install_url: string
   dependencies: any // jsonb т
-  is_public: boolean
+  // is_public: boolean
   downloads_count: number
   likes_count: number
   component_slug: string

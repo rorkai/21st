@@ -73,7 +73,6 @@ export default function ComponentForm() {
       demo_code: "",
       description: "",
       tags: [],
-      is_public: true,
       license: "mit",
     },
   })
@@ -112,17 +111,11 @@ export default function ComponentForm() {
 
   const { user } = useUser()
   const client = useClerkSupabaseClient()
-
   const router = useRouter()
-
   const [showComponentDetails, setShowComponentDetails] = useState(false)
-
   const [previewImage, setPreviewImage] = useState<string | null>(null)
-
   const [isEditMode, setIsEditMode] = useState(false)
-
   const [isLoading, setIsLoading] = useState(false)
-
   const [importsToRemove, setImportsToRemove] = useState<string[] | undefined>(undefined)
 
   useEffect(() => {
@@ -215,7 +208,6 @@ export default function ComponentForm() {
         dependencies: JSON.stringify(dependencies),
         demo_dependencies: JSON.stringify(parsedDemoDependencies),
         internal_dependencies: JSON.stringify(internalDependencies),
-        is_public: data.is_public,
         preview_url: previewImageUrl,
       }
 
@@ -313,10 +305,8 @@ export default function ComponentForm() {
         >
           <AnimatePresence>
             <div className={`flex gap-4 items-center h-full w-full mt-2`}>
-              <motion.div
+              <div
                 className={`flex flex-col items-start gap-2 py-10 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[400px] ${showComponentDetails ? "ml-0" : "mx-auto"}`}
-                layout
-                transition={{ duration: isPreviewReady ? 0.6 : 0.3 }}
               >
                 <FormField
                   control={form.control}
@@ -631,11 +621,11 @@ export default function ComponentForm() {
                     />
                   </motion.div>
                 )}
-              </motion.div>
+              </div>
 
               {previewProps && isPreviewReady && showComponentDetails && (
                 <motion.div
-                  initial={{ opacity: 0.01 }}
+                  initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3, delay: 3 }}

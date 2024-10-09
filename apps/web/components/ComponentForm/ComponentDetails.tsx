@@ -64,7 +64,6 @@ export function ComponentDetails({
   internalDependencies,
 }: ComponentDetailsProps) {
   const client = useClerkSupabaseClient()
-  const [isPublic, setIsPublic] = useState(form.watch("is_public"))
   const { data: availableTags = [] } = useAvailableTags()
 
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false)
@@ -357,50 +356,6 @@ export function ComponentDetails({
             ) : null}
           </>
         )}
-      </div>
-
-      <div className="flex flex-col space-y-2">
-        <div className="flex gap-2">
-          <div
-            className="flex grow items-center justify-between p-2 border rounded-md cursor-pointer bg-white"
-            onClick={() => {
-              // TODO: Implement
-            }}
-          >
-            <div className="flex items-center space-x-2">
-              <Globe size={16} />
-              <span>Everyone</span>
-            </div>
-            <Checkbox
-              checked={isPublic}
-              onCheckedChange={() => {
-                // TODO: Implement
-              }}
-            />
-          </div>
-          <div
-            className="flex grow items-center justify-between p-2 border rounded-md cursor-pointer bg-white"
-            onClick={() => {
-              // TODO: Implement
-            }}
-          >
-            <div className="flex items-center space-x-2">
-              <Lock size={16} />
-              <span>Only me</span>
-            </div>
-            <Checkbox
-              checked={!isPublic}
-              onCheckedChange={() => {
-                // TODO: Implement
-              }}
-            />
-          </div>
-        </div>
-        <p className="text-sm text-gray-500">
-          {isPublic
-            ? "This component will be visible to everyone"
-            : "This component will be visible only to administrators"}
-        </p>
       </div>
 
       <Button

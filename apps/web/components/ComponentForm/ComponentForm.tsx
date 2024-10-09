@@ -102,7 +102,6 @@ export default function ComponentForm() {
   } = componentDependencies || {}
 
   const {
-    name,
     component_slug: componentSlug,
     code,
     demo_code: demoCode,

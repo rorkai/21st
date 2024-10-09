@@ -1,5 +1,5 @@
 
-import ComponentPreview from "@/components/ComponentPreview"
+import ComponentPage from "@/components/ComponentPage"
 import { Header } from "@/components/Header"
 import React from "react"
 import { notFound } from "next/navigation"
@@ -21,7 +21,7 @@ export const generateMetadata = async ({
   }
 }
 
-export default async function ComponentPage({
+export default async function ComponentPageLayout({
   params,
 }: {
   params: { username: string; component_slug: string }
@@ -43,12 +43,9 @@ export default async function ComponentPage({
 
   return (
     <>
-      <Header
-        componentSlug={component.component_slug}
-        isPublic={component.is_public}
-      />
+      <Header componentSlug={component.component_slug} />
       <div className="w-full ">
-        <ComponentPreview component={component} />
+        <ComponentPage component={component} />
       </div>
     </>
   )

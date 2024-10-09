@@ -36,8 +36,6 @@ export function Preview({
       dependencies: {
         react: "^18.0.0",
         "react-dom": "^18.0.0",
-        "lucide-react": "^0.446.0",
-        "framer-motion": "latest",
         ...dependencies,
       },
     },

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { generateSlug } from "@/components/ComponentForm/useIsCheckSlugAvailable"
 import { SupabaseClient } from "@supabase/supabase-js"
 import { useClerkSupabaseClient } from "./clerk"
+import { ComponentOwnerData } from "@/types/supabase"
 
 const userFields = `
   id,
@@ -52,14 +53,6 @@ export async function getComponent(
   }
 
   return { data, error }
-}
-
-export function useCcomponent(username: string, slug: string) {
-  const supabase = useClerkSupabaseClient()
-  return useQuery<{ data: Component | null; error: Error | null }, Error>({
-    queryKey: ["component", username, slug],
-    queryFn: () => getComponent(supabase, username, slug),
-  })
 }
 
 export async function getUserData(
@@ -193,6 +186,8 @@ export async function addTagsToComponent(
     if (tag.id) {
       tagId = tag.id
     } else {
+      const capitalizedName =
+        tag.name.charAt(0).toUpperCase() + tag.name.slice(1)
       const slug = generateSlug(tag.name)
       const { data: existingTag, error: selectError } = await supabase
         .from("tags")
@@ -205,7 +200,7 @@ export async function addTagsToComponent(
       } else {
         const { data: newTag, error: insertError } = await supabase
           .from("tags")
-          .insert({ name: tag.name, slug })
+          .insert({ name: capitalizedName, slug })
           .single()
 
         if (insertError) {
@@ -283,5 +278,49 @@ export function useComponentOwnerUsername(slug: string) {
 
       return user.username
     },
+  })
+}
+
+export async function fetchDependencyComponents(
+  supabase: SupabaseClient,
+  dependencySlugs: string[],
+): Promise<Component[]> {
+
+  const components = await Promise.all(
+    dependencySlugs.map(async (slug) => {
+      try {
+        const { data, error } = await supabase
+          .from("components")
+          .select(componentFields)
+          .eq("component_slug", slug)
+          .single()
+
+        if (error) {
+          console.error("Error fetching dependency component:", error)
+          return null
+        }
+
+        return data
+      } catch (error) {
+        console.error("Error fetching dependency component:", error)
+        return null
+      }
+    }),
+  )
+  return components.filter((c): c is Component => c !== null)
+}
+
+export function useDependencyComponents(
+  componentDependencies: Record<string, string>,
+) {
+  const supabase = useClerkSupabaseClient()
+  const dependencySlugs = Object.values(componentDependencies)
+
+  return useQuery<Component[], Error>({
+    queryKey: ["dependencyComponents", dependencySlugs],
+    queryFn: () => fetchDependencyComponents(supabase, dependencySlugs),
+    enabled: dependencySlugs.length > 0,
+    refetchOnMount: true,
+    staleTime: 0,
   })
 }

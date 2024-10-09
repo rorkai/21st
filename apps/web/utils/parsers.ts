@@ -30,6 +30,7 @@ export function extractDemoComponentName(code: string): string {
 }
 
 export function extractDependencies(code: string): Record<string, string> {
+  console.log("code in extractDependencies", code)
   const dependencies: Record<string, string> = {}
   try {
     const ast = parse(code, {
@@ -85,6 +86,7 @@ export function extractDependencies(code: string): Record<string, string> {
         }
       },
     })
+    console.log("dependencies in extractDependencies", dependencies)
   } catch (error) {
     console.error("Error parsing dependencies:", error)
   }
@@ -93,17 +95,35 @@ export function extractDependencies(code: string): Record<string, string> {
 }
 
 export function findInternalDependencies(
-  componentDependencies: Record<string, string>,
-  demoDependencies: Record<string, string>,
+  componentCode: string,
+  demoCode: string,
 ): Record<string, string> {
   const internalDeps: Record<string, string> = {}
 
-  const allDependencies = { ...componentDependencies, ...demoDependencies }
+  try {
+    const parseAndExtractImports = (code: string) => {
+      const ast = parse(code, {
+        sourceType: "module",
+        plugins: ["typescript", "jsx"],
+      })
 
-  for (const [source, version] of Object.entries(allDependencies)) {
-    if (source.startsWith("@/components/")) {
-      internalDeps[source] = version
+      traverse(ast, {
+        ImportDeclaration({ node }) {
+          const source = node.source.value
+          if (
+            typeof source === "string" &&
+            source.startsWith("@/components/")
+          ) {
+            internalDeps[source] = "latest"
+          }
+        },
+      })
     }
+
+    parseAndExtractImports(componentCode)
+    parseAndExtractImports(demoCode)
+  } catch (error) {
+    console.error("Ошибка при анализе зависимостей:", error)
   }
 
   return internalDeps

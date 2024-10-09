@@ -1,6 +1,5 @@
 
 import ComponentPage from "@/components/ComponentPage"
-import { Header } from "@/components/Header"
 import React from "react"
 import { notFound } from "next/navigation"
 import { getComponent } from "@/utils/dataFetchers"
@@ -42,11 +41,8 @@ export default async function ComponentPageLayout({
   }
 
   return (
-    <>
-      <Header componentSlug={component.component_slug} />
       <div className="w-full ">
         <ComponentPage component={component} />
       </div>
-    </>
   )
 }

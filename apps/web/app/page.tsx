@@ -11,8 +11,8 @@ export default function HomePage() {
   return (
     <>
       <Header />
-      <div className="container mx-auto mt-7">
-        <ComponentsList initialComponents={components || []} />
+      <div className="container mx-auto mt-20">
+        <ComponentsList components={components || []} isLoading={isLoading} />
       </div>
     </>
   )

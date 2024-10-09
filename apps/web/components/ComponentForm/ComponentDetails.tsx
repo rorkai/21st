@@ -4,6 +4,7 @@ import { Controller, UseFormReturn } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Hotkey } from "@/components/ui/hotkey"
 import CreatableSelect from "react-select/creatable"
 import Image from "next/image"
 import {
@@ -14,7 +15,7 @@ import {
 import { FormData, TagOption } from "./utils"
 import { Globe, Lock } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
-import { useDropzone } from "react-dropzone"
+import { useDropzone, } from "react-dropzone"
 import { CloudUpload } from "lucide-react"
 import { Check, ChevronsUpDown } from "lucide-react"
 import {
@@ -42,6 +43,8 @@ interface ComponentDetailsProps {
   isLoading: boolean
   isFormValid: (...args: any[]) => boolean
   internalDependencies: Record<string, string>
+  componentName: string | null
+  
 }
 
 const licenses = [
@@ -62,6 +65,7 @@ export function ComponentDetails({
   isLoading,
   isFormValid,
   internalDependencies,
+  componentName,
 }: ComponentDetailsProps) {
   const client = useClerkSupabaseClient()
   const { data: availableTags = [] } = useAvailableTags()
@@ -111,8 +115,9 @@ export function ComponentDetails({
     multiple: false,
   })
 
+
   return (
-    <div className="flex flex-col gap-4 py-4 w-full">
+    <div className="flex flex-col gap-4 w-full">
       <div className="w-full">
         <label
           htmlFor="name"
@@ -122,7 +127,11 @@ export function ComponentDetails({
         </label>
         <Input
           id="name"
-          placeholder="Button"
+          placeholder={
+            componentName
+              ? `For example "${componentName.replace(/([a-z])([A-Z])/g, "$1 $2")}"`
+              : "Button"
+          }
           {...form.register("name", { required: true })}
           className="mt-1 w-full bg-white"
           onChange={(e) => {
@@ -142,7 +151,7 @@ export function ComponentDetails({
         </label>
         <Input
           id="description"
-          placeholder="Displays a button or button-like component"
+          placeholder="Add some description to help others find your component"
           {...form.register("description")}
           className="mt-1 w-full bg-white"
         />
@@ -169,9 +178,18 @@ export function ComponentDetails({
               </span>
             </p>
             <p className="mt-1 text-xs text-gray-500">PNG, JPEG (max. 5MB)</p>
+            {isDragActive && (
+              <div className="absolute inset-0 z-9999 bg-white bg-opacity-90 flex items-center justify-center rounded-md">
+                <p className="text-sm text-gray-600">Drop image here</p>
+              </div>
+            )}
           </div>
         ) : (
-          <div className="mt-1 w-full border border-gray-300 rounded-md p-2 flex items-center space-x-4">
+          <div
+            {...getRootProps()}
+            className="mt-1 w-full border border-gray-300 rounded-md p-2 flex items-center space-x-4 relative"
+          >
+            <input {...getInputProps()} id="preview_image" />
             <div className="w-40 h-32 relative">
               <Image
                 src={previewImage}
@@ -183,13 +201,15 @@ export function ComponentDetails({
             </div>
             <div className="flex flex-col items-start">
               <div className="flex-grow">
-                <h4 className="text-sm font-medium mb-1">Cover</h4>
+                <h4 className="text-sm font-medium mb-1">
+                  {componentName ? `${componentName} Cover` : "Cover"}
+                </h4>
               </div>
-              <div className="flex space-x-2">
+              <div className="flex flex-col space-x-2">
                 <Button
                   variant="outline"
-                  size="sm"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation()
                     const input = document.createElement("input")
                     input.type = "file"
                     input.accept = "image/jpeg, image/png"
@@ -206,8 +226,16 @@ export function ComponentDetails({
                 >
                   Change cover
                 </Button>
+                <span className="text-sm text-gray-500 self-center">
+                  or drop it here
+                </span>
               </div>
             </div>
+            {isDragActive && (
+              <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center">
+                <p className="text-sm text-gray-600">Drop new image here</p>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -299,7 +327,7 @@ export function ComponentDetails({
                 className="mt-1 w-full rounded-md border border-input bg-transparent text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="Select or create tags"
                 formatCreateLabel={(inputValue: string) =>
-                  `Create "${inputValue}"`
+                  `Create "${inputValue.charAt(0).toUpperCase() + inputValue.slice(1)}"`
                 }
                 onChange={(newValue) => {
                   const formattedValue = newValue.map((item: any) => ({
@@ -366,6 +394,7 @@ export function ComponentDetails({
         }
       >
         {isLoading ? "Adding..." : "Add component"}
+        {!isLoading && <Hotkey keys={["⌘", "⏎"]} isDarkBackground />}
       </Button>
     </div>
   )

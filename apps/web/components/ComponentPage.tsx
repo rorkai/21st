@@ -3,13 +3,15 @@
 
 import React, { useEffect, useState } from "react"
 import dynamic from "next/dynamic"
-import { Button } from "./ui/button"
-import { LayoutTemplate, CodeXml, Link, Tag } from "lucide-react"
+import { ChevronRight, Check, CodeXml, Info, Link, Tag, House } from "lucide-react"
 import { LoadingSpinner } from "./Loading"
 import { Component } from "@/types/types"
 import { UserAvatar } from "./UserAvatar"
 import { useClerkSupabaseClient } from "@/utils/clerk"
 import { generateFiles } from "@/utils/generateFiles"
+import { atom, useAtom } from "jotai"
+
+export const isShowCodeAtom = atom(true)
 
 const ComponentPreview = dynamic(() => import("./ComponentPreview"), {
   ssr: false,
@@ -33,8 +35,8 @@ export default function ComponentPage({
   const [internalDependenciesCode, setInternalDependenciesCode] = useState<
     Record<string, string>
   >({})
-  const [isSharing, setIsSharing] = useState(false)
-  const [shareButtonText, setShareButtonText] = useState("Share")
+  const [isShared, setIsShared] = useState(false)
+  const [isShowCode, setIsShowCode] = useAtom(isShowCodeAtom)
 
   useEffect(() => {
     async function fetchCode() {
@@ -134,60 +136,80 @@ export default function ComponentPage({
   })
 
   const handleShareClick = async () => {
-    setIsSharing(true)
     const url = `${window.location.origin}/${component.user.username}/${component.component_slug}`
     try {
       await navigator.clipboard.writeText(url)
-      setShareButtonText("Copied")
-      setTimeout(() => setShareButtonText("Share"), 2000)
+      setIsShared(true)
+      setTimeout(() => {
+        setIsShared(false)
+      }, 2000)
     } catch (err) {
       console.error("Error copying link: ", err)
-    } finally {
-      setIsSharing(false)
     }
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg p-4 bg-slate-50 h-[90vh] w-full">
+    <div className="flex flex-col gap-2 rounded-lg p-4 h-[98vh] w-full">
       <div className="flex justify-between items-center">
-        <div className="flex gap-4 items-center">
-          <a href={`/${component.user.username}`}>
+        <div className="flex gap-1 items-center">
+          <a
+            href="/"
+            className="cursor-pointer hover:bg-gray-100 rounded-md h-8 w-8 flex items-center justify-center"
+          >
+            <House size={18} />
+          </a>
+          <ChevronRight size={12} className="text-gray-500" />
+          <a
+            href={`/${component.user.username}`}
+            className="cursor-pointer hover:bg-gray-100 rounded-md h-8 w-8 flex items-center justify-center"
+          >
             <UserAvatar
               src={component.user.image_url || "/placeholder.svg"}
               alt={component.user.name}
-              size={32}
+              size={20}
             />
           </a>
-          <div className="h-10 w-[1px] bg-gray-200" />
+          <ChevronRight size={12} className="text-gray-500" />
           <div className="flex gap-2 items-start">
-            <p className="text-[17px] font-semibold">{component.name}</p>
-            <p className="text-[17px] text-gray-600">{component.description}</p>
-            {component.tags && component.tags.length > 0 && (
-              <div className="flex gap-2 ml-2">
-                {component.tags.map((tag) => (
-                  <div
-                    key={tag.slug}
-                    className="flex items-center gap-1 px-2 py-1 bg-gray-200 text-gray-700 rounded-full text-xs"
-                  >
-                    <Tag size={12} />
-                    {tag.name}
-                  </div>
-                ))}
-              </div>
-            )}
+            <p className="text-[14px] font-medium">{component.name}</p>
+            <p className="text-[14px] text-gray-600">{component.description}</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="ghost"
+        <div className="flex items-center">
+          <button
             onClick={handleShareClick}
-            disabled={isSharing}
+            disabled={isShared}
+            className="h-8 w-8 flex items-center justify-center mr-1 hover:bg-gray-100 rounded-md relative"
           >
-            {shareButtonText}
-            <div className="ml-2 w-5 h-5 flex items-center justify-center">
-              <Link size={20} />
+            <div className="absolute inset-0 flex items-center justify-center">
+              {isShared ? <Check size={18} /> : <Link size={18} />}
             </div>
-          </Button>
+          </button>
+          <div className="relative bg-gray-200 rounded-lg h-8 p-0.5 flex">
+            <div
+              className="absolute inset-y-0.5 rounded-md bg-white shadow transition-all duration-200 ease-in-out"
+              style={{
+                width: "calc(50% - 2px)",
+                left: isShowCode ? "2px" : "calc(50%)",
+              }}
+            />
+            <button
+              onClick={() => setIsShowCode(true)}
+              className={`relative z-2 px-2 flex items-center justify-center transition-colors duration-200 ${
+                isShowCode ? "text-gray-800" : "text-gray-500"
+              }`}
+            >
+              <CodeXml size={18} />
+            </button>
+            <button
+              onClick={() => setIsShowCode(false)}
+              className={`relative z-2s px-2 flex items-center justify-center transition-colors duration-200 ${
+                !isShowCode ? "text-gray-800" : "text-gray-500"
+              }`}
+            >
+              <Info size={18} />
+            </button>
+          </div>
         </div>
       </div>
       {isLoading && showLoading && <LoadingSpinner />}

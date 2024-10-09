@@ -8,6 +8,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      zIndex: {
+        "9999": "9999",
+      },
       borderColor: {
         border: "hsl(var(--border))",
       },

@@ -1,5 +1,11 @@
 import { User, Component } from "./types"
 
+export interface ComponentOwnerData {
+  user: {
+    username: string;
+  };
+}
+
 export type GenericView = {
   Row: Record<string, unknown>
 }

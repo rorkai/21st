@@ -62,6 +62,7 @@ import { useUser } from "@clerk/nextjs"
 import { useDebugMode } from "@/hooks/useDebugMode"
 import { Tag } from "@/types/types"
 import { Preview } from "./preview"
+import { Hotkey } from "../ui/hotkey"
 
 export default function ComponentForm() {
   const form = useForm<FormData>({
@@ -120,15 +121,14 @@ export default function ComponentForm() {
   useEffect(() => {
     const updateDependencies = () => {
       try {
-        console.log("Full component code:", code)
         const componentNames = extractComponentNames(code)
-        console.log("Parsed exported component names:", componentNames)
         const dependencies = extractDependencies(code)
         const demoDependencies = extractDependencies(demoCode)
+        console.log("demoDependencies + code", demoDependencies, demoCode)
         const demoComponentName = extractDemoComponentName(demoCode)
         const internalDependencies = findInternalDependencies(
-          dependencies,
-          demoDependencies,
+          code,
+          demoCode,
         )
 
         setComponentDependencies({
@@ -235,10 +235,48 @@ export default function ComponentForm() {
     setIsSuccessDialogOpen(false)
   }
 
+
+  useEffect(() => {
+    const keyDownHandler = (e: KeyboardEvent) => {
+      if (isSuccessDialogOpen && e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        handleGoToComponent()
+      }
+    }
+
+    window.addEventListener("keydown", keyDownHandler)
+
+    return () => {
+      window.removeEventListener("keydown", keyDownHandler)
+    }
+  }, [isSuccessDialogOpen, handleGoToComponent])
+
+
   const handleAddAnother = () => {
     form.reset()
     setIsSuccessDialogOpen(false)
+    setShowComponentDetails(false)
+    setPreviewImage(null)
   }
+
+  useEffect(() => {
+    const keyDownHandler = (e: KeyboardEvent) => {
+      if (
+        isSuccessDialogOpen &&
+        e.code === "KeyN" 
+      ) {
+        e.preventDefault()
+        handleAddAnother()
+      }
+    }
+
+    window.addEventListener("keydown", keyDownHandler)
+
+    return () => {
+      window.removeEventListener("keydown", keyDownHandler)
+    }
+  }, [isSuccessDialogOpen, handleGoToComponent])
+
 
   const [previewProps, setPreviewProps] = useState<{
     files: Record<string, string>
@@ -270,6 +308,24 @@ export default function ComponentForm() {
     onSubmit(formData)
   }
 
+  useEffect(() => {
+    const keyDownHandler = (e: KeyboardEvent) => {
+      if (
+        e.code === "Enter" &&
+        (e.metaKey || e.ctrlKey)
+      ) {
+        e.preventDefault()
+        handleSubmit(e as unknown as React.FormEvent)
+      }
+    }
+
+    window.addEventListener("keydown", keyDownHandler)
+
+    return () => {
+      window.removeEventListener("keydown", keyDownHandler)
+    }
+  }, [form, internalDependencies, handleSubmit, onSubmit])
+
   const isPreviewReady =
     !!previewProps &&
     Object.keys(internalDependencies).length === 0 &&
@@ -295,6 +351,17 @@ export default function ComponentForm() {
     }
   }, [form.watch("demo_code")])
 
+  const getMainComponentName = () => {
+    if (!parsedComponentNames || parsedComponentNames.length === 0) return null;
+    
+    const capitalizedComponent = parsedComponentNames.find(name => /^[A-Z]/.test(name));
+    if (!capitalizedComponent) return null;
+    
+    return capitalizedComponent.replace(/([A-Z])/g, ' $1').trim();
+  };
+
+  const mainComponentName = getMainComponentName();
+
   return (
     <>
       <Form {...form}>
@@ -305,7 +372,7 @@ export default function ComponentForm() {
           <AnimatePresence>
             <div className={`flex gap-4 items-center h-full w-full mt-2`}>
               <div
-                className={`flex flex-col items-start gap-2 py-10 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[400px] ${showComponentDetails ? "ml-0" : "mx-auto"}`}
+                className={`flex flex-col items-start gap-2 py-10 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[400px] ${showComponentDetails && Object.keys(internalDependencies).length === 0 ? "ml-0" : "mx-auto"}`}
               >
                 <FormField
                   control={form.control}
@@ -375,16 +442,16 @@ export default function ComponentForm() {
                                     <div className="w-12 h-12 relative bg-white border p-1 rounded-md mr-4">
                                       <Image
                                         src="/tsx-file.svg"
-                                        width={40}
-                                        height={40}
+                                        width={32}
+                                        height={32}
                                         alt="TSX File"
                                       />
                                     </div>
                                     <div className="flex flex-col items-start">
-                                      <p className="font-semibold">
-                                        Component code
+                                      <p className="font-semibold text-[14px]">
+                                        {mainComponentName} code
                                       </p>
-                                      <p className="text-sm text-gray-600">
+                                      <p className="text-sm text-gray-600 text-[12px]">
                                         {parsedComponentNames
                                           .slice(0, 2)
                                           .join(", ")}
@@ -393,10 +460,7 @@ export default function ComponentForm() {
                                       </p>
                                     </div>
                                   </div>
-                                  <Button
-                                    onClick={() => setIsEditMode(true)}
-                                    variant="default"
-                                  >
+                                  <Button onClick={() => setIsEditMode(true)}>
                                     Edit
                                   </Button>
                                 </div>
@@ -475,16 +539,16 @@ export default function ComponentForm() {
                                         <div className="w-12 h-12 relative bg-white border p-1 rounded-md mr-4">
                                           <Image
                                             src="/demo-file.svg"
-                                            width={40}
-                                            height={40}
+                                            width={32}
+                                            height={32}
                                             alt="Demo File"
                                           />
                                         </div>
                                         <div className="flex flex-col items-start">
-                                          <p className="font-semibold">
+                                          <p className="font-semibold text-[14px]">
                                             Demo code
                                           </p>
-                                          <p className="text-sm text-gray-600">
+                                          <p className="text-sm text-gray-600 text-[12px]">
                                             for {parsedComponentNames[0]}
                                           </p>
                                         </div>
@@ -493,7 +557,6 @@ export default function ComponentForm() {
                                         onClick={() =>
                                           setShowComponentDetails(false)
                                         }
-                                        variant="default"
                                       >
                                         Edit
                                       </Button>
@@ -510,47 +573,47 @@ export default function ComponentForm() {
                   </motion.div>
                 )}
 
-                {Object.keys(internalDependencies ?? {}).length > 0 && (
-                  <div className="w-full">
-                    <h3 className="text-lg font-semibold mb-2">
-                      Internal dependencies
-                    </h3>
-                    {Object.entries(internalDependencies ?? {}).map(
-                      ([path, slug]) => (
-                        <div key={path} className="mb-2 w-full">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Add slug for {path}
-                          </label>
-                          <Input
-                            value={slug}
-                            onChange={(e) => {
-                              setComponentDependencies((prev) => ({
-                                ...prev,
-                                internalDependencies: {
-                                  ...prev?.internalDependencies,
-                                  [path]: e.target.value!!,
-                                },
-                              }))
-                            }}
-                            placeholder="Enter component slug"
-                            className="mt-1 w-full"
-                          />
-                          <Alert className="mt-4">
-                            <Codepen className="h-4 w-4" />
-                            <AlertTitle>Internal dependencies</AlertTitle>
-                            <AlertDescription>
-                              To use another component within your component:
-                              <br />
-                              1. Add it to the Component Community first.
-                              <br />
-                              2. Enter its slug here.
-                            </AlertDescription>
-                          </Alert>
-                        </div>
-                      ),
-                    )}
-                  </div>
-                )}
+                {Object.keys(internalDependencies ?? {}).length > 0 &&
+                  showComponentDetails && (
+                    <div className="w-full">
+                      <Alert className="my-2">
+                        <Codepen className="h-4 w-4" />
+                        <AlertTitle>Component dependencies detected</AlertTitle>
+                        <AlertDescription>
+                          To use another component within your component:
+                          <br />
+                          1. Add it to the Component Community first.
+                          <br />
+                          2. Enter its slug here.
+                        </AlertDescription>
+                      </Alert>
+                      {Object.entries(internalDependencies ?? {}).map(
+                        ([path], index) => (
+                          <div
+                            key={path}
+                            className={`w-full ${index > 0 ? "mt-2" : ""}`}
+                          >
+                            <label className="block text-sm font-medium text-gray-700">
+                              Add slug for {path}
+                            </label>
+                            <Input
+                              onChange={(e) => {
+                                setComponentDependencies((prev) => ({
+                                  ...prev,
+                                  internalDependencies: {
+                                    ...prev?.internalDependencies,
+                                    [path]: e.target.value!!,
+                                  },
+                                }))
+                              }}
+                              placeholder="Enter component slug"
+                              className="mt-1 w-full"
+                            />
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  )}
 
                 {isDebug && (
                   <>
@@ -617,6 +680,7 @@ export default function ComponentForm() {
                       isLoading={isLoading}
                       isFormValid={isFormValid}
                       internalDependencies={internalDependencies ?? {}}
+                      componentName={mainComponentName}
                     />
                   </motion.div>
                 )}
@@ -655,9 +719,11 @@ export default function ComponentForm() {
           <DialogFooter>
             <Button onClick={handleAddAnother} variant="outline">
               Add Another
+              <Hotkey keys={["N"]} />
             </Button>
             <Button onClick={handleGoToComponent} variant="default">
               View Component
+              <Hotkey keys={["⏎"]} isDarkBackground modifier />
             </Button>
           </DialogFooter>
         </DialogContent>

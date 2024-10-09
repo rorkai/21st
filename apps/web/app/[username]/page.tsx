@@ -35,7 +35,7 @@ export default async function UserProfile({
   return (
     <>
       <Header />
-      <div className="flex mx-auto px-4 py-8">
+      <div className="flex mx-auto px-4 py-8 mt-20">
         <div className="flex flex-col md:flex-row gap-8">
           <div className="flex md:w-[30%] md:min-w-[300px] flex-col items-center w-full ">
             <div className="flex flex-col items-center md:items-start">
@@ -49,7 +49,7 @@ export default async function UserProfile({
             </div>
           </div>
           <div className="w-full md:w-[70%]">
-            <ComponentsList initialComponents={components || []} />
+            <ComponentsList components={components || []} />
           </div>
         </div>
       </div>

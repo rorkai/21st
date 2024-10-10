@@ -4,7 +4,7 @@ import * as t from "@babel/types"
 
 export function extractComponentNames(code: string): string[] {
   const componentRegex =
-    /export\s+(?:default\s+)?(?:function|const|class|let|var)\s+(\w+)|export\s*{\s*([^}]+)\s*}/g
+    /export\s+(?:default\s+)?(?:function|const|class|let|var)\s+(\w+)|export\s*{\s*([^}]+)\s*}|export\s+(\w+)\s*;/g
 
   const matches = Array.from(code.matchAll(componentRegex))
   const componentNames = matches.flatMap((match) => {
@@ -12,6 +12,8 @@ export function extractComponentNames(code: string): string[] {
       return [match[1]]
     } else if (match[2]) {
       return match[2].split(",").map((name) => name.trim().split(/\s+as\s+/)[0])
+    } else if (match[3]) {
+      return [match[3]]
     }
     return []
   })

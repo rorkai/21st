@@ -4,11 +4,8 @@
 import React, { useEffect, useState } from "react"
 import dynamic from "next/dynamic"
 import { ChevronRight, Check, CodeXml, Info, Link as LinkIcon } from "lucide-react"
-import { LoadingSpinner } from "./Loading"
 import { Component } from "@/types/types"
 import { UserAvatar } from "./UserAvatar"
-import { useClerkSupabaseClient } from "@/utils/clerk"
-import { generateFiles } from "@/utils/generateFiles"
 import { atom, useAtom } from "jotai"
 import Image from "next/image"
 import Link from "next/link"
@@ -28,120 +25,21 @@ const ComponentPreview = dynamic(() => import("./ComponentPreview"), {
 
 export default function ComponentPage({
   component,
+  files,
+  dependencies,
+  demoDependencies,
+  demoComponentName,
+  internalDependencies,
 }: {
   component: Component
+  files: Record<string, string>
+  dependencies: Record<string, string>
+  demoDependencies: Record<string, string>
+  demoComponentName: string
+  internalDependencies: Record<string, string>
 }) {
-  const supabase = useClerkSupabaseClient()
-  const [isLoading, setIsLoading] = useState(true)
-  const [showLoading, setShowLoading] = useState(false)
-  const [code, setCode] = useState("")
-  const [demoCode, setDemoCode] = useState("")
-  const [dependencies, setDependencies] = useState<Record<string, string>>({})
-  const [demoDependencies, setDemoDependencies] = useState<
-    Record<string, string>
-  >({})
-  const [internalDependenciesCode, setInternalDependenciesCode] = useState<
-    Record<string, string>
-  >({})
   const [isShared, setIsShared] = useState(false)
   const [isShowCode, setIsShowCode] = useAtom(isShowCodeAtom)
-
-  useEffect(() => {
-    async function fetchCode() {
-      const loadingTimeout = setTimeout(() => setShowLoading(true), 300)
-      setIsLoading(true)
-      try {
-        const { data: codeData, error: codeError } = await supabase.storage
-          .from("components")
-          .download(`${component.component_slug}-code.tsx`)
-
-        const { data: demoData, error: demoError } = await supabase.storage
-          .from("components")
-          .download(`${component.component_slug}-demo.tsx`)
-
-        if (codeError || demoError) {
-          console.error("Error fetching code:", codeError || demoError)
-          return
-        }
-
-        const codeText = await codeData.text()
-        const rawDemoCode = await demoData.text()
-
-        setCode(codeText)
-        const componentNames = parseComponentNames(component.component_name)
-        const updatedDemoCode = `import { ${componentNames.join(", ")} } from "./${component.component_slug}";\n${rawDemoCode}`
-        setDemoCode(updatedDemoCode)
-
-        const componentDependencies = JSON.parse(component.dependencies || "{}")
-        const componentDemoDependencies = JSON.parse(
-          component.demo_dependencies || "{}",
-        )
-        const componentInternalDependencies = JSON.parse(
-          component.internal_dependencies || "{}",
-        )
-        setDependencies(componentDependencies)
-        setDemoDependencies(componentDemoDependencies)
-
-        await fetchInternalDependencies(componentInternalDependencies)
-      } catch (error) {
-        console.error("Error in fetchCode:", error)
-      } finally {
-        clearTimeout(loadingTimeout)
-        setIsLoading(false)
-        setShowLoading(false)
-      }
-    }
-
-    fetchCode()
-  }, [component])
-
-  async function fetchInternalDependencies(
-    componentInternalDependencies: Record<string, string | string[]>,
-  ) {
-    const internalDepsCode: Record<string, string> = {}
-    for (const [path, slugs] of Object.entries(componentInternalDependencies)) {
-      if (typeof slugs === "string") {
-        await fetchSingleDependency(path, slugs, internalDepsCode)
-      } else if (Array.isArray(slugs)) {
-        for (const slug of slugs) {
-          await fetchSingleDependency(path, slug, internalDepsCode)
-        }
-      }
-    }
-    setInternalDependenciesCode(internalDepsCode)
-  }
-
-  async function fetchSingleDependency(
-    path: string,
-    slug: string,
-    internalDepsCode: Record<string, string>,
-  ) {
-    try {
-      const { data, error } = await supabase.storage
-        .from("components")
-        .download(`${slug}-code.tsx`)
-
-      if (error) {
-        console.error(`Error loading internal dependency ${slug}:`, error)
-        return
-      }
-
-      const dependencyCode = await data.text()
-      const fullPath = path.endsWith(".tsx") ? path : `${path}.tsx`
-      internalDepsCode[fullPath] = dependencyCode
-    } catch (error) {
-      console.error(`Error fetching dependency ${slug}:`, error)
-    }
-  }
-
-  const demoComponentName = component.demo_component_name
-
-  const files = generateFiles({
-    demoComponentName,
-    componentSlug: component.component_slug,
-    code,
-    demoCode,
-  })
 
   const handleShareClick = async () => {
     const url = `${window.location.origin}/${component.user.username}/${component.component_slug}`
@@ -171,24 +69,24 @@ export default function ComponentPage({
     }
   }, [])
 
-    useEffect(() => {
-      const keyDownHandler = (e: KeyboardEvent) => {
-        if (e.code === "BracketLeft") {
-          e.preventDefault()
-          setIsShowCode(true)
-        }
-      }
-
-      window.addEventListener("keydown", keyDownHandler)
-
-      return () => {
-        window.removeEventListener("keydown", keyDownHandler)
-      }
-    }, [])
-  
   useEffect(() => {
     const keyDownHandler = (e: KeyboardEvent) => {
-      if (e.code === "C" && (e.shiftKey )  && (e.metaKey || e.ctrlKey)) {
+      if (e.code === "BracketLeft") {
+        e.preventDefault()
+        setIsShowCode(true)
+      }
+    }
+
+    window.addEventListener("keydown", keyDownHandler)
+
+    return () => {
+      window.removeEventListener("keydown", keyDownHandler)
+    }
+  }, [])
+
+  useEffect(() => {
+    const keyDownHandler = (e: KeyboardEvent) => {
+      if (e.code === "C" && e.shiftKey && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
         handleShareClick()
       }
@@ -306,29 +204,18 @@ export default function ComponentPage({
           </div>
         </div>
       </div>
-      {isLoading && showLoading && <LoadingSpinner />}
-      {!isLoading && (
-        <div className="flex w-full !flex-grow">
-          <ComponentPreview
-            files={files}
-            dependencies={dependencies}
-            demoDependencies={demoDependencies}
-            demoComponentName={demoComponentName}
-            internalDependencies={internalDependenciesCode}
-            installUrl={component.install_url}
-            componentSlug={component.component_slug}
-            componentInfo={component}
-          />
-        </div>
-      )}
+      <div className="flex w-full !flex-grow">
+        <ComponentPreview
+          files={files}
+          dependencies={dependencies}
+          demoDependencies={demoDependencies}
+          demoComponentName={demoComponentName}
+          internalDependencies={internalDependencies}
+          installUrl={component.install_url}
+          componentSlug={component.component_slug}
+          componentInfo={component}
+        />
+      </div>
     </div>
   )
-}
-
-function parseComponentNames(componentName: string): string[] {
-  try {
-    return JSON.parse(componentName)
-  } catch {
-    return [componentName]
-  }
 }

@@ -24,7 +24,7 @@ const LazyPreview = React.lazy(() =>
 )
 
 
-interface ComponentPreviewtProps {
+interface ComponentPreviewProps {
   files: Record<string, string>
   dependencies: Record<string, string>
   demoDependencies: Record<string, string>
@@ -42,7 +42,7 @@ export default function ComponentPreview({
   internalDependencies,
   componentSlug,
   componentInfo,
-}: ComponentPreviewtProps) {
+}: ComponentPreviewProps) {
   const [copied, setCopied] = useState(false)
   const [codeCopied, setCodeCopied] = useState(false)
   const [isHovering, setIsHovering] = useState(false)

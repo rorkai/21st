@@ -121,7 +121,7 @@ export function findInternalDependencies(
     parseAndExtractImports(componentCode)
     parseAndExtractImports(demoCode)
   } catch (error) {
-    console.error("Ошибка при анализе зависимостей:", error)
+    console.error("Error finding internal dependencies:", error)
   }
 
   return internalDeps
@@ -178,4 +178,24 @@ export function removeComponentImports(
     console.error("Error parsing demo code:", error)
     return { modifiedCode: demoCode, removedImports: [] }
   }
+}
+
+
+export function wrapExportInBraces(code: string): string {
+  // Find the last export statement in the file
+  const lastExportIndex = code.lastIndexOf("export")
+
+  if (lastExportIndex !== -1) {
+    // Get the content after the export keyword
+    let afterExport = code.slice(lastExportIndex + 6).trim()
+    // Remove any trailing semicolons
+    afterExport = afterExport.replace(/;$/, "")
+    // Check if it's already wrapped in braces
+    if (!afterExport.startsWith("{")) {
+      // Wrap the export in braces
+      return code.slice(0, lastExportIndex) + "export { " + afterExport + " };"
+    }
+  }
+
+  return code
 }

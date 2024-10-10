@@ -21,6 +21,7 @@ import {
   extractDemoComponentName,
   findInternalDependencies,
   removeComponentImports,
+  wrapExportInBraces,
 } from "../../utils/parsers"
 import Editor from "react-simple-code-editor"
 import { highlight, languages } from "prismjs"
@@ -330,6 +331,26 @@ export default function ComponentForm() {
     !!code.length &&
     !!demoCode.length
 
+  const [exportWrapped, setExportWrapped] = useState(false)
+
+  useEffect(() => {
+  if (exportWrapped) return
+
+  const code = form.getValues("code")
+  console.log("code in useEffect wrapExportInBraces", code)
+  if (!code) return
+
+  const modifiedCode = wrapExportInBraces(code)
+
+  if (modifiedCode !== code) {
+    form.setValue("code", modifiedCode)
+    console.log("modifiedCode in useEffect wrapExportInBraces", modifiedCode)
+    setExportWrapped(true)
+  } else {
+    setExportWrapped(true)
+  }
+}, [form.watch("code"), exportWrapped])
+
   useEffect(() => {
     if (!parsedComponentNames)
       return
@@ -393,6 +414,7 @@ export default function ComponentForm() {
                                 PASTE COMPONENT .TSX CODE HERE
                               </div>
                             )}
+                
                           <Editor
                             value={field.value}
                             onValueChange={(code) => {

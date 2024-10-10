@@ -428,17 +428,17 @@ export default function ComponentForm() {
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
                               exit={{ opacity: 0 }}
-                              transition={{ duration: 0.3, delay: 0.3 }}
+                              transition={{ duration: 0.3 }}
                               className="absolute p-2 border  rounded-md inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-start"
                             >
                               <div className="flex items-center gap-2 w-full">
                                 <div className="flex items-center justify-between w-full">
                                   <div className="flex items-center">
-                                    <div className="w-12 h-12 relative bg-white border p-1 rounded-md mr-4">
+                                    <div className="w-10 h-10 relative mr-2 items-center justify-center">
                                       <Image
                                         src="/tsx-file.svg"
-                                        width={32}
-                                        height={32}
+                                        width={40}
+                                        height={40}
                                         alt="TSX File"
                                       />
                                     </div>
@@ -531,11 +531,11 @@ export default function ComponentForm() {
                                   <div className="flex items-center gap-2 w-full">
                                     <div className="flex items-center justify-between w-full">
                                       <div className="flex items-center">
-                                        <div className="w-12 h-12 relative bg-white border p-1 rounded-md mr-4">
+                                        <div className="w-10 h-10 relative mr-2 items-center justify-center">
                                           <Image
                                             src="/demo-file.svg"
-                                            width={32}
-                                            height={32}
+                                            width={40}
+                                            height={40}
                                             alt="Demo File"
                                           />
                                         </div>

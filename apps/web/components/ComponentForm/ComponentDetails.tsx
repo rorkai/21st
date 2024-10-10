@@ -79,9 +79,6 @@ export function ComponentDetails({
     slug: form.watch("component_slug"),
   })
 
-  console.log("slugAvailable", slugAvailable)
-  console.log("componentSlug", form.watch("component_slug"))
-
   const [license, setLicense] = useState("mit")
   const [open, setOpen] = useState(false)
 
@@ -147,7 +144,7 @@ export function ComponentDetails({
           htmlFor="description"
           className="block text-sm font-medium text-gray-700"
         >
-          Description (optional)
+          Description
         </label>
         <Input
           id="description"

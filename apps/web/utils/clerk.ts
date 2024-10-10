@@ -21,8 +21,6 @@ export const createSupabaseClerkClient = (getToken?: () => Promise<string | null
             fetch: async (url, options = {}) => {
               const clerkToken = await getToken?.()
 
-              console.log("clerkToken", clerkToken)
-
               const headers = new Headers(options?.headers)
               headers.set("Authorization", `Bearer ${clerkToken}`)
 

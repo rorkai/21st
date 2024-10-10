@@ -8,7 +8,6 @@ interface HotkeyProps {
 
 export const Hotkey: React.FC<HotkeyProps> = ({ keys, isDarkBackground = false, modifier = false}) => {
   const textColor = isDarkBackground ? 'text-white' : 'text-black';
-  console.log(isDarkBackground)
   const borderColor = isDarkBackground ? 'border-gray-600' : 'border-gray-300';
   const isMac = typeof window !== 'undefined' && window.navigator.userAgent.includes('Macintosh');
   const modifierText = isMac ? "⌘" : "⌃"

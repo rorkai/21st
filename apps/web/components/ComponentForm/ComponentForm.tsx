@@ -124,7 +124,6 @@ export default function ComponentForm() {
         const componentNames = extractComponentNames(code)
         const dependencies = extractDependencies(code)
         const demoDependencies = extractDependencies(demoCode)
-        console.log("demoDependencies + code", demoDependencies, demoCode)
         const demoComponentName = extractDemoComponentName(demoCode)
         const internalDependencies = findInternalDependencies(
           code,
@@ -158,8 +157,6 @@ export default function ComponentForm() {
       alert("You must be logged in to add a component.")
       return
     }
-
-    console.log("onSubmit called with data:", data)
 
     if (Object.values(internalDependencies ?? {}).some((slug) => !slug)) {
       console.error("Internal dependencies not specified")
@@ -332,8 +329,6 @@ export default function ComponentForm() {
     importsToRemove !== undefined &&
     !!code.length &&
     !!demoCode.length
-
-  console.log(`isPreviewReady: ${isPreviewReady}`)
 
   useEffect(() => {
     if (!parsedComponentNames)

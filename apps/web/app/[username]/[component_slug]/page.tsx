@@ -27,7 +27,6 @@ export default async function ComponentPageLayout({
   }) {
   const { username, component_slug } = params
 
-  console.log("ComponentPage called with params:", params)
 
   const { data: component, error } = await getComponent(supabaseWithAdminAccess, username, component_slug)
   
@@ -36,7 +35,6 @@ export default async function ComponentPageLayout({
   }
 
   if (!component) {
-    console.log("Component not found, redirecting to 404")
     notFound()
   }
 

@@ -18,8 +18,6 @@ export function extractComponentNames(code: string): string[] {
 
   const uniqueNames = [...new Set(componentNames)]
 
-  console.log("Extracted exported names:", uniqueNames)
-
   return uniqueNames.filter((name): name is string => name !== undefined)
 }
 
@@ -30,7 +28,6 @@ export function extractDemoComponentName(code: string): string {
 }
 
 export function extractDependencies(code: string): Record<string, string> {
-  console.log("code in extractDependencies", code)
   const dependencies: Record<string, string> = {}
   try {
     const ast = parse(code, {
@@ -86,7 +83,6 @@ export function extractDependencies(code: string): Record<string, string> {
         }
       },
     })
-    console.log("dependencies in extractDependencies", dependencies)
   } catch (error) {
     console.error("Error parsing dependencies:", error)
   }
@@ -133,6 +129,7 @@ export function removeComponentImports(
   demoCode: string,
   componentNames: string[],
 ): { modifiedCode: string; removedImports: string[] } {
+  
   try {
     const ast = parse(demoCode, {
       sourceType: "module",
@@ -145,11 +142,12 @@ export function removeComponentImports(
     traverse(ast, {
       ImportDeclaration(path) {
         const specifiers = path.node.specifiers
-        const importedNames = specifiers.map((s) =>
-          t.isImportSpecifier(s) && t.isIdentifier(s.imported)
-            ? s.imported.name
-            : "",
-        )
+        const importedNames = specifiers.map((s) => {
+          if (t.isImportDefaultSpecifier(s) || t.isImportSpecifier(s)) {
+            return s.local.name
+          }
+          return ""
+        })
 
         if (importedNames.some((name) => componentNames.includes(name))) {
           importsToDrop.push({
@@ -173,6 +171,7 @@ export function removeComponentImports(
     }
 
     return { modifiedCode: modifiedCode.trim(), removedImports }
+    
   } catch (error) {
     console.error("Error parsing demo code:", error)
     return { modifiedCode: demoCode, removedImports: [] }

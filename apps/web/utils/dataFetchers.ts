@@ -30,7 +30,6 @@ export async function getComponent(
     return { data: null, error: new Error("Supabase client is null") }
   }
 
-  console.log("getComponent called with username:", username, "and slug:", slug)
   const { data, error } = await supabase
     .from("components")
     .select(

@@ -31,7 +31,6 @@ export const Info: React.FC<{ info: Component }> = ({ info }) => {
 
   const { data: dependencyComponents, isLoading: isLoadingDependencies } =
     useDependencyComponents(componentDependencies)
-  console.log("dependencyComponents are :", dependencyComponents)
 
   const copyAllDependencies = () => {
     const dependenciesString = Object.entries({

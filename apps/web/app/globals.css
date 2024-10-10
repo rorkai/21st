@@ -13,11 +13,6 @@ body {
   margin: 0;
 }
 
-.css-13cymwt-control {
-  border-color: transparent !important;
-  border-width: 0px !important;
-}
-
 a {
   color: inherit;
   text-decoration: none;
@@ -53,6 +48,27 @@ button.sp-icon-standalone.sp-button {
 
 .css-v7duua:hover {
   background-color: #ffe4dd !important;
+}
+
+
+.css-t3ipsp-control {
+  border-color: transparent !important;
+  box-shadow: 0 0 0 1px black !important;
+  border-radius: 6px !important;
+}
+
+.css-b62m3t-container {
+  border-radius: 6px !important;
+  height: 36px !important;
+}
+
+.css-13cymwt-control {
+  border-color: hsl(var(--input)) !important;
+  border-width: 1px !important;
+  border-radius: 6px !important;
+  min-height: 36px !important;
+  height: 36px !important;
+
 }
 
 .sp-preview-container {

@@ -50,8 +50,10 @@ export function extractExportedTypes(code: string): string[] {
 
 export function extractDemoComponentName(code: string): string {
   if (!code) return ""
-  const match = code.match(/export\s+function\s+([A-Z]\w+)/)
-  return match && match[1] ? match[1] : ""
+  const match = code.match(
+    /export\s+(default\s+)?(async\s+)?function\s+([A-Z]\w+)/,
+  )
+  return match && match[3] ? match[3] : ""
 }
 
 export function extractDependencies(code: string): Record<string, string> {
@@ -210,6 +212,15 @@ export function removeComponentImports(
     return { modifiedCode: demoCode, removedImports: [] }
   }
 }
+
+export function removeAsyncFromExport(code: string): string {
+  const asyncExportRegex = /export\s+async\s+function/g
+  const modifiedCode = code.replace(asyncExportRegex, "export function")
+  console.log("Original code:", code)
+  console.log("Modified code:", modifiedCode)
+  return modifiedCode
+}
+
 
 
 export function wrapExportInBraces(code: string): string {

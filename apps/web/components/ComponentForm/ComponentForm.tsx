@@ -22,6 +22,7 @@ import {
   findInternalDependencies,
   removeComponentImports,
   wrapExportInBraces,
+  removeAsyncFromExport,
 } from "../../utils/parsers"
 import Editor from "react-simple-code-editor"
 import { highlight, languages } from "prismjs"
@@ -349,7 +350,23 @@ export default function ComponentForm() {
   } else {
     setExportWrapped(true)
   }
-}, [form.watch("code"), exportWrapped])
+  }, [form.watch("code"), exportWrapped])
+
+  useEffect(() => {
+    const demoCode = form.getValues("demo_code")
+    if (!demoCode) return
+
+    console.log("Original demo code:", demoCode)
+
+    const modifiedDemoCode = removeAsyncFromExport(demoCode)
+
+    if (modifiedDemoCode !== demoCode) {
+      form.setValue("demo_code", modifiedDemoCode)
+      console.log("Async removed from export. New demo code:", modifiedDemoCode)
+    } else {
+      console.log("No async exports found or no changes made.")
+    }
+  }, [form.watch("demo_code")])
 
   useEffect(() => {
     if (!parsedComponentNames)

@@ -12,7 +12,7 @@ export function generateFiles({
   const files = {
     "/App.tsx": `
 import React from 'react';
-import { ${demoComponentName} } from './Demo';
+import { ${demoComponentName} } from './demo';
 
 export default function App() {
   return (
@@ -43,7 +43,7 @@ export default function App() {
 }
 `,
     [`/${componentSlug}.tsx`]: code,
-    "/Demo.tsx": demoCode,
+    "/demo.tsx": demoCode,
     "/lib/utils.ts": `
 export function cn(...inputs: (string | undefined)[]) {
   return inputs.filter(Boolean).join(' ');

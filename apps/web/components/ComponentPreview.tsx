@@ -82,6 +82,11 @@ root.render(
       file.endsWith(`${componentSlug}.tsx`),
     ) || Object.keys(updatedFiles)[0]
 
+  const demoComponentFile =
+    Object.keys(updatedFiles).find((file) =>
+      file.endsWith(`demo.tsx`),
+    ) || Object.keys(updatedFiles)[0]
+
   useEffect(() => {
     if (mainComponentFile) {
       setActiveFile(mainComponentFile)
@@ -90,6 +95,7 @@ root.render(
 
   const visibleFiles = [
     mainComponentFile,
+    demoComponentFile,
     ...Object.keys(internalDependencies),
   ].filter((file): file is string => file !== undefined)
 

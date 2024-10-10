@@ -17,6 +17,6 @@
     "**/*.tsx",
     "global.d.ts",
     ".next/types/**/*.ts"
-  ],
+, "app/css/combinedCSS.js"  ],
   "exclude": ["node_modules"]
 }

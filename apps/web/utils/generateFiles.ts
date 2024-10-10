@@ -35,7 +35,7 @@ export default function App() {
           }
         \`}</style>
       </div>
-      <div className="flex justify-center items-center max-w-[600px] w-full h-full max-h-[600px] p-4 relative">
+      <div className="flex w-full min-w-[300px] md:w-auto justify-center items-center p-4 relative">
         <${demoComponentName} />
       </div>
     </div>

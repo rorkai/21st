@@ -146,7 +146,7 @@ root.render(
     options: {
       externalResources: [
         "https://cdn.tailwindcss.com",
-        "https://vucvdpamtrjkzmubwlts.supabase.co/storage/v1/object/public/css/compiled-tailwind.css",
+        "https://vucvdpamtrjkzmubwlts.supabase.co/storage/v1/object/public/css/combined-tailwind.css",
       ],
       activeFile: activeFile || mainComponentFile || "",
       visibleFiles,

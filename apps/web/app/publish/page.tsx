@@ -5,7 +5,6 @@ import { useUser, SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import ComponentForm from "@/components/ComponentForm/ComponentForm"
 import { LoadingSpinner } from "@/components/Loading"
-import { Header } from "@/components/Header"
 import Head from "next/head"
 import { House } from "lucide-react"
 

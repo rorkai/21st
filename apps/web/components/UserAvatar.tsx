@@ -5,16 +5,18 @@ interface UserAvatarProps {
   src: string
   alt: string
   size?: number
+  isClickable?: boolean
 }
 
 export const UserAvatar: React.FC<UserAvatarProps> = ({
   src,
   alt,
   size = 40,
+  isClickable,
 }) => {
   return (
     <div
-      className="relative rounded-full overflow-hidden"
+      className={`relative rounded-full overflow-hidden ${isClickable ? "group" : ""}`}
       style={{ width: size, height: size }}
     >
       <div
@@ -26,6 +28,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
           opacity: 0.5,
         }}
       />
+      <div className="shimmer-effect" />
       <img
         src={src}
         alt={alt}

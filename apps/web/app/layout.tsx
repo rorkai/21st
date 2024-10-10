@@ -1,9 +1,9 @@
 // app/layout.tsx
-import type { Metadata } from "next"
 import localFont from "next/font/local"
 import "./globals.css"
 import { Providers } from "./providers"
 import { Toaster } from "@/components/ui/toaster"
+import { TooltipProvider } from "@/components/ui/tooltip"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -25,7 +25,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} px-4 h-full`}
     >
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <TooltipProvider>{children}</TooltipProvider>
+        </Providers>
         <Toaster />
       </body>
     </html>

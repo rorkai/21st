@@ -47,15 +47,7 @@ interface ComponentDetailsProps {
   
 }
 
-const licenses = [
-  { value: "mit", label: "MIT License" },
-  { value: "apache-2.0", label: "Apache License 2.0" },
-  { value: "bsd-3-clause", label: "BSD 3-Clause License" },
-  { value: "lgpl", label: "GNU Lesser General Public License (LGPL)" },
-  { value: "mpl-2.0", label: "Mozilla Public License 2.0 (MPL)" },
-  { value: "isc", label: "ISC License" },
-  { value: "unlicense", label: "Unlicense" },
-]
+import { licenses } from "@/utils/licenses"
 
 export function ComponentDetails({
   form,

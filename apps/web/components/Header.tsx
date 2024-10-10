@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
 import React from "react"
-import { Hotkey } from "./ui/hotkey"
 
 interface HeaderProps {
   componentSlug?: string
@@ -25,7 +24,7 @@ export function Header({ componentSlug, username }: HeaderProps) {
       <div className="flex items-center gap-4">
         <div className="flex items-center">
           <Link href="/" className="flex items-center">
-            <Image src="/cc-logo.svg" alt="Logo" width={24} height={24} />
+            <Image src="/cc-logo-circle.svg" alt="Logo" width={24} height={24} />
           </Link>
           {!isHomePage && username && (
             <>

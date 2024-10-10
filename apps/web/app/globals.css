@@ -125,6 +125,36 @@ overflow: auto;
   overflow-y: auto;
 }
 
+.shimmer-effect {
+  box-sizing: border-box;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.36);
+  position: absolute;
+  width: 25%;
+  height: 100%;
+  transition: 200ms ease-out;
+  transform: skewX(-45deg) translateX(-300%);
+}
+
+.group:hover .shimmer-effect {
+  transform: skewX(-45deg) translateX(500%);
+}
+
+.shimmer-effect::after {
+  display: block;
+  box-sizing: border-box;
+  content: "";
+  position: absolute;
+  width: 400%;
+  height: 100%;
+  transform: skewX(45deg) translateX(75%);
+  transition: 200ms ease-out;
+  border-width: 2px;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.36);
+  border-radius: 50%;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

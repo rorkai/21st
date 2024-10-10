@@ -48,25 +48,31 @@ export default async function ComponentPageLayout({
   )
 
   const componentAndDemoCodePromises = [
-    supabaseWithAdminAccess.storage
+    fetch(
+      supabaseWithAdminAccess.storage
       .from("components")
-      .download(`${component.component_slug}-code.tsx`)
-      .then(async ({ data, error }) => {
-        if (!data || error) {
-          console.error(`Error loading component code:`, error)
+      .getPublicUrl(`${component.component_slug}-code.tsx`).data.publicUrl
+    )
+      .then(async (response) => {
+        if (!response.ok) {
+          console.error(`Error loading component code:`, response.statusText)
+          return { data: null, error: new Error(response.statusText) }
         }
-        const code = await data!.text()
-        return { data: code, error }
+        const code = await response.text()
+        return { data: code, error: null }
       }),
-    supabaseWithAdminAccess.storage
+    fetch(
+      supabaseWithAdminAccess.storage
       .from("components")
-      .download(`${component.component_slug}-demo.tsx`)
-      .then(async ({ data, error }) => {
-        if (!data || error) {
-          console.error(`Error loading component demo code:`, error)
+      .getPublicUrl(`${component.component_slug}-demo.tsx`).data.publicUrl
+    )
+      .then(async (response) => {
+        if (!response.ok) {
+          console.error(`Error loading component demo code:`, response.statusText)
+          return { data: null, error: new Error(response.statusText) }
         }
-        const demoCode = await data!.text()
-        return { data: demoCode, error }
+        const demoCode = await response.text()
+        return { data: demoCode, error: null }
       }),
   ]
 
@@ -75,14 +81,21 @@ export default async function ComponentPageLayout({
   ).flatMap(([path, slugs]) => {
     const slugArray = Array.isArray(slugs) ? slugs : [slugs]
     return slugArray.map(async (slug) => {
-      const { data, error } = await supabaseWithAdminAccess.storage
+      const response = await fetch(
+        supabaseWithAdminAccess.storage
         .from("components")
-        .download(`${slug}-code.tsx`)
-      if (!data || error) {
+        .getPublicUrl(`${slug}-code.tsx`).data.publicUrl
+      )
+      if (!response.ok) {
+        console.error(`Error downloading file for ${slug}:`, response.statusText)
+        return { data: null, error: new Error(response.statusText) }
+      }
+
+      const code = await response.text()
+      if (!code || error) {
         console.error(`Error loading internal dependency ${slug}:`, error)
         return { data: null, error }
       }
-      const code = await data.text()
       const fullPath = path.endsWith(".tsx") ? path : `${path}.tsx`
       return { data: { [fullPath]: code }, error: null }
     })

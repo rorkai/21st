@@ -24,22 +24,28 @@ export function extractComponentNames(code: string): string[] {
 }
 
 export function extractExportedTypes(code: string): string[] {
-  const typeRegex =
-    /export\s+(?:type|interface)\s+(\w+)|export\s*{\s*(?:type|interface)?\s*([^}]+)\s*}/g
+  const typeRegex = /export\s+(type|interface)\s+(\w+)(?![=(])/g
+  const exportedTypeRegex = /export\s*{\s*(?:type|interface)?\s*([^}]+)\s*}/g
 
   const matches = Array.from(code.matchAll(typeRegex))
-  const typeNames = matches.flatMap((match) => {
-    if (match[1]) {
-      return [match[1]]
-    } else if (match[2]) {
-      return match[2].split(",").map((name) => name.trim().split(/\s+as\s+/)[0])
-    }
-    return []
-  })
+  const exportedMatches = Array.from(code.matchAll(exportedTypeRegex))
 
-  const uniqueNames = [...new Set(typeNames)]
+  const typeNames = matches.map((match) => match[2])
+  const exportedNames = exportedMatches.flatMap((match) =>
+    match[1]?.split(",").map((name) => {
+      const trimmed = name.trim()
+      return trimmed.startsWith("type ") || trimmed.startsWith("interface ")
+        ? trimmed.split(/\s+/)[1]
+        : trimmed.split(/\s+as\s+/)[0]
+    }),
+  )
 
-  return uniqueNames.filter((name): name is string => name !== undefined)
+  const uniqueNames = [...new Set([...typeNames, ...exportedNames])]
+
+  return uniqueNames.filter(
+    (name): name is string =>
+      name !== undefined && !name.includes("(") && !name.match(/^[A-Z]/), // Исключаем имена, начинающиеся с заглавной буквы (вероятно, компоненты)
+  )
 }
 
 export function extractDemoComponentName(code: string): string {

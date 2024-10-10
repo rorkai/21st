@@ -52,14 +52,16 @@ export const prepareFilesForPreview = (code: string, demoCode: string) => {
   const componentNames = extractComponentNames(code)
   const types = extractExportedTypes(code)
   const demoComponentName = extractDemoComponentName(demoCode)
-  console.log(componentNames)
-  console.log(types)
+  console.log("componentNames", componentNames)
+  console.log("types", types)
 
   const updatedDemoCode = `
   import { ${componentNames.join(", ")} } from "./Component";\n
-  import { ${types.join(", ")} } from "./Component";\n
+  ${types.length > 0 ? `import { ${types.join(", ")} } from "./Component";\n` : ''}
   ${demoCode}
   `
+
+  console.log(updatedDemoCode)
 
   const files = generateFiles({
     demoComponentName,

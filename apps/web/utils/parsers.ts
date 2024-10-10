@@ -23,6 +23,25 @@ export function extractComponentNames(code: string): string[] {
   return uniqueNames.filter((name): name is string => name !== undefined)
 }
 
+export function extractExportedTypes(code: string): string[] {
+  const typeRegex =
+    /export\s+(?:type|interface)\s+(\w+)|export\s*{\s*(?:type|interface)?\s*([^}]+)\s*}/g
+
+  const matches = Array.from(code.matchAll(typeRegex))
+  const typeNames = matches.flatMap((match) => {
+    if (match[1]) {
+      return [match[1]]
+    } else if (match[2]) {
+      return match[2].split(",").map((name) => name.trim().split(/\s+as\s+/)[0])
+    }
+    return []
+  })
+
+  const uniqueNames = [...new Set(typeNames)]
+
+  return uniqueNames.filter((name): name is string => name !== undefined)
+}
+
 export function extractDemoComponentName(code: string): string {
   if (!code) return ""
   const match = code.match(/export\s+function\s+([A-Z]\w+)/)
@@ -131,7 +150,6 @@ export function removeComponentImports(
   demoCode: string,
   componentNames: string[],
 ): { modifiedCode: string; removedImports: string[] } {
-  
   try {
     const ast = parse(demoCode, {
       sourceType: "module",
@@ -151,7 +169,15 @@ export function removeComponentImports(
           return ""
         })
 
-        if (importedNames.some((name) => componentNames.includes(name))) {
+        const shouldDropImport = importedNames.some(
+          (name) =>
+            componentNames.includes(name) ||
+            componentNames.some((componentName) =>
+              name.startsWith(componentName),
+            ),
+        )
+
+        if (shouldDropImport) {
           importsToDrop.push({
             start: path.node.start!,
             end: path.node.end!,
@@ -173,7 +199,6 @@ export function removeComponentImports(
     }
 
     return { modifiedCode: modifiedCode.trim(), removedImports }
-    
   } catch (error) {
     console.error("Error parsing demo code:", error)
     return { modifiedCode: demoCode, removedImports: [] }

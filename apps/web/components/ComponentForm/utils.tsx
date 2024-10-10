@@ -3,6 +3,7 @@ import {
   extractComponentNames,
   extractDemoComponentName,
   extractDependencies,
+  extractExportedTypes,
 } from "@/utils/parsers"
 import { generateFiles } from "@/utils/generateFiles"
 
@@ -49,9 +50,16 @@ export const formatComponentName = (name: string): string => {
 
 export const prepareFilesForPreview = (code: string, demoCode: string) => {
   const componentNames = extractComponentNames(code)
+  const types = extractExportedTypes(code)
   const demoComponentName = extractDemoComponentName(demoCode)
+  console.log(componentNames)
+  console.log(types)
 
-  const updatedDemoCode = `import { ${componentNames.join(", ")} } from "./Component";\n${demoCode}`
+  const updatedDemoCode = `
+  import { ${componentNames.join(", ")} } from "./Component";\n
+  import { ${types.join(", ")} } from "./Component";\n
+  ${demoCode}
+  `
 
   const files = generateFiles({
     demoComponentName,

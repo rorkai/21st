@@ -164,7 +164,7 @@ export function ComponentDetails({
         {!previewImage ? (
           <div
             {...getRootProps()}
-            className={`mt-1 w-full border border-dashed border-gray-300 bg-white rounded-md p-8 text-center cursor-pointer hover:border-gray-400 transition-colors`}
+            className={`mt-1 w-full border border-dashed border-gray-300 bg-white rounded-md p-8 text-center cursor-pointer hover:border-gray-400 transition-colors relative`}
           >
             <input {...getInputProps()} id="preview_image" />
             <CloudUpload strokeWidth={1.5} className="mx-auto h-10 w-10" />
@@ -176,7 +176,7 @@ export function ComponentDetails({
             </p>
             <p className="mt-1 text-xs text-gray-500">PNG, JPEG (max. 5MB)</p>
             {isDragActive && (
-              <div className="absolute inset-0 z-9999 bg-white bg-opacity-90 flex items-center justify-center rounded-md">
+              <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center rounded-md">
                 <p className="text-sm text-gray-600">Drop image here</p>
               </div>
             )}

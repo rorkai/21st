@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "build:css": "tailwindcss -i ./input.css -o ./public/compiled-tailwind.css --minify",
-    "combine-css": "node app/css/combinedCSS.js"
+    "combine-css": "node css/combinedCSS.js"
   },
   "dependencies": {
     "@babel/parser": "^7.25.6",

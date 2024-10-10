@@ -19,7 +19,7 @@ export const Hotkey: React.FC<HotkeyProps> = ({ keys, isDarkBackground = false, 
       {displayKeys.map((key, index) => (
         <kbd
           key={index}
-          className={`inline-flex items-center justify-center rounded border ${borderColor} ${textColor} font-sans text-[10px] font-medium h-4 w-4 ${index === 0 ? 'ml-2' : 'ml-[1px]'}`}
+          className={`inline-flex items-center justify-center rounded border ${borderColor} ${textColor} font-sans text-[10px] font-medium h-4 w-4 ${index === 0 ? 'ml-2' : 'ml-[1px]'} bg-gradient-to-bl from-transparent via-transparent to-white/20 bg-[length:100%_130%] bg-[0_100%]`}
         >
           {key}
         </kbd>

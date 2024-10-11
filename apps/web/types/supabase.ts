@@ -2,8 +2,8 @@ import { User, Component } from "./types"
 
 export interface ComponentOwnerData {
   user: {
-    username: string;
-  };
+    username: string
+  }
 }
 
 export type GenericView = {

@@ -221,8 +221,6 @@ export function removeAsyncFromExport(code: string): string {
   return modifiedCode
 }
 
-
-
 export function wrapExportInBraces(code: string): string {
   // Find the last export statement in the file
   const lastExportIndex = code.lastIndexOf("export")

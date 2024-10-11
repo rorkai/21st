@@ -57,7 +57,7 @@ export const prepareFilesForPreview = (code: string, demoCode: string) => {
 
   const updatedDemoCode = `
   import { ${componentNames.join(", ")} } from "./Component";\n
-  ${types.length > 0 ? `import { ${types.join(", ")} } from "./Component";\n` : ''}
+  ${types.length > 0 ? `import { ${types.join(", ")} } from "./Component";\n` : ""}
   ${demoCode}
   `
 

@@ -23,7 +23,6 @@ const LazyPreview = React.lazy(() =>
   })),
 )
 
-
 interface ComponentPreviewProps {
   files: Record<string, string>
   dependencies: Record<string, string>
@@ -83,9 +82,8 @@ root.render(
     ) || Object.keys(updatedFiles)[0]
 
   const demoComponentFile =
-    Object.keys(updatedFiles).find((file) =>
-      file.endsWith(`demo.tsx`),
-    ) || Object.keys(updatedFiles)[0]
+    Object.keys(updatedFiles).find((file) => file.endsWith(`demo.tsx`)) ||
+    Object.keys(updatedFiles)[0]
 
   useEffect(() => {
     if (mainComponentFile) {

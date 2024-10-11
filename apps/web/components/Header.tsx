@@ -8,7 +8,6 @@ import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
 import React from "react"
 import { motion } from "framer-motion"
 
-
 interface HeaderProps {
   componentSlug?: string
   username?: string
@@ -18,8 +17,6 @@ export function Header({ componentSlug, username }: HeaderProps) {
   const pathname = usePathname()
   const isHomePage = pathname === "/"
   const isPublishPage = pathname === "/publish"
-
-
 
   return (
     <header className="flex fixed top-0 left-0 right-0 z-50 items-center justify-between border-b border-gray-200 px-4 py-3 bg-white">

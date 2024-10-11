@@ -58,7 +58,7 @@ export const uploadPreviewImageToR2 = async (
     })
 
     await r2Client.send(command)
-  
+
     const publicUrl = `${process.env.NEXT_PUBLIC_CDN_URL}/${fileName}`
 
     return publicUrl
@@ -67,7 +67,6 @@ export const uploadPreviewImageToR2 = async (
     throw error
   }
 }
-
 
 export const handleFileChange = (
   event: React.ChangeEvent<HTMLInputElement>,

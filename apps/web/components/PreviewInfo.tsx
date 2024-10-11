@@ -13,7 +13,11 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export const Info: React.FC<{ info: Component }> = ({ info }) => {
   const [copiedLibDependencies, setCopiedLibDependencies] = useState(false)
@@ -206,11 +210,7 @@ export const Info: React.FC<{ info: Component }> = ({ info }) => {
                         </button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>
-                          {copiedDependency === dep
-                            ? "Copied!"
-                            : "Copy"}
-                        </p>
+                        <p>{copiedDependency === dep ? "Copied!" : "Copy"}</p>
                       </TooltipContent>
                     </Tooltip>
                   </div>

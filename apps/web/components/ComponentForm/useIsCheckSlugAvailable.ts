@@ -32,8 +32,10 @@ const checkSlugUnique = async (
   return data?.length === 0
 }
 
-
-export const generateUniqueSlug = async (supabase: SupabaseClient, baseName: string) => {
+export const generateUniqueSlug = async (
+  supabase: SupabaseClient,
+  baseName: string,
+) => {
   let newSlug = generateSlug(baseName)
   let isUnique = await checkSlugUnique(supabase, newSlug)
   let suffix = 1
@@ -47,13 +49,9 @@ export const generateUniqueSlug = async (supabase: SupabaseClient, baseName: str
   return newSlug
 }
 
-export const useIsCheckSlugAvailable = ({
-  slug,
-}: {
-  slug: string,
-}) => {
+export const useIsCheckSlugAvailable = ({ slug }: { slug: string }) => {
   const client = useClerkSupabaseClient()
-  
+
   const {
     data: isAvailable,
     isFetching: isChecking,
@@ -61,13 +59,13 @@ export const useIsCheckSlugAvailable = ({
   } = useQuery({
     queryKey: ["slugCheck", slug],
     queryFn: async () => {
-        if (!isValidSlug(slug)) {
-          return false
-        }
-        return await checkSlugUnique(client, slug)
-      },
-      enabled: !!slug,
-    })
+      if (!isValidSlug(slug)) {
+        return false
+      }
+      return await checkSlugUnique(client, slug)
+    },
+    enabled: !!slug,
+  })
 
   return {
     isAvailable,

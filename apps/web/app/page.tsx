@@ -10,8 +10,7 @@ import Head from "next/head"
 export default function HomePage() {
   const { data: components, isLoading } = useComponents()
   // eslint-disable-next-line no-unused-vars
-  
-  
+
   const metadata: Metadata = {
     title: "Home | Component Community",
     description: "Discover and share code components with the community.",

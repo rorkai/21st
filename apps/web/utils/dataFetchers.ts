@@ -3,21 +3,10 @@ import { useQuery } from "@tanstack/react-query"
 import { generateSlug } from "@/components/ComponentForm/useIsCheckSlugAvailable"
 import { SupabaseClient } from "@supabase/supabase-js"
 import { useClerkSupabaseClient } from "./clerk"
-import { ComponentOwnerData } from "@/types/supabase"
-
-const userFields = `
-  id,
-  username,
-  image_url,
-  name,
-  email,
-  created_at,
-  updated_at
-`
 
 const componentFields = `
   *,
-  user:users!user_id (${userFields})
+  user:users!user_id (*)
 `
 
 export async function getComponent(
@@ -61,7 +50,7 @@ export async function getUserData(
   try {
     const { data, error } = await supabase
       .from("users")
-      .select(userFields)
+      .select("*")
       .eq("username", username)
       .single()
 
@@ -284,7 +273,6 @@ export async function fetchDependencyComponents(
   supabase: SupabaseClient,
   dependencySlugs: string[],
 ): Promise<Component[]> {
-
   const components = await Promise.all(
     dependencySlugs.map(async (slug) => {
       try {

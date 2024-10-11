@@ -26,8 +26,7 @@ export async function GET(
     const codePath = `${component_slug}-code.tsx`
 
     const { data: codeContent, error: codeError } =
-      await supabaseWithAdminAccess
-        .storage
+      await supabaseWithAdminAccess.storage
         .from("components")
         .download(codePath)
 

@@ -4,11 +4,7 @@ import React, { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
-import {
-  uploadToR2,
-  uploadPreviewImageToR2,
-  handleFileChange,
-} from "./actions"
+import { uploadToR2, uploadPreviewImageToR2, handleFileChange } from "./actions"
 import {
   formSchema,
   FormData,
@@ -50,10 +46,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 
-import {
-  addComponent,
-  addTagsToComponent,
-} from "@/utils/dataFetchers"
+import { addComponent, addTagsToComponent } from "@/utils/dataFetchers"
 
 import { ComponentDetails } from "./ComponentDetails"
 import { motion, AnimatePresence } from "framer-motion"
@@ -118,7 +111,9 @@ export default function ComponentForm() {
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [isEditMode, setIsEditMode] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [importsToRemove, setImportsToRemove] = useState<string[] | undefined>(undefined)
+  const [importsToRemove, setImportsToRemove] = useState<string[] | undefined>(
+    undefined,
+  )
 
   useEffect(() => {
     const updateDependencies = () => {
@@ -127,10 +122,7 @@ export default function ComponentForm() {
         const dependencies = extractDependencies(code)
         const demoDependencies = extractDependencies(demoCode)
         const demoComponentName = extractDemoComponentName(demoCode)
-        const internalDependencies = findInternalDependencies(
-          code,
-          demoCode,
-        )
+        const internalDependencies = findInternalDependencies(code, demoCode)
 
         setComponentDependencies({
           dependencies,
@@ -211,7 +203,11 @@ export default function ComponentForm() {
       const insertedData = await addComponent(client, componentData)
 
       if (insertedData && validTags) {
-        await addTagsToComponent(client, insertedData.id, validTags.filter((tag) => !!tag.slug) as Tag[])
+        await addTagsToComponent(
+          client,
+          insertedData.id,
+          validTags.filter((tag) => !!tag.slug) as Tag[],
+        )
         setIsSuccessDialogOpen(true)
       }
     } catch (error) {
@@ -233,10 +229,13 @@ export default function ComponentForm() {
     setIsSuccessDialogOpen(false)
   }
 
-
   useEffect(() => {
     const keyDownHandler = (e: KeyboardEvent) => {
-      if (isSuccessDialogOpen && e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+      if (
+        isSuccessDialogOpen &&
+        e.key === "Enter" &&
+        (e.metaKey || e.ctrlKey)
+      ) {
         e.preventDefault()
         handleGoToComponent()
       }
@@ -249,7 +248,6 @@ export default function ComponentForm() {
     }
   }, [isSuccessDialogOpen, handleGoToComponent])
 
-
   const handleAddAnother = () => {
     form.reset()
     setIsSuccessDialogOpen(false)
@@ -259,10 +257,7 @@ export default function ComponentForm() {
 
   useEffect(() => {
     const keyDownHandler = (e: KeyboardEvent) => {
-      if (
-        isSuccessDialogOpen &&
-        e.code === "KeyN" 
-      ) {
+      if (isSuccessDialogOpen && e.code === "KeyN") {
         e.preventDefault()
         handleAddAnother()
       }
@@ -274,7 +269,6 @@ export default function ComponentForm() {
       window.removeEventListener("keydown", keyDownHandler)
     }
   }, [isSuccessDialogOpen, handleGoToComponent])
-
 
   const [previewProps, setPreviewProps] = useState<{
     files: Record<string, string>
@@ -293,12 +287,7 @@ export default function ComponentForm() {
     } else {
       setPreviewProps(null)
     }
-  }, [
-    code,
-    demoCode,
-    internalDependencies,
-    importsToRemove,
-  ])
+  }, [code, demoCode, internalDependencies, importsToRemove])
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
@@ -308,10 +297,7 @@ export default function ComponentForm() {
 
   useEffect(() => {
     const keyDownHandler = (e: KeyboardEvent) => {
-      if (
-        e.code === "Enter" &&
-        (e.metaKey || e.ctrlKey)
-      ) {
+      if (e.code === "Enter" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
         handleSubmit(e as unknown as React.FormEvent)
       }
@@ -334,21 +320,21 @@ export default function ComponentForm() {
   const [exportWrapped, setExportWrapped] = useState(false)
 
   useEffect(() => {
-  if (exportWrapped) return
+    if (exportWrapped) return
 
-  const code = form.getValues("code")
-  console.log("code in useEffect wrapExportInBraces", code)
-  if (!code) return
+    const code = form.getValues("code")
+    console.log("code in useEffect wrapExportInBraces", code)
+    if (!code) return
 
-  const modifiedCode = wrapExportInBraces(code)
+    const modifiedCode = wrapExportInBraces(code)
 
-  if (modifiedCode !== code) {
-    form.setValue("code", modifiedCode)
-    console.log("modifiedCode in useEffect wrapExportInBraces", modifiedCode)
-    setExportWrapped(true)
-  } else {
-    setExportWrapped(true)
-  }
+    if (modifiedCode !== code) {
+      form.setValue("code", modifiedCode)
+      console.log("modifiedCode in useEffect wrapExportInBraces", modifiedCode)
+      setExportWrapped(true)
+    } else {
+      setExportWrapped(true)
+    }
   }, [form.watch("code"), exportWrapped])
 
   useEffect(() => {
@@ -368,8 +354,7 @@ export default function ComponentForm() {
   }, [form.watch("demo_code")])
 
   useEffect(() => {
-    if (!parsedComponentNames)
-      return
+    if (!parsedComponentNames) return
     const demoCode = form.getValues("demo_code")
     const { modifiedCode, removedImports } = removeComponentImports(
       demoCode,
@@ -384,15 +369,17 @@ export default function ComponentForm() {
   }, [form.watch("demo_code")])
 
   const getMainComponentName = () => {
-    if (!parsedComponentNames || parsedComponentNames.length === 0) return null;
-    
-    const capitalizedComponent = parsedComponentNames.find(name => /^[A-Z]/.test(name));
-    if (!capitalizedComponent) return null;
-    
-    return capitalizedComponent.replace(/([A-Z])/g, ' $1').trim();
-  };
+    if (!parsedComponentNames || parsedComponentNames.length === 0) return null
 
-  const mainComponentName = getMainComponentName();
+    const capitalizedComponent = parsedComponentNames.find((name) =>
+      /^[A-Z]/.test(name),
+    )
+    if (!capitalizedComponent) return null
+
+    return capitalizedComponent.replace(/([A-Z])/g, " $1").trim()
+  }
+
+  const mainComponentName = getMainComponentName()
 
   return (
     <>
@@ -430,7 +417,7 @@ export default function ComponentForm() {
                                 PASTE COMPONENT .TSX CODE HERE
                               </div>
                             )}
-                
+
                           <Editor
                             value={field.value}
                             onValueChange={(code) => {

@@ -16,7 +16,7 @@ export const createSupabaseClerkClientSSR = () => {
     {
       global: {
         fetch: async (url, options = {}) => {
-        const clerkToken = await getToken?.()
+          const clerkToken = await getToken?.()
 
           const headers = new Headers(options?.headers)
           headers.set("Authorization", `Bearer ${clerkToken}`)

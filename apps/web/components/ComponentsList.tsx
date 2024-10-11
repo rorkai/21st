@@ -8,11 +8,14 @@ interface ComponentsListProps {
 }
 
 export function ComponentsList({ components, isLoading }: ComponentsListProps) {
-
   return (
     <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-9 list-none pb-10">
       {components.map((component) => (
-        <ComponentCard key={component.id} component={component} isLoading={isLoading} />
+        <ComponentCard
+          key={component.id}
+          component={component}
+          isLoading={isLoading}
+        />
       ))}
     </div>
   )

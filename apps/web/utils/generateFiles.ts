@@ -16,7 +16,7 @@ import { ${demoComponentName} } from './demo';
 
 export default function App() {
   return (
-    <div className="flex justify-center items-center h-screen p-4 relative">
+    <div className="flex p-4 items-center h-screen m-auto justify-center">
       <div style={{
         position: 'absolute',
         inset: 0,

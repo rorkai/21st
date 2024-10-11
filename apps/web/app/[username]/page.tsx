@@ -5,12 +5,13 @@ import { Header } from "@/components/Header"
 import { getUserData, getUserComponents } from "@/utils/dataFetchers"
 import { UserAvatar } from "@/components/UserAvatar"
 import { supabaseWithAdminAccess } from "@/utils/supabase"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 
 export const generateMetadata = async ({
   params,
 }: {
   params: { username: string }
-  }) => {
+}) => {
   const user = await getUserData(supabaseWithAdminAccess, params.username)
   return {
     title: user
@@ -23,10 +24,10 @@ export default async function UserProfile({
   params,
 }: {
   params: { username: string }
-  }) {
+}) {
   const user = await getUserData(supabaseWithAdminAccess, params.username)
 
-  if (!user) {  
+  if (!user) {
     return <div>User not found</div>
   }
 
@@ -44,8 +45,32 @@ export default async function UserProfile({
                 alt={user.name}
                 size={184}
               />
-              <h1 className="mt-4 text-[44px] font-bold">{user.name}</h1>
-              <p className="text-[20px] text-gray-600">@{user.username}</p>
+              <h1 className="mt-4 text-[44px] leading-1 font-bold">
+                {user.name}
+              </h1>
+              <p className="text-[20px] leading-none text-gray-600">
+                @{user.username}
+              </p>
+              {!user.manually_added && (
+                <div className="flex flex-col mt-7 -ml-4">
+                  <Alert>
+                    <AlertTitle>
+                      This profile was created by 21st.dev
+                    </AlertTitle>
+                    <AlertDescription>
+                      To claim this profile, please contact{" "}
+                      <a
+                        href="https://x.com/serafimcloud"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:underline"
+                      >
+                        @serafimcloud
+                      </a>
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
             </div>
           </div>
           <div className="w-full md:w-[70%]">

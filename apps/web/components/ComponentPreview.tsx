@@ -249,7 +249,7 @@ root.render(
   }
 
   return (
-    <div className="h-full w-full flex gap-2 rounded-lg min-h-90vh">
+    <div className="h-full w-full flex gap-2 rounded-lg min-h-90vh md:flex-row flex-col">
       <SandpackProviderUnstyled {...providerProps}>
         <motion.div
           layout
@@ -261,7 +261,7 @@ root.render(
           </Suspense>
         </motion.div>
       </SandpackProviderUnstyled>
-      <div className="h-full w-full max-w-[30%] min-h-90vh overflow-hidden rounded-lg border border-[#efefef]">
+      <div className="h-full w-full md:max-w-[30%] min-h-90vh overflow-hidden rounded-lg border border-[#efefef]">
         <SandpackProvider {...providerProps}>
           <div ref={sandpackRef} className="h-full w-full flex relative">
             <SandpackLayout className="flex w-full flex-row gap-4">

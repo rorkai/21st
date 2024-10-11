@@ -3,11 +3,18 @@
 
 import React, { useEffect, useState } from "react"
 import dynamic from "next/dynamic"
-import { ChevronRight, Check, CodeXml, Info, Link as LinkIcon } from "lucide-react"
+import {
+  ChevronRight,
+  Check,
+  CodeXml,
+  Info,
+  Link as LinkIcon,
+} from "lucide-react"
 import { Component } from "@/types/types"
 import { UserAvatar } from "./UserAvatar"
 import { atom, useAtom } from "jotai"
 import Image from "next/image"
+import { motion } from "framer-motion"
 import Link from "next/link"
 import {
   Tooltip,
@@ -103,18 +110,23 @@ export default function ComponentPage({
     <div className="flex flex-col gap-2 rounded-lg p-4 h-[98vh] w-full">
       <div className="flex justify-between items-center">
         <div className="flex gap-1 items-center">
-          <Link
-            href="/"
-            className="flex min-w-[20px] min-h-[20px] items-center cursor-pointer"
+          <motion.div
+            layoutId="logo"
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
           >
-            <Image
-              src="/cc-logo-circle.svg"
-              alt="Logo"
-              width={20}
-              height={20}
-              sizes="(min-height: 20px) 100vw, (min-width: 20px) 100vw, 100vh"
-            />
-          </Link>
+            <Link
+              href="/"
+              className="flex min-w-[20px] min-h-[20px] items-center cursor-pointer"
+            >
+              <Image
+                src="/cc-logo-circle.svg"
+                alt="Logo"
+                width={20}
+                height={20}
+                sizes="(min-height: 20px) 100vw, (min-width: 20px) 100vw, 100vh"
+              />
+            </Link>
+          </motion.div>
           <ChevronRight size={12} className="text-gray-500" />
           <a
             href={`/${component.user.username}`}

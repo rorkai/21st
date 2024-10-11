@@ -26,13 +26,12 @@ export default async function ComponentPageLayout({
   params: { username: string; component_slug: string }
 }) {
   const { username, component_slug } = params
-
+  const apiUrl = process.env.NEXT_PUBLIC_CDN_URL
   const { data: component, error } = await getComponent(
     supabaseWithAdminAccess,
     username,
     component_slug,
   )
-  
 
   if (error) {
     return <div>Error: {error.message}</div>
@@ -49,32 +48,22 @@ export default async function ComponentPageLayout({
   )
 
   const componentAndDemoCodePromises = [
-    fetch(
-      supabaseWithAdminAccess.storage
-      .from("components")
-      .getPublicUrl(`${component.component_slug}-code.tsx`).data.publicUrl
-    )
-      .then(async (response) => {
-        if (!response.ok) {
-          console.error(`Error loading component code:`, response.statusText)
-          return { data: null, error: new Error(response.statusText) }
-        }
-        const code = await response.text()
-        return { data: code, error: null }
-      }),
-    fetch(
-      supabaseWithAdminAccess.storage
-      .from("components")
-      .getPublicUrl(`${component.component_slug}-demo.tsx`).data.publicUrl
-    )
-      .then(async (response) => {
-        if (!response.ok) {
-          console.error(`Error loading component demo code:`, response.statusText)
-          return { data: null, error: new Error(response.statusText) }
-        }
-        const demoCode = await response.text()
-        return { data: demoCode, error: null }
-      }),
+    fetch(component.code).then(async (response) => {
+      if (!response.ok) {
+        console.error(`Error loading component code:`, response.statusText)
+        return { data: null, error: new Error(response.statusText) }
+      }
+      const code = await response.text()
+      return { data: code, error: null }
+    }),
+    fetch(component.demo_code).then(async (response) => {
+      if (!response.ok) {
+        console.error(`Error loading component demo code:`, response.statusText)
+        return { data: null, error: new Error(response.statusText) }
+      }
+      const demoCode = await response.text()
+      return { data: demoCode, error: null }
+    }),
   ]
 
   const internalDependenciesPromises = Object.entries(
@@ -82,20 +71,22 @@ export default async function ComponentPageLayout({
   ).flatMap(([path, slugs]) => {
     const slugArray = Array.isArray(slugs) ? slugs : [slugs]
     return slugArray.map(async (slug) => {
-      const response = await fetch(
-        supabaseWithAdminAccess.storage
-        .from("components")
-        .getPublicUrl(`${slug}-code.tsx`).data.publicUrl
-      )
+      const dependencyUrl = `${apiUrl}/${slug}-code.tsx`
+      const response = await fetch(dependencyUrl)
       if (!response.ok) {
-        console.error(`Error downloading file for ${slug}:`, response.statusText)
+        console.error(
+          `Error downloading file for ${slug}:`,
+          response.statusText,
+        )
         return { data: null, error: new Error(response.statusText) }
       }
 
       const code = await response.text()
-      if (!code || error) {
-        console.error(`Error loading internal dependency ${slug}:`, error)
-        return { data: null, error }
+      if (!code) {
+        console.error(
+          `Error loading internal dependency ${slug}: No code returned`,
+        )
+        return { data: null, error: new Error("No code returned") }
       }
       const fullPath = path.endsWith(".tsx") ? path : `${path}.tsx`
       return { data: { [fullPath]: code }, error: null }
@@ -115,14 +106,18 @@ export default async function ComponentPageLayout({
   if (internalDependenciesResults?.find((result) => result?.error)) {
     return <div>Error fetching internal dependencies</div>
   }
+
   const internalDependenciesWithCode = internalDependenciesResults
     .filter((result) => typeof result?.data === "object")
-    .reduce((acc, result): Record<string, string> => {
-      if (result?.data && typeof result.data === 'object') {
-        return { ...acc, ...result.data }
-      }
-      return acc
-    }, {} as Record<string, string>)
+    .reduce(
+      (acc, result): Record<string, string> => {
+        if (result?.data && typeof result.data === "object") {
+          return { ...acc, ...result.data }
+        }
+        return acc
+      },
+      {} as Record<string, string>,
+    )
 
   const code = codeResult?.data as string
   const rawDemoCode = demoResult?.data as string

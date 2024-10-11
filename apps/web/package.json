@@ -11,6 +11,7 @@
     "combine-css": "node css/combinedCSS.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.669.0",
     "@babel/parser": "^7.25.6",
     "@babel/traverse": "^7.25.6",
     "@babel/types": "^7.25.6",

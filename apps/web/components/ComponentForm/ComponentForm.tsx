@@ -5,8 +5,8 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import {
-  uploadToStorage,
-  uploadPreviewImage,
+  uploadToR2,
+  uploadPreviewImageToR2,
   handleFileChange,
 } from "./actions"
 import {
@@ -178,16 +178,15 @@ export default function ComponentForm() {
       const demoCodeFileName = `${data.component_slug}-demo.tsx`
 
       const [codeUrl, demoCodeUrl] = await Promise.all([
-        uploadToStorage(client, codeFileName, data.code),
-        uploadToStorage(client, demoCodeFileName, cleanedDemoCode),
+        uploadToR2(codeFileName, data.code),
+        uploadToR2(demoCodeFileName, cleanedDemoCode),
       ])
 
       const installUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/r/${data.component_slug}`
 
       let previewImageUrl = ""
       if (data.preview_url) {
-        previewImageUrl = await uploadPreviewImage(
-          client,
+        previewImageUrl = await uploadPreviewImageToR2(
           data.preview_url,
           data.component_slug,
         )

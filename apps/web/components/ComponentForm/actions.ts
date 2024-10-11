@@ -2,45 +2,72 @@
 import { useClerkSupabaseClient } from "@/utils/clerk"
 import { FormData } from "./utils"
 import { UseFormReturn } from "react-hook-form"
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3"
 
-export const uploadToStorage = async (
-  client: ReturnType<typeof useClerkSupabaseClient>,
+const r2Client = new S3Client({
+  region: "auto",
+  endpoint: "https://c65c8ba13697ad2e3b97b0ccff517f03.r2.cloudflarestorage.com",
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+  },
+})
+
+export const uploadToR2 = async (
   fileName: string,
-  content: string,
+  content: string | Buffer,
 ) => {
-  const { error } = await client.storage
-    .from("components")
-    .upload(fileName, content, {
-      contentType: "text/plain",
-      upsert: true,
+  try {
+    const bucketName = "components-code"
+
+    const command = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: fileName,
+      Body: content,
+      ContentType: "text/plain",
     })
 
-  if (error) throw error
+    await r2Client.send(command)
 
-  const { data: publicUrlData } = client.storage
-    .from("components")
-    .getPublicUrl(fileName)
+    const publicUrl = `${process.env.NEXT_PUBLIC_CDN_URL}/${fileName}`
 
-  return publicUrlData.publicUrl
+    return publicUrl
+  } catch (error) {
+    console.error("Error uploading to R2:", error)
+    throw error
+  }
 }
 
-export const uploadPreviewImage = async (
-  client: ReturnType<typeof useClerkSupabaseClient>,
+export const uploadPreviewImageToR2 = async (
   file: File,
   componentSlug: string,
 ): Promise<string> => {
-  const fileExtension = file.name.split(".").pop()
-  const fileName = `${componentSlug}-preview-${Date.now()}.${fileExtension}`
-  const { error } = await client.storage
-    .from("components")
-    .upload(fileName, file, { upsert: true })
+  try {
+    const fileExtension = file.name.split(".").pop()
+    const fileName = `${componentSlug}-preview-${Date.now()}.${fileExtension}`
+    const bucketName = "components-code"
 
-  if (error) throw error
+    const arrayBuffer = await file.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
 
-  const { data } = client.storage.from("components").getPublicUrl(fileName)
+    const command = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: fileName,
+      Body: buffer,
+      ContentType: file.type,
+    })
 
-  return data.publicUrl
+    await r2Client.send(command)
+  
+    const publicUrl = `${process.env.NEXT_PUBLIC_CDN_URL}/${fileName}`
+
+    return publicUrl
+  } catch (error) {
+    console.error("Error uploading preview image to R2:", error)
+    throw error
+  }
 }
+
 
 export const handleFileChange = (
   event: React.ChangeEvent<HTMLInputElement>,

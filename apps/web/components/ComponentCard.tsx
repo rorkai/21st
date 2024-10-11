@@ -36,7 +36,6 @@ export function ComponentCard({ component }: ComponentCardProps) {
           <div className="flex items-center space-x-2 text-gray-500 text-sm">
             <span className="flex items-center">
               <LikeButton componentId={component.id} size={14} variant="circle" />
-              <span className="ml-1">{component.likes_count || 0}</span>
             </span>
           </div>
         </div>

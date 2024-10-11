@@ -46,7 +46,6 @@ export default function ComponentPreview({
   const [codeCopied, setCodeCopied] = useState(false)
   const [isHovering, setIsHovering] = useState(false)
   const sandpackRef = useRef<HTMLDivElement>(null)
-  const [activeFile, setActiveFile] = useState("")
   const [isComponentsLoaded, setIsComponentsLoaded] = useState(false)
   const [isShowCode] = useAtom(isShowCodeAtom)
   const isDebug = useDebugMode()
@@ -84,12 +83,10 @@ root.render(
   const demoComponentFile =
     Object.keys(updatedFiles).find((file) => file.endsWith(`demo.tsx`)) ||
     Object.keys(updatedFiles)[0]
-
-  useEffect(() => {
-    if (demoComponentFile) {
-      setActiveFile(demoComponentFile)
-    }
-  }, [demoComponentFile, setActiveFile])
+  
+  const [activeFile, setActiveFile] = useState(
+    demoComponentFile || mainComponentFile,
+  )
 
   const visibleFiles = [
     demoComponentFile,

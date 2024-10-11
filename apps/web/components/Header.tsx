@@ -50,12 +50,12 @@ export function Header({ componentSlug, username }: HeaderProps) {
         </div>
       </div>
       <div className="flex items-center gap-4">
-        {!isPublishPage && (
-          <Button asChild>
-            <Link href="/publish">Publish</Link>
-          </Button>
-        )}
         <SignedIn>
+          {!isPublishPage && (
+            <Button asChild>
+              <Link href="/publish">Publish</Link>
+            </Button>
+          )}
           <UserButton />
         </SignedIn>
         <SignedOut>

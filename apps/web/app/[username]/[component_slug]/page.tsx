@@ -32,6 +32,7 @@ export default async function ComponentPageLayout({
     username,
     component_slug,
   )
+  
 
   if (error) {
     return <div>Error: {error.message}</div>

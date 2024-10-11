@@ -86,14 +86,14 @@ root.render(
     Object.keys(updatedFiles)[0]
 
   useEffect(() => {
-    if (mainComponentFile) {
-      setActiveFile(mainComponentFile)
+    if (demoComponentFile) {
+      setActiveFile(demoComponentFile)
     }
-  }, [mainComponentFile, setActiveFile])
+  }, [demoComponentFile, setActiveFile])
 
   const visibleFiles = [
-    mainComponentFile,
     demoComponentFile,
+    mainComponentFile,
     ...Object.keys(internalDependencies),
   ].filter((file): file is string => file !== undefined)
 

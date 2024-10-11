@@ -59,7 +59,9 @@ export function Header({ componentSlug, username }: HeaderProps) {
           <UserButton />
         </SignedIn>
         <SignedOut>
-          <SignInButton />
+          <div className="text-sm">
+            <SignInButton />
+          </div>
         </SignedOut>
       </div>
     </header>

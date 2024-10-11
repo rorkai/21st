@@ -46,9 +46,10 @@ export default async function ComponentPageLayout({
   const internalDependencies = JSON.parse(
     component.internal_dependencies || "{}",
   )
-
+  
   const componentAndDemoCodePromises = [
     fetch(component.code).then(async (response) => {
+     
       if (!response.ok) {
         console.error(`Error loading component code:`, response.statusText)
         return { data: null, error: new Error(response.statusText) }

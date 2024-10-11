@@ -22,6 +22,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Hotkey } from "./ui/hotkey"
+import { LikeButton } from "./likeButton"
+import { useHasUserLikedComponent, useLikeComponent, useUnlikeComponent } from "../hooks/useLikes"
 
 export const isShowCodeAtom = atom(true)
 
@@ -106,6 +108,33 @@ export default function ComponentPage({
     }
   }, [])
 
+  const { data: hasLiked } = useHasUserLikedComponent(component.id)
+  const likeMutation = useLikeComponent()
+  const unlikeMutation = useUnlikeComponent()
+
+  const handleLike = () => {
+    if (hasLiked) {
+      unlikeMutation.mutate(component.id)
+    } else {
+      likeMutation.mutate(component.id)
+    }
+  }
+
+  useEffect(() => {
+    const keyDownHandler = (e: KeyboardEvent) => {
+      if (e.code === "KeyL") {
+        e.preventDefault()
+        handleLike()
+      }
+    }
+
+    window.addEventListener("keydown", keyDownHandler)
+
+    return () => {
+      window.removeEventListener("keydown", keyDownHandler)
+    }
+  }, [hasLiked])
+
   return (
     <div className="flex flex-col gap-2 rounded-lg p-4 h-[98vh] w-full">
       <div className="flex justify-between items-center">
@@ -149,7 +178,14 @@ export default function ComponentPage({
             </p>
           </div>
         </div>
+      
         <div className="flex items-center">
+          <LikeButton 
+            componentId={component.id} 
+            size={20} 
+            showTooltip={true} 
+            onLike={handleLike}
+          />
           <Tooltip>
             <TooltipTrigger asChild>
               <button

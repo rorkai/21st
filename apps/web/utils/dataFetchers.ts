@@ -163,6 +163,60 @@ export async function addComponent(
   return data
 }
 
+export async function hasUserLikedComponent(
+  supabase: SupabaseClient,
+  userId: string,
+  componentId: number,
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("component_likes")
+    .select("user_id")
+    .eq("user_id", userId)
+    .eq("component_id", componentId)
+    .single()
+
+  if (error && error.code !== "PGRST116") {
+    // PGRST116: Single row not found
+    console.error("Error checking if user liked component:", error)
+    throw error
+  }
+
+  return !!data
+}
+
+export async function likeComponent(
+  supabase: SupabaseClient,
+  userId: string,
+  componentId: number,
+) {
+  const { error } = await supabase.from("component_likes").insert({
+    user_id: userId,
+    component_id: componentId,
+  })
+
+  if (error) {
+    console.error("Error liking component:", error)
+    throw error
+  }
+}
+
+export async function unlikeComponent(
+  supabase: SupabaseClient,
+  userId: string,
+  componentId: number,
+) {
+  const { error } = await supabase
+    .from("component_likes")
+    .delete()
+    .eq("user_id", userId)
+    .eq("component_id", componentId)
+
+  if (error) {
+    console.error("Error unliking component:", error)
+    throw error
+  }
+}
+
 export async function addTagsToComponent(
   supabase: SupabaseClient,
   componentId: number,

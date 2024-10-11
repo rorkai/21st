@@ -51,7 +51,7 @@ export default async function UserProfile({
               <p className="text-[20px] leading-none text-gray-600">
                 @{user.username}
               </p>
-              {!user.manually_added && (
+              {user.manually_added === true && (
                 <div className="flex flex-col mt-7 -ml-4">
                   <Alert>
                     <AlertTitle>

@@ -65,7 +65,7 @@ export function LikeButton({
       <Heart
         size={size}
         fill={hasLiked || isHovered ? "red" : "none"}
-        className={cn(hasLiked || isHovered ? "text-red-500" : "text-gray-500")}
+        className={cn(hasLiked || isHovered ? "stroke-none scale-110 transition-transform" : "")}
       />
     </button>
   )

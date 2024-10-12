@@ -179,7 +179,7 @@ export default function ComponentPage({
           </div>
         </div>
       
-        <div className="flex items-center">
+        <div className="flex items-center gap-1">
           <LikeButton 
             componentId={component.id} 
             size={20} 
@@ -191,7 +191,7 @@ export default function ComponentPage({
               <button
                 onClick={handleShareClick}
                 disabled={isShared}
-                className="h-8 w-8 flex items-center justify-center mr-1 hover:bg-gray-100 rounded-md relative"
+                className="h-8 w-8 flex items-center justify-center hover:bg-gray-100 rounded-md relative"
               >
                 <div className="absolute inset-0 flex items-center justify-center">
                   {isShared ? <Check size={18} /> : <LinkIcon size={18} />}

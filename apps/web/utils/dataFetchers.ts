@@ -1,5 +1,10 @@
 import { Component, Tag, User } from "@/types/types"
-import { useQuery } from "@tanstack/react-query"
+import {
+  UseMutationResult,
+  useMutation,
+  useQueryClient,
+  useQuery,
+} from "@tanstack/react-query"
 import { generateSlug } from "@/components/ComponentForm/useIsCheckSlugAvailable"
 import { SupabaseClient } from "@supabase/supabase-js"
 import { useClerkSupabaseClient } from "./clerk"
@@ -67,14 +72,6 @@ export async function getUserData(
   }
 }
 
-export function useUserData(username: string) {
-  const supabase = useClerkSupabaseClient()
-  return useQuery<User | null, Error>({
-    queryKey: ["user", username],
-    queryFn: () => getUserData(supabase, username),
-  })
-}
-
 export async function getUserComponents(
   supabase: SupabaseClient,
   userId: string,
@@ -93,19 +90,14 @@ export async function getUserComponents(
   return data
 }
 
-export function useUserComponents(userId: string) {
-  const supabase = useClerkSupabaseClient()
-  return useQuery<Component[] | null, Error>({
-    queryKey: ["userComponents", userId],
-    queryFn: () => getUserComponents(supabase, userId),
-  })
-}
-
 export async function getComponents(
   supabase: SupabaseClient,
-  tagSlug?: string
+  tagSlug?: string,
 ): Promise<Component[]> {
-  let query = supabase.from("components").select(`
+  let query = supabase
+    .from("components")
+    .select(
+      `
     *,
     user:users!user_id (*),
     component_tags!inner (
@@ -113,18 +105,20 @@ export async function getComponents(
         slug
       )
     )
-  `).eq('is_public', true)
+  `,
+    )
+    .eq("is_public", true)
 
   if (tagSlug) {
-    query = query.eq('component_tags.tags.slug', tagSlug)
+    query = query.eq("component_tags.tags.slug", tagSlug)
   }
 
   const { data, error } = await query.limit(1000)
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(error.message)
   }
-  return data as Component[] || [];
+  return (data as Component[]) || []
 }
 
 export function useComponents(tagSlug?: string) {
@@ -227,6 +221,81 @@ export async function unlikeComponent(
     console.error("Error unliking component:", error)
     throw error
   }
+}
+
+export function useLikeComponent(
+  userId: string,
+): UseMutationResult<void, Error, number> {
+  const supabase = useClerkSupabaseClient()
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, number>({
+    mutationFn: async (componentId: number) => {
+      await likeComponent(supabase, userId, componentId)
+    },
+    onSuccess: (_, componentId) => {
+      queryClient.invalidateQueries({
+        queryKey: ["hasUserLikedComponent", componentId, userId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ["component", componentId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ["components"],
+      })
+    },
+  })
+}
+
+export function useUnlikeComponent(
+  userId: string,
+): UseMutationResult<void, Error, number> {
+  const queryClient = useQueryClient()
+  const supabase = useClerkSupabaseClient()
+  return useMutation<void, Error, number>({
+    mutationFn: async (componentId: number) => {
+      await unlikeComponent(supabase, userId, componentId)
+    },
+    onSuccess: (_, componentId) => {
+      queryClient.invalidateQueries({
+        queryKey: ["hasUserLikedComponent", componentId, userId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ["component", componentId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ["components"],
+      })
+    },
+  })
+}
+
+export function useHasUserLikedComponent(userId: string, componentId: number) {
+  const supabase = useClerkSupabaseClient()
+  return useQuery<boolean, Error>({
+    queryKey: ["hasUserLikedComponent", componentId, userId],
+    queryFn: async () => {
+      try {
+        const result = await hasUserLikedComponent(
+          supabase,
+          userId,
+          componentId,
+        )
+        return result
+      } catch (error) {
+        if (
+          typeof error === "object" &&
+          error !== null &&
+          "code" in error &&
+          error.code === "PGRST116"
+        ) {
+          // If the query returned no rows, it means the user hasn't liked the component
+          return false
+        }
+        throw error
+      }
+    },
+    enabled: !!userId,
+  })
 }
 
 export async function addTagsToComponent(
@@ -378,10 +447,9 @@ export function useDependencyComponents(
   })
 }
 
-
 export async function getTagInfo(
   supabase: SupabaseClient,
-  tagSlug: string
+  tagSlug: string,
 ): Promise<Tag | null> {
   const { data, error } = await supabase
     .from("tags")
@@ -407,4 +475,3 @@ export function useTagInfo(tagSlug: string) {
     staleTime: 0,
   })
 }
-

@@ -3,7 +3,7 @@ import Link from "next/link"
 import ComponentPreviewImage from "./ComponentPreviewImage"
 import { Component } from "../types/types"
 import { UserAvatar } from "./UserAvatar"
-import { LikeButton } from "./likeButton"
+import { LikeButton } from "./LikeButton"
 
 interface ComponentCardProps {
   component: Component
@@ -35,7 +35,11 @@ export function ComponentCard({ component }: ComponentCardProps) {
           </h2>
           <div className="flex items-center space-x-2 text-gray-500 text-sm">
             <span className="flex items-center">
-              <LikeButton componentId={component.id} size={14} variant="circle" />
+              <LikeButton
+                componentId={component.id}
+                size={14}
+                variant="circle"
+              />
             </span>
           </div>
         </div>

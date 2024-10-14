@@ -22,9 +22,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Hotkey } from "./ui/hotkey"
-import { LikeButton } from "./likeButton"
-import { useHasUserLikedComponent, useLikeComponent, useUnlikeComponent } from "../hooks/useLikes"
+import { LikeButton } from "./LikeButton"
 import { useIsMobile } from "@/utils/useMediaQuery"
+
 export const isShowCodeAtom = atom(true)
 
 const ComponentPreview = dynamic(() => import("./ComponentPreview"), {
@@ -108,33 +108,6 @@ export default function ComponentPage({
     }
   }, [])
 
-  const { data: hasLiked } = useHasUserLikedComponent(component.id)
-  const likeMutation = useLikeComponent()
-  const unlikeMutation = useUnlikeComponent()
-
-  const handleLike = () => {
-    if (hasLiked) {
-      unlikeMutation.mutate(component.id)
-    } else {
-      likeMutation.mutate(component.id)
-    }
-  }
-
-  useEffect(() => {
-    const keyDownHandler = (e: KeyboardEvent) => {
-      if (e.code === "KeyL") {
-        e.preventDefault()
-        handleLike()
-      }
-    }
-
-    window.addEventListener("keydown", keyDownHandler)
-
-    return () => {
-      window.removeEventListener("keydown", keyDownHandler)
-    }
-  }, [hasLiked])
-
   return (
     <div
       className={`flex flex-col gap-2 rounded-lg h-[98vh] w-full ${isMobile ? "pt-4" : "p-4"}`}
@@ -179,12 +152,7 @@ export default function ComponentPage({
         </div>
 
         <div className="flex items-center gap-1">
-          <LikeButton
-            componentId={component.id}
-            size={20}
-            showTooltip={true}
-            onLike={handleLike}
-          />
+          <LikeButton componentId={component.id} size={20} showTooltip={true} />
           {!isMobile && (
             <Tooltip>
               <TooltipTrigger asChild>

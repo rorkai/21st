@@ -1,15 +1,12 @@
 "use client"
 
-import React, { useState } from "react"
-import {
-  useHasUserLikedComponent,
-  useLikeComponent,
-  useUnlikeComponent,
-} from "../hooks/useLikes"
+import React, { useEffect, useState } from "react"
 import { Heart } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
 import { Hotkey } from "./ui/hotkey"
 import { cn } from "@/lib/utils"
+import { useLikeComponent, useUnlikeComponent, useHasUserLikedComponent } from "@/utils/dataFetchers"
+import { useUser } from "@clerk/nextjs"
 
 interface LikeButtonProps {
   componentId: number
@@ -26,9 +23,10 @@ export function LikeButton({
   onLike,
   variant = "default",
 }: LikeButtonProps) {
-  const { data: hasLiked } = useHasUserLikedComponent(componentId)
-  const likeMutation = useLikeComponent()
-  const unlikeMutation = useUnlikeComponent()
+  const { user } = useUser()
+  const { data: hasLiked } = useHasUserLikedComponent(user?.id ?? '', componentId)
+  const likeMutation = useLikeComponent(user?.id ?? '')
+  const unlikeMutation = useUnlikeComponent(user?.id ?? '')
   const [isHovered, setIsHovered] = useState(false)
 
   const handleLike = (e: React.MouseEvent) => {
@@ -44,6 +42,21 @@ export function LikeButton({
       }
     }
   }
+
+    useEffect(() => {
+    const keyDownHandler = (e: KeyboardEvent) => {
+      if (e.code === "KeyL") {
+        e.preventDefault()
+        handleLike(e as unknown as React.MouseEvent)
+      }
+    }
+
+    window.addEventListener("keydown", keyDownHandler)
+
+    return () => {
+      window.removeEventListener("keydown", keyDownHandler)
+    }
+  }, [hasLiked])
 
   const isMutating = likeMutation.isPending || unlikeMutation.isPending
 

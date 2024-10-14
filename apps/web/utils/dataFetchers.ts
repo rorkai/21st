@@ -101,27 +101,37 @@ export function useUserComponents(userId: string) {
 
 export async function getComponents(
   supabase: SupabaseClient,
+  tagSlug?: string
 ): Promise<Component[]> {
-  const { data, error } = await supabase
-    .from("components")
-    .select(componentFields)
-    .limit(1000)
+  let query = supabase.from("components").select(`
+    *,
+    user:users!user_id (*),
+    component_tags!inner (
+      tags!inner (
+        slug
+      )
+    )
+  `)
 
-  if (error) {
-    return []
+  if (tagSlug) {
+    query = query.eq('component_tags.tags.slug', tagSlug)
   }
 
-  return data || []
+  const { data, error } = await query.limit(1000)
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  return data as Component[] || [];
 }
 
-export function useComponents() {
+export function useComponents(tagSlug?: string) {
   const supabase = useClerkSupabaseClient()
   return useQuery<Component[], Error>({
-    queryKey: ["components"],
-    queryFn: () => getComponents(supabase),
-    staleTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    queryKey: ["components", tagSlug],
+    queryFn: () => getComponents(supabase, tagSlug),
+    refetchOnWindowFocus: false,
+    retry: false,
   })
 }
 
@@ -365,3 +375,34 @@ export function useDependencyComponents(
     staleTime: 0,
   })
 }
+
+
+export async function getTagInfo(
+  supabase: SupabaseClient,
+  tagSlug: string
+): Promise<Tag | null> {
+  const { data, error } = await supabase
+    .from("tags")
+    .select("*")
+    .eq("slug", tagSlug)
+    .single()
+
+  if (error) {
+    console.error("Error fetching tag info:", error)
+    return null
+  }
+
+  return data
+}
+
+export function useTagInfo(tagSlug: string) {
+  const supabase = useClerkSupabaseClient()
+  return useQuery<Tag | null, Error>({
+    queryKey: ["tagInfo", tagSlug],
+    queryFn: () => getTagInfo(supabase, tagSlug),
+    enabled: !!tagSlug,
+    refetchOnMount: true,
+    staleTime: 0,
+  })
+}
+

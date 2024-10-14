@@ -118,15 +118,16 @@ export const Info: React.FC<{ info: Component }> = ({ info }) => {
       )}
       {info.tags && info.tags.length > 0 && (
         <div className="flex items-center justify-center">
-          <span className="text-gray-500 w-1/3">Tags:</span>
+          <span className="text-gray-500 w-1/3">Теги:</span>
           <div className="w-2/3 flex flex-wrap gap-2 d">
             {info.tags.map((tag) => (
-              <span
+              <Link
                 key={tag.slug}
-                className="bg-gray-200 px-2 py-1 rounded-md text-black"
+                href={`/s/${tag.slug}`}
+                className="bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded-md text-black transition-colors duration-200"
               >
                 {tag.name}
-              </span>
+              </Link>
             ))}
           </div>
         </div>

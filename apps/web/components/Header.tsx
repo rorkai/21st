@@ -9,11 +9,10 @@ import React from "react"
 import { motion } from "framer-motion"
 
 interface HeaderProps {
-  componentSlug?: string
-  username?: string
+  tagName?: string
 }
 
-export function Header({ componentSlug, username }: HeaderProps) {
+export function Header({ tagName }: HeaderProps) {
   const pathname = usePathname()
   const isHomePage = pathname === "/"
   const isPublishPage = pathname === "/publish"
@@ -35,16 +34,10 @@ export function Header({ componentSlug, username }: HeaderProps) {
               />
             </Link>
           </motion.div>
-          {!isHomePage && username && (
+          {!isHomePage && tagName && (
             <>
               <span className="mx-2 text-gray-400">/</span>
-              <span className="text-gray-700">{username}</span>
-              {componentSlug && (
-                <>
-                  <span className="mx-2 text-gray-400">/</span>
-                  <span className="text-gray-700">{componentSlug}</span>
-                </>
-              )}
+              <span className="text-gray-700 text-[14px] font-medium">{tagName}</span>
             </>
           )}
         </div>

@@ -5,14 +5,14 @@ import { ComponentCard } from "./ComponentCard"
 import { Component, User } from "../types/types"
 import { Input } from "@/components/ui/input"
 import { useQuery } from "@tanstack/react-query"
-import { createSupabaseClerkClient } from "@/utils/clerk"
+import { useClerkSupabaseClient } from "@/utils/clerk"
 import { Skeleton } from "./ui/skeleton"
 import { Hotkey } from "./ui/hotkey"
 
 
 export function ComponentsListMainPage() {
   const [searchTerm, setSearchTerm] = useState("")
-  const supabase = createSupabaseClerkClient()
+  const supabase = useClerkSupabaseClient()
 
   const { data: components } = useQuery({
     queryKey: ['components', searchTerm],
@@ -42,6 +42,8 @@ export function ComponentsListMainPage() {
     refetchOnWindowFocus: false,
     retry: false,
   });
+
+  
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {

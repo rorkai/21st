@@ -15,7 +15,7 @@ export default function HomePage() {
       <Head>
         <title>Home | 21st.dev</title>
       </Head>
-      <Header />
+      <Header page="home" />
       <div className="container mx-auto mt-20">
         <ComponentsListMainPage />
       </div>

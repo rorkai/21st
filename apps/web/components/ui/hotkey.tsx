@@ -1,4 +1,7 @@
+"use client"
+
 import React from "react"
+import { useEffect, useState } from "react"
 
 interface HotkeyProps {
   keys: string[]
@@ -11,14 +14,17 @@ export const Hotkey: React.FC<HotkeyProps> = ({
   isDarkBackground = false,
   modifier = false,
 }) => {
+  const [, setModifierText] = useState("⌃")
+  const [displayKeys, setDisplayKeys] = useState(keys)
+
+  useEffect(() => {
+    const isMac = window.navigator.userAgent.includes("Macintosh")
+    setModifierText(isMac ? "⌘" : "⌃")
+    setDisplayKeys(modifier ? [isMac ? "⌘" : "⌃", ...keys] : keys)
+  }, [modifier, keys])
+
   const textColor = isDarkBackground ? "text-white" : "text-black"
   const borderColor = isDarkBackground ? "border-gray-600" : "border-gray-300"
-  const isMac =
-    typeof window !== "undefined" &&
-    window.navigator.userAgent.includes("Macintosh")
-  const modifierText = isMac ? "⌘" : "⌃"
-
-  const displayKeys = modifier ? [modifierText, ...keys] : keys
 
   return (
     <span className="inline-flex gap-1">

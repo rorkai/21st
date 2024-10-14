@@ -29,6 +29,7 @@ export async function getComponent(
     )
     .eq("component_slug", slug)
     .eq("user.username", username)
+    .eq("is_public", true)
     .single()
 
   if (error) {
@@ -82,6 +83,7 @@ export async function getUserComponents(
     .from("components")
     .select(componentFields)
     .eq("user_id", userId)
+    .eq("is_public", true)
 
   if (error) {
     console.error("Error fetching user components:", error)
@@ -111,7 +113,7 @@ export async function getComponents(
         slug
       )
     )
-  `)
+  `).eq('is_public', true)
 
   if (tagSlug) {
     query = query.eq('component_tags.tags.slug', tagSlug)

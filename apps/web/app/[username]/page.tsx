@@ -35,7 +35,7 @@ export default async function UserProfile({
 
   return (
     <>
-      <Header />
+      <Header page="profile" />
       <div className="flex mx-auto px-4 py-8 mt-20">
         <div className="flex flex-col md:flex-row gap-8">
           <div className="flex md:w-[30%] md:min-w-[300px] flex-col items-center w-full ">
@@ -52,7 +52,7 @@ export default async function UserProfile({
                 @{user.username}
               </p>
               {user.manually_added === true && (
-                <div className="flex flex-col mt-7 -ml-4">
+                <div className="flex flex-col mt-7 -mx-4">
                   <Alert>
                     <AlertTitle>
                       This profile was created by 21st.dev

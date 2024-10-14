@@ -23,7 +23,7 @@ export function ComponentsList({
   const components = propsComponents || fetchedComponents
   return (
     <div>
-      {tagSlug && <Header tagName={tagInfo?.name} />}
+      {tagSlug && <Header tagName={tagInfo?.name} page="components" />}
       <div
         className={`grid ${tagSlug ? "mt-20" : ""} grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-9 list-none pb-10`}
       >

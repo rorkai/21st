@@ -56,7 +56,6 @@ export const prepareFilesForPreview = (code: string, demoCode: string) => {
   console.log("types", types)
 
   const updatedDemoCode = `
-  import * as React from "react"
   import { ${componentNames.join(", ")} } from "./Component";\n
   ${types.length > 0 ? `import { ${types.join(", ")} } from "./Component";\n` : ""}
   ${demoCode}

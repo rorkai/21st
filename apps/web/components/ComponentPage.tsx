@@ -24,7 +24,7 @@ import {
 import { Hotkey } from "./ui/hotkey"
 import { LikeButton } from "./likeButton"
 import { useHasUserLikedComponent, useLikeComponent, useUnlikeComponent } from "../hooks/useLikes"
-
+import { useIsMobile } from "@/utils/useMediaQuery"
 export const isShowCodeAtom = atom(true)
 
 const ComponentPreview = dynamic(() => import("./ComponentPreview"), {
@@ -49,7 +49,7 @@ export default function ComponentPage({
 }) {
   const [isShared, setIsShared] = useState(false)
   const [isShowCode, setIsShowCode] = useAtom(isShowCodeAtom)
-
+  const isMobile = useIsMobile()
   const handleShareClick = async () => {
     const url = `${window.location.origin}/${component.user.username}/${component.component_slug}`
     try {
@@ -136,7 +136,9 @@ export default function ComponentPage({
   }, [hasLiked])
 
   return (
-    <div className="flex flex-col gap-2 rounded-lg p-4 h-[98vh] w-full">
+    <div
+      className={`flex flex-col gap-2 rounded-lg h-[98vh] w-full ${isMobile ? "pt-4" : "p-4"}`}
+    >
       <div className="flex justify-between items-center">
         <div className="flex gap-1 items-center">
           <motion.div
@@ -173,38 +175,37 @@ export default function ComponentPage({
             <p className="text-[14px] font-medium whitespace-nowrap">
               {component.name}
             </p>
-            <p className="text-[14px] text-gray-600 truncate max-w-[50vw]">
-              {component.description}
-            </p>
           </div>
         </div>
-      
+
         <div className="flex items-center gap-1">
-          <LikeButton 
-            componentId={component.id} 
-            size={20} 
-            showTooltip={true} 
+          <LikeButton
+            componentId={component.id}
+            size={20}
+            showTooltip={true}
             onLike={handleLike}
           />
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={handleShareClick}
-                disabled={isShared}
-                className="h-8 w-8 flex items-center justify-center hover:bg-gray-100 rounded-md relative"
-              >
-                <div className="absolute inset-0 flex items-center justify-center">
-                  {isShared ? <Check size={18} /> : <LinkIcon size={18} />}
-                </div>
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>
-                {isShared ? "Link copied" : "Copy link"}
-                <Hotkey keys={["⌘", "⇧", "C"]} isDarkBackground={true} />
-              </p>
-            </TooltipContent>
-          </Tooltip>
+          {!isMobile && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={handleShareClick}
+                  disabled={isShared}
+                  className="h-8 w-8 flex items-center justify-center hover:bg-gray-100 rounded-md relative"
+                >
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    {isShared ? <Check size={18} /> : <LinkIcon size={18} />}
+                  </div>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  {isShared ? "Link copied" : "Copy link"}
+                  <Hotkey keys={["⌘", "⇧", "C"]} isDarkBackground={true} />
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          )}
           <div className="relative bg-gray-200 rounded-lg h-8 p-0.5 flex">
             <div
               className="absolute inset-y-0.5 rounded-md bg-white shadow transition-all duration-200 ease-in-out"

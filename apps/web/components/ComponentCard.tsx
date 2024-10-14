@@ -10,6 +10,7 @@ interface ComponentCardProps {
   isLoading?: boolean
 }
 
+
 export function ComponentCard({ component }: ComponentCardProps) {
   const componentUrl = `/${component.user.username}/${component.component_slug}`
 

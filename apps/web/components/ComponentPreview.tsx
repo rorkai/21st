@@ -16,6 +16,7 @@ import { useDebugMode } from "@/hooks/useDebugMode"
 import { Component } from "@/types/types"
 import { isShowCodeAtom } from "./ComponentPage"
 import { useAtom } from "jotai"
+import { useTheme } from "next-themes"
 
 const LazyPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react/unstyled").then((module) => ({
@@ -50,6 +51,8 @@ export default function ComponentPreview({
   const [isShowCode] = useAtom(isShowCodeAtom)
   const isDebug = useDebugMode()
   const installUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/r/${componentSlug}`
+  const { theme } = useTheme()
+  const isDarkTheme = theme === 'dark'
 
   const updatedIndexContent = `
 import React from 'react';
@@ -131,7 +134,7 @@ root.render(
   )
 
   const providerProps: SandpackProviderProps = {
-    theme: "light",
+    theme: isDarkTheme ? "dark" : "light",
     template: "react-ts" as const,
     files: updatedFiles,
     customSetup: {
@@ -256,7 +259,7 @@ root.render(
           </Suspense>
         </motion.div>
       </SandpackProviderUnstyled>
-      <div className="h-full w-full md:max-w-[30%] min-h-90vh overflow-hidden rounded-lg border border-[#efefef]">
+      <div className="h-full w-full md:max-w-[30%] min-h-90vh overflow-hidden rounded-lg border border-border">
         <SandpackProvider {...providerProps}>
           <div ref={sandpackRef} className="h-full w-full flex relative">
             <SandpackLayout className="flex w-full flex-row gap-4">
@@ -305,7 +308,7 @@ root.render(
                               animate={{ opacity: 1 }}
                               exit={{ opacity: 0 }}
                               onClick={copyCode}
-                              className={`absolute flex items-center gap-2 ${visibleFiles.length > 1 ? "top-12" : "top-2"} right-2 z-10 p-1 px-2 bg-white border text-gray-500 border-[#efefef] rounded-md hover:bg-gray-100 transition-colors ${codeCopied ? "opacity-0" : "opacity-100"}`}
+                              className={`absolute flex items-center gap-2 ${visibleFiles.length > 1 ? "top-12" : "top-2"} right-2 z-10 p-1 px-2 bg-background text-foreground border border-border rounded-md hover:bg-accent transition-colors ${codeCopied ? "opacity-0" : "opacity-100"}`}
                             >
                               Copy Code{" "}
                               {codeCopied ? (
@@ -333,7 +336,7 @@ root.render(
         </SandpackProvider>
       </div>
       {isDebug && (
-        <div className="absolute top-0 left-0 bg-black text-white p-2 z-50">
+        <div className="absolute top-0 left-0 bg-background text-foreground p-2 z-50">
           Debug Mode
         </div>
       )}

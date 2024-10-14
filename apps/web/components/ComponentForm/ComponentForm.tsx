@@ -58,8 +58,12 @@ import { useDebugMode } from "@/hooks/useDebugMode"
 import { Tag } from "@/types/types"
 import { Preview } from "./preview"
 import { Hotkey } from "../ui/hotkey"
+import { useTheme } from "next-themes"
 
 export default function ComponentForm() {
+  const { theme } = useTheme()
+  const isDarkTheme = theme === 'dark'
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -282,7 +286,11 @@ export default function ComponentForm() {
       Object.keys(internalDependencies ?? {}).length === 0 &&
       importsToRemove?.length === 0
     ) {
-      const { files, dependencies } = prepareFilesForPreview(code, demoCode)
+      const { files, dependencies } = prepareFilesForPreview(
+        code,
+        demoCode,
+        isDarkTheme,
+      )
       setPreviewProps({ files, dependencies })
     } else {
       setPreviewProps(null)
@@ -413,7 +421,9 @@ export default function ComponentForm() {
                           {!parsedComponentNames?.length &&
                             !isPreviewReady &&
                             !isEditMode && (
-                              <div className="absolute inset-0 w-full h-full text-gray-400 text-[20px] flex items-center justify-center">
+                              <div
+                                className={`absolute inset-0 w-full h-full ${isDarkTheme ? "text-gray-400" : "text-gray-600"} text-[20px] flex items-center justify-center`}
+                              >
                                 PASTE COMPONENT .TSX CODE HERE
                               </div>
                             )}
@@ -422,7 +432,6 @@ export default function ComponentForm() {
                             value={field.value}
                             onValueChange={(code) => {
                               field.onChange(code)
-
                               if (code.trim()) {
                                 setIsEditMode(false)
                               }
@@ -439,14 +448,17 @@ export default function ComponentForm() {
                               fontFamily: '"Fira code", "Fira Mono", monospace',
                               fontSize: code.length ? 12 : 20,
                               backgroundColor: code.length
-                                ? "#f5f5f5"
+                                ? isDarkTheme
+                                  ? "#2d2d2d"
+                                  : "#f5f5f5"
                                 : "transparent",
                               borderRadius: "0.375rem",
                               height: "100%",
                               overflow: "auto",
                               outline: "black !important",
+                              color: isDarkTheme ? "#e0e0e0" : "inherit",
                             }}
-                            className={`mt-1 w-full border-input ${code.length ? "border" : ""}`}
+                            className={`mt-1 w-full ${isDarkTheme ? "border-gray-700" : "border-input"} ${code.length ? "border" : ""}`}
                           />
                           {!!parsedComponentNames?.length && !isEditMode && (
                             <motion.div
@@ -454,7 +466,7 @@ export default function ComponentForm() {
                               animate={{ opacity: 1 }}
                               exit={{ opacity: 0 }}
                               transition={{ duration: 0.3 }}
-                              className="absolute p-2 border  rounded-md inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-start"
+                              className={`absolute p-2 border rounded-md inset-0 bg-background text-foreground bg-opacity-80 backdrop-blur-sm flex items-center justify-start`}
                             >
                               <div className="flex items-center gap-2 w-full">
                                 <div className="flex items-center justify-between w-full">
@@ -536,12 +548,17 @@ export default function ComponentForm() {
                                 style={{
                                   fontFamily:
                                     '"Fira code", "Fira Mono", monospace',
-                                  fontSize: 12,
-                                  backgroundColor: "#f5f5f5",
+                                  fontSize: code.length ? 12 : 20,
+                                  backgroundColor: code.length
+                                    ? isDarkTheme
+                                      ? "#2d2d2d"
+                                      : "#f5f5f5"
+                                    : "transparent",
                                   borderRadius: "0.375rem",
                                   height: "100%",
                                   overflow: "auto",
-                                  outline: "none !important",
+                                  outline: "black !important",
+                                  color: isDarkTheme ? "#e0e0e0" : "inherit",
                                 }}
                                 className="mt-1 w-full border border-input"
                               />
@@ -551,7 +568,7 @@ export default function ComponentForm() {
                                   animate={{ opacity: 1 }}
                                   exit={{ opacity: 0 }}
                                   transition={{ duration: 0.3, delay: 0.3 }}
-                                  className="absolute p-2 border  rounded-md inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-start"
+                                  className="absolute p-2 border  rounded-md inset-0 bg-background text-foreground bg-opacity-80 backdrop-blur-sm flex items-center justify-start"
                                 >
                                   <div className="flex items-center gap-2 w-full">
                                     <div className="flex items-center justify-between w-full">
@@ -714,9 +731,9 @@ export default function ComponentForm() {
                   transition={{ duration: 0.3, delay: 3 }}
                   className="w-2/3 py-4"
                 >
-                  <h3 className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium mb-2">
                     Component Preview
-                  </h3>
+                  </label>
                   <React.Suspense fallback={<div>Loading preview...</div>}>
                     <Preview {...previewProps} />
                   </React.Suspense>
@@ -743,7 +760,7 @@ export default function ComponentForm() {
             </Button>
             <Button onClick={handleGoToComponent} variant="default">
               View Component
-              <Hotkey keys={["⏎"]} isDarkBackground modifier />
+              <Hotkey keys={["⏎"]} />
             </Button>
           </DialogFooter>
         </DialogContent>

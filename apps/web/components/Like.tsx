@@ -7,6 +7,7 @@ import { Hotkey } from "./ui/hotkey"
 import { cn } from "@/lib/utils"
 import { useLikeComponent, useUnlikeComponent, useHasUserLikedComponent } from "@/utils/dataFetchers"
 import { useUser } from "@clerk/nextjs"
+import { useTheme } from "next-themes"
 
 interface LikeButtonProps {
   componentId: number
@@ -28,6 +29,8 @@ export function LikeButton({
   const likeMutation = useLikeComponent(user?.id ?? '')
   const unlikeMutation = useUnlikeComponent(user?.id ?? '')
   const [isHovered, setIsHovered] = useState(false)
+  const { theme } = useTheme()
+  const isDarkTheme = theme === 'dark'
 
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -43,7 +46,7 @@ export function LikeButton({
     }
   }
 
-    useEffect(() => {
+  useEffect(() => {
     const keyDownHandler = (e: KeyboardEvent) => {
       if (e.code === "KeyL") {
         e.preventDefault()
@@ -63,8 +66,8 @@ export function LikeButton({
   const buttonClasses = cn(
     "flex items-center justify-center relative transition-colors duration-200",
     variant === "default"
-      ? "h-8 w-8 hover:bg-gray-100 rounded-md"
-      : "p-1 hover:bg-gray-200 rounded-full",
+      ? "h-8 w-8 hover:bg-accent rounded-md"
+      : "p-1 hover:bg-accent rounded-full",
   )
 
   const button = (
@@ -78,7 +81,10 @@ export function LikeButton({
       <Heart
         size={size}
         fill={hasLiked || isHovered ? "red" : "none"}
-        className={cn(hasLiked || isHovered ? "stroke-none scale-110 transition-transform" : "")}
+        className={cn(
+          hasLiked || isHovered ? "stroke-none scale-110 transition-transform" : "",
+          isDarkTheme ? "text-foreground" : "text-foreground"
+        )}
       />
     </button>
   )
@@ -87,10 +93,10 @@ export function LikeButton({
     return (
       <Tooltip>
         <TooltipTrigger asChild>{button}</TooltipTrigger>
-        <TooltipContent>
-          <p>
+        <TooltipContent className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
+          <p className="flex items-center">
             {hasLiked ? "Unlike" : "Like"}
-            <Hotkey keys={["L"]} isDarkBackground={true} />
+            <Hotkey keys={["L"]} />
           </p>
         </TooltipContent>
       </Tooltip>

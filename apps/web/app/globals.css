@@ -72,8 +72,8 @@ button.sp-icon-standalone.sp-button {
 }
 
 .sp-preview-container {
-  background: white;
-  border: 1px solid #E5E5E5;
+  background: var(--background);
+  border: hsl(var(--border));
   border-radius: 8px;
   height: 100% !important;
   width: 100% !important;
@@ -103,6 +103,7 @@ overflow: auto;
   width: 100% !important;
   min-height: 700px;
   border-radius: 8px !important;
+  background: var(--background);
 }
 
 .sp-c-euXojQ {

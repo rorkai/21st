@@ -10,7 +10,6 @@ interface ComponentCardProps {
   isLoading?: boolean
 }
 
-
 export function ComponentCard({ component }: ComponentCardProps) {
   const componentUrl = `/${component.user.username}/${component.component_slug}`
 
@@ -22,7 +21,7 @@ export function ComponentCard({ component }: ComponentCardProps) {
             src={component.preview_url || "/placeholder.svg"}
             alt={component.name}
             fallbackSrc="/placeholder.svg"
-            className="w-full h-full object-cover border border-gray-200 rounded-lg hover:border hover:border-gray-300"
+            className="w-full h-full object-cover border border-border rounded-lg hover:border-2 hover:border-primary transition-colors duration-200"
           />
         </div>
         <div className="flex items-center space-x-3">
@@ -31,10 +30,10 @@ export function ComponentCard({ component }: ComponentCardProps) {
             alt={component.user.name}
             size={24}
           />
-          <h2 className="text-sm font-medium text-gray-900 truncate flex-grow">
+          <h2 className="text-sm font-medium text-foreground truncate flex-grow">
             {component.name}
           </h2>
-          <div className="flex items-center space-x-2 text-gray-500 text-sm">
+          <div className="flex items-center space-x-2 text-muted-foreground text-sm">
             <span className="flex items-center">
               <LikeButton
                 componentId={component.id}

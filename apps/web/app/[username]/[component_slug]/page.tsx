@@ -135,18 +135,12 @@ import { ${componentNames.join(", ")} } from "./${component.component_slug}";\n\
 
   const demoComponentName = component.demo_component_name
 
-  const files = generateFiles({
-    demoComponentName,
-    componentSlug: component.component_slug,
-    code,
-    demoCode,
-  })
-
   return (
     <div className="w-full ">
       <ComponentPage
         component={component}
-        files={files}
+        code={code}
+        demoCode={demoCode}
         dependencies={dependencies}
         demoDependencies={demoDependencies}
         demoComponentName={demoComponentName}

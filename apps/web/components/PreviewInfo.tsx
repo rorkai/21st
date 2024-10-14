@@ -18,11 +18,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useTheme } from "next-themes"
 
 export const Info: React.FC<{ info: Component }> = ({ info }) => {
   const [copiedLibDependencies, setCopiedLibDependencies] = useState(false)
   const [copiedDependency, setCopiedDependency] = useState<string | null>(null)
   const [isLibDepsHovered, setIsLibDepsHovered] = useState(false)
+  const { theme } = useTheme()
+  const isDarkTheme = theme === 'dark'
 
   const parseDependencies = useCallback((deps: any): Record<string, string> => {
     if (typeof deps === "string") {
@@ -62,17 +65,17 @@ export const Info: React.FC<{ info: Component }> = ({ info }) => {
   const license = info.license ? getLicenseBySlug(info.license) : null
 
   return (
-    <div className="p-3 space-y-3 text-sm overflow-y-auto max-h-[calc(100vh-100px)]">
+    <div className="p-3 space-y-3 text-sm overflow-y-auto max-h-[calc(100vh-100px)] bg-background text-foreground">
       {info.name && (
         <div className="flex items-center">
-          <span className="text-gray-500 w-1/3">Name:</span>
-          <span className="text-black w-2/3 ">{info.name}</span>
+          <span className="text-muted-foreground w-1/3">Name:</span>
+          <span className="w-2/3">{info.name}</span>
         </div>
       )}
       {info.user && (
         <div className="flex items-center">
-          <span className="text-gray-500 w-1/3">Created by:</span>
-          <div className="flex items-center justify-start hover:bg-gray-100 rounded-md px-2 py-1 -mx-2 mr-auto">
+          <span className="text-muted-foreground w-1/3">Created by:</span>
+          <div className="flex items-center justify-start hover:bg-accent rounded-md px-2 py-1 -mx-2 mr-auto">
             <Link href={`/${info.user.username}`} className="flex items-center">
               <UserAvatar
                 src={info.user.image_url || "/placeholder.svg"}
@@ -89,14 +92,14 @@ export const Info: React.FC<{ info: Component }> = ({ info }) => {
       )}
       {info.description && (
         <div className="flex items-start">
-          <span className="text-gray-500 w-1/3">Description:</span>
-          <span className="text-black w-2/3  ">{info.description}</span>
+          <span className="text-muted-foreground w-1/3">Description:</span>
+          <span className="w-2/3">{info.description}</span>
         </div>
       )}
       {license && (
         <div className="flex items-center">
-          <span className="text-gray-500 w-1/3">License:</span>
-          <span className="text-black w-2/3 text-left">
+          <span className="text-muted-foreground w-1/3">License:</span>
+          <span className="w-2/3 text-left">
             <HoverCard>
               <HoverCardTrigger className="cursor-help">
                 {license.label}
@@ -118,13 +121,13 @@ export const Info: React.FC<{ info: Component }> = ({ info }) => {
       )}
       {info.tags && info.tags.length > 0 && (
         <div className="flex items-center justify-center">
-          <span className="text-gray-500 w-1/3">Теги:</span>
-          <div className="w-2/3 flex flex-wrap gap-2 d">
+          <span className="text-muted-foreground w-1/3">Tags:</span>
+          <div className="w-2/3 flex flex-wrap gap-2">
             {info.tags.map((tag) => (
               <Link
                 key={tag.slug}
                 href={`/s/${tag.slug}`}
-                className="bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded-md text-black transition-colors duration-200"
+                className="bg-accent hover:bg-accent-hover px-2 py-1 rounded-md transition-colors duration-200"
               >
                 {tag.name}
               </Link>
@@ -142,7 +145,7 @@ export const Info: React.FC<{ info: Component }> = ({ info }) => {
             onMouseLeave={() => setIsLibDepsHovered(false)}
           >
             <div className="flex items-center mb-2 justify-between">
-              <span className="text-gray-500 w-full font-medium">
+              <span className="text-muted-foreground w-full font-medium">
                 npm dependencies:
               </span>
               <div
@@ -158,11 +161,11 @@ export const Info: React.FC<{ info: Component }> = ({ info }) => {
               </div>
             </div>
 
-            <div className="pl-1/3 flex flex-col ">
+            <div className="pl-1/3 flex flex-col">
               {Object.entries(libDependencies).map(([dep, version]) => (
                 <div
                   key={dep}
-                  className="flex items-center justify-between group hover:bg-gray-100  rounded-md p-1 -mx-2 "
+                  className="flex items-center justify-between group hover:bg-accent rounded-md p-1 -mx-2"
                 >
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -171,7 +174,7 @@ export const Info: React.FC<{ info: Component }> = ({ info }) => {
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        <span className="pl-1 ">{dep}</span>
+                        <span className="pl-1">{dep}</span>
                       </a>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -185,7 +188,7 @@ export const Info: React.FC<{ info: Component }> = ({ info }) => {
                           href={`https://www.npmjs.com/package/${dep}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hover:bg-gray-200 rounded relative overflow-hidden"
+                          className="hover:bg-accent-hover rounded relative overflow-hidden"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <div className="relative p-1 transition-all duration-300 ease-in-out hover:translate-x-[2px] hover:-translate-y-[2px]">
@@ -201,7 +204,7 @@ export const Info: React.FC<{ info: Component }> = ({ info }) => {
                       <TooltipTrigger asChild>
                         <button
                           onClick={() => copySingleDependency(dep, version)}
-                          className="p-1 hover:bg-gray-200 rounded"
+                          className="p-1 hover:bg-accent-hover rounded"
                         >
                           {copiedDependency === dep ? (
                             <Check size={16} />
@@ -227,11 +230,11 @@ export const Info: React.FC<{ info: Component }> = ({ info }) => {
           <Separator className="w-full !my-6" />
           <div className="flex flex-col">
             <div className="flex items-center mb-2 justify-between">
-              <span className="text-gray-500 w-full font-medium">
+              <span className="text-muted-foreground w-full font-medium">
                 Components used in the demo:
               </span>
             </div>
-            <div className="pl-1/3 ">
+            <div className="pl-1/3">
               {isLoadingDependencies ? (
                 <LoadingSpinner />
               ) : dependencyComponents ? (

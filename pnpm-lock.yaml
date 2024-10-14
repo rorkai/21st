@@ -48,6 +48,9 @@ importers:
       '@clerk/nextjs':
         specifier: ^5.7.1
         version: 5.7.1(next@14.2.6)(react-dom@18.3.1)(react@18.3.1)
+      '@clerk/themes':
+        specifier: ^2.1.35
+        version: 2.1.35
       '@codesandbox/sandpack-react':
         specifier: ^2.19.9
         version: 2.19.9(@lezer/common@1.2.2)(react-dom@18.3.1)(react@18.3.1)
@@ -147,6 +150,9 @@ importers:
       next:
         specifier: 14.2.6
         version: 14.2.6(react-dom@18.3.1)(react@18.3.1)
+      next-themes:
+        specifier: ^0.3.0
+        version: 0.3.0(react-dom@18.3.1)(react@18.3.1)
       prismjs:
         specifier: ^1.29.0
         version: 1.29.0
@@ -1540,6 +1546,14 @@ packages:
       react-dom: 18.3.1(react@18.3.1)
       std-env: 3.7.0
       swr: 2.2.5(react@18.3.1)
+    dev: false
+
+  /@clerk/themes@2.1.35:
+    resolution: {integrity: sha512-woISi7Li+hUrFRQofELgpjr0gYOMK39m+ljW6EcOLiGWmJPJiUqOADS1gPY3kzH/qnO+6jJYWtu4bn8NsSH+Sw==}
+    engines: {node: '>=18.17.0'}
+    dependencies:
+      '@clerk/types': 4.25.0
+      tslib: 2.4.1
     dev: false
 
   /@clerk/types@4.25.0:
@@ -7369,6 +7383,16 @@ packages:
     resolution: {integrity: sha512-dBpDMdxv9Irdq66304OLfEmQ9tbNRFnFTuZiLo+bD+r332bBmMJ8GBLXklIXXgxd3+v9+KUnZaUR5PJMa75Gsg==}
     engines: {node: '>= 0.4.0'}
     dev: true
+
+  /next-themes@0.3.0(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-/QHIrsYpd6Kfk7xakK4svpDI5mmXP0gfvCoJdGpZQ2TOrQZmsW0QxjaiLn8wbIKjtm4BTSqLoix4lxYYOnLJ/w==}
+    peerDependencies:
+      react: ^16.8 || ^17 || ^18
+      react-dom: ^16.8 || ^17 || ^18
+    dependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+    dev: false
 
   /next-tick@1.1.0:
     resolution: {integrity: sha512-CXdUiJembsNjuToQvxayPZF9Vqht7hewsvy2sOWafLvi2awflj9mOC6bHIg50orX8IJvWKY9wYQ/zB2kogPslQ==}

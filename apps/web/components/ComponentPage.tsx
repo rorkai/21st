@@ -12,10 +12,9 @@ import {
 } from "lucide-react"
 import { Component } from "@/types/types"
 import { UserAvatar } from "./UserAvatar"
-import { atom, useAtom } from "jotai"
-import Image from "next/image"
-import { motion } from "framer-motion"
 import Link from "next/link"
+import { atom, useAtom } from "jotai"
+import { motion } from "framer-motion"
 import {
   Tooltip,
   TooltipContent,
@@ -24,6 +23,8 @@ import {
 import { Hotkey } from "./ui/hotkey"
 import { LikeButton } from "./Like"
 import { useIsMobile } from "@/utils/useMediaQuery"
+import { generateFiles } from "@/utils/generateFiles"
+import { useTheme } from "next-themes"
 
 export const isShowCodeAtom = atom(true)
 
@@ -34,19 +35,32 @@ const ComponentPreview = dynamic(() => import("./ComponentPreview"), {
 
 export default function ComponentPage({
   component,
-  files,
+  code,
+  demoCode,
   dependencies,
   demoDependencies,
   demoComponentName,
   internalDependencies,
 }: {
   component: Component
-  files: Record<string, string>
+  code: string
+  demoCode: string
   dependencies: Record<string, string>
   demoDependencies: Record<string, string>
   demoComponentName: string
   internalDependencies: Record<string, string>
-}) {
+  }) {
+    const { theme } = useTheme()
+    const isDarkTheme = theme === "dark"
+    const files = generateFiles({
+      demoComponentName,
+      componentSlug: component.component_slug,
+      code,
+      demoCode,
+      theme: isDarkTheme ? "dark" : "light",
+    })
+  
+  
   const [isShared, setIsShared] = useState(false)
   const [isShowCode, setIsShowCode] = useAtom(isShowCodeAtom)
   const isMobile = useIsMobile()
@@ -110,7 +124,9 @@ export default function ComponentPage({
 
   return (
     <div
-      className={`flex flex-col gap-2 rounded-lg h-[98vh] w-full ${isMobile ? "pt-4" : "p-4"}`}
+      className={`flex flex-col gap-2 rounded-lg h-[98vh] w-full ${
+        isMobile ? "pt-4" : "p-4"
+      } bg-background text-foreground`}
     >
       <div className="flex justify-between items-center">
         <div className="flex gap-1 items-center">
@@ -120,19 +136,15 @@ export default function ComponentPage({
           >
             <Link
               href="/"
-              className="flex min-w-[20px] min-h-[20px] items-center cursor-pointer"
+              className="flex items-center justify-center w-5 h-5 rounded-full cursor-pointer"
             >
-              <Image
-                src="/cc-logo-circle.svg"
-                alt="Logo"
-                width={20}
-                height={20}
-                sizes="(min-height: 20px) 100vw, (min-width: 20px) 100vw, 100vh"
+              <div
+                className="w-full h-full rounded-full bg-foreground"
               />
             </Link>
           </motion.div>
-          <ChevronRight size={12} className="text-gray-500" />
-          <a
+          <ChevronRight size={12} className="text-muted-foreground" />
+          <Link
             href={`/${component.user.username}`}
             className="cursor-pointer flex items-center whitespace-nowrap"
           >
@@ -142,8 +154,8 @@ export default function ComponentPage({
               size={20}
               isClickable={true}
             />
-          </a>
-          <ChevronRight size={12} className="text-gray-500" />
+          </Link>
+          <ChevronRight size={12} className="text-muted-foreground" />
           <div className="flex gap-2 items-start">
             <p className="text-[14px] font-medium whitespace-nowrap">
               {component.name}
@@ -159,24 +171,24 @@ export default function ComponentPage({
                 <button
                   onClick={handleShareClick}
                   disabled={isShared}
-                  className="h-8 w-8 flex items-center justify-center hover:bg-gray-100 rounded-md relative"
+                  className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-md relative"
                 >
                   <div className="absolute inset-0 flex items-center justify-center">
                     {isShared ? <Check size={18} /> : <LinkIcon size={18} />}
                   </div>
                 </button>
               </TooltipTrigger>
-              <TooltipContent>
-                <p>
+              <TooltipContent className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
+                <p className="flex items-center">
                   {isShared ? "Link copied" : "Copy link"}
-                  <Hotkey keys={["⌘", "⇧", "C"]} isDarkBackground={true} />
+                  <Hotkey keys={["⌘", "⇧", "C"]} />
                 </p>
               </TooltipContent>
             </Tooltip>
           )}
-          <div className="relative bg-gray-200 rounded-lg h-8 p-0.5 flex">
+          <div className="relative bg-muted rounded-lg h-8 p-0.5 flex">
             <div
-              className="absolute inset-y-0.5 rounded-md bg-white shadow transition-all duration-200 ease-in-out"
+              className="absolute inset-y-0.5 rounded-md bg-background shadow transition-all duration-200 ease-in-out"
               style={{
                 width: "calc(50% - 2px)",
                 left: isShowCode ? "2px" : "calc(50%)",
@@ -187,16 +199,16 @@ export default function ComponentPage({
                 <button
                   onClick={() => setIsShowCode(true)}
                   className={`relative z-2 px-2 flex items-center justify-center transition-colors duration-200 ${
-                    isShowCode ? "text-gray-800" : "text-gray-500"
+                    isShowCode ? "text-foreground" : "text-muted-foreground"
                   }`}
                 >
                   <CodeXml size={18} />
                 </button>
               </TooltipTrigger>
-              <TooltipContent>
-                <p>
+              <TooltipContent className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
+                <p className="flex items-center">
                   Component code
-                  <Hotkey keys={["["]} isDarkBackground={true} />
+                  <Hotkey keys={["["]} />
                 </p>
               </TooltipContent>
             </Tooltip>
@@ -205,16 +217,16 @@ export default function ComponentPage({
                 <button
                   onClick={() => setIsShowCode(false)}
                   className={`relative z-2s px-2 flex items-center justify-center transition-colors duration-200 ${
-                    !isShowCode ? "text-gray-800" : "text-gray-500"
+                    !isShowCode ? "text-foreground" : "text-muted-foreground"
                   }`}
                 >
                   <Info size={18} />
                 </button>
               </TooltipTrigger>
-              <TooltipContent>
-                <p>
+              <TooltipContent className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
+                <p className="flex items-center">
                   Component info
-                  <Hotkey keys={["]"]} isDarkBackground={true} />
+                  <Hotkey keys={["]"]} />
                 </p>
               </TooltipContent>
             </Tooltip>

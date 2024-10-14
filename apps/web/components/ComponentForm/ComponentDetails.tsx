@@ -34,6 +34,7 @@ import {
 import { cn } from "@/lib/utils"
 import { useClerkSupabaseClient } from "@/utils/clerk"
 import { useAvailableTags } from "@/utils/dataFetchers"
+import { useTheme } from "next-themes"
 
 interface ComponentDetailsProps {
   form: UseFormReturn<FormData>
@@ -60,6 +61,8 @@ export function ComponentDetails({
 }: ComponentDetailsProps) {
   const client = useClerkSupabaseClient()
   const { data: availableTags = [] } = useAvailableTags()
+  const { theme } = useTheme()
+  const isDarkTheme = theme === 'dark'
 
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false)
   const {
@@ -108,11 +111,13 @@ export function ComponentDetails({
   })
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div
+      className={`flex flex-col gap-4 w-full ${isDarkTheme ? "text-foreground" : "text-gray-700"}`}
+    >
       <div className="w-full">
         <label
           htmlFor="name"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium"
         >
           Name
         </label>
@@ -124,7 +129,7 @@ export function ComponentDetails({
               : "Button"
           }
           {...form.register("name", { required: true })}
-          className="mt-1 w-full bg-white"
+          className="mt-1 w-full"
           onChange={(e) => {
             form.setValue("name", e.target.value)
             const generatedSlug = generateSlug(e.target.value)
@@ -136,7 +141,7 @@ export function ComponentDetails({
       <div className="w-full">
         <label
           htmlFor="description"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium"
         >
           Description
         </label>
@@ -144,21 +149,25 @@ export function ComponentDetails({
           id="description"
           placeholder="Add some description to help others find your component"
           {...form.register("description")}
-          className="mt-1 w-full bg-white"
+          className="mt-1 w-full"
         />
       </div>
 
       <div className="w-full">
         <Label
           htmlFor="preview_image"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium"
         >
           Cover Image (1200x900 recommended)
         </Label>
         {!previewImage ? (
           <div
             {...getRootProps()}
-            className={`mt-1 w-full border border-dashed border-gray-300 bg-white rounded-md p-8 text-center cursor-pointer hover:border-gray-400 transition-colors relative`}
+            className={`mt-1 w-full border border-dashed ${
+              isDarkTheme
+                ? "border-gray-600 bg-background"
+                : "border-gray-300 bg-background"
+            } rounded-md p-8 text-center cursor-pointer hover:border-gray-400 transition-colors relative`}
           >
             <input {...getInputProps()} id="preview_image" />
             <CloudUpload strokeWidth={1.5} className="mx-auto h-10 w-10" />
@@ -170,7 +179,7 @@ export function ComponentDetails({
             </p>
             <p className="mt-1 text-xs text-gray-500">PNG, JPEG (max. 5MB)</p>
             {isDragActive && (
-              <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center rounded-md">
+              <div className="absolute inset-0 bg-background bg-opacity-90 flex items-center justify-center rounded-md">
                 <p className="text-sm text-gray-600">Drop image here</p>
               </div>
             )}
@@ -178,7 +187,9 @@ export function ComponentDetails({
         ) : (
           <div
             {...getRootProps()}
-            className="mt-1 w-full border border-gray-300 rounded-md p-2 flex items-center space-x-4 relative"
+            className={`mt-1 w-full border ${
+              isDarkTheme ? "border-gray-600" : "border-gray-300"
+            } rounded-md p-2 flex items-center space-x-4 relative`}
           >
             <input {...getInputProps()} id="preview_image" />
             <div className="w-40 h-32 relative">
@@ -223,7 +234,7 @@ export function ComponentDetails({
               </div>
             </div>
             {isDragActive && (
-              <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center">
+              <div className="absolute inset-0 bg-background bg-opacity-90 flex items-center justify-center">
                 <p className="text-sm text-gray-600">Drop new image here</p>
               </div>
             )}
@@ -234,7 +245,7 @@ export function ComponentDetails({
       <div className="w-full mt-4">
         <label
           htmlFor="license"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium"
         >
           License
         </label>
@@ -244,7 +255,7 @@ export function ComponentDetails({
               variant="outline"
               role="combobox"
               aria-expanded={open}
-              className="w-full justify-between mt-1"
+              className="w-full justify-between mt-1 h-9"
             >
               {license
                 ? licenses.find((l) => l.value === license)?.label
@@ -290,7 +301,7 @@ export function ComponentDetails({
       <div className="w-full">
         <label
           htmlFor="tags"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium"
         >
           Tags (optional)
         </label>
@@ -336,7 +347,35 @@ export function ComponentDetails({
                 menuPortalTarget={document.body}
                 styles={{
                   menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                  control: (base) => ({
+                    ...base,
+                    backgroundColor: isDarkTheme ? "#0A0A0A" : "#ffffff",
+                    color: isDarkTheme ? "#e0e0e0" : "inherit",
+                  }),
+                  menu: (base) => ({
+                    ...base,
+                    backgroundColor: isDarkTheme ? "#0A0A0A" : "#ffffff",
+                  }),
+                  option: (base, state) => ({
+                    ...base,
+                    backgroundColor: state.isFocused
+                      ? isDarkTheme
+                        ? "#0A0A0A"
+                        : "#f0f0f0"
+                      : "transparent",
+                    color: isDarkTheme ? "#e0e0e0" : "inherit",
+                  }),
                 }}
+                theme={(theme) => ({
+                  ...theme,
+                  colors: {
+                    ...theme.colors,
+                    primary: isDarkTheme ? "#6b7280" : "#4a5568",
+                    primary25: isDarkTheme ? "#4a4a4a" : "#f0f0f0",
+                    neutral0: isDarkTheme ? "#2d2d2d" : "#ffffff",
+                    neutral80: isDarkTheme ? "#e0e0e0" : "inherit",
+                  },
+                })}
               />
             )
           }}
@@ -346,14 +385,14 @@ export function ComponentDetails({
       <div className="w-full">
         <label
           htmlFor="component_slug"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium"
         >
           Slug
         </label>
         <Input
           id="component_slug"
           {...form.register("component_slug", { required: true })}
-          className="mt-1 w-full bg-white"
+          className="mt-1 w-full"
           onChange={(e) => {
             setIsSlugManuallyEdited(true)
             form.setValue("component_slug", e.target.value)
@@ -385,7 +424,7 @@ export function ComponentDetails({
         }
       >
         {isLoading ? "Adding..." : "Add component"}
-        {!isLoading && <Hotkey keys={["⌘", "⏎"]} isDarkBackground />}
+        {!isLoading && isFormValid(form, internalDependencies, slugAvailable === true) && <Hotkey keys={["⌘", "⏎"]} />}
       </Button>
     </div>
   )

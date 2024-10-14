@@ -19,8 +19,6 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils"
-
-// Импортируем uiSystems и componentTypes из HeaderServer
 import { uiSystems, componentTypes } from "./HeaderServer"
 
 interface HeaderProps {
@@ -35,7 +33,6 @@ export function Header({ tagName, page }: HeaderProps) {
   const [searchTerm, setSearchTerm] = useAtom(searchAtom)
   const inputRef = React.useRef<HTMLInputElement>(null)
   const isMobile = useIsMobile()
-
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {
@@ -54,21 +51,18 @@ export function Header({ tagName, page }: HeaderProps) {
   }, [])
 
   return (
-    <header className="flex fixed top-0 left-0 right-0 h-14 z-50 items-center justify-between border-b border-gray-200 px-4 py-3 bg-white">
+    <header className="flex fixed top-0 left-0 right-0 h-14 z-50 items-center justify-between border-b border-border px-4 py-3 bg-background text-foreground">
       <div className="flex items-center gap-4">
-        <HeaderServer
-          tagName={tagName}
-          isHomePage={isHomePage}
-          isComponentsPage={isComponentsPage}
-          isMobile={isMobile}
-        />
+        <HeaderServer tagName={tagName} isHomePage={isHomePage} />
         {!isMobile && !tagName && !isComponentsPage && (
           <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>
-                <NavigationMenuTrigger>UI Systems</NavigationMenuTrigger>
+                <NavigationMenuTrigger className="text-foreground">
+                  UI Systems
+                </NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+                  <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-background">
                     {uiSystems.map((system) => (
                       <ListItem
                         key={system.title}
@@ -82,9 +76,11 @@ export function Header({ tagName, page }: HeaderProps) {
                 </NavigationMenuContent>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <NavigationMenuTrigger>Component Types</NavigationMenuTrigger>
+                <NavigationMenuTrigger className="text-foreground">
+                  Component Types
+                </NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                  <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] bg-background">
                     {componentTypes.map((component) => (
                       <ListItem
                         key={component.title}
@@ -155,7 +151,7 @@ const ListItem = React.forwardRef<
           )}
           {...props}
         >
-          <div className="text-sm font-medium leading-none">{title}</div>
+          <div className="text-sm font-medium leading-none text-foreground">{title}</div>
           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
             {children}
           </p>

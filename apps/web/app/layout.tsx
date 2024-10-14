@@ -4,6 +4,8 @@ import "./globals.css"
 import { Providers } from "./providers"
 import { Toaster } from "@/components/ui/toaster"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { ThemeProvider } from "next-themes"
+
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -18,17 +20,19 @@ export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
-}) {
+  }) {
+
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} px-4 h-full`}
-    >
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} px-4 h-full`}>
       <body>
-        <Providers>
-          <TooltipProvider>{children}</TooltipProvider>
-        </Providers>
-        <Toaster />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <TooltipProvider>
+            <Providers>
+              {children}
+            </Providers>
+          </TooltipProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )

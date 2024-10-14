@@ -1,8 +1,9 @@
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Icons } from "./icons"
-import { Logo } from "./Logo"
+import { ThemeToggle } from "./ThemeToggle"
 
 const uiSystems = [
   {
@@ -59,19 +60,20 @@ const componentTypes = [
 interface HeaderServerProps {
   tagName?: string
   isHomePage: boolean
-  isComponentsPage: boolean
-  isMobile: boolean
 }
 
 export function HeaderServer({
   tagName,
   isHomePage,
-  isComponentsPage,
-  isMobile,
 }: HeaderServerProps) {
   return (
     <div className="flex items-center">
-      <Logo size={28} />
+      <Link
+        href="/"
+        className="flex items-center justify-center w-5 h-5 rounded-full cursor-pointer"
+      >
+        <div className="w-full h-full rounded-full bg-foreground" />
+      </Link>
       {!isHomePage && tagName && (
         <>
           <span className="mx-2 text-gray-400">/</span>
@@ -102,11 +104,7 @@ HeaderServer.SocialIcons = function SocialIcons() {
           <span className="sr-only">GitHub</span>
         </div>
       </Link>
-      <Link
-        href="https://x.com/serafimcloud"
-        target="_blank"
-        rel="noreferrer"
-      >
+      <Link href="https://x.com/serafimcloud" target="_blank" rel="noreferrer">
         <div
           className={cn(
             buttonVariants({
@@ -119,6 +117,7 @@ HeaderServer.SocialIcons = function SocialIcons() {
           <span className="sr-only">Twitter</span>
         </div>
       </Link>
+      <ThemeToggle />
     </div>
   )
 }

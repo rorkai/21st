@@ -48,7 +48,11 @@ export const formatComponentName = (name: string): string => {
   return name.replace(/([A-Z])/g, " $1").trim()
 }
 
-export const prepareFilesForPreview = (code: string, demoCode: string) => {
+export const prepareFilesForPreview = (
+  code: string,
+  demoCode: string,
+  isDarkTheme: boolean,
+) => {
   const componentNames = extractComponentNames(code)
   const types = extractExportedTypes(code)
   const demoComponentName = extractDemoComponentName(demoCode)
@@ -68,6 +72,7 @@ export const prepareFilesForPreview = (code: string, demoCode: string) => {
     componentSlug: "Component",
     code,
     demoCode: updatedDemoCode,
+    theme: isDarkTheme ? "dark" : "light",
   })
 
   const dependencies = {

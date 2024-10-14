@@ -13,7 +13,7 @@ export default function HomePage() {
   return (
     <>
       <Head>
-        <title>Home | Component Community</title>
+        <title>Home | 21st.dev</title>
       </Head>
       <Header />
       <div className="container mx-auto mt-20">

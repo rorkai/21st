@@ -102,9 +102,16 @@ export default async function ComponentPageLayout({
   if (codeResult?.error || demoResult?.error) {
     return <div>Error fetching component code</div>
   }
-
-  if (internalDependenciesResults?.find((result) => result?.error)) {
-    return <div>Error fetching internal dependencies</div>
+  const errorResult = internalDependenciesResults?.find((result) => result?.error);
+  if (errorResult) {
+    const errorMessage = errorResult.error?.message || 'Unknown error';
+    return (
+      <div>
+        <h2>Error fetching internal dependencies</h2>
+        <p>Details: {errorMessage}</p>
+        <p>Please try again later or contact support if the problem persists.</p>
+      </div>
+    );
   }
 
   const internalDependenciesWithCode = internalDependenciesResults

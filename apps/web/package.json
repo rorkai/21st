@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.669.0",
+    "@aws-sdk/credential-providers": "^3.670.0",
     "@babel/parser": "^7.25.6",
     "@babel/traverse": "^7.25.6",
     "@babel/types": "^7.25.6",
@@ -42,6 +43,7 @@
     "clsx": "^2.1.1",
     "cmdk": "1.0.0",
     "date-fns": "^4.1.0",
+    "dotenv": "^16.4.5",
     "framer-motion": "^11.9.0",
     "fs": "0.0.1-security",
     "lucide-react": "^0.446.0",

@@ -4,10 +4,10 @@ import React, { useState } from "react"
 import { ComponentCard } from "./ComponentCard"
 import { Component, User } from "../types/types"
 import { Input } from "@/components/ui/input"
-import { LoadingSpinner } from "./Loading"
 import { useQuery } from "@tanstack/react-query"
 import { createSupabaseClerkClient } from "@/utils/clerk"
 import { Skeleton } from "./ui/skeleton"
+import { Hotkey } from "./ui/hotkey"
 
 
 export function ComponentsListMainPage() {
@@ -42,17 +42,36 @@ export function ComponentsListMainPage() {
     refetchOnWindowFocus: false,
     retry: false,
   });
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+        event.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   return (
     <div>
-      <div className="relative mb-4">
+      <div className="relative mb-4 flex items-center max-w-[400px] m-auto">
         <Input
+          ref={inputRef}
           type="text"
-            placeholder="Search components..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-[300px] ml-auto"
-          />
+          placeholder="Search components..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <div className="absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none">
+            <Hotkey keys={["K"]} modifier={true} />
+          </div>
       </div>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-9 list-none pb-10">
         {components?.map((component: Component & { user: User }) => (

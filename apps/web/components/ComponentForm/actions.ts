@@ -3,7 +3,6 @@ import { useClerkSupabaseClient } from "@/utils/clerk"
 import { FormData } from "./utils"
 import { UseFormReturn } from "react-hook-form"
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
-import { fromEnv } from "@aws-sdk/credential-providers";
 import path from 'path';
 import dotenv from 'dotenv';
 
@@ -11,15 +10,15 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 const r2Client = new S3Client({
   region: "auto",
-  endpoint: "https://c65c8ba13697ad2e3b97b0ccff517f03.r2.cloudflarestorage.com",
+  endpoint: process.env.NEXT_PUBLIC_R2_ENDPOINT,
   credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+    accessKeyId: process.env.NEXT_PUBLIC_R2_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.NEXT_PUBLIC_R2_SECRET_ACCESS_KEY || '',
   },
 });
 
-if (!process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY) {
-  console.error('R2 credentials are missing');
+if (!process.env.NEXT_PUBLIC_R2_ACCESS_KEY_ID || !process.env.NEXT_PUBLIC_R2_SECRET_ACCESS_KEY || !process.env.NEXT_PUBLIC_R2_ENDPOINT) {
+  console.error('R2 credentials or endpoint are missing');
 }
 
 export const uploadToR2 = async (

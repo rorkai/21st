@@ -130,7 +130,9 @@ export default async function ComponentPageLayout({
   const rawDemoCode = demoResult?.data as string
 
   const componentNames = JSON.parse(component.component_name)
-  const demoCode = `import { ${componentNames.join(", ")} } from "./${component.component_slug}";\n\n${rawDemoCode}`
+  const demoCode = `
+import * as React from "react"
+import { ${componentNames.join(", ")} } from "./${component.component_slug}";\n\n${rawDemoCode}`
 
   const demoComponentName = component.demo_component_name
 

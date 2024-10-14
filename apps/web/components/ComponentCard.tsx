@@ -3,7 +3,7 @@ import Link from "next/link"
 import ComponentPreviewImage from "./ComponentPreviewImage"
 import { Component } from "../types/types"
 import { UserAvatar } from "./UserAvatar"
-import { LikeButton } from "./LikeButton"
+import { LikeButton } from "./Like"
 
 interface ComponentCardProps {
   component: Component

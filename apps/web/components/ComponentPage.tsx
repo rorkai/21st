@@ -22,7 +22,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Hotkey } from "./ui/hotkey"
-import { LikeButton } from "./LikeButton"
+import { LikeButton } from "./Like"
 import { useIsMobile } from "@/utils/useMediaQuery"
 
 export const isShowCodeAtom = atom(true)

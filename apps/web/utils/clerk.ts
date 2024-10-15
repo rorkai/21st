@@ -36,15 +36,16 @@ export const createSupabaseClerkClient = (
   )
 }
 
-const supabaseClientAtom = atom<SupabaseClient>(createSupabaseClerkClient())
+const supabaseClerkClientAtom = atom<SupabaseClient | null>(null)
+const defaultSupabaseClient = createSupabaseClerkClient()
 
 export function useClerkSupabaseClient(): SupabaseClient {
   const { session } = useSession()
-  const [supabaseClient, setSupabaseClient] = useAtom(supabaseClientAtom)
+  const [clerkClient, setClerkClient] = useAtom(supabaseClerkClientAtom)
 
   useEffect(() => {
-    if (session) {
-      setSupabaseClient(
+    if (session && !clerkClient) {
+      setClerkClient(
         createSupabaseClerkClient(() =>
           session.getToken({ template: "supabase" }),
         ),
@@ -52,5 +53,5 @@ export function useClerkSupabaseClient(): SupabaseClient {
     }
   }, [session])
 
-  return supabaseClient
+  return clerkClient ?? defaultSupabaseClient
 }

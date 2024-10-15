@@ -70,7 +70,7 @@ export function HeaderServer({
     <div className="flex items-center">
       <Link
         href="/"
-        className="flex items-center justify-center w-5 h-5 rounded-full cursor-pointer"
+        className="flex items-center justify-center w-7 h-7 rounded-full cursor-pointer"
       >
         <div className="w-full h-full rounded-full bg-foreground" />
       </Link>

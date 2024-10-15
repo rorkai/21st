@@ -27,7 +27,7 @@ export default function App() {
           <div className="bg-background text-foreground w-full h-full flex items-center justify-center relative">
             <div className="absolute lab-bg inset-0 size-full bg-[radial-gradient(#00000055_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff22_1px,transparent_1px)] [background-size:16px_16px]">
             </div>
-            <div className="flex w-full min-w-[500px] overflow-auto md:w-auto justify-center items-center p-4 relative">
+            <div className="flex w-full min-w-[500px] md:w-auto justify-center items-center p-4 relative">
               <${demoComponentName} />
             </div>
           </div>

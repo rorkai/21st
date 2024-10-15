@@ -275,7 +275,7 @@ root.render(
                           <div className="flex items-center justify-center text-white w-5 h-5 mr-3">
                             <Terminal size={20} />
                           </div>
-                          <div className="flex-grow overflow-hidden">
+                          <div className="flex-grow overflow-scroll scrollbar-hide">
                             <code className="flex items-center whitespace-nowrap font-mono text-sm">
                               <span className="mr-2 text-white">npx</span>
                               <span className="text-gray-400">

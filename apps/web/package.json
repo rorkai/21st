@@ -58,6 +58,7 @@
     "react-hook-form": "^7.53.0",
     "svix": "^1.37.0",
     "tailwind-merge": "^2.5.2",
+    "tailwind-scrollbar-hide": "^1.1.7",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.23.8"
   },

@@ -11,26 +11,54 @@ export function generateFiles({
   demoCode: string
   theme: "light" | "dark"
 }) {
-  const isDarkTheme = theme === "dark"
 
   const files = {
     "/App.tsx": `
 import React from 'react';
 import { ${demoComponentName} } from './demo';
+import { ThemeProvider } from './next-themes';
 
 export default function App() {
   return (
-    <div className="flex items-center h-screen m-auto justify-center ${isDarkTheme ? "dark" : ""}">
-      <div className="bg-background text-foreground w-full h-full flex items-center justify-center relative">
-        <div className="absolute lab-bg inset-0 size-full bg-[radial-gradient(#00000055_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff22_1px,transparent_1px)] [background-size:16px_16px]">
-        </div>
-        <div className="flex w-full min-w-[500px] overflow-auto md:w-auto justify-center items-center p-4 relative">
-          <${demoComponentName} />
+    <ThemeProvider attribute="class" defaultTheme="${theme}" enableSystem={false}>
+      <div className="flex items-center h-screen m-auto justify-center">
+        <div className="bg-background text-foreground w-full h-full flex items-center justify-center relative">
+          <div className="absolute lab-bg inset-0 size-full bg-[radial-gradient(#00000055_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff22_1px,transparent_1px)] [background-size:16px_16px]">
+          </div>
+          <div className="flex w-full min-w-[500px] overflow-auto md:w-auto justify-center items-center p-4 relative">
+            <${demoComponentName} />
+          </div>
         </div>
       </div>
-    </div>
+    </ThemeProvider>
   );
 }
+`,
+    "/next-themes.tsx": `
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+const ThemeContext = createContext({
+  theme: 'light',
+  setTheme: (theme: string) => {},
+});
+
+export const useTheme = () => useContext(ThemeContext);
+
+export const ThemeProvider = ({ children, defaultTheme = 'light', enableSystem = false }) => {
+  const [theme, setTheme] = useState(defaultTheme);
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+  }, [theme]);
+
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
 `,
     [`/${componentSlug}.tsx`]: code,
     "/demo.tsx": demoCode,

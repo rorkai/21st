@@ -28,7 +28,7 @@ import { useTheme } from "next-themes"
 import { ThemeToggle } from "./ThemeToggle"
 import { useQuery } from "@tanstack/react-query"
 import { useClerkSupabaseClient } from "@/utils/clerk"
-import { useUser } from "@clerk/nextjs"
+import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs"
 
 export const isShowCodeAtom = atom(true)
 
@@ -187,12 +187,23 @@ export default function ComponentPage({
 
         <div className="flex items-center gap-1">
           <ThemeToggle />
-          <LikeButton
-            componentId={component.id}
-            size={18}
-            showTooltip={true}
-            liked={liked ?? false}
-          />
+          <SignedIn>
+            <LikeButton
+              componentId={component.id}
+              size={18}
+              showTooltip={true}
+              liked={liked ?? false}
+            />
+          </SignedIn>
+          <SignedOut>
+            <SignInButton>
+              <LikeButton
+                componentId={component.id}
+                size={18}
+                liked={false}
+              />
+            </SignInButton>
+          </SignedOut>
           {!isMobile && (
             <Tooltip>
               <TooltipTrigger asChild>

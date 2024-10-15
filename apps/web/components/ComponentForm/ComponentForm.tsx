@@ -747,9 +747,6 @@ export default function ComponentForm() {
                   transition={{ duration: 0.3, delay: 3 }}
                   className="w-2/3 py-4"
                 >
-                  <label className="block text-sm font-medium mb-2">
-                    Component Preview
-                  </label>
                   <React.Suspense fallback={<div>Loading preview...</div>}>
                     <Preview {...previewProps} isDebug={isDebug} />
                   </React.Suspense>

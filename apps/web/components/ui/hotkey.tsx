@@ -8,11 +8,13 @@ import { cn } from "@/lib/utils"
 interface HotkeyProps {
   keys: string[]
   modifier?: boolean
+  isBackgroundDark?: boolean
 }
 
 export const Hotkey: React.FC<HotkeyProps> = ({
   keys,
   modifier = false,
+  isBackgroundDark = false,
 }) => {
   const [, setModifierText] = useState("⌃")
   const [displayKeys, setDisplayKeys] = useState(keys)
@@ -31,14 +33,13 @@ export const Hotkey: React.FC<HotkeyProps> = ({
     : "bg-gradient-to-bl from-transparent via-transparent to-white/20"
 
   return (
-    <span className="inline-flex gap-[2px]">
+    <span className={cn("inline-flex gap-[2px]", isBackgroundDark ? "text-background" : "text-foreground")}>
       {displayKeys.map((key, index) => (
         <kbd
           key={index}
           suppressHydrationWarning
           className={cn(
-            "inline-flex items-center justify-center rounded border border-border text-foreground",
-            "font-sans text-[10px] font-medium h-4 w-4",
+            "inline-flex items-center justify-center rounded border border-border font-sans text-[10px] font-medium h-4 w-4",
             index === 0 ? "ml-2" : "ml-[1px]",
             bgGradient,
             "bg-[length:100%_130%] bg-[0_100%]",

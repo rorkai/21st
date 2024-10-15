@@ -412,7 +412,7 @@ const ComponentDetails = forwardRef<ComponentDetailsRef, ComponentDetailsProps>(
         }
       >
         {isLoading ? "Adding..." : "Add component"}
-        {!isLoading && isFormValid(form, internalDependencies, slugAvailable === true) && <Hotkey keys={["⌘", "⏎"]} />}
+        {!isLoading && isFormValid(form, internalDependencies, slugAvailable === true) && <Hotkey keys={["⌘", "⏎"]} isBackgroundDark={true} />}
       </Button>
     </div>
   )

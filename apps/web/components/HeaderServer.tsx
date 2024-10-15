@@ -86,7 +86,8 @@ export function HeaderServer({
 
 HeaderServer.SocialIcons = function SocialIcons() {
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-[2px]">
+      <ThemeToggle />
       <Link
         href="https://github.com/rorkai/21st"
         target="_blank"
@@ -100,7 +101,7 @@ HeaderServer.SocialIcons = function SocialIcons() {
             "h-8 w-8 px-0",
           )}
         >
-          <Icons.gitHub className="h-4 w-4" />
+          <Icons.gitHub className="h-[18px] w-[18px]" />
           <span className="sr-only">GitHub</span>
         </div>
       </Link>
@@ -113,11 +114,10 @@ HeaderServer.SocialIcons = function SocialIcons() {
             "h-8 w-8 px-0",
           )}
         >
-          <Icons.twitter className="h-3 w-3 fill-current" />
+          <Icons.twitter className="h-[14px] w-[14px] fill-current" />
           <span className="sr-only">Twitter</span>
         </div>
       </Link>
-      <ThemeToggle />
     </div>
   )
 }

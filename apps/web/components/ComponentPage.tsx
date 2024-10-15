@@ -25,6 +25,7 @@ import { LikeButton } from "./Like"
 import { useIsMobile } from "@/utils/useMediaQuery"
 import { generateFiles } from "@/utils/generateFiles"
 import { useTheme } from "next-themes"
+import { ThemeToggle } from "./ThemeToggle"
 
 export const isShowCodeAtom = atom(true)
 
@@ -34,6 +35,7 @@ const ComponentPreview = dynamic(() => import("./ComponentPreview"), {
 })
 
 export default function ComponentPage({
+  
   component,
   code,
   demoCode,
@@ -138,9 +140,7 @@ export default function ComponentPage({
               href="/"
               className="flex items-center justify-center w-5 h-5 rounded-full cursor-pointer"
             >
-              <div
-                className="w-full h-full rounded-full bg-foreground"
-              />
+              <div className="w-full h-full rounded-full bg-foreground" />
             </Link>
           </motion.div>
           <ChevronRight size={12} className="text-muted-foreground" />
@@ -164,7 +164,8 @@ export default function ComponentPage({
         </div>
 
         <div className="flex items-center gap-1">
-          <LikeButton componentId={component.id} size={20} showTooltip={true} />
+          <ThemeToggle />
+          <LikeButton componentId={component.id} size={18} showTooltip={true} />
           {!isMobile && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -174,7 +175,7 @@ export default function ComponentPage({
                   className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-md relative"
                 >
                   <div className="absolute inset-0 flex items-center justify-center">
-                    {isShared ? <Check size={18} /> : <LinkIcon size={18} />}
+                    {isShared ? <Check size={16} /> : <LinkIcon size={16} />}
                   </div>
                 </button>
               </TooltipTrigger>
@@ -235,6 +236,7 @@ export default function ComponentPage({
       </div>
       <div className="flex w-full !flex-grow">
         <ComponentPreview
+          key={theme}
           files={files}
           dependencies={dependencies}
           demoDependencies={demoDependencies}

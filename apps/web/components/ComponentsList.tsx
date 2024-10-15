@@ -6,6 +6,7 @@ import { Component } from "../types/types"
 import { useComponents, useTagInfo } from "@/utils/dataFetchers"
 import { Header } from "./Header"
 import { useClerkSupabaseClient } from "@/utils/clerk"
+import { cn } from "@/lib/utils"
 
 interface ComponentsListProps {
   components?: Component[]
@@ -26,7 +27,10 @@ export function ComponentsList({
     <div>
       {tagSlug && <Header tagName={tagInfo?.name} page="components" />}
       <div
-        className={`grid ${tagSlug ? "mt-20" : ""} grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-9 list-none pb-10`}
+        className={cn(
+          `grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-9 list-none pb-10`,
+          tagSlug ? "mt-20" : "",
+        )}
       >
         {components?.map((component) => (
           <ComponentCard

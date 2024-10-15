@@ -5,6 +5,7 @@ import { Providers } from "./providers"
 import { Toaster } from "@/components/ui/toaster"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { ThemeProvider } from "next-themes"
+import { cn } from "@/lib/utils"
 
 
 const geistSans = localFont({
@@ -23,13 +24,13 @@ export default function RootLayout({
   }) {
 
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} px-4 h-full`}>
-      <body>
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={cn(geistSans.variable, geistMono.variable, "px-4 h-full")}
+      >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <TooltipProvider>
-            <Providers>
-              {children}
-            </Providers>
+            <Providers>{children}</Providers>
           </TooltipProvider>
           <Toaster />
         </ThemeProvider>

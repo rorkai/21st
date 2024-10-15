@@ -50,7 +50,7 @@ export default function ComponentPreview({
   const [isComponentsLoaded, setIsComponentsLoaded] = useState(false)
   const [isShowCode] = useAtom(isShowCodeAtom)
   const isDebug = useDebugMode()
-  const installUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/r/${componentSlug}`
+  const installUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/r/${componentInfo.user.username}/${componentSlug}`
   const { theme } = useTheme()
   const isDarkTheme = theme === 'dark'
 

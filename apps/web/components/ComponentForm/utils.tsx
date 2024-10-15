@@ -56,8 +56,6 @@ export const prepareFilesForPreview = (
   const componentNames = extractComponentNames(code)
   const types = extractExportedTypes(code)
   const demoComponentName = extractDemoComponentName(demoCode)
-  console.log("componentNames", componentNames)
-  console.log("types", types)
 
   const hasUseClient = /^"use client";?\s*/.test(demoCode)
 

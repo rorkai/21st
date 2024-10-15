@@ -28,7 +28,6 @@ export function ComponentsListMainPage() {
         }
         return data
       }
-      console.log("Fetching components with query:", searchTerm);
       const { data: components, error } = await supabase.rpc("search_components", {
         search_query: searchTerm,
       })

@@ -233,8 +233,6 @@ export function removeComponentImports(
 export function removeAsyncFromExport(code: string): string {
   const asyncExportRegex = /export\s+async\s+function/g
   const modifiedCode = code.replace(asyncExportRegex, "export function")
-  console.log("Original code:", code)
-  console.log("Modified code:", modifiedCode)
   return modifiedCode
 }
 

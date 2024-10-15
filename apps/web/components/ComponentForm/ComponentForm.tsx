@@ -43,7 +43,7 @@ import {
 
 import { addTagsToComponent } from "@/utils/dataFetchers"
 
-import { ComponentDetails } from "./ComponentDetails"
+import { ComponentDetails, ComponentDetailsRef } from "./ComponentDetails"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { FileTerminal, SunMoon, Codepen } from "lucide-react"
@@ -113,6 +113,14 @@ export default function ComponentForm() {
   const [importsToRemove, setImportsToRemove] = useState<string[] | undefined>(
     undefined,
   )
+
+  const componentDetailsRef = useRef<ComponentDetailsRef>(null)
+
+  useEffect(() => {
+    if (showComponentDetails && componentDetailsRef.current) {
+      componentDetailsRef.current.focusNameInput()
+    }
+  }, [showComponentDetails])
 
   useEffect(() => {
     const updateDependencies = () => {
@@ -375,14 +383,12 @@ export default function ComponentForm() {
     if (exportWrapped) return
 
     const code = form.getValues("code")
-    console.log("code in useEffect wrapExportInBraces", code)
     if (!code) return
 
     const modifiedCode = wrapExportInBraces(code)
 
     if (modifiedCode !== code) {
       form.setValue("code", modifiedCode)
-      console.log("modifiedCode in useEffect wrapExportInBraces", modifiedCode)
       setExportWrapped(true)
     } else {
       setExportWrapped(true)
@@ -393,15 +399,10 @@ export default function ComponentForm() {
     const demoCode = form.getValues("demo_code")
     if (!demoCode) return
 
-    console.log("Original demo code:", demoCode)
-
     const modifiedDemoCode = removeAsyncFromExport(demoCode)
 
     if (modifiedDemoCode !== demoCode) {
       form.setValue("demo_code", modifiedDemoCode)
-      console.log("Async removed from export. New demo code:", modifiedDemoCode)
-    } else {
-      console.log("No async exports found or no changes made.")
     }
   }, [form.watch("demo_code")])
 
@@ -433,13 +434,13 @@ export default function ComponentForm() {
 
   const mainComponentName = getMainComponentName()
 
-  const demoCodeTextAreaRef = useRef<HTMLTextAreaElement>(null)
-
+    const demoCodeTextAreaRef = useRef<HTMLTextAreaElement>(null)
+  
   useEffect(() => {
-    if (showComponentDetails && demoCodeTextAreaRef.current) {
-      demoCodeTextAreaRef.current.blur()
+    if (parsedComponentNames?.length && demoCodeTextAreaRef.current) {
+      demoCodeTextAreaRef.current.focus()
     }
-  }, [showComponentDetails])
+  }, [parsedComponentNames])
 
   return (
     <>
@@ -465,38 +466,36 @@ export default function ComponentForm() {
                             height: isEditMode
                               ? "33vh"
                               : parsedComponentNames?.length
-                                ? "64px"
+                                ? "56px"
                                 : "50px",
                           }}
                           transition={{ duration: 0.3 }}
                         >
-                          <Textarea
-                            value={field.value}
-                            onChange={(e) => {
-                              field.onChange(e.target.value)
-                              if (e.target.value.trim()) {
-                                setIsEditMode(false)
-                              }
-                            }}
-                            className={`mt-1 w-full h-full ${field.value.length ? "" : "border-none shadow-none text-[20px] bg-transparent"}`}
-                          />
-                          {!parsedComponentNames?.length &&
-                            field.value.length === 0 &&
-                            !isPreviewReady &&
-                            !isEditMode && (
-                              <div
-                                className={`absolute inset-0 w-full h-full ${isDarkTheme ? "text-gray-400" : "text-gray-600"} text-[20px] flex items-center justify-center cursor-text`}
-                                onClick={() => {
-                                  const textarea =
-                                    document.querySelector("textarea")
-                                  if (textarea) {
-                                    textarea.focus()
-                                  }
-                                }}
-                              >
-                                PASTE COMPONENT .TSX CODE HERE
-                              </div>
-                            )}
+                            <Textarea
+                              value={field.value}
+                              onChange={(e) => {
+                                field.onChange(e.target.value)
+                                if (e.target.value.trim()) {
+                                  setIsEditMode(false)
+                                }
+                              }}
+                              className={`mt-1 min-h-[56px] w-full h-full ${field.value.length ? "" : "border-none shadow-none text-[20px] bg-transparent"}`}
+                            />
+                            {!parsedComponentNames?.length && field.value.length === 0 &&
+                              !isPreviewReady &&
+                              !isEditMode && (
+                                <div
+                                  className={`absolute inset-0 w-full h-full ${isDarkTheme ? "text-gray-400" : "text-gray-600"} text-[20px] flex items-center justify-center cursor-text`}
+                                  onClick={() => {
+                                    const textarea = document.querySelector('textarea');
+                                    if (textarea) {
+                                      textarea.focus();
+                                    }
+                                  }}
+                                >
+                                  PASTE COMPONENT .TSX CODE HERE
+                                </div>
+                              )}
                           {!!parsedComponentNames?.length && !isEditMode && (
                             <motion.div
                               initial={{ opacity: 0 }}
@@ -516,7 +515,7 @@ export default function ComponentForm() {
                                         alt="TSX File"
                                       />
                                     </div>
-                                    <div className="flex flex-col items-start">
+                                    <div className="flex flex-col items-start h-10">
                                       <p className="font-semibold text-[14px]">
                                         {mainComponentName} code
                                       </p>
@@ -564,7 +563,7 @@ export default function ComponentForm() {
                               className="relative"
                               animate={{
                                 height: showComponentDetails
-                                  ? "64px"
+                                  ? "56px"
                                   : "calc(100vh/3)",
                               }}
                               transition={{ duration: 0.3 }}
@@ -597,7 +596,7 @@ export default function ComponentForm() {
                                             alt="Demo File"
                                           />
                                         </div>
-                                        <div className="flex flex-col items-start">
+                                        <div className="flex flex-col items-start h-10">
                                           <p className="font-semibold text-[14px]">
                                             Demo code
                                           </p>
@@ -726,6 +725,7 @@ export default function ComponentForm() {
                     className="w-full"
                   >
                     <ComponentDetails
+                      ref={componentDetailsRef}
                       form={form}
                       previewImage={previewImage}
                       handleFileChange={handleFileChange}

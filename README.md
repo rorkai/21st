@@ -14,7 +14,7 @@ We support:
 - TypeScript
 - Tailwind themes
 - RadixUI
-- Any other npm dependencies (via [Sandpack](https://sandpack.codesandbox.io/)
+- Any other npm dependencies (via [Sandpack](https://sandpack.codesandbox.io/))
 - Internal dependencies (you use any component of our registry as a dependency)
 
 We encourage everyone to post TypeScript components, JS support is currently untested.
@@ -27,7 +27,9 @@ For instance, for `shadcn/ui/accordion` you'll run:
 npx shadcn@latest add "https://21st.dev/r/shadcn/accordion"
 ```
 
-You can also copy the code directly.
+The command will create all the necessary files for the component and its dependencies (excluding the `.demo.tsx` file), and extend your Tailwind theme.
+
+You can also copy the code directly from the website, but note that you’ll need to copy and paste all the files for the component and its dependencies, so using the `npx shadcn` command is the recommended way.
 
 ## Contributing to 21st
 

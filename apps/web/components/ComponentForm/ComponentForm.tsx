@@ -209,7 +209,7 @@ export default function ComponentForm() {
         }),
       ])
 
-      const installUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/r/${user?.username}/${data.component_slug}`
+      const installUrl = `${process.env.NEXT_PUBLIC_API_URL}/r/${user?.username}/${data.component_slug}`
 
       let previewImageUrl = ""
       if (data.preview_url) {

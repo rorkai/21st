@@ -11,6 +11,14 @@ const nextConfig = {
     }
     return config;
   },
+  async rewrites() {
+    return [
+      {
+        source: '/r/:path*',
+        destination: '/api/r/:path*',
+      },
+    ];
+  },
 };
 
 export default nextConfig;

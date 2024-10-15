@@ -24,7 +24,7 @@ Pick a component from [21st.dev](https://21st.dev), copy the `npx shadcn` comman
 
 For instance, for `shadcn/ui/accordion` you'll run:
 ```bash
-npx shadcn@latest add "https://21st.dev/api/r/shadcn/accordion"
+npx shadcn@latest add "https://21st.dev/r/shadcn/accordion"
 ```
 
 You can also copy the code directly.

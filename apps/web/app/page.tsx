@@ -1,15 +1,27 @@
 import { Header } from "../components/Header"
 import React from "react"
-import { ComponentsListMainPage } from "../components/ComponentsListMainPage"
+import { HomePageClient } from "./page.client"
 import { Metadata } from "next"
 import Head from "next/head"
+import { supabaseWithAdminAccess } from "@/utils/supabase"
 
 export const metadata: Metadata = {
-  title: "Home | Component Community",
+  title: "Home | 21st.dev",
   description: "Discover and share code components with the community.",
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { data: initialComponents, error: componentsError } =
+    await supabaseWithAdminAccess
+      .from("components")
+      .select("*, user:users!user_id (*)")
+      .limit(40)
+      .eq("is_public", true)
+
+  if (componentsError) {
+    return null
+  }
+
   return (
     <>
       <Head>
@@ -17,7 +29,7 @@ export default function HomePage() {
       </Head>
       <Header page="home" />
       <div className="container mx-auto mt-20">
-        <ComponentsListMainPage />
+        <HomePageClient initialComponents={initialComponents} />
       </div>
     </>
   )

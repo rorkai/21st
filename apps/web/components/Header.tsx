@@ -1,11 +1,10 @@
 "use client"
 
-import React from "react"
+import React, { useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
-import { useAtom } from "jotai"
-import { searchAtom } from "./ComponentsListMainPage"
+import { atom, useAtom } from "jotai"
 import { Input } from "@/components/ui/input"
 import { Hotkey } from "./ui/hotkey"
 import { useIsMobile } from "@/utils/useMediaQuery"
@@ -21,19 +20,20 @@ import {
 import { cn } from "@/lib/utils"
 import { uiSystems, componentTypes } from "./HeaderServer"
 
-interface HeaderProps {
+export const searchQueryAtom = atom("")
+
+export function Header({ tagName, page }: {
   tagName?: string
   page?: string
-}
-
-export function Header({ tagName, page }: HeaderProps) {
+}) {
   const isHomePage = page === "home"
   const isPublishPage = page === "publish"
   const isComponentsPage = page === "components"
-  const [searchTerm, setSearchTerm] = useAtom(searchAtom)
+  const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom)
   const inputRef = React.useRef<HTMLInputElement>(null)
   const isMobile = useIsMobile()
-  React.useEffect(() => {
+
+  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {
         event.preventDefault()
@@ -105,8 +105,8 @@ export function Header({ tagName, page }: HeaderProps) {
             ref={inputRef}
             type="text"
             placeholder="Search components..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="pr-14"
           />
           <div className="absolute top-0 right-3 h-full flex items-center pointer-events-none">
@@ -151,7 +151,9 @@ const ListItem = React.forwardRef<
           )}
           {...props}
         >
-          <div className="text-sm font-medium leading-none text-foreground">{title}</div>
+          <div className="text-sm font-medium leading-none text-foreground">
+            {title}
+          </div>
           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
             {children}
           </p>

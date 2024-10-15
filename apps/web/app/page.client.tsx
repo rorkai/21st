@@ -1,56 +1,60 @@
 "use client"
 
 import React from "react"
-import { ComponentCard } from "./ComponentCard"
-import { Component, User } from "../types/types"
+import { ComponentCard } from "@/components/ComponentCard"
+import { Component, User } from "@/types/types"
 import { useQuery } from "@tanstack/react-query"
 import { useClerkSupabaseClient } from "@/utils/clerk"
-import { Skeleton } from "./ui/skeleton"
-import { atom, useAtom } from "jotai"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useAtom } from "jotai"
+import { searchQueryAtom } from "@/components/Header"
 
-export const searchAtom = atom("")
-
-export function ComponentsListMainPage() {
-  const [searchTerm] = useAtom(searchAtom)
+export function HomePageClient({
+  initialComponents,
+}: {
+  initialComponents: Component[]
+}) {
+  const [searchQuery] = useAtom(searchQueryAtom)
   const supabase = useClerkSupabaseClient()
 
   const { data: components } = useQuery({
-    queryKey: ['components', searchTerm],
+    queryKey: ["components", searchQuery],
     queryFn: async () => {
-      if (!searchTerm) {
+      if (!searchQuery) {
         const { data, error } = await supabase
           .from("components")
           .select("*, user:users!user_id (*)")
           .limit(1000)
-        .eq("is_public", true)
+          .eq("is_public", true)
         if (error) {
-          throw new Error(error.message || `HTTP error: ${status}`);
+          throw new Error(error.message || `HTTP error: ${status}`)
         }
         return data
       }
-      const { data: components, error } = await supabase.rpc("search_components", {
-        search_query: searchTerm,
-      })
+      const { data: components, error } = await supabase.rpc(
+        "search_components",
+        {
+          search_query: searchQuery,
+        },
+      )
       if (error) {
-        throw new Error(error.message || `HTTP error: ${status}`);
+        throw new Error(error.message || `HTTP error: ${status}`)
       }
       return components.map((component: Component & { user_data: User }) => ({
         ...component,
         user: component.user_data as User,
       }))
     },
+    initialData: initialComponents,
     refetchOnWindowFocus: false,
     retry: false,
-  });
+  })
 
   return (
     <div>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-9 list-none pb-10">
         {components?.map((component: Component & { user: User }) => (
-          <ComponentCard
-            key={component.id}
-            component={component}
-          />
+          <ComponentCard key={component.id} component={component} />
         ))}
         {components === undefined && (
           <>

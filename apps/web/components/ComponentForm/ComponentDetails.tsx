@@ -5,16 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Hotkey } from "@/components/ui/hotkey"
-import CreatableSelect from "react-select/creatable"
 import Image from "next/image"
 import {
   generateSlug,
   generateUniqueSlug,
   useIsCheckSlugAvailable,
 } from "@/components/ComponentForm/useIsCheckSlugAvailable"
-import { FormData, TagOption } from "./utils"
-import { Globe, Lock } from "lucide-react"
-import { Checkbox } from "@/components/ui/checkbox"
+import { FormData } from "./utils"
 import { useDropzone } from "react-dropzone"
 import { CloudUpload } from "lucide-react"
 import { Check, ChevronsUpDown } from "lucide-react"

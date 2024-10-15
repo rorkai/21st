@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation"
 import ComponentForm from "@/components/ComponentForm/ComponentForm"
 import { LoadingSpinner } from "@/components/Loading"
 import Head from "next/head"
-import { House } from "lucide-react"
 import Link from "next/link"
 
 export default function PublishPage() {

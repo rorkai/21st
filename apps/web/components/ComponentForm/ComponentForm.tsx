@@ -700,7 +700,7 @@ export default function ComponentForm() {
                     Component Preview
                   </label>
                   <React.Suspense fallback={<div>Loading preview...</div>}>
-                    <Preview {...previewProps} />
+                    <Preview {...previewProps} isDebug={isDebug} />
                   </React.Suspense>
                 </motion.div>
               )}

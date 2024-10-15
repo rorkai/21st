@@ -73,6 +73,13 @@ export function extractDependencies(code: string): Record<string, string> {
 
     const defaultDependencies = ["react", "react-dom", "tailwindcss"]
 
+    const shouldAddDependency = (packageName: string) => {
+      return (
+        !defaultDependencies.includes(packageName) &&
+        !packageName.startsWith("next")
+      )
+    }
+
     traverse(ast, {
       ImportDeclaration({ node }) {
         const importDeclaration = node as t.ImportDeclaration
@@ -84,7 +91,7 @@ export function extractDependencies(code: string): Record<string, string> {
           !source.startsWith("@/")
         ) {
           let packageName = source
-          if (!defaultDependencies.includes(packageName)) {
+          if (shouldAddDependency(packageName)) {
             dependencies[packageName] = "latest"
           }
         }
@@ -105,7 +112,7 @@ export function extractDependencies(code: string): Record<string, string> {
             !source.startsWith("@/")
           ) {
             let packageName = source
-            if (!defaultDependencies.includes(packageName)) {
+            if (shouldAddDependency(packageName)) {
               dependencies[packageName] = "latest"
             }
           }

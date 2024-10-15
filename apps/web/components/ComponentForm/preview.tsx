@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { SandpackProvider } from "@codesandbox/sandpack-react/unstyled"
+import { SandpackProvider, SandpackFileExplorer, SandpackCodeViewer } from "@codesandbox/sandpack-react/unstyled"
 import React from "react"
 
 const ComponentPreview = React.lazy(() =>
@@ -11,9 +11,11 @@ const ComponentPreview = React.lazy(() =>
 export function Preview({
   files,
   dependencies,
+  isDebug,
 }: {
   files: Record<string, string>
   dependencies: Record<string, string>
+  isDebug: boolean
 }) {
   const [isComponentsLoaded, setIsComponentsLoaded] = useState(false)
 
@@ -51,6 +53,12 @@ export function Preview({
     <div className="w-full bg-[#FAFAFA] rounded-lg">
       <SandpackProvider {...providerProps}>
         <ComponentPreview />
+        {isDebug && (
+          <>
+            <SandpackFileExplorer />
+            <SandpackCodeViewer />
+          </>
+        )}
       </SandpackProvider>
     </div>
   )

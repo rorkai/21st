@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
@@ -20,11 +20,6 @@ import {
   wrapExportInBraces,
   removeAsyncFromExport,
 } from "../../utils/parsers"
-import Editor from "react-simple-code-editor"
-import { highlight, languages } from "prismjs"
-import "prismjs/components/prism-typescript"
-import "prismjs/components/prism-jsx"
-import "prismjs/themes/prism.css"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -389,6 +384,14 @@ export default function ComponentForm() {
 
   const mainComponentName = getMainComponentName()
 
+    const demoCodeTextAreaRef = useRef<HTMLTextAreaElement>(null)
+
+    useEffect(() => {
+      if (showComponentDetails && demoCodeTextAreaRef.current) {
+        demoCodeTextAreaRef.current.blur()
+      }
+    }, [showComponentDetails])
+
   return (
     <>
       <Form {...form}>
@@ -418,48 +421,31 @@ export default function ComponentForm() {
                           }}
                           transition={{ duration: 0.3 }}
                         >
-                          {!parsedComponentNames?.length &&
-                            !isPreviewReady &&
-                            !isEditMode && (
-                              <div
-                                className={`absolute inset-0 w-full h-full ${isDarkTheme ? "text-gray-400" : "text-gray-600"} text-[20px] flex items-center justify-center`}
-                              >
-                                PASTE COMPONENT .TSX CODE HERE
-                              </div>
-                            )}
-
-                          <Editor
-                            value={field.value}
-                            onValueChange={(code) => {
-                              field.onChange(code)
-                              if (code.trim()) {
-                                setIsEditMode(false)
-                              }
-                            }}
-                            highlight={(code) => {
-                              const grammar =
-                                languages.tsx || languages.typescript
-                              return grammar
-                                ? highlight(code, grammar, "tsx")
-                                : code
-                            }}
-                            padding={10}
-                            style={{
-                              fontFamily: '"Fira code", "Fira Mono", monospace',
-                              fontSize: code.length ? 12 : 20,
-                              backgroundColor: code.length
-                                ? isDarkTheme
-                                  ? "#2d2d2d"
-                                  : "#f5f5f5"
-                                : "transparent",
-                              borderRadius: "0.375rem",
-                              height: "100%",
-                              overflow: "auto",
-                              outline: "black !important",
-                              color: isDarkTheme ? "#e0e0e0" : "inherit",
-                            }}
-                            className={`mt-1 w-full ${isDarkTheme ? "border-gray-700" : "border-input"} ${code.length ? "border" : ""}`}
-                          />
+                            <Textarea
+                              value={field.value}
+                              onChange={(e) => {
+                                field.onChange(e.target.value)
+                                if (e.target.value.trim()) {
+                                  setIsEditMode(false)
+                                }
+                              }}
+                              className={`mt-1 w-full h-full ${field.value.length ? "" : "border-none shadow-none text-[20px] bg-transparent"}`}
+                            />
+                            {!parsedComponentNames?.length && field.value.length === 0 &&
+                              !isPreviewReady &&
+                              !isEditMode && (
+                                <div
+                                  className={`absolute inset-0 w-full h-full ${isDarkTheme ? "text-gray-400" : "text-gray-600"} text-[20px] flex items-center justify-center cursor-text`}
+                                  onClick={() => {
+                                    const textarea = document.querySelector('textarea');
+                                    if (textarea) {
+                                      textarea.focus();
+                                    }
+                                  }}
+                                >
+                                  PASTE COMPONENT .TSX CODE HERE
+                                </div>
+                              )}
                           {!!parsedComponentNames?.length && !isEditMode && (
                             <motion.div
                               initial={{ opacity: 0 }}
@@ -532,35 +518,14 @@ export default function ComponentForm() {
                               }}
                               transition={{ duration: 0.3 }}
                             >
-                              <Editor
+                              <Textarea
+                                ref={demoCodeTextAreaRef}
                                 value={field.value}
-                                onValueChange={(code) => {
-                                  field.onChange(code)
+                                onChange={(e) => {
+                                  field.onChange(e.target.value)
                                 }}
-                                highlight={(code) => {
-                                  const grammar =
-                                    languages.tsx || languages.typescript
-                                  return grammar
-                                    ? highlight(code, grammar, "tsx")
-                                    : code
-                                }}
-                                padding={10}
-                                style={{
-                                  fontFamily:
-                                    '"Fira code", "Fira Mono", monospace',
-                                  fontSize: code.length ? 12 : 20,
-                                  backgroundColor: code.length
-                                    ? isDarkTheme
-                                      ? "#2d2d2d"
-                                      : "#f5f5f5"
-                                    : "transparent",
-                                  borderRadius: "0.375rem",
-                                  height: "100%",
-                                  overflow: "auto",
-                                  outline: "black !important",
-                                  color: isDarkTheme ? "#e0e0e0" : "inherit",
-                                }}
-                                className="mt-1 w-full border border-input"
+                                className="mt-1 w-full h-full resize-none"
+                                style={{ height: '100%', minHeight: '100%' }}
                               />
                               {showComponentDetails && (
                                 <motion.div

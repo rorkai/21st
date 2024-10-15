@@ -224,9 +224,9 @@ export async function unlikeComponent(
 }
 
 export function useLikeComponent(
+  supabase: SupabaseClient,
   userId: string,
 ): UseMutationResult<void, Error, number> {
-  const supabase = useClerkSupabaseClient()
   const queryClient = useQueryClient()
   return useMutation<void, Error, number>({
     mutationFn: async (componentId: number) => {
@@ -247,10 +247,10 @@ export function useLikeComponent(
 }
 
 export function useUnlikeComponent(
+  supabase: SupabaseClient,
   userId: string,
 ): UseMutationResult<void, Error, number> {
   const queryClient = useQueryClient()
-  const supabase = useClerkSupabaseClient()
   return useMutation<void, Error, number>({
     mutationFn: async (componentId: number) => {
       await unlikeComponent(supabase, userId, componentId)
@@ -269,8 +269,11 @@ export function useUnlikeComponent(
   })
 }
 
-export function useHasUserLikedComponent(userId: string, componentId: number) {
-  const supabase = useClerkSupabaseClient()
+export function useHasUserLikedComponent(
+  supabase: SupabaseClient,
+  userId: string,
+  componentId: number,
+) {
   return useQuery<boolean, Error>({
     queryKey: ["hasUserLikedComponent", componentId, userId],
     queryFn: async () => {
@@ -372,8 +375,10 @@ export function useAvailableTags() {
   })
 }
 
-export function useComponentOwnerUsername(slug: string) {
-  const supabase = useClerkSupabaseClient()
+export function useComponentOwnerUsername(
+  supabase: SupabaseClient,
+  slug: string,
+) {
   return useQuery<string | null, Error>({
     queryKey: ["componentOwner", slug],
     queryFn: async () => {
@@ -433,9 +438,9 @@ export async function fetchDependencyComponents(
 }
 
 export function useDependencyComponents(
+  supabase: SupabaseClient,
   componentDependencies: Record<string, string>,
 ) {
-  const supabase = useClerkSupabaseClient()
   const dependencySlugs = Object.values(componentDependencies)
 
   return useQuery<Component[], Error>({
@@ -465,8 +470,7 @@ export async function getTagInfo(
   return data
 }
 
-export function useTagInfo(tagSlug: string) {
-  const supabase = useClerkSupabaseClient()
+export function useTagInfo(supabase: SupabaseClient, tagSlug: string) {
   return useQuery<Tag | null, Error>({
     queryKey: ["tagInfo", tagSlug],
     queryFn: () => getTagInfo(supabase, tagSlug),

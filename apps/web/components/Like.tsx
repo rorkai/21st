@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 import { useLikeComponent, useUnlikeComponent, useHasUserLikedComponent } from "@/utils/dataFetchers"
 import { useUser } from "@clerk/nextjs"
 import { useTheme } from "next-themes"
+import { useClerkSupabaseClient } from "@/utils/clerk"
 
 interface LikeButtonProps {
   componentId: number
@@ -25,9 +26,10 @@ export function LikeButton({
   variant = "default",
 }: LikeButtonProps) {
   const { user } = useUser()
-  const { data: hasLiked } = useHasUserLikedComponent(user?.id ?? '', componentId)
-  const likeMutation = useLikeComponent(user?.id ?? '')
-  const unlikeMutation = useUnlikeComponent(user?.id ?? '')
+  const supabase = useClerkSupabaseClient()
+  const { data: hasLiked } = useHasUserLikedComponent(supabase, user?.id ?? '', componentId)
+  const likeMutation = useLikeComponent(supabase, user?.id ?? '')
+  const unlikeMutation = useUnlikeComponent(supabase, user?.id ?? '')
   const [isHovered, setIsHovered] = useState(false)
   const { theme } = useTheme()
   const isDarkTheme = theme === 'dark'

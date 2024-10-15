@@ -5,6 +5,7 @@ import { ComponentCard } from "./ComponentCard"
 import { Component } from "../types/types"
 import { useComponents, useTagInfo } from "@/utils/dataFetchers"
 import { Header } from "./Header"
+import { useClerkSupabaseClient } from "@/utils/clerk"
 
 interface ComponentsListProps {
   components?: Component[]
@@ -17,9 +18,9 @@ export function ComponentsList({
   isLoading,
   tagSlug,
 }: ComponentsListProps) {
-  
+  const supabase = useClerkSupabaseClient()
   const { data: fetchedComponents } = useComponents(tagSlug)
-  const { data: tagInfo } = useTagInfo(tagSlug || '')
+  const { data: tagInfo } = useTagInfo(supabase, tagSlug || '')
   const components = propsComponents || fetchedComponents
   return (
     <div>

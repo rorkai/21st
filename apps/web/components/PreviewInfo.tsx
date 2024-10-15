@@ -19,8 +19,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useTheme } from "next-themes"
+import { useClerkSupabaseClient } from "@/utils/clerk"
 
 export const Info: React.FC<{ info: Component }> = ({ info }) => {
+  const supabase = useClerkSupabaseClient()
   const [copiedLibDependencies, setCopiedLibDependencies] = useState(false)
   const [copiedDependency, setCopiedDependency] = useState<string | null>(null)
   const [isLibDepsHovered, setIsLibDepsHovered] = useState(false)
@@ -43,7 +45,7 @@ export const Info: React.FC<{ info: Component }> = ({ info }) => {
   const componentDependencies = parseDependencies(info.internal_dependencies)
 
   const { data: dependencyComponents, isLoading: isLoadingDependencies } =
-    useDependencyComponents(componentDependencies)
+    useDependencyComponents(supabase, componentDependencies)
 
   const copyAllDependencies = () => {
     const dependenciesString = Object.entries({

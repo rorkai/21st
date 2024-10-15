@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils"
 import { useClerkSupabaseClient } from "@/utils/clerk"
 import { useAvailableTags } from "@/utils/dataFetchers"
 import { useTheme } from "next-themes"
+import { useUser } from "@clerk/nextjs";
 
 interface ComponentDetailsProps {
   form: UseFormReturn<FormData>
@@ -61,6 +62,7 @@ export function ComponentDetails({
   const { data: availableTags = [] } = useAvailableTags()
   const { theme } = useTheme()
   const isDarkTheme = theme === 'dark'
+  const { user } = useUser();
 
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false)
   const {
@@ -69,6 +71,7 @@ export function ComponentDetails({
     error: slugError,
   } = useIsCheckSlugAvailable({
     slug: form.watch("component_slug"),
+    userId: user?.id ?? ''
   })
 
   const [license, setLicense] = useState("mit")
@@ -81,7 +84,7 @@ export function ComponentDetails({
         (!form.getValues("component_slug") ||
           (!isSlugManuallyEdited && slugAvailable === false))
       ) {
-        const slug = await generateUniqueSlug(client, form.getValues("name"))
+        const slug = await generateUniqueSlug(client, form.getValues("name"), user?.id ?? '')
         form.setValue("component_slug", slug)
         setIsSlugManuallyEdited(false)
       }

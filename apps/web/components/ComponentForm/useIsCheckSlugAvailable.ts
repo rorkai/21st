@@ -18,11 +18,13 @@ export const isValidSlug = (slug: string): boolean => {
 const checkSlugUnique = async (
   supabase: SupabaseClient,
   slug: string,
+  userId: string
 ): Promise<boolean> => {
   const { data, error } = await supabase
     .from("components")
     .select("id")
     .eq("component_slug", slug)
+    .eq("user_id", userId)
 
   if (error) {
     console.error("Error checking slug uniqueness:", error)
@@ -35,21 +37,22 @@ const checkSlugUnique = async (
 export const generateUniqueSlug = async (
   supabase: SupabaseClient,
   baseName: string,
+  userId: string
 ) => {
   let newSlug = generateSlug(baseName)
-  let isUnique = await checkSlugUnique(supabase, newSlug)
+  let isUnique = await checkSlugUnique(supabase, newSlug, userId)
   let suffix = 1
 
   while (!isUnique) {
     newSlug = `${generateSlug(baseName)}-${suffix}`
-    isUnique = await checkSlugUnique(supabase, newSlug)
+    isUnique = await checkSlugUnique(supabase, newSlug, userId)
     suffix += 1
   }
 
   return newSlug
 }
 
-export const useIsCheckSlugAvailable = ({ slug }: { slug: string }) => {
+export const useIsCheckSlugAvailable = ({ slug, userId }: { slug: string; userId: string }) => {
   const client = useClerkSupabaseClient()
 
   const {
@@ -57,14 +60,14 @@ export const useIsCheckSlugAvailable = ({ slug }: { slug: string }) => {
     isFetching: isChecking,
     error: error,
   } = useQuery({
-    queryKey: ["slugCheck", slug],
+    queryKey: ["slugCheck", slug, userId],
     queryFn: async () => {
       if (!isValidSlug(slug)) {
         return false
       }
-      return await checkSlugUnique(client, slug)
+      return await checkSlugUnique(client, slug, userId)
     },
-    enabled: !!slug,
+    enabled: !!slug && !!userId,
   })
 
   return {

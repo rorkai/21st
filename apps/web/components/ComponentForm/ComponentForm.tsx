@@ -173,7 +173,7 @@ export default function ComponentForm() {
         uploadToR2(demoCodeFileName, cleanedDemoCode),
       ])
 
-      const installUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/r/${data.component_slug}`
+      const installUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/r/${user?.username}/${data.component_slug}`
 
       let previewImageUrl = ""
       if (data.preview_url) {

@@ -3,15 +3,16 @@ import { NextRequest, NextResponse } from "next/server"
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { component_slug: string } },
+  { params }: { params: { username: string; component_slug: string } },
 ) {
-  const component_slug = params.component_slug
+  const { username, component_slug } = params
 
   try {
     const { data: component, error } = await supabaseWithAdminAccess
       .from("components")
-      .select("*")
+      .select("*, user:users!user_id(*)")
       .eq("component_slug", component_slug)
+      .eq("user.username", username)
       .single()
 
     if (error) throw error

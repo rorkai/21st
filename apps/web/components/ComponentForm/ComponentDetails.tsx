@@ -324,9 +324,9 @@ export function ComponentDetails({
                   setTags(newTags)
                   field.onChange(newTags)
                 }}
-                getValue={(tag) => tag.slug} // Используем 'slug' как уникальное значение
-                getLabel={(tag) => tag.name} // Используем 'name' как отображаемое значение
-                createTag={createTag} // Передаём функцию создания тега
+                getValue={(tag) => tag.slug}
+                getLabel={(tag) => tag.name}
+                createTag={createTag}
               />
             )
           }}

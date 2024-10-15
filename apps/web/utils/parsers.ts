@@ -44,7 +44,7 @@ export function extractExportedTypes(code: string): string[] {
 
   return uniqueNames.filter(
     (name): name is string =>
-      name !== undefined && !name.includes("(") && !name.match(/^[A-Z]/), // Исключаем имена, начинающиеся с заглавной буквы (вероятно, компоненты)
+      name !== undefined && !name.includes("(") && !name.match(/^[A-Z]/),
   )
 }
 
@@ -193,10 +193,20 @@ export function removeComponentImports(
         )
 
         if (shouldDropImport) {
+          let start = path.node.start!
+          let end = path.node.end!
+
+          const nextChar = demoCode[end]
+          if (nextChar === '\n') {
+            end += 1
+          } else if (demoCode.slice(end, end + 2) === '\r\n') {
+            end += 2
+          }
+
           importsToDrop.push({
-            start: path.node.start!,
-            end: path.node.end!,
-            text: demoCode.slice(path.node.start!, path.node.end!),
+            start,
+            end,
+            text: demoCode.slice(start, end),
           })
         }
       },

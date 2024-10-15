@@ -51,14 +51,12 @@ export function TagSelector<T>({
       onChange([...selectedTags, existingTag])
     }
     setInputValue("")
-    // Popover остается открытым
   }
 
   const handleCreate = () => {
     const newTag = createTag(inputValue)
     onChange([...selectedTags, newTag])
     setInputValue("")
-    // Popover остается открытым
   }
 
   const handleRemove = (value: string) => {

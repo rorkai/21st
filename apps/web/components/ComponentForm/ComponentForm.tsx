@@ -185,8 +185,8 @@ export default function ComponentForm() {
 
       const cleanedDemoCode = demoCode
 
-      const codeFileName = `${data.component_slug}-code.tsx`
-      const demoCodeFileName = `${data.component_slug}-demo.tsx`
+      const codeFileName = `${data.component_slug}.tsx`
+      const demoCodeFileName = `${data.component_slug}.demo.tsx`
 
       const [codeUrl, demoCodeUrl] = await Promise.all([
         uploadToR2({
@@ -195,7 +195,7 @@ export default function ComponentForm() {
             type: "text/plain",
             textContent: data.code,
           },
-          fileKey: codeFileName,
+          fileKey: `${user.id}/${codeFileName}`,
           bucketName: "components-code",
         }),
         uploadToR2({
@@ -204,7 +204,7 @@ export default function ComponentForm() {
             type: "text/plain",
             textContent: cleanedDemoCode,
           },
-          fileKey: demoCodeFileName,
+          fileKey: `${user.id}/${demoCodeFileName}`,
           bucketName: "components-code",
         }),
       ])
@@ -214,7 +214,7 @@ export default function ComponentForm() {
       let previewImageUrl = ""
       if (data.preview_url) {
         const fileExtension = data.preview_url.name.split(".").pop()
-        const fileKey = `${componentSlug}-preview-${Date.now()}.${fileExtension}`
+        const fileKey = `${user.id}/${componentSlug}.${fileExtension}`
         const buffer = Buffer.from(await data.preview_url.arrayBuffer())
         const base64Content = buffer.toString("base64")
         previewImageUrl = await uploadToR2({

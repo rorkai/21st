@@ -70,7 +70,7 @@ export default async function ComponentPageLayout({
   ).flatMap(([path, slugs]) => {
     const slugArray = Array.isArray(slugs) ? slugs : [slugs]
     return slugArray.map(async (slug) => {
-      const dependencyUrl = `${apiUrl}/${slug}-code.tsx`
+      const dependencyUrl = `${apiUrl}/${component.user_id}/${slug}.tsx`
       const response = await fetch(dependencyUrl)
       if (!response.ok) {
         console.error(

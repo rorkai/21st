@@ -32,7 +32,7 @@ export const Hotkey: React.FC<HotkeyProps> = ({
     : "bg-gradient-to-bl from-transparent via-transparent to-white/20"
 
   return (
-    <span className="inline-flex gap-1">
+    <span className="inline-flex gap-[2px]">
       {displayKeys.map((key, index) => (
         <kbd
           key={index}

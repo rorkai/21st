@@ -109,7 +109,7 @@ export function Header({ tagName, page }: HeaderProps) {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pr-14"
           />
-          <div className="absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none">
+          <div className="absolute top-0 right-3 h-full flex items-center pointer-events-none">
             <Hotkey keys={["K"]} modifier={true} />
           </div>
         </div>

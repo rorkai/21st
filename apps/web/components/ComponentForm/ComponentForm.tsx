@@ -54,6 +54,7 @@ import { Tag } from "@/types/types"
 import { Preview } from "./preview"
 import { Hotkey } from "../ui/hotkey"
 import { useTheme } from "next-themes"
+import { cn } from "@/lib/utils"
 
 export default function ComponentForm() {
   const { theme } = useTheme()
@@ -209,8 +210,6 @@ export default function ComponentForm() {
         }),
       ])
 
-      const installUrl = `${process.env.NEXT_PUBLIC_API_URL}/r/${user?.username}/${data.component_slug}`
-
       let previewImageUrl = ""
       if (data.preview_url) {
         const fileExtension = data.preview_url.name.split(".").pop()
@@ -237,7 +236,6 @@ export default function ComponentForm() {
         code: codeUrl,
         demo_code: demoCodeUrl,
         description: data.description,
-        install_url: installUrl,
         user_id: user?.id,
         dependencies: JSON.stringify(dependencies),
         demo_dependencies: JSON.stringify(parsedDemoDependencies),
@@ -250,7 +248,7 @@ export default function ComponentForm() {
         .insert(componentData)
         .select()
         .single()
-      
+
       if (error) {
         throw error
       }
@@ -285,46 +283,12 @@ export default function ComponentForm() {
     setIsSuccessDialogOpen(false)
   }
 
-  useEffect(() => {
-    const keyDownHandler = (e: KeyboardEvent) => {
-      if (
-        isSuccessDialogOpen &&
-        e.key === "Enter" &&
-        (e.metaKey || e.ctrlKey)
-      ) {
-        e.preventDefault()
-        handleGoToComponent()
-      }
-    }
-
-    window.addEventListener("keydown", keyDownHandler)
-
-    return () => {
-      window.removeEventListener("keydown", keyDownHandler)
-    }
-  }, [isSuccessDialogOpen, handleGoToComponent])
-
   const handleAddAnother = () => {
     form.reset()
     setIsSuccessDialogOpen(false)
     setShowComponentDetails(false)
     setPreviewImage(null)
   }
-
-  useEffect(() => {
-    const keyDownHandler = (e: KeyboardEvent) => {
-      if (isSuccessDialogOpen && e.code === "KeyN") {
-        e.preventDefault()
-        handleAddAnother()
-      }
-    }
-
-    window.addEventListener("keydown", keyDownHandler)
-
-    return () => {
-      window.removeEventListener("keydown", keyDownHandler)
-    }
-  }, [isSuccessDialogOpen, handleGoToComponent])
 
   const [previewProps, setPreviewProps] = useState<{
     files: Record<string, string>
@@ -434,8 +398,8 @@ export default function ComponentForm() {
 
   const mainComponentName = getMainComponentName()
 
-    const demoCodeTextAreaRef = useRef<HTMLTextAreaElement>(null)
-  
+  const demoCodeTextAreaRef = useRef<HTMLTextAreaElement>(null)
+
   useEffect(() => {
     if (parsedComponentNames?.length && demoCodeTextAreaRef.current) {
       demoCodeTextAreaRef.current.focus()
@@ -452,7 +416,13 @@ export default function ComponentForm() {
           <AnimatePresence>
             <div className={`flex gap-4 items-center h-full w-full mt-2`}>
               <div
-                className={`flex flex-col items-start gap-2 py-10 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[400px] ${showComponentDetails && Object.keys(internalDependencies).length === 0 ? "ml-0" : "mx-auto"}`}
+                className={cn(
+                  "flex flex-col items-start gap-2 py-10 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[400px]",
+                  showComponentDetails &&
+                    Object.keys(internalDependencies).length === 0
+                    ? "ml-0"
+                    : "mx-auto",
+                )}
               >
                 <FormField
                   control={form.control}
@@ -471,31 +441,44 @@ export default function ComponentForm() {
                           }}
                           transition={{ duration: 0.3 }}
                         >
-                            <Textarea
-                              value={field.value}
-                              onChange={(e) => {
-                                field.onChange(e.target.value)
-                                if (e.target.value.trim()) {
-                                  setIsEditMode(false)
-                                }
-                              }}
-                              className={`mt-1 min-h-[56px] w-full h-full ${field.value.length ? "" : "border-none shadow-none text-[20px] bg-transparent"}`}
-                            />
-                            {!parsedComponentNames?.length && field.value.length === 0 &&
-                              !isPreviewReady &&
-                              !isEditMode && (
-                                <div
-                                  className={`absolute inset-0 w-full h-full ${isDarkTheme ? "text-gray-400" : "text-gray-600"} text-[20px] flex items-center justify-center cursor-text`}
-                                  onClick={() => {
-                                    const textarea = document.querySelector('textarea');
-                                    if (textarea) {
-                                      textarea.focus();
-                                    }
-                                  }}
-                                >
-                                  PASTE COMPONENT .TSX CODE HERE
-                                </div>
-                              )}
+                          <Textarea
+                            value={field.value}
+                            onChange={(e) => {
+                              field.onChange(e.target.value)
+                              if (e.target.value.trim()) {
+                                setIsEditMode(false)
+                              }
+                            }}
+                            className={cn(
+                              "mt-1 min-h-[56px] w-full h-full",
+                              field.value.length
+                                ? ""
+                                : "border-none shadow-none text-[20px] bg-transparent",
+                            )}
+                          />
+                          {!parsedComponentNames?.length &&
+                            field.value.length === 0 &&
+                            !isPreviewReady &&
+                            !isEditMode && (
+                              <div
+                                className={cn(
+                                  "absolute inset-0 w-full h-full",
+                                  isDarkTheme
+                                    ? "text-gray-400"
+                                    : "text-gray-600",
+                                  "text-[20px] flex items-center justify-center cursor-text",
+                                )}
+                                onClick={() => {
+                                  const textarea =
+                                    document.querySelector("textarea")
+                                  if (textarea) {
+                                    textarea.focus()
+                                  }
+                                }}
+                              >
+                                PASTE COMPONENT .TSX CODE HERE
+                              </div>
+                            )}
                           {!!parsedComponentNames?.length && !isEditMode && (
                             <motion.div
                               initial={{ opacity: 0 }}
@@ -504,35 +487,12 @@ export default function ComponentForm() {
                               transition={{ duration: 0.3 }}
                               className={`absolute p-2 border rounded-md inset-0 bg-background text-foreground bg-opacity-80 backdrop-blur-sm flex items-center justify-start`}
                             >
-                              <div className="flex items-center gap-2 w-full">
-                                <div className="flex items-center justify-between w-full">
-                                  <div className="flex items-center">
-                                    <div className="w-10 h-10 relative mr-2 items-center justify-center">
-                                      <Image
-                                        src="/tsx-file.svg"
-                                        width={40}
-                                        height={40}
-                                        alt="TSX File"
-                                      />
-                                    </div>
-                                    <div className="flex flex-col items-start h-10">
-                                      <p className="font-semibold text-[14px]">
-                                        {mainComponentName} code
-                                      </p>
-                                      <p className="text-sm text-gray-600 text-[12px]">
-                                        {parsedComponentNames
-                                          .slice(0, 2)
-                                          .join(", ")}
-                                        {parsedComponentNames.length > 2 &&
-                                          ` +${parsedComponentNames.length - 2}`}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <Button onClick={() => setIsEditMode(true)}>
-                                    Edit
-                                  </Button>
-                                </div>
-                              </div>
+                              <EditCodeFileCard
+                                iconSrc="/tsx-file.svg"
+                                mainText={`${mainComponentName} code`}
+                                subText={`${parsedComponentNames.slice(0, 2).join(", ")}${parsedComponentNames.length > 2 ? ` +${parsedComponentNames.length - 2}` : ""}`}
+                                onEditClick={() => setIsEditMode(true)}
+                              />
                             </motion.div>
                           )}
                         </motion.div>
@@ -583,37 +543,16 @@ export default function ComponentForm() {
                                   animate={{ opacity: 1 }}
                                   exit={{ opacity: 0 }}
                                   transition={{ duration: 0.3, delay: 0.3 }}
-                                  className="absolute p-2 border  rounded-md inset-0 bg-background text-foreground bg-opacity-80 backdrop-blur-sm flex items-center justify-start"
+                                  className="absolute p-2 border rounded-md inset-0 bg-background text-foreground bg-opacity-80 backdrop-blur-sm flex items-center justify-start"
                                 >
-                                  <div className="flex items-center gap-2 w-full">
-                                    <div className="flex items-center justify-between w-full">
-                                      <div className="flex items-center">
-                                        <div className="w-10 h-10 relative mr-2 items-center justify-center">
-                                          <Image
-                                            src="/demo-file.svg"
-                                            width={40}
-                                            height={40}
-                                            alt="Demo File"
-                                          />
-                                        </div>
-                                        <div className="flex flex-col items-start h-10">
-                                          <p className="font-semibold text-[14px]">
-                                            Demo code
-                                          </p>
-                                          <p className="text-sm text-gray-600 text-[12px]">
-                                            for {parsedComponentNames[0]}
-                                          </p>
-                                        </div>
-                                      </div>
-                                      <Button
-                                        onClick={() =>
-                                          setShowComponentDetails(false)
-                                        }
-                                      >
-                                        Edit
-                                      </Button>
-                                    </div>
-                                  </div>
+                                  <EditCodeFileCard
+                                    iconSrc="/demo-file.svg"
+                                    mainText="Demo code"
+                                    subText={`for ${parsedComponentNames[0]}`}
+                                    onEditClick={() =>
+                                      setShowComponentDetails(false)
+                                    }
+                                  />
                                 </motion.div>
                               )}
                             </motion.div>
@@ -627,93 +566,19 @@ export default function ComponentForm() {
 
                 {Object.keys(internalDependencies ?? {}).length > 0 &&
                   showComponentDetails && (
-                    <div className="w-full">
-                      <Alert className="my-2">
-                        <Codepen className="h-4 w-4" />
-                        <AlertTitle>Component dependencies detected</AlertTitle>
-                        <AlertDescription>
-                          To use another component within your component:
-                          <br />
-                          1. Add it to the Component Community first.
-                          <br />
-                          2. Enter its slug here.
-                        </AlertDescription>
-                      </Alert>
-                      {Object.entries(internalDependencies ?? {}).map(
-                        ([path], index) => (
-                          <div
-                            key={path}
-                            className={`w-full ${index > 0 ? "mt-2" : ""}`}
-                          >
-                            <label className="block text-sm font-medium text-gray-700">
-                              Add slug for {path}
-                            </label>
-                            <Input
-                              onChange={(e) => {
-                                setComponentDependencies((prev) => ({
-                                  ...prev,
-                                  internalDependencies: {
-                                    ...prev?.internalDependencies,
-                                    [path]: e.target.value!!,
-                                  },
-                                }))
-                              }}
-                              placeholder="Enter component slug"
-                              className="mt-1 w-full"
-                            />
-                          </div>
-                        ),
-                      )}
-                    </div>
+                    <InputInternalDependenciesCard
+                      internalDependencies={internalDependencies}
+                      setComponentDependencies={setComponentDependencies}
+                    />
                   )}
 
                 {isDebug && (
-                  <>
-                    <div className="w-full">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Component names
-                      </label>
-                      <Textarea
-                        value={parsedComponentNames?.join(", ")}
-                        readOnly
-                        className="mt-1 w-full bg-gray-100"
-                      />
-                    </div>
-                    <div className="w-full">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Demo component name
-                      </label>
-                      <Input
-                        value={parsedDemoComponentName}
-                        readOnly
-                        className="mt-1 w-full bg-gray-100"
-                      />
-                    </div>
-                    <div className="w-full">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Component dependencies
-                      </label>
-                      <Textarea
-                        value={Object.entries(parsedDependencies ?? {})
-                          .map(([key, value]) => `${key}: ${value}`)
-                          .join("\n")}
-                        readOnly
-                        className="mt-1 w-full bg-gray-100"
-                      />
-                    </div>
-                    <div className="w-full">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Demo dependencies
-                      </label>
-                      <Textarea
-                        value={Object.entries(parsedDemoDependencies ?? {})
-                          .map(([key, value]) => `${key}: ${value}`)
-                          .join("\n")}
-                        readOnly
-                        className="mt-1 w-full bg-gray-100"
-                      />
-                    </div>
-                  </>
+                  <DebugInfoDisplay
+                    parsedComponentNames={parsedComponentNames}
+                    parsedDemoComponentName={parsedDemoComponentName}
+                    parsedDependencies={parsedDependencies}
+                    parsedDemoDependencies={parsedDemoDependencies}
+                  />
                 )}
 
                 {showComponentDetails && (
@@ -756,68 +621,254 @@ export default function ComponentForm() {
           </AnimatePresence>
         </form>
       </Form>
-
-      <Dialog open={isSuccessDialogOpen} onOpenChange={setIsSuccessDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Component Added Successfully</DialogTitle>
-            <DialogDescription className="break-words">
-              Your new component has been successfully added. What would you
-              like to do next?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button onClick={handleAddAnother} variant="outline">
-              Add Another
-              <Hotkey keys={["N"]} />
-            </Button>
-            <Button onClick={handleGoToComponent} variant="default">
-              View Component
-              <Hotkey keys={["⏎"]} />
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SuccessDialog
+        isOpen={isSuccessDialogOpen}
+        onOpenChange={setIsSuccessDialogOpen}
+        onAddAnother={handleAddAnother}
+        onGoToComponent={handleGoToComponent}
+      />
       {!parsedComponentNames?.length && !isPreviewReady && !isEditMode && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          transition={{ duration: 0.3 }}
-          className="absolute bottom-4 mx-auto"
-        >
-          <Alert>
-            <FileTerminal className="h-4 w-4" />
-            <AlertTitle>Entire code should be in a single file</AlertTitle>
-            <AlertDescription>
-              Ensure to include all necessary dependencies to enable everyone{" "}
-              <br />
-              to use this component and install it seamlessly via the CLI.
-            </AlertDescription>
-          </Alert>
-        </motion.div>
+        <CodeGuidelinesAlert />
       )}
       {!showComponentDetails && !!code.length && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          transition={{ duration: 0.3, delay: 0.3 }}
-          className="absolute bottom-4 mx-auto"
-        >
-          <Alert>
-            <SunMoon className="h-4 w-4" />
-            <AlertTitle>
-              Demo should demonstrate how it functions and appears
-            </AlertTitle>
-            <AlertDescription>
-              Do not add an import statement for the Component,
-              <br />
-              as it will be imported automatically.
-            </AlertDescription>
-          </Alert>
-        </motion.div>
+        <DemoComponentGuidelinesAlert />
       )}
     </>
   )
 }
+
+const EditCodeFileCard = ({
+  iconSrc,
+  mainText,
+  subText,
+  onEditClick,
+}: {
+  iconSrc: string
+  mainText: string
+  subText: string
+  onEditClick: () => void
+}) => (
+  <div className="flex items-center gap-2 w-full">
+    <div className="flex items-center justify-between w-full">
+      <div className="flex items-center">
+        <div className="w-10 h-10 relative mr-2 items-center justify-center">
+          <Image
+            src={iconSrc}
+            width={40}
+            height={40}
+            alt={`${mainText} File`}
+          />
+        </div>
+        <div className="flex flex-col items-start h-10">
+          <p className="font-semibold text-[14px]">{mainText}</p>
+          <p className="text-sm text-gray-600 text-[12px]">{subText}</p>
+        </div>
+      </div>
+      <Button onClick={onEditClick}>Edit</Button>
+    </div>
+  </div>
+)
+
+const SuccessDialog = ({
+  isOpen,
+  onOpenChange,
+  onAddAnother,
+  onGoToComponent,
+}: {
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
+  onAddAnother: () => void
+  onGoToComponent: () => void
+}) => {
+  useEffect(() => {
+    const keyDownHandler = (e: KeyboardEvent) => {
+      if (isOpen && e.code === "KeyN") {
+        e.preventDefault()
+        onAddAnother()
+      }
+      if (isOpen && e.code === "Enter" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        onGoToComponent()
+      }
+    }
+
+    window.addEventListener("keydown", keyDownHandler)
+    return () => {
+      window.removeEventListener("keydown", keyDownHandler)
+    }
+  }, [isOpen, onAddAnother, onGoToComponent])
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Component Added Successfully</DialogTitle>
+          <DialogDescription className="break-words">
+            Your new component has been successfully added. What would you like
+            to do next?
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button onClick={onAddAnother} variant="outline">
+            Add Another
+            <Hotkey keys={["N"]} />
+          </Button>
+          <Button onClick={onGoToComponent} variant="default">
+            View Component
+            <Hotkey keys={["⏎"]} />
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+const CodeGuidelinesAlert = () => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: 20 }}
+    transition={{ duration: 0.3 }}
+    className="absolute bottom-4 mx-auto"
+  >
+    <Alert>
+      <FileTerminal className="h-4 w-4" />
+      <AlertTitle>Entire code should be in a single file</AlertTitle>
+      <AlertDescription>
+        Ensure to include all necessary dependencies to enable everyone <br />
+        to use this component and install it seamlessly via the CLI.
+      </AlertDescription>
+    </Alert>
+  </motion.div>
+)
+
+const DemoComponentGuidelinesAlert = () => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: 20 }}
+    transition={{ duration: 0.3, delay: 0.3 }}
+    className="absolute bottom-4 mx-auto"
+  >
+    <Alert>
+      <SunMoon className="h-4 w-4" />
+      <AlertTitle>
+        Demo should demonstrate how it functions and appears
+      </AlertTitle>
+      <AlertDescription>
+        Do not add an import statement for the Component,
+        <br />
+        as it will be imported automatically.
+      </AlertDescription>
+    </Alert>
+  </motion.div>
+)
+
+const DebugInfoDisplay = ({
+  parsedComponentNames,
+  parsedDemoComponentName,
+  parsedDependencies,
+  parsedDemoDependencies,
+}: {
+  parsedComponentNames: string[]
+  parsedDemoComponentName: string
+  parsedDependencies: Record<string, string>
+  parsedDemoDependencies: Record<string, string>
+}) => (
+  <>
+    <div className="w-full">
+      <label className="block text-sm font-medium text-gray-700">
+        Component names
+      </label>
+      <Textarea
+        value={parsedComponentNames?.join(", ")}
+        readOnly
+        className="mt-1 w-full bg-gray-100"
+      />
+    </div>
+    <div className="w-full">
+      <label className="block text-sm font-medium text-gray-700">
+        Demo component name
+      </label>
+      <Input
+        value={parsedDemoComponentName}
+        readOnly
+        className="mt-1 w-full bg-gray-100"
+      />
+    </div>
+    <div className="w-full">
+      <label className="block text-sm font-medium text-gray-700">
+        Component dependencies
+      </label>
+      <Textarea
+        value={Object.entries(parsedDependencies ?? {})
+          .map(([key, value]) => `${key}: ${value}`)
+          .join("\n")}
+        readOnly
+        className="mt-1 w-full bg-gray-100"
+      />
+    </div>
+    <div className="w-full">
+      <label className="block text-sm font-medium text-gray-700">
+        Demo dependencies
+      </label>
+      <Textarea
+        value={Object.entries(parsedDemoDependencies ?? {})
+          .map(([key, value]) => `${key}: ${value}`)
+          .join("\n")}
+        readOnly
+        className="mt-1 w-full bg-gray-100"
+      />
+    </div>
+  </>
+)
+
+const InputInternalDependenciesCard = ({
+  internalDependencies,
+  setComponentDependencies,
+}: {
+  internalDependencies: Record<string, string>
+  setComponentDependencies: React.Dispatch<
+    React.SetStateAction<{
+      dependencies: Record<string, string>
+      demoDependencies: Record<string, string>
+      internalDependencies: Record<string, string>
+      componentNames: string[]
+      demoComponentName: string
+    }>
+  >
+}) => (
+  <div className="w-full">
+    <Alert className="my-2">
+      <Codepen className="h-4 w-4" />
+      <AlertTitle>Component dependencies detected</AlertTitle>
+      <AlertDescription>
+        To use another component within your component:
+        <br />
+        1. Add it to the Component Community first.
+        <br />
+        2. Enter its slug here.
+      </AlertDescription>
+    </Alert>
+    {Object.entries(internalDependencies ?? {}).map(([path], index) => (
+      <div key={path} className={`w-full ${index > 0 ? "mt-2" : ""}`}>
+        <label className="block text-sm font-medium text-gray-700">
+          Add slug for {path}
+        </label>
+        <Input
+          onChange={(e) => {
+            setComponentDependencies((prev) => ({
+              ...prev,
+              internalDependencies: {
+                ...prev?.internalDependencies,
+                [path]: e.target.value!!,
+              },
+            }))
+          }}
+          placeholder="Enter component slug"
+          className="mt-1 w-full"
+        />
+      </div>
+    ))}
+  </div>
+)

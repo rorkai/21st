@@ -274,7 +274,6 @@ export default function ComponentPage({
           demoDependencies={demoDependencies}
           demoComponentName={demoComponentName}
           internalDependencies={internalDependencies}
-          installUrl={component.install_url}
           componentSlug={component.component_slug}
           componentInfo={component}
         />

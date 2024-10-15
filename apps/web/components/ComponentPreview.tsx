@@ -30,7 +30,6 @@ interface ComponentPreviewProps {
   demoDependencies: Record<string, string>
   demoComponentName: string
   internalDependencies: Record<string, string>
-  installUrl: string
   componentSlug: string
   componentInfo: Component
 }

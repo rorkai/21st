@@ -7,7 +7,7 @@ import { ThemeToggle } from "./ThemeToggle"
 
 const uiSystems = [
   {
-    title: "Shadcn/UI",
+    title: "shadcn/ui",
     href: "/s/shadcn",
     description:
       "Beautifully designed components that you can copy and paste into your apps.",

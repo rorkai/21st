@@ -5,47 +5,34 @@ import { Heart } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
 import { Hotkey } from "./ui/hotkey"
 import { cn } from "@/lib/utils"
-import { useLikeComponent, useUnlikeComponent, useHasUserLikedComponent } from "@/utils/dataFetchers"
+import { useLikeMutation } from "@/utils/dataFetchers"
 import { useUser } from "@clerk/nextjs"
-import { useTheme } from "next-themes"
 import { useClerkSupabaseClient } from "@/utils/clerk"
 
 interface LikeButtonProps {
   componentId: number
   size?: number
   showTooltip?: boolean
-  onLike?: () => void
   variant?: "default" | "circle"
+  liked: boolean
 }
 
 export function LikeButton({
   componentId,
   size = 18,
   showTooltip = false,
-  onLike,
+  liked,
   variant = "default",
 }: LikeButtonProps) {
   const { user } = useUser()
   const supabase = useClerkSupabaseClient()
-  const { data: hasLiked } = useHasUserLikedComponent(supabase, user?.id ?? '', componentId)
-  const likeMutation = useLikeComponent(supabase, user?.id ?? '')
-  const unlikeMutation = useUnlikeComponent(supabase, user?.id ?? '')
+  const likeMutation = useLikeMutation(supabase, user?.id)
   const [isHovered, setIsHovered] = useState(false)
-  const { theme } = useTheme()
-  const isDarkTheme = theme === 'dark'
 
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (onLike) {
-      onLike()
-    } else {
-      if (hasLiked) {
-        unlikeMutation.mutate(componentId)
-      } else {
-        likeMutation.mutate(componentId)
-      }
-    }
+    likeMutation.mutate({ componentId, liked })
   }
 
   useEffect(() => {
@@ -61,9 +48,7 @@ export function LikeButton({
     return () => {
       window.removeEventListener("keydown", keyDownHandler)
     }
-  }, [hasLiked])
-
-  const isMutating = likeMutation.isPending || unlikeMutation.isPending
+  }, [liked])
 
   const buttonClasses = cn(
     "flex items-center justify-center relative transition-colors duration-200",
@@ -75,17 +60,18 @@ export function LikeButton({
   const button = (
     <button
       onClick={handleLike}
-      disabled={isMutating}
+      disabled={likeMutation.isPending}
       className={buttonClasses}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <Heart
         size={size}
-        fill={hasLiked || isHovered ? "red" : "none"}
+        fill={liked || isHovered ? "red" : "none"}
         className={cn(
-          hasLiked || isHovered ? "stroke-none scale-110 transition-transform" : "",
-          isDarkTheme ? "text-foreground" : "text-foreground"
+          liked || isHovered
+            ? "stroke-none scale-110 transition-transform"
+            : "",
         )}
       />
     </button>
@@ -97,7 +83,7 @@ export function LikeButton({
         <TooltipTrigger asChild>{button}</TooltipTrigger>
         <TooltipContent className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
           <p className="flex items-center">
-            {hasLiked ? "Unlike" : "Like"}
+            {liked ? "Unlike" : "Like"}
             <Hotkey keys={["L"]} />
           </p>
         </TooltipContent>

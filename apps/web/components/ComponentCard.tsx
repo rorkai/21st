@@ -3,7 +3,6 @@ import Link from "next/link"
 import ComponentPreviewImage from "./ComponentPreviewImage"
 import { Component } from "../types/types"
 import { UserAvatar } from "./UserAvatar"
-import { LikeButton } from "./Like"
 
 interface ComponentCardProps {
   component: Component
@@ -33,15 +32,16 @@ export function ComponentCard({ component }: ComponentCardProps) {
           <h2 className="text-sm font-medium text-foreground truncate flex-grow">
             {component.name}
           </h2>
-          <div className="flex items-center space-x-2 text-muted-foreground text-sm">
+          {/* <div className="flex items-center space-x-2 text-muted-foreground text-sm">
             <span className="flex items-center">
               <LikeButton
                 componentId={component.id}
                 size={14}
                 variant="circle"
+                liked={component.liked}
               />
             </span>
-          </div>
+          </div> */}
         </div>
       </div>
     </Link>

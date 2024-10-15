@@ -8,8 +8,6 @@ interface TagPageProps {
 }
 
 export default async function TagPage({ params }: TagPageProps) {
-
-
   return (
     <div className="container mx-auto px-4">
       <ComponentsList tagSlug={params.tag_slug} />

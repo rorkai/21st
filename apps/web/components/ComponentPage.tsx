@@ -21,11 +21,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Hotkey } from "./ui/hotkey"
-import { LikeButton } from "./Like"
+import { LikeButton } from "./LikeButton"
 import { useIsMobile } from "@/utils/useMediaQuery"
 import { generateFiles } from "@/utils/generateFiles"
 import { useTheme } from "next-themes"
 import { ThemeToggle } from "./ThemeToggle"
+import { useQuery } from "@tanstack/react-query"
+import { useClerkSupabaseClient } from "@/utils/clerk"
+import { useUser } from "@clerk/nextjs"
 
 export const isShowCodeAtom = atom(true)
 
@@ -52,17 +55,36 @@ export default function ComponentPage({
   demoComponentName: string
   internalDependencies: Record<string, string>
   }) {
-    const { theme } = useTheme()
-    const isDarkTheme = theme === "dark"
-    const files = generateFiles({
-      demoComponentName,
-      componentSlug: component.component_slug,
-      code,
-      demoCode,
-      theme: isDarkTheme ? "dark" : "light",
-    })
-  
-  
+  const { user } = useUser()
+  const supabase = useClerkSupabaseClient()
+  const { theme } = useTheme()
+  const isDarkTheme = theme === "dark"
+  const files = generateFiles({
+    demoComponentName,
+    componentSlug: component.component_slug,
+    code,
+    demoCode,
+    theme: isDarkTheme ? "dark" : "light",
+  })
+
+  const { data: liked } = useQuery({
+    queryKey: ["hasUserLikedComponent", component.id, user?.id],
+    queryFn: async () => {
+      if (!user || !supabase)
+        return null
+      const { data, error } = await supabase
+        .from("component_likes")
+        .select("*")
+        .eq("component_id", component.id)
+        .eq("user_id", user?.id)
+      if (error) {
+        console.error("Error checking if user liked component:", error)
+        throw error
+      }
+      return data.length > 0
+    },
+  })
+
   const [isShared, setIsShared] = useState(false)
   const [isShowCode, setIsShowCode] = useAtom(isShowCodeAtom)
   const isMobile = useIsMobile()
@@ -165,7 +187,12 @@ export default function ComponentPage({
 
         <div className="flex items-center gap-1">
           <ThemeToggle />
-          <LikeButton componentId={component.id} size={18} showTooltip={true} />
+          <LikeButton
+            componentId={component.id}
+            size={18}
+            showTooltip={true}
+            liked={liked ?? false}
+          />
           {!isMobile && (
             <Tooltip>
               <TooltipTrigger asChild>

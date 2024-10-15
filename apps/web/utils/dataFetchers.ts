@@ -121,8 +121,7 @@ export async function getComponents(
   return (data as Component[]) || []
 }
 
-export function useComponents(tagSlug?: string) {
-  const supabase = useClerkSupabaseClient()
+export function useComponents(supabase: SupabaseClient, tagSlug?: string) {
   return useQuery<Component[], Error>({
     queryKey: ["components", tagSlug],
     queryFn: () => getComponents(supabase, tagSlug),
@@ -169,27 +168,6 @@ export async function addComponent(
   return data
 }
 
-export async function hasUserLikedComponent(
-  supabase: SupabaseClient,
-  userId: string,
-  componentId: number,
-): Promise<boolean> {
-  const { data, error } = await supabase
-    .from("component_likes")
-    .select("user_id")
-    .eq("user_id", userId)
-    .eq("component_id", componentId)
-    .single()
-
-  if (error && error.code !== "PGRST116") {
-    // PGRST116: Single row not found
-    console.error("Error checking if user liked component:", error)
-    throw error
-  }
-
-  return !!data
-}
-
 export async function likeComponent(
   supabase: SupabaseClient,
   userId: string,
@@ -223,81 +201,39 @@ export async function unlikeComponent(
   }
 }
 
-export function useLikeComponent(
+export function useLikeMutation(
   supabase: SupabaseClient,
-  userId: string,
-): UseMutationResult<void, Error, number> {
+  userId: string | undefined,
+): UseMutationResult<void, Error, { componentId: number; liked: boolean }> {
   const queryClient = useQueryClient()
-  return useMutation<void, Error, number>({
-    mutationFn: async (componentId: number) => {
-      await likeComponent(supabase, userId, componentId)
-    },
-    onSuccess: (_, componentId) => {
-      queryClient.invalidateQueries({
-        queryKey: ["hasUserLikedComponent", componentId, userId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ["component", componentId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ["components"],
-      })
-    },
-  })
-}
-
-export function useUnlikeComponent(
-  supabase: SupabaseClient,
-  userId: string,
-): UseMutationResult<void, Error, number> {
-  const queryClient = useQueryClient()
-  return useMutation<void, Error, number>({
-    mutationFn: async (componentId: number) => {
-      await unlikeComponent(supabase, userId, componentId)
-    },
-    onSuccess: (_, componentId) => {
-      queryClient.invalidateQueries({
-        queryKey: ["hasUserLikedComponent", componentId, userId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ["component", componentId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ["components"],
-      })
-    },
-  })
-}
-
-export function useHasUserLikedComponent(
-  supabase: SupabaseClient,
-  userId: string,
-  componentId: number,
-) {
-  return useQuery<boolean, Error>({
-    queryKey: ["hasUserLikedComponent", componentId, userId],
-    queryFn: async () => {
-      try {
-        const result = await hasUserLikedComponent(
-          supabase,
-          userId,
-          componentId,
-        )
-        return result
-      } catch (error) {
-        if (
-          typeof error === "object" &&
-          error !== null &&
-          "code" in error &&
-          error.code === "PGRST116"
-        ) {
-          // If the query returned no rows, it means the user hasn't liked the component
-          return false
-        }
-        throw error
+  return useMutation<void, Error, { componentId: number; liked: boolean }>({
+    mutationFn: async ({
+      componentId,
+      liked,
+    }: {
+      componentId: number
+      liked: boolean
+    }) => {
+      if (!userId) {
+        throw new Error("User is not logged in")
+      }
+      if (liked) {
+        await likeComponent(supabase, userId, componentId)
+      } else {
+        await unlikeComponent(supabase, userId, componentId)
       }
     },
-    enabled: !!userId,
+    onSuccess: (_, { componentId }) => {
+      queryClient.invalidateQueries({
+        queryKey: ["hasUserLikedComponent", componentId, userId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ["component", componentId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ["components"],
+      })
+    },
   })
 }
 
@@ -452,7 +388,7 @@ export function useDependencyComponents(
   })
 }
 
-export async function getTagInfo(
+async function getTagInfo(
   supabase: SupabaseClient,
   tagSlug: string,
 ): Promise<Tag | null> {
@@ -470,10 +406,10 @@ export async function getTagInfo(
   return data
 }
 
-export function useTagInfo(supabase: SupabaseClient, tagSlug: string) {
+export function useTagInfo(supabase: SupabaseClient, tagSlug?: string) {
   return useQuery<Tag | null, Error>({
     queryKey: ["tagInfo", tagSlug],
-    queryFn: () => getTagInfo(supabase, tagSlug),
+    queryFn: () => tagSlug ? getTagInfo(supabase, tagSlug) : null,
     enabled: !!tagSlug,
     refetchOnMount: true,
     staleTime: 0,

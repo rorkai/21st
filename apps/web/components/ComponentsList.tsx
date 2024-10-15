@@ -20,8 +20,8 @@ export function ComponentsList({
   tagSlug,
 }: ComponentsListProps) {
   const supabase = useClerkSupabaseClient()
-  const { data: fetchedComponents } = useComponents(tagSlug)
-  const { data: tagInfo } = useTagInfo(supabase, tagSlug || '')
+  const { data: fetchedComponents } = useComponents(supabase, tagSlug)
+  const { data: tagInfo } = useTagInfo(supabase, tagSlug)
   const components = propsComponents || fetchedComponents
   return (
     <div>

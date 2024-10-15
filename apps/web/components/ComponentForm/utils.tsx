@@ -59,13 +59,17 @@ export const prepareFilesForPreview = (
   console.log("componentNames", componentNames)
   console.log("types", types)
 
-  const updatedDemoCode = `
+  const hasUseClient = /^"use client";?\s*/.test(demoCode)
+
+  const importStatements = `
   import { ${componentNames.join(", ")} } from "./Component";\n
   ${types.length > 0 ? `import { ${types.join(", ")} } from "./Component";\n` : ""}
-  ${demoCode}
   `
 
-  console.log(updatedDemoCode)
+  const updatedDemoCode = `
+  ${hasUseClient ? `"use client";\n${importStatements}` : importStatements}
+  ${demoCode.replace(/^"use client";?\s*/, "")}
+  `
 
   const files = generateFiles({
     demoComponentName,

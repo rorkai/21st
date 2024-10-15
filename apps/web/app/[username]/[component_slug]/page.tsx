@@ -129,8 +129,14 @@ export default async function ComponentPageLayout({
   const rawDemoCode = demoResult?.data as string
 
   const componentNames = JSON.parse(component.component_name)
-  const demoCode = `
-import { ${componentNames.join(", ")} } from "./${component.component_slug}";\n\n${rawDemoCode}`
+  
+  const hasUseClient = /^"use client";?\s*/.test(rawDemoCode)
+
+  const importStatements = `import { ${componentNames.join(", ")} } from "./${component.component_slug}";\n`
+
+  const demoCode = hasUseClient
+    ? `"use client";\n${importStatements}\n${rawDemoCode.replace(/^"use client";?\s*/, "")}`
+    : `${importStatements}\n${rawDemoCode}`
 
   const demoComponentName = component.demo_component_name
 

@@ -154,20 +154,6 @@ export function useComponentTags(componentId: string) {
   })
 }
 
-export async function addComponent(
-  supabase: SupabaseClient,
-  componentData: any,
-) {
-  const { data, error } = await supabase
-    .from("components")
-    .insert(componentData)
-    .select()
-    .single()
-
-  if (error) throw error
-  return data
-}
-
 export async function likeComponent(
   supabase: SupabaseClient,
   userId: string,

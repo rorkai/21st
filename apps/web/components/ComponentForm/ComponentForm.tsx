@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
-import { uploadToR2, uploadPreviewImageToR2, handleFileChange } from "./actions"
+import { uploadToR2 } from "../../utils/r2"
 import {
   formSchema,
   FormData,
@@ -41,7 +41,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 
-import { addComponent, addTagsToComponent } from "@/utils/dataFetchers"
+import { addTagsToComponent } from "@/utils/dataFetchers"
 
 import { ComponentDetails } from "./ComponentDetails"
 import { motion, AnimatePresence } from "framer-motion"
@@ -57,7 +57,7 @@ import { useTheme } from "next-themes"
 
 export default function ComponentForm() {
   const { theme } = useTheme()
-  const isDarkTheme = theme === 'dark'
+  const isDarkTheme = theme === "dark"
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -138,10 +138,22 @@ export default function ComponentForm() {
     updateDependencies()
   }, [code, demoCode])
 
-  const handleFileChangeWrapper = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    handleFileChange(event, setPreviewImage, form)
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("File is too large. Maximum size is 5 MB.")
+        return
+      }
+
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setPreviewImage(e.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+
+      form.setValue("preview_url", file)
+    }
   }
 
   const onSubmit = async (data: FormData) => {
@@ -169,18 +181,44 @@ export default function ComponentForm() {
       const demoCodeFileName = `${data.component_slug}-demo.tsx`
 
       const [codeUrl, demoCodeUrl] = await Promise.all([
-        uploadToR2(codeFileName, data.code),
-        uploadToR2(demoCodeFileName, cleanedDemoCode),
+        uploadToR2({
+          file: {
+            name: codeFileName,
+            type: "text/plain",
+            textContent: data.code,
+          },
+          fileKey: codeFileName,
+          bucketName: "components-code",
+        }),
+        uploadToR2({
+          file: {
+            name: demoCodeFileName,
+            type: "text/plain",
+            textContent: cleanedDemoCode,
+          },
+          fileKey: demoCodeFileName,
+          bucketName: "components-code",
+        }),
       ])
 
       const installUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/r/${user?.username}/${data.component_slug}`
 
       let previewImageUrl = ""
       if (data.preview_url) {
-        previewImageUrl = await uploadPreviewImageToR2(
-          data.preview_url,
-          data.component_slug,
-        )
+        const fileExtension = data.preview_url.name.split(".").pop()
+        const fileKey = `${componentSlug}-preview-${Date.now()}.${fileExtension}`
+        const buffer = Buffer.from(await data.preview_url.arrayBuffer())
+        const base64Content = buffer.toString("base64")
+        previewImageUrl = await uploadToR2({
+          file: {
+            name: fileKey,
+            type: data.preview_url.type,
+            encodedContent: base64Content,
+          },
+          fileKey,
+          bucketName: "components-code",
+          contentType: data.preview_url.type,
+        })
       }
 
       const componentData = {
@@ -199,14 +237,25 @@ export default function ComponentForm() {
         preview_url: previewImageUrl,
       }
 
-      const insertedData = await addComponent(client, componentData)
+      const { data: insertedComponent, error } = await client
+        .from("components")
+        .insert(componentData)
+        .select()
+        .single()
+      
+      if (error) {
+        throw error
+      }
 
-      if (insertedData && validTags) {
+      if (validTags) {
         await addTagsToComponent(
           client,
-          insertedData.id,
+          insertedComponent.id,
           validTags.filter((tag) => !!tag.slug) as Tag[],
         )
+      }
+
+      if (insertedComponent) {
         setIsSuccessDialogOpen(true)
       }
     } catch (error) {
@@ -384,13 +433,13 @@ export default function ComponentForm() {
 
   const mainComponentName = getMainComponentName()
 
-    const demoCodeTextAreaRef = useRef<HTMLTextAreaElement>(null)
+  const demoCodeTextAreaRef = useRef<HTMLTextAreaElement>(null)
 
-    useEffect(() => {
-      if (showComponentDetails && demoCodeTextAreaRef.current) {
-        demoCodeTextAreaRef.current.blur()
-      }
-    }, [showComponentDetails])
+  useEffect(() => {
+    if (showComponentDetails && demoCodeTextAreaRef.current) {
+      demoCodeTextAreaRef.current.blur()
+    }
+  }, [showComponentDetails])
 
   return (
     <>
@@ -421,31 +470,33 @@ export default function ComponentForm() {
                           }}
                           transition={{ duration: 0.3 }}
                         >
-                            <Textarea
-                              value={field.value}
-                              onChange={(e) => {
-                                field.onChange(e.target.value)
-                                if (e.target.value.trim()) {
-                                  setIsEditMode(false)
-                                }
-                              }}
-                              className={`mt-1 w-full h-full ${field.value.length ? "" : "border-none shadow-none text-[20px] bg-transparent"}`}
-                            />
-                            {!parsedComponentNames?.length && field.value.length === 0 &&
-                              !isPreviewReady &&
-                              !isEditMode && (
-                                <div
-                                  className={`absolute inset-0 w-full h-full ${isDarkTheme ? "text-gray-400" : "text-gray-600"} text-[20px] flex items-center justify-center cursor-text`}
-                                  onClick={() => {
-                                    const textarea = document.querySelector('textarea');
-                                    if (textarea) {
-                                      textarea.focus();
-                                    }
-                                  }}
-                                >
-                                  PASTE COMPONENT .TSX CODE HERE
-                                </div>
-                              )}
+                          <Textarea
+                            value={field.value}
+                            onChange={(e) => {
+                              field.onChange(e.target.value)
+                              if (e.target.value.trim()) {
+                                setIsEditMode(false)
+                              }
+                            }}
+                            className={`mt-1 w-full h-full ${field.value.length ? "" : "border-none shadow-none text-[20px] bg-transparent"}`}
+                          />
+                          {!parsedComponentNames?.length &&
+                            field.value.length === 0 &&
+                            !isPreviewReady &&
+                            !isEditMode && (
+                              <div
+                                className={`absolute inset-0 w-full h-full ${isDarkTheme ? "text-gray-400" : "text-gray-600"} text-[20px] flex items-center justify-center cursor-text`}
+                                onClick={() => {
+                                  const textarea =
+                                    document.querySelector("textarea")
+                                  if (textarea) {
+                                    textarea.focus()
+                                  }
+                                }}
+                              >
+                                PASTE COMPONENT .TSX CODE HERE
+                              </div>
+                            )}
                           {!!parsedComponentNames?.length && !isEditMode && (
                             <motion.div
                               initial={{ opacity: 0 }}
@@ -525,7 +576,7 @@ export default function ComponentForm() {
                                   field.onChange(e.target.value)
                                 }}
                                 className="mt-1 w-full h-full resize-none"
-                                style={{ height: '100%', minHeight: '100%' }}
+                                style={{ height: "100%", minHeight: "100%" }}
                               />
                               {showComponentDetails && (
                                 <motion.div
@@ -677,7 +728,7 @@ export default function ComponentForm() {
                     <ComponentDetails
                       form={form}
                       previewImage={previewImage}
-                      handleFileChange={handleFileChangeWrapper}
+                      handleFileChange={handleFileChange}
                       handleSubmit={handleSubmit}
                       isLoading={isLoading}
                       isFormValid={isFormValid}

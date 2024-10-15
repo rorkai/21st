@@ -3,7 +3,6 @@ import React from "react"
 import { notFound } from "next/navigation"
 import { getComponent } from "@/utils/dataFetchers"
 import { supabaseWithAdminAccess } from "@/utils/supabase"
-import { generateFiles } from "@/utils/generateFiles"
 
 export const generateMetadata = async ({
   params,

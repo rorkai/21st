@@ -218,9 +218,9 @@ export function useLikeMutation(
         throw new Error("User is not logged in")
       }
       if (liked) {
-        await likeComponent(supabase, userId, componentId)
-      } else {
         await unlikeComponent(supabase, userId, componentId)
+      } else {
+        await likeComponent(supabase, userId, componentId)
       }
     },
     onSuccess: (_, { componentId }) => {

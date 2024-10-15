@@ -48,6 +48,7 @@ interface ComponentDetailsProps {
 }
 
 import { licenses } from "@/utils/licenses"
+import { TagSelector } from "../TagSelector"
 
 export function ComponentDetails({
   form,
@@ -310,72 +311,25 @@ export function ComponentDetails({
           control={form.control}
           defaultValue={[]}
           render={({ field }) => {
-            const [tags, setTags] = useState(field.value)
+            const [tags, setTags] = useState<{ name: string; slug: string; id?: number }[]>(field.value)
 
-            const selectOptions = useMemo(
-              () =>
-                availableTags.map((tag) => ({
-                  value: tag.id,
-                  label: tag.name,
-                })),
-              [availableTags],
-            )
+            const createTag = (inputValue: string) => ({
+              name: inputValue,
+              slug: generateSlug(inputValue),
+              id: undefined,
+            })
 
             return (
-              <CreatableSelect<TagOption, true>
-                {...field}
-                isMulti
-                options={selectOptions}
-                className="mt-1 w-full rounded-md bg-transparent text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="Select or create tags"
-                formatCreateLabel={(inputValue: string) =>
-                  `Create "${inputValue.charAt(0).toUpperCase() + inputValue.slice(1)}"`
-                }
-                onChange={(newValue) => {
-                  const formattedValue = newValue.map((item: any) => ({
-                    id: item.__isNew__ ? undefined : item.value,
-                    name: item.label,
-                    slug: generateSlug(item.label),
-                  }))
-                  setTags(formattedValue)
-                  field.onChange(formattedValue)
+              <TagSelector
+                availableTags={availableTags}
+                selectedTags={tags}
+                onChange={(newTags) => {
+                  setTags(newTags)
+                  field.onChange(newTags)
                 }}
-                value={tags.map((tag) => ({
-                  value: tag.id ?? -1,
-                  label: tag.name,
-                }))}
-                menuPortalTarget={document.body}
-                styles={{
-                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                  control: (base) => ({
-                    ...base,
-                    backgroundColor: isDarkTheme ? "#0A0A0A" : "#ffffff",
-                    color: isDarkTheme ? "#e0e0e0" : "inherit",
-                  }),
-                  menu: (base) => ({
-                    ...base,
-                    backgroundColor: isDarkTheme ? "#0A0A0A" : "#ffffff",
-                  }),
-                  option: (base, state) => ({
-                    ...base,
-                    backgroundColor: state.isFocused
-                      ? isDarkTheme
-                        ? "#0A0A0A"
-                        : "#f0f0f0"
-                      : "transparent",
-                    color: isDarkTheme ? "#e0e0e0" : "inherit",
-                  }),
-                }}
-                theme={(theme) => ({
-                  ...theme,
-                  colors: {
-                    ...theme.colors,
-                    primary: isDarkTheme ? "#6b7280" : "#4a5568",
-                    primary25: isDarkTheme ? "#4a4a4a" : "#f0f0f0",
-                    neutral0: isDarkTheme ? "#2d2d2d" : "#ffffff",
-                    neutral80: isDarkTheme ? "#e0e0e0" : "inherit",
-                  },
-                })}
+                getValue={(tag) => tag.slug} // Используем 'slug' как уникальное значение
+                getLabel={(tag) => tag.name} // Используем 'name' как отображаемое значение
+                createTag={createTag} // Передаём функцию создания тега
               />
             )
           }}

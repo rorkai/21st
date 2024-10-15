@@ -31,9 +31,9 @@ export default function PublishPage() {
       <SignedIn>
         <Link
           href="/"
-          className="absolute top-4 left-4 cursor-pointer hover:bg-gray-100 rounded-md w-5 h-5 flex items-center justify-center"
+          className="absolute top-4 left-4 cursor-pointer w-5 h-5 flex items-center justify-center"
         >
-          <div className="w-full h-full rounded-full bg-foreground" />
+          <div className="w-full h-full z-10 rounded-full bg-foreground" />
         </Link>
         <div className="flex flex-col items-center gap-7 h-screen w-full">
           <ComponentForm />

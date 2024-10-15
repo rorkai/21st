@@ -52,7 +52,7 @@ export async function getComponent(
 export async function getUserData(
   supabase: SupabaseClient,
   username: string,
-): Promise<User | null> {
+): Promise<{ data: User | null; error: Error | null }> {
   try {
     const { data, error } = await supabase
       .from("users")
@@ -62,13 +62,13 @@ export async function getUserData(
 
     if (error) {
       console.error("Error fetching user data:", error)
-      return null
+      return { data: null, error: new Error(error.message) }
     }
 
     return data
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in getUserData:", error)
-    return null
+    return { data: null, error }
   }
 }
 

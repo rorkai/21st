@@ -6,13 +6,17 @@ import { getUserData, getUserComponents } from "@/utils/dataFetchers"
 import { UserAvatar } from "@/components/UserAvatar"
 import { supabaseWithAdminAccess } from "@/utils/supabase"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+import ErrorPage from "@/components/ErrorPage"
 
 export const generateMetadata = async ({
   params,
 }: {
   params: { username: string }
 }) => {
-  const user = await getUserData(supabaseWithAdminAccess, params.username)
+  const { data: user } = await getUserData(
+    supabaseWithAdminAccess,
+    params.username,
+  )
   return {
     title: user
       ? `${user.name}'s Profile | Component Library`
@@ -25,10 +29,15 @@ export default async function UserProfile({
 }: {
   params: { username: string }
 }) {
-  const user = await getUserData(supabaseWithAdminAccess, params.username)
+  const { data: user, error } = await getUserData(
+    supabaseWithAdminAccess,
+    params.username,
+  )
 
   if (!user) {
-    return <div>User not found</div>
+    return (
+      <ErrorPage error={new Error(`Error fetching user: ${error?.message}`)} />
+    )
   }
 
   const components = await getUserComponents(supabaseWithAdminAccess, user.id)

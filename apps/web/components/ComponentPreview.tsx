@@ -9,7 +9,7 @@ import { Info } from "./PreviewInfo"
 import { SandpackProvider as SandpackProviderUnstyled } from "@codesandbox/sandpack-react/unstyled"
 import { CheckIcon, CopyIcon, Terminal, Clipboard } from "lucide-react"
 import styles from "./ComponentPreview.module.css"
-import { LoadingSpinner } from "./Loading"
+import { LoadingSpinner } from "./LoadingSpinner"
 import { SandpackProviderProps } from "@codesandbox/sandpack-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useDebugMode } from "@/hooks/useDebugMode"
@@ -52,7 +52,7 @@ export default function ComponentPreview({
   const isDebug = useDebugMode()
   const installUrl = `${process.env.NEXT_PUBLIC_API_URL}/r/${componentInfo.user.username}/${componentSlug}`
   const { theme } = useTheme()
-  const isDarkTheme = theme === 'dark'
+  const isDarkTheme = theme === "dark"
 
   const updatedIndexContent = `
 import React from 'react';
@@ -86,7 +86,7 @@ root.render(
   const demoComponentFile =
     Object.keys(updatedFiles).find((file) => file.endsWith(`demo.tsx`)) ||
     Object.keys(updatedFiles)[0]
-  
+
   const [activeFile, setActiveFile] = useState(
     demoComponentFile || mainComponentFile,
   )

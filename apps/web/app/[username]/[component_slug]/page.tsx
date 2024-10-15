@@ -3,6 +3,7 @@ import React from "react"
 import { notFound } from "next/navigation"
 import { getComponent } from "@/utils/dataFetchers"
 import { supabaseWithAdminAccess } from "@/utils/supabase"
+import ErrorPage from "@/components/ErrorPage"
 
 export const generateMetadata = async ({
   params,
@@ -33,7 +34,7 @@ export default async function ComponentPageLayout({
   )
 
   if (error) {
-    return <div>Error: {error.message}</div>
+    return <ErrorPage error={error} />
   }
 
   if (!component) {
@@ -99,18 +100,28 @@ export default async function ComponentPageLayout({
     ])
 
   if (codeResult?.error || demoResult?.error) {
-    return <div>Error fetching component code</div>
-  }
-  const errorResult = internalDependenciesResults?.find((result) => result?.error);
-  if (errorResult) {
-    const errorMessage = errorResult.error?.message || 'Unknown error';
     return (
-      <div>
-        <h2>Error fetching internal dependencies</h2>
-        <p>Details: {errorMessage}</p>
-        <p>Please try again later or contact support if the problem persists.</p>
-      </div>
-    );
+      <ErrorPage
+        error={
+          new Error(
+            `Error fetching component code: ${codeResult?.error?.message || demoResult?.error?.message}`,
+          )
+        }
+      />
+    )
+  }
+  const errorResult = internalDependenciesResults?.find(
+    (result) => result?.error,
+  )
+  if (errorResult) {
+    const errorMessage = errorResult.error?.message || "Unknown error"
+    return (
+      <ErrorPage
+        error={
+          new Error(`Error fetching internal dependencies: ${errorMessage}`)
+        }
+      />
+    )
   }
 
   const internalDependenciesWithCode = internalDependenciesResults
@@ -129,7 +140,7 @@ export default async function ComponentPageLayout({
   const rawDemoCode = demoResult?.data as string
 
   const componentNames = JSON.parse(component.component_name)
-  
+
   const hasUseClient = /^"use client";?\s*/.test(rawDemoCode)
 
   const importStatements = `import { ${componentNames.join(", ")} } from "./${component.component_slug}";\n`

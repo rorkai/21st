@@ -4,7 +4,7 @@ import React, { useEffect } from "react"
 import { useUser, SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import ComponentForm from "@/components/ComponentForm/ComponentForm"
-import { LoadingSpinner } from "@/components/Loading"
+import { LoadingSpinner } from "@/components/LoadingSpinner"
 import Head from "next/head"
 import Link from "next/link"
 

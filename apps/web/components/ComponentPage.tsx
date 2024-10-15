@@ -38,7 +38,6 @@ const ComponentPreview = dynamic(() => import("./ComponentPreview"), {
 })
 
 export default function ComponentPage({
-  
   component,
   code,
   demoCode,
@@ -54,7 +53,7 @@ export default function ComponentPage({
   demoDependencies: Record<string, string>
   demoComponentName: string
   internalDependencies: Record<string, string>
-  }) {
+}) {
   const { user } = useUser()
   const supabase = useClerkSupabaseClient()
   const { theme } = useTheme()
@@ -70,8 +69,7 @@ export default function ComponentPage({
   const { data: liked } = useQuery({
     queryKey: ["hasUserLikedComponent", component.id, user?.id],
     queryFn: async () => {
-      if (!user || !supabase)
-        return null
+      if (!user || !supabase) return null
       const { data, error } = await supabase
         .from("component_likes")
         .select("*")
@@ -197,11 +195,7 @@ export default function ComponentPage({
           </SignedIn>
           <SignedOut>
             <SignInButton>
-              <LikeButton
-                componentId={component.id}
-                size={18}
-                liked={false}
-              />
+              <LikeButton componentId={component.id} size={18} liked={false} />
             </SignInButton>
           </SignedOut>
           {!isMobile && (

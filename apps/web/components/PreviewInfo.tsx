@@ -2,7 +2,7 @@ import { useState, useCallback } from "react"
 import { useDependencyComponents } from "@/utils/dataFetchers"
 import Link from "next/link"
 import { UserAvatar } from "@/components/UserAvatar"
-import { LoadingSpinner } from "./Loading"
+import { LoadingSpinner } from "./LoadingSpinner"
 import { Component } from "@/types/types"
 import { ArrowUpRight, Check, Copy, Scale } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
@@ -27,7 +27,7 @@ export const Info: React.FC<{ info: Component }> = ({ info }) => {
   const [copiedDependency, setCopiedDependency] = useState<string | null>(null)
   const [isLibDepsHovered, setIsLibDepsHovered] = useState(false)
   const { theme } = useTheme()
-  const isDarkTheme = theme === 'dark'
+  const isDarkTheme = theme === "dark"
 
   const parseDependencies = useCallback((deps: any): Record<string, string> => {
     if (typeof deps === "string") {

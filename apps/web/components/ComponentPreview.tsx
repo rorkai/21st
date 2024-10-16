@@ -7,17 +7,17 @@ import {
 } from "@codesandbox/sandpack-react"
 import { Info } from "./PreviewInfo"
 import { SandpackProvider as SandpackProviderUnstyled } from "@codesandbox/sandpack-react/unstyled"
-import { CheckIcon, CopyIcon, Terminal, Clipboard } from "lucide-react"
+import { CheckIcon, CopyIcon, Terminal } from "lucide-react"
 import styles from "./ComponentPreview.module.css"
 import { LoadingSpinner } from "./LoadingSpinner"
 import { SandpackProviderProps } from "@codesandbox/sandpack-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import { useDebugMode } from "@/hooks/useDebugMode"
 import { Component } from "@/types/types"
 import { isShowCodeAtom } from "./ComponentPage"
 import { useAtom } from "jotai"
 import { useTheme } from "next-themes"
-
+import { CopyCodeButton } from "./CopyCodeButton"
 const LazyPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react/unstyled").then((module) => ({
     default: module.SandpackPreview,
@@ -43,8 +43,6 @@ export default function ComponentPreview({
   componentInfo,
 }: ComponentPreviewProps) {
   const [copied, setCopied] = useState(false)
-  const [codeCopied, setCodeCopied] = useState(false)
-  const [isHovering, setIsHovering] = useState(false)
   const sandpackRef = useRef<HTMLDivElement>(null)
   const [isComponentsLoaded, setIsComponentsLoaded] = useState(false)
   const [isShowCode] = useAtom(isShowCodeAtom)
@@ -162,16 +160,6 @@ root.render(
     navigator.clipboard.writeText(command)
     setCopied(true)
     setTimeout(() => setCopied(false), 1000)
-  }
-
-  const copyCode = () => {
-    const codeElement = sandpackRef.current?.querySelector(".sp-code-editor")
-    if (codeElement) {
-      const code = codeElement.textContent
-      navigator.clipboard.writeText(code || "")
-      setCodeCopied(true)
-      setTimeout(() => setCodeCopied(false), 2000)
-    }
   }
 
   useEffect(() => {
@@ -297,28 +285,8 @@ root.render(
                       {isDebug && <SandpackFileExplorer />}
                       <div
                         className={`overflow-auto ${styles.codeViewerWrapper} relative`}
-                        onMouseEnter={() => setIsHovering(true)}
-                        onMouseLeave={() => setIsHovering(false)}
                       >
-                        <AnimatePresence>
-                          {isHovering && (
-                            <motion.button
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              onClick={copyCode}
-                              className={`absolute flex items-center gap-2 ${visibleFiles.length > 1 ? "top-12" : "top-2"} right-2 z-10 p-1 px-2 bg-background text-foreground border border-border rounded-md hover:bg-accent transition-colors ${codeCopied ? "opacity-0" : "opacity-100"}`}
-                            >
-                              Copy Code{" "}
-                              {codeCopied ? (
-                                <CheckIcon size={16} />
-                              ) : (
-                                <Clipboard size={16} />
-                              )}
-                            </motion.button>
-                          )}
-                        </AnimatePresence>
-
+                        <CopyCodeButton />
                         <SandpackCodeViewer
                           showLineNumbers={true}
                           wrapContent={true}

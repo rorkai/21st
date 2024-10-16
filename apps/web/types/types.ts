@@ -11,7 +11,7 @@ export interface User {
 
 export interface Component {
   id: number
-  component_name: any // jsonb
+  component_names: any // jsonb
   description: string
   code: string
   demo_code: string

@@ -139,7 +139,7 @@ export default async function ComponentPageLayout({
   const code = codeResult?.data as string
   const rawDemoCode = demoResult?.data as string
 
-  const componentNames = JSON.parse(component.component_name)
+  const componentNames = JSON.parse(component.component_names)
 
   const hasUseClient = /^"use client";?\s*/.test(rawDemoCode)
 

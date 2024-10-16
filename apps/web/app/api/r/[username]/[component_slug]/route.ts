@@ -1,11 +1,13 @@
 import { supabaseWithAdminAccess } from "@/utils/supabase"
 import { NextRequest, NextResponse } from "next/server"
+import { ComponentRegistryResponse } from "./types"
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { username: string; component_slug: string } },
 ) {
   const { username, component_slug } = params
+  const apiUrl = process.env.NEXT_PUBLIC_CDN_URL
 
   try {
     const { data: component, error } = await supabaseWithAdminAccess
@@ -15,48 +17,78 @@ export async function GET(
       .eq("user.username", username)
       .single()
 
-    if (error) throw error
-
-    if (!component) {
+    if (error || !component) {
       return NextResponse.json(
         { error: "Component not found" },
         { status: 404 },
       )
     }
 
-    const codePath = `${component_slug}-code.tsx`
+    const dependencies = JSON.parse(component.dependencies || "{}")
+    const internalDependencies = JSON.parse(
+      component.internal_dependencies || "{}",
+    )
 
-    const { data: codeContent, error: codeError } =
-      await supabaseWithAdminAccess.storage
-        .from("components")
-        .download(codePath)
+    const componentCodeResponse = await fetch(component.code)
+    if (!componentCodeResponse.ok) {
+      throw new Error(
+        `Error fetching component code: ${componentCodeResponse.statusText}`,
+      )
+    }
+    const code = await componentCodeResponse.text()
 
-    if (codeError) throw codeError
-
-    const code = await codeContent.text()
-
-    const responseData = {
-      name: component_slug,
-      type: "registry:ui",
-      files: [
-        {
-          path: `cc/${component_slug}.tsx`,
+    const internalDependenciesPromises = Object.entries(
+      internalDependencies,
+    ).flatMap(([path, slugs]) => {
+      const slugArray = Array.isArray(slugs) ? slugs : [slugs]
+      return slugArray.map(async (slug) => {
+        const dependencyUrl = `${apiUrl}/${component.user_id}/${slug}.tsx`
+        const response = await fetch(dependencyUrl)
+        if (!response.ok) {
+          throw new Error(
+            `Error downloading file for ${slug}: ${response.statusText}`,
+          )
+        }
+        const code = await response.text()
+        const fullPath = path.endsWith(".tsx") ? path : `${path}.tsx`
+        return {
+          path: fullPath,
           content: code,
           type: "registry:ui",
           target: "",
-        },
-      ],
+        }
+      })
+    })
+
+    const internalDependenciesResults = await Promise.all(
+      internalDependenciesPromises,
+    )
+
+    const files = [
+      {
+        path: `components/ui/${username}/${component_slug}.tsx`,
+        content: code,
+        type: "registry:ui",
+        target: "",
+      },
+      ...internalDependenciesResults,
+    ]
+
+    const responseData: ComponentRegistryResponse = {
+      name: component_slug,
+      type: "registry:ui",
+      dependencies:
+        Object.keys(dependencies).length > 0
+          ? Object.keys(dependencies)
+          : undefined,
+      files,
     }
 
     return NextResponse.json(responseData)
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("Unexpected error:", error)
-    if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-    return NextResponse.json(
-      { error: "An unexpected error occurred" },
-      { status: 500 },
-    )
+    const message =
+      error instanceof Error ? error.message : "An unexpected error occurred"
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

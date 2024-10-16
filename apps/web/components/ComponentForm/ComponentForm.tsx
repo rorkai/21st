@@ -386,7 +386,6 @@ export default function ComponentForm() {
     setImportsToRemove(removedImports)
     const demoComponentName = extractDemoComponentName(modifiedCode)
     if (demoComponentName) {
-      setShowComponentDetails(true)
       form.setValue("demo_code", modifiedCode)
     }
   }, [form.watch("demo_code")])
@@ -567,6 +566,23 @@ export default function ComponentForm() {
                         </FormItem>
                       )}
                     />
+                    <div className="-mt-10 h-[36px] flex justify-end w-full">
+                      <AnimatePresence>
+                        {!!parsedDemoComponentName && !showComponentDetails && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="mr-2"
+                          >
+                            <Button onClick={() => setShowComponentDetails(true)}>
+                              Continie
+                            </Button>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </motion.div>
                 )}
 
@@ -636,7 +652,7 @@ export default function ComponentForm() {
       {!showDemoCodeInput && !isPreviewReady && !isEditMode && (
         <CodeGuidelinesAlert />
       )}
-      {showDemoCodeInput && !isPreviewReady && <DemoComponentGuidelinesAlert />}
+      {showDemoCodeInput && !showComponentDetails && <DemoComponentGuidelinesAlert />}
     </>
   )
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Suspense } from "react"
+import React, { useState, useRef, Suspense } from "react"
 import {
   SandpackProvider,
   SandpackLayout,
@@ -26,7 +26,7 @@ const SandpackPreview = React.lazy(() =>
   })),
 )
 
-export default function ComponentPagePreview({
+export function ComponentPagePreview({
   component,
   code,
   demoCode,
@@ -48,17 +48,6 @@ export default function ComponentPagePreview({
   const isDarkTheme = theme === "dark"
   const [isShowCode] = useAtom(isShowCodeAtom)
   const isDebug = useDebugMode()
-
-  console.log("internalDependencies", internalDependencies)
-  console.log(
-    "modifiedInternalDependencies",
-    Object.fromEntries(
-      Object.entries(internalDependencies).map(([path, code]) => [
-        path.startsWith("/") ? path : `/${path}`,
-        code,
-      ]),
-    ),
-  )
 
   const files = {
     ...generateSandpackFiles({
@@ -236,3 +225,5 @@ function CopyCommandSection({
     </div>
   )
 }
+
+export default ComponentPagePreview

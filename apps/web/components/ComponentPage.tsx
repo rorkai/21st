@@ -2,7 +2,6 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import dynamic from "next/dynamic"
 import {
   ChevronRight,
   Check,
@@ -28,13 +27,9 @@ import { useQuery } from "@tanstack/react-query"
 import { useClerkSupabaseClient } from "@/utils/clerk"
 import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs"
 import { useTheme } from "next-themes"
+import { ComponentPagePreview } from "./ComponentPagePreview"
 
 export const isShowCodeAtom = atom(true)
-
-const ComponentPagePreview = dynamic(() => import("./ComponentPagePreview"), {
-  ssr: false,
-  loading: () => null,
-})
 
 export default function ComponentPage({
   component,

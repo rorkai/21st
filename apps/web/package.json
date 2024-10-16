@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",
+    "types": "supabase gen types --lang=typescript --project-id \"vucvdpamtrjkzmubwlts\" --schema public > ./types/supabase.ts",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -73,6 +74,7 @@
     "eslint": "^8",
     "eslint-config-next": "14.2.6",
     "postcss": "^8.4.47",
+    "supabase": ">=1.8.1",
     "tailwindcss": "^3.4.13",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"

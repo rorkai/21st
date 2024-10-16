@@ -2,7 +2,7 @@
 import React from "react"
 import { ComponentsList } from "@/components/ComponentsList"
 import { Header } from "@/components/Header"
-import { getUserData, getUserComponents } from "@/utils/dataFetchers"
+import { getUserData, getUserComponents } from "@/utils/dbQueries"
 import { UserAvatar } from "@/components/UserAvatar"
 import { supabaseWithAdminAccess } from "@/utils/supabase"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
@@ -83,7 +83,7 @@ export default async function UserProfile({
             </div>
           </div>
           <div className="w-full md:w-[70%]">
-            <ComponentsList components={components || []} />
+            <ComponentsList initialComponents={components} />
           </div>
         </div>
       </div>

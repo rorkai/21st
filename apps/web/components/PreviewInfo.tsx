@@ -1,9 +1,9 @@
 import { useState, useCallback } from "react"
-import { useDependencyComponents } from "@/utils/dataFetchers"
+import { useDependencyComponents } from "@/utils/dbQueries"
 import Link from "next/link"
 import { UserAvatar } from "@/components/UserAvatar"
 import { LoadingSpinner } from "./LoadingSpinner"
-import { Component } from "@/types/types"
+import { Component, Tag, User } from "@/types/global"
 import { ArrowUpRight, Check, Copy, Scale } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { ComponentsList } from "./ComponentsList"
@@ -21,7 +21,11 @@ import {
 import { useTheme } from "next-themes"
 import { useClerkSupabaseClient } from "@/utils/clerk"
 
-export const Info: React.FC<{ info: Component }> = ({ info }) => {
+export const PreviewInfo = ({
+  component,
+}: {
+  component: Component & { user: User } & { tags: Tag[] }
+}) => {
   const supabase = useClerkSupabaseClient()
   const [copiedLibDependencies, setCopiedLibDependencies] = useState(false)
   const [copiedDependency, setCopiedDependency] = useState<string | null>(null)
@@ -41,8 +45,10 @@ export const Info: React.FC<{ info: Component }> = ({ info }) => {
     return deps || {}
   }, [])
 
-  const libDependencies = parseDependencies(info.dependencies)
-  const componentDependencies = parseDependencies(info.internal_dependencies)
+  const libDependencies = parseDependencies(component.dependencies)
+  const componentDependencies = parseDependencies(
+    component.internal_dependencies,
+  )
 
   const { data: dependencyComponents, isLoading: isLoadingDependencies } =
     useDependencyComponents(supabase, componentDependencies)
@@ -64,38 +70,41 @@ export const Info: React.FC<{ info: Component }> = ({ info }) => {
     setTimeout(() => setCopiedDependency(null), 2000)
   }
 
-  const license = info.license ? getLicenseBySlug(info.license) : null
+  const license = component.license ? getLicenseBySlug(component.license) : null
 
   return (
     <div className="p-3 space-y-3 text-sm overflow-y-auto max-h-[calc(100vh-100px)] bg-background text-foreground">
-      {info.name && (
+      {component.name && (
         <div className="flex items-center">
           <span className="text-muted-foreground w-1/3">Name:</span>
-          <span className="w-2/3">{info.name}</span>
+          <span className="w-2/3">{component.name}</span>
         </div>
       )}
-      {info.user && (
+      {component.user && (
         <div className="flex items-center">
           <span className="text-muted-foreground w-1/3">Created by:</span>
           <div className="flex items-center justify-start hover:bg-accent rounded-md px-2 py-1 -mx-2 mr-auto">
-            <Link href={`/${info.user.username}`} className="flex items-center">
+            <Link
+              href={`/${component.user.username}`}
+              className="flex items-center"
+            >
               <UserAvatar
-                src={info.user.image_url || "/placeholder.svg"}
-                alt={info.user.name || info.user.username}
+                src={component.user.image_url || "/placeholder.svg"}
+                alt={component.user.name || component.user.username}
                 size={20}
                 isClickable={true}
               />
               <span className="ml-1 font-medium">
-                {info.user.name || info.user.username}
+                {component.user.name || component.user.username}
               </span>
             </Link>
           </div>
         </div>
       )}
-      {info.description && (
+      {component.description && (
         <div className="flex items-start">
           <span className="text-muted-foreground w-1/3">Description:</span>
-          <span className="w-2/3">{info.description}</span>
+          <span className="w-2/3">{component.description}</span>
         </div>
       )}
       {license && (
@@ -121,11 +130,11 @@ export const Info: React.FC<{ info: Component }> = ({ info }) => {
           </span>
         </div>
       )}
-      {info.tags && info.tags.length > 0 && (
+      {component.tags && component.tags.length > 0 && (
         <div className="flex items-center justify-center">
           <span className="text-muted-foreground w-1/3">Tags:</span>
           <div className="w-2/3 flex flex-wrap gap-2">
-            {info.tags.map((tag) => (
+            {component.tags.map((tag) => (
               <Link
                 key={tag.slug}
                 href={`/s/${tag.slug}`}
@@ -240,7 +249,7 @@ export const Info: React.FC<{ info: Component }> = ({ info }) => {
               {isLoadingDependencies ? (
                 <LoadingSpinner />
               ) : dependencyComponents ? (
-                <ComponentsList components={dependencyComponents} />
+                <ComponentsList initialComponents={dependencyComponents!} />
               ) : (
                 <span>Error loading dependencies</span>
               )}

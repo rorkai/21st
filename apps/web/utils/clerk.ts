@@ -1,5 +1,6 @@
 "use client"
 
+import { Database } from "@/types/supabase"
 import { useSession } from "@clerk/nextjs"
 import { createClient, SupabaseClient } from "@supabase/supabase-js"
 import { atom, useAtom } from "jotai"
@@ -36,10 +37,10 @@ export const createSupabaseClerkClient = (
   )
 }
 
-const supabaseClerkClientAtom = atom<SupabaseClient | null>(null)
+const supabaseClerkClientAtom = atom<SupabaseClient<Database> | null>(null)
 const defaultSupabaseClient = createSupabaseClerkClient()
 
-export function useClerkSupabaseClient(): SupabaseClient {
+export function useClerkSupabaseClient(): SupabaseClient<Database> {
   const { session } = useSession()
   const [clerkClient, setClerkClient] = useAtom(supabaseClerkClientAtom)
 

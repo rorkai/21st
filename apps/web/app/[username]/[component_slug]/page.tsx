@@ -1,7 +1,7 @@
 import ComponentPage from "@/components/ComponentPage"
 import React from "react"
 import { notFound } from "next/navigation"
-import { getComponent } from "@/utils/dataFetchers"
+import { getComponent } from "@/utils/dbQueries"
 import { supabaseWithAdminAccess } from "@/utils/supabase"
 import ErrorPage from "@/components/ErrorPage"
 
@@ -41,11 +41,9 @@ export default async function ComponentPageLayout({
     notFound()
   }
 
-  const dependencies = JSON.parse(component.dependencies || "{}")
-  const demoDependencies = JSON.parse(component.demo_dependencies || "{}")
-  const internalDependencies = JSON.parse(
-    component.internal_dependencies || "{}",
-  )
+  const dependencies = (component.dependencies ?? {}) as Record<string, string>
+  const demoDependencies = (component.demo_dependencies ?? {}) as Record<string, string>
+  const internalDependencies = (component.internal_dependencies ?? {}) as Record<string, string>
 
   const componentAndDemoCodePromises = [
     fetch(component.code).then(async (response) => {
@@ -139,7 +137,7 @@ export default async function ComponentPageLayout({
   const code = codeResult?.data as string
   const rawDemoCode = demoResult?.data as string
 
-  const componentNames = JSON.parse(component.component_name)
+  const componentNames = component.component_names! as string[]
 
   const hasUseClient = /^"use client";?\s*/.test(rawDemoCode)
 
@@ -149,7 +147,7 @@ export default async function ComponentPageLayout({
     ? `"use client";\n${importStatements}\n${rawDemoCode.replace(/^"use client";?\s*/, "")}`
     : `${importStatements}\n${rawDemoCode}`
 
-  const demoComponentName = component.demo_component_name
+  const demoComponentName = (component.demo_component_names as string[])[0]!
 
   return (
     <div className="w-full ">

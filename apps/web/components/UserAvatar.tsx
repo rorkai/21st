@@ -1,18 +1,16 @@
 /* eslint-disable @next/next/no-img-element */
 import React from "react"
 
-interface UserAvatarProps {
-  src: string
-  alt: string
-  size?: number
-  isClickable?: boolean
-}
-
-export const UserAvatar: React.FC<UserAvatarProps> = ({
+export const UserAvatar = ({
   src,
   alt,
   size = 40,
   isClickable,
+}: {
+  src: string
+  alt: string | null
+  size?: number
+  isClickable?: boolean
 }) => {
   return (
     <div
@@ -31,7 +29,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
       <div className="shimmer-effect" />
       <img
         src={src}
-        alt={alt}
+        alt={alt ?? undefined}
         width={size}
         height={size}
         className="object-cover"

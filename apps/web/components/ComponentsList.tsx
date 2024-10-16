@@ -2,27 +2,25 @@
 
 import React from "react"
 import { ComponentCard } from "./ComponentCard"
-import { Component } from "../types/types"
-import { useComponents, useTagInfo } from "@/utils/dataFetchers"
+import { Component, User } from "../types/global"
+import { useComponents, useTagInfo } from "@/utils/dbQueries"
 import { Header } from "./Header"
 import { useClerkSupabaseClient } from "@/utils/clerk"
 import { cn } from "@/lib/utils"
 
-interface ComponentsListProps {
-  components?: Component[]
-  isLoading?: boolean
-  tagSlug?: string
-}
-
 export function ComponentsList({
-  components: propsComponents,
+  initialComponents,
   isLoading,
   tagSlug,
-}: ComponentsListProps) {
+}: {
+  initialComponents?: (Component & { user: User })[] | null
+  isLoading?: boolean
+  tagSlug?: string
+}) {
   const supabase = useClerkSupabaseClient()
   const { data: fetchedComponents } = useComponents(supabase, tagSlug)
   const { data: tagInfo } = useTagInfo(supabase, tagSlug)
-  const components = propsComponents || fetchedComponents
+  const components = initialComponents ?? fetchedComponents
   return (
     <div>
       {tagSlug && <Header tagName={tagInfo?.name} page="components" />}

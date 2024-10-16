@@ -8,6 +8,7 @@ import {
   CodeXml,
   Info,
   Link as LinkIcon,
+  Pencil,
 } from "lucide-react"
 import { Component, Tag, User } from "@/types/global"
 import { UserAvatar } from "./UserAvatar"
@@ -28,11 +29,14 @@ import { useClerkSupabaseClient } from "@/utils/clerk"
 import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs"
 import { useTheme } from "next-themes"
 import { ComponentPagePreview } from "./ComponentPagePreview"
+import { Button } from "./ui/button"
+import { EditComponentDialog } from "./EditComponentDialog"
+import { useUpdateComponentWithTags } from "@/utils/dbQueries"
 
 export const isShowCodeAtom = atom(true)
 
 export default function ComponentPage({
-  component,
+  component: initialComponent,
   code,
   demoCode,
   dependencies,
@@ -48,9 +52,11 @@ export default function ComponentPage({
   demoComponentName: string
   internalDependencies: Record<string, string>
 }) {
+  const [component, setComponent] = useState(initialComponent)
   const { user } = useUser()
   const supabase = useClerkSupabaseClient()
   const { theme } = useTheme()
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
 
   const { data: liked } = useQuery({
     queryKey: ["hasUserLikedComponent", component.id, user?.id],
@@ -130,6 +136,64 @@ export default function ComponentPage({
     }
   }, [])
 
+  const { mutate: updateComponent } = useUpdateComponentWithTags(supabase)
+
+  const handleUpdate = async (
+    updatedData: Partial<Component & { tags: Tag[] }>,
+  ) => {
+    return new Promise<void>((resolve, reject) => {
+      updateComponent(
+        { componentId: component.id, updatedData },
+        {
+          onSuccess: async () => {
+            try {
+              const { data: updatedComponent, error } = await supabase
+                .from("components")
+                .select(
+                  `
+                  *,
+                  user:users!components_user_id_fkey(*),
+                  tags:component_tags(
+                    tag:tag_id(*)
+                  )
+                `,
+                )
+                .eq("id", component.id)
+                .single()
+
+              if (error) {
+                console.error("Error fetching updated component:", error)
+                reject(error)
+              } else if (updatedComponent) {
+                const transformedComponent = {
+                  ...updatedComponent,
+                  tags: updatedComponent.tags.map(
+                    (tagRelation: any) => tagRelation.tag,
+                  ),
+                }
+
+                setComponent(
+                  transformedComponent as Component & { user: User } & {
+                    tags: Tag[]
+                  },
+                )
+                setIsEditDialogOpen(false)
+                resolve()
+              }
+            } catch (err) {
+              console.error("Error in onSuccess:", err)
+              reject(err)
+            }
+          },
+          onError: (error) => {
+            console.error("Error updating component:", error)
+            reject(error)
+          },
+        },
+      )
+    })
+  }
+
   return (
     <div
       className={`flex flex-col gap-2 rounded-lg h-[98vh] w-full ${
@@ -170,6 +234,23 @@ export default function ComponentPage({
         </div>
 
         <div className="flex items-center gap-1">
+          {user?.id === component.user_id && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setIsEditDialogOpen(true)}
+                  className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-md relative"
+                >
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Pencil size={16} />
+                  </div>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
+                <p className="flex items-center">Edit Component</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
           <ThemeToggle />
           <SignedIn>
             <LikeButton
@@ -264,6 +345,12 @@ export default function ComponentPage({
           internalDependencies={internalDependencies}
         />
       </div>
+      <EditComponentDialog
+        component={component}
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        onUpdate={handleUpdate}
+      />
     </div>
   )
 }

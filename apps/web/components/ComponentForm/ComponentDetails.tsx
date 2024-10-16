@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { useClerkSupabaseClient } from "@/utils/clerk"
-import { useAvailableTags } from "@/utils/dataFetchers"
+import { useAvailableTags } from "@/utils/dbQueries"
 import { useTheme } from "next-themes"
 import { useUser } from "@clerk/nextjs";
 

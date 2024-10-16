@@ -75,12 +75,11 @@ export type Database = {
       components: {
         Row: {
           code: string
-          component_name: Json
+          component_names: Json
           component_slug: string
           created_at: string
           demo_code: string
-          demo_component_name: string
-          demo_component_names: Json | null
+          demo_component_names: Json
           demo_dependencies: Json | null
           dependencies: Json | null
           description: string | null
@@ -98,12 +97,11 @@ export type Database = {
         }
         Insert: {
           code?: string
-          component_name: Json
+          component_names: Json
           component_slug: string
           created_at?: string
           demo_code: string
-          demo_component_name: string
-          demo_component_names?: Json | null
+          demo_component_names: Json
           demo_dependencies?: Json | null
           dependencies?: Json | null
           description?: string | null
@@ -121,12 +119,11 @@ export type Database = {
         }
         Update: {
           code?: string
-          component_name?: Json
+          component_names?: Json
           component_slug?: string
           created_at?: string
           demo_code?: string
-          demo_component_name?: string
-          demo_component_names?: Json | null
+          demo_component_names?: Json
           demo_dependencies?: Json | null
           dependencies?: Json | null
           description?: string | null
@@ -252,36 +249,35 @@ export type Database = {
         Args: {
           search_query: string
         }
-        Returns: {
-          component_id: number
-          component_name: Json
-          description: string
-          code: string
-          demo_code: string
-          created_at: string
-          updated_at: string
-          user_id: string
-          install_url: string
-          dependencies: Json
-          is_public: boolean
-          downloads_count: number
-          likes_count: number
-          component_slug: string
-          demo_component_name: string
-          name: string
-          demo_dependencies: Json
-          internal_dependencies: Json
-          preview_url: string
-          license: string
-          user_data: Json
-        }[]
+        Returns: Database["public"]["CompositeTypes"]["component_with_user"][]
       }
     }
     Enums: {
       [_ in never]: never
     }
     CompositeTypes: {
-      [_ in never]: never
+      component_with_user: {
+        id: number | null
+        component_names: Json | null
+        description: string | null
+        code: string | null
+        demo_code: string | null
+        created_at: string | null
+        updated_at: string | null
+        user_id: string | null
+        dependencies: Json | null
+        is_public: boolean | null
+        downloads_count: number | null
+        likes_count: number | null
+        component_slug: string | null
+        demo_component_names: Json | null
+        name: string | null
+        demo_dependencies: Json | null
+        internal_dependencies: Json | null
+        preview_url: string | null
+        license: string | null
+        user_data: Json | null
+      }
     }
   }
 }

@@ -5,7 +5,7 @@ import {
   SandpackCodeViewer,
   SandpackFileExplorer,
 } from "@codesandbox/sandpack-react"
-import { Info } from "./PreviewInfo"
+import { PreviewInfo } from "./PreviewInfo"
 import { SandpackProvider as SandpackProviderUnstyled } from "@codesandbox/sandpack-react/unstyled"
 import { CheckIcon, CopyIcon, Terminal } from "lucide-react"
 import styles from "./ComponentPreview.module.css"
@@ -13,7 +13,7 @@ import { LoadingSpinner } from "./LoadingSpinner"
 import { SandpackProviderProps } from "@codesandbox/sandpack-react"
 import { motion } from "framer-motion"
 import { useDebugMode } from "@/hooks/useDebugMode"
-import { Component } from "@/types/types"
+import { Component, Tag, User } from "@/types/global"
 import { isShowCodeAtom } from "./ComponentPage"
 import { useAtom } from "jotai"
 import { useTheme } from "next-themes"
@@ -24,16 +24,6 @@ const LazyPreview = React.lazy(() =>
   })),
 )
 
-interface ComponentPreviewProps {
-  files: Record<string, string>
-  dependencies: Record<string, string>
-  demoDependencies: Record<string, string>
-  demoComponentName: string
-  internalDependencies: Record<string, string>
-  componentSlug: string
-  componentInfo: Component
-}
-
 export default function ComponentPreview({
   files,
   dependencies,
@@ -41,7 +31,15 @@ export default function ComponentPreview({
   internalDependencies,
   componentSlug,
   componentInfo,
-}: ComponentPreviewProps) {
+}: {
+  files: Record<string, string>
+  dependencies: Record<string, string>
+  demoDependencies: Record<string, string>
+  demoComponentName: string
+  internalDependencies: Record<string, string>
+  componentSlug: string
+  componentInfo: Component & { user: User } & { tags: Tag[] }
+}) {
   const [copied, setCopied] = useState(false)
   const sandpackRef = useRef<HTMLDivElement>(null)
   const [isComponentsLoaded, setIsComponentsLoaded] = useState(false)
@@ -294,7 +292,7 @@ root.render(
                       </div>
                     </>
                   ) : (
-                    <Info info={componentInfo} />
+                    <PreviewInfo component={componentInfo} />
                   )}
                 </div>
               </div>

@@ -467,7 +467,7 @@ export default function ComponentForm() {
                               className={`absolute p-2 border rounded-md inset-0 bg-background text-foreground bg-opacity-80 backdrop-blur-sm flex items-center justify-start`}
                             >
                               <EditCodeFileCard
-                                iconSrc="/tsx-file.svg"
+                                iconSrc={isDarkTheme ? "/tsx-file-dark.svg" : "/tsx-file.svg"}
                                 mainText={`${mainComponentName} code`}
                                 subText={`${parsedComponentNames.slice(0, 2).join(", ")}${parsedComponentNames.length > 2 ? ` +${parsedComponentNames.length - 2}` : ""}`}
                                 onEditClick={() => {
@@ -547,7 +547,7 @@ export default function ComponentForm() {
                                   className="absolute p-2 border rounded-md inset-0 bg-background text-foreground bg-opacity-80 backdrop-blur-sm flex items-center justify-start"
                                 >
                                   <EditCodeFileCard
-                                    iconSrc="/demo-file.svg"
+                                    iconSrc={isDarkTheme ? "/demo-file-dark.svg" : "/demo-file.svg"}
                                     mainText="Demo code"
                                     subText={`for ${parsedComponentNames[0]}`}
                                     onEditClick={() => {
@@ -761,7 +761,7 @@ const CodeGuidelinesAlert = () => (
         <AlertDescription className="mt-2">
           <ol className="list-decimal pl-5 space-y-2">
             <li>
-              <strong>Dependency usage:</strong>
+              Dependency usage:
               <ul className="list-disc pl-5 mt-1">
                 <li>
                   You can use any dependencies from npm; we install them
@@ -778,7 +778,7 @@ const CodeGuidelinesAlert = () => (
               </ul>
             </li>
             <li>
-              <strong>Imports:</strong>
+              Imports:
               <ul className="list-disc pl-5 mt-1">
                 <li>Import internal components using relative paths.</li>
                 <li>
@@ -787,11 +787,11 @@ const CodeGuidelinesAlert = () => (
                 </li>
               </ul>
               <pre className="bg-secondary p-2 rounded-md mt-2">
-                <code className="text-sm">import * from 'react'</code>
+                <code className="text-[12px]">import * from 'react'</code>
               </pre>
             </li>
             <li>
-              <strong>Platform compatibility:</strong>
+              Platform compatibility:
               <ul className="list-disc pl-5 mt-1">
                 <li>
                   Do not use server components or Next.js functions. They are
@@ -805,7 +805,7 @@ const CodeGuidelinesAlert = () => (
               </ul>
             </li>
             <li>
-              <strong>Tailwind CSS:</strong>
+              Tailwind CSS:
               <ul className="list-disc pl-5 mt-1">
                 <li>
                   Custom Tailwind styles are not yet supported in the preview.
@@ -838,7 +838,7 @@ const DemoComponentGuidelinesAlert = () => (
         <AlertDescription className="mt-2">
           <ol className="list-decimal pl-5 space-y-2">
             <li>
-              <strong>Component import:</strong>
+              Component import:
               <ul className="list-disc pl-5 mt-1">
                 <li>
                   Always import the component using curly braces, regardless of the export method in the component:
@@ -849,7 +849,7 @@ const DemoComponentGuidelinesAlert = () => (
               </ul>
             </li>
             <li>
-              <strong>Demo structure:</strong>
+              Demo structure:
               <ul className="list-disc pl-5 mt-1">
                 <li>The demo code should demonstrate the usage and appearance of the component.</li>
                 <li>
@@ -861,7 +861,7 @@ const DemoComponentGuidelinesAlert = () => (
               </ul>
             </li>
             <li>
-              <strong>Imports and dependencies:</strong>
+              Imports and dependencies:
               <ul className="list-disc pl-5 mt-1">
                 <li>You can use any dependencies from npm; we install them automatically.</li>
                 <li>

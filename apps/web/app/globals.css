@@ -24,6 +24,10 @@ a {
   }
 }
 
+iframe {
+  background: var(--background);
+}
+
 .sp-preview-actions {
   display: none;
 }

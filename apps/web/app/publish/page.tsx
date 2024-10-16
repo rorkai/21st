@@ -1,26 +1,12 @@
-"use client"
-
-import React, { useEffect } from "react"
-import { useUser, SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs"
-import { useRouter } from "next/navigation"
+import React from "react"
+import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs"
 import ComponentForm from "@/components/ComponentForm/ComponentForm"
-import { LoadingSpinner } from "@/components/LoadingSpinner"
+
 import Head from "next/head"
 import Link from "next/link"
 
 export default function PublishPage() {
-  const { isLoaded, isSignedIn } = useUser()
-  const router = useRouter()
 
-  useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      router.push("/sign-in?redirect_url=/publish")
-    }
-  }, [isLoaded, isSignedIn, router])
-
-  if (!isLoaded) {
-    return <LoadingSpinner />
-  }
 
   return (
     <>

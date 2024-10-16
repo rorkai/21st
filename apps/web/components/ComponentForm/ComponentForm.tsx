@@ -417,11 +417,7 @@ export default function ComponentForm() {
             <div className={`flex gap-4 items-center h-full w-full mt-2`}>
               <div
                 className={cn(
-                  "flex flex-col items-start gap-2 py-10 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[400px]",
-                  showComponentDetails &&
-                    Object.keys(internalDependencies).length === 0
-                    ? "ml-0"
-                    : "mx-auto",
+                  "flex flex-col items-start gap-2 py-10 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[400px]ml-0"
                 )}
               >
                 <FormField
@@ -729,16 +725,74 @@ const CodeGuidelinesAlert = () => (
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: 20 }}
     transition={{ duration: 0.3 }}
-    className="absolute bottom-4 mx-auto"
+    className="fixed inset-0 flex justify-end items-center p-4 overflow-auto -z-10"
   >
-    <Alert>
-      <FileTerminal className="h-4 w-4" />
-      <AlertTitle>Entire code should be in a single file</AlertTitle>
-      <AlertDescription>
-        Ensure to include all necessary dependencies to enable everyone <br />
-        to use this component and install it seamlessly via the CLI.
-      </AlertDescription>
-    </Alert>
+    <div className="max-w-[90%] md:max-w-[70%] lg:max-w-[50%] xl:max-w-[40%]">
+      <Alert>
+        <FileTerminal className="h-4 w-4" />
+        <AlertTitle>Component code requirements</AlertTitle>
+        <AlertDescription className="mt-2">
+          <ol className="list-decimal pl-5 space-y-2">
+            <li>
+              <strong>Dependency usage:</strong>
+              <ul className="list-disc pl-5 mt-1">
+                <li>
+                  You can use any dependencies from npm; we install them
+                  automatically.
+                </li>
+                <li>
+                  If your component depends on other components from our
+                  library, make sure they are already published or publish them.
+                </li>
+                <li>
+                  To reference already loaded components, use a direct link to
+                  the component.
+                </li>
+              </ul>
+            </li>
+            <li>
+              <strong>Imports:</strong>
+              <ul className="list-disc pl-5 mt-1">
+                <li>Import internal components using relative paths.</li>
+                <li>
+                  Unlike Next.js, React is not imported automatically. If you
+                  use React, be sure to import it:
+                </li>
+              </ul>
+              <pre className="bg-secondary p-2 rounded-md mt-2">
+                <code className="text-sm">import * from 'react'</code>
+              </pre>
+            </li>
+            <li>
+              <strong>Platform compatibility:</strong>
+              <ul className="list-disc pl-5 mt-1">
+                <li>
+                  Do not use server components or Next.js functions. They are
+                  not supported in the preview.
+                </li>
+                <li>
+                  Despite emulating some Next.js libraries, we do not support it
+                  directly. Make sure your code works in our environment; if it
+                  doesn't, write to @serafimcloud
+                </li>
+              </ul>
+            </li>
+            <li>
+              <strong>Tailwind CSS:</strong>
+              <ul className="list-disc pl-5 mt-1">
+                <li>
+                  Custom Tailwind styles are not yet supported in the preview.
+                </li>
+                <li>
+                  If your component needs additional styles, specify them in the
+                  description so users can install them themselves.
+                </li>
+              </ul>
+            </li>
+          </ol>
+        </AlertDescription>
+      </Alert>
+    </div>
   </motion.div>
 )
 
@@ -748,19 +802,53 @@ const DemoComponentGuidelinesAlert = () => (
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: 20 }}
     transition={{ duration: 0.3, delay: 0.3 }}
-    className="absolute bottom-4 mx-auto"
+    className="fixed inset-0 flex justify-end items-center p-4 overflow-auto -z-10"
   >
-    <Alert>
-      <SunMoon className="h-4 w-4" />
-      <AlertTitle>
-        Demo should demonstrate how it functions and appears
-      </AlertTitle>
-      <AlertDescription>
-        Do not add an import statement for the Component,
-        <br />
-        as it will be imported automatically.
-      </AlertDescription>
-    </Alert>
+    <div className="max-w-[90%] md:max-w-[70%] lg:max-w-[50%] xl:max-w-[40%]">
+      <Alert>
+        <SunMoon className="h-4 w-4" />
+        <AlertTitle>Demo code requirements</AlertTitle>
+        <AlertDescription className="mt-2">
+          <ol className="list-decimal pl-5 space-y-2">
+            <li>
+              <strong>Component import:</strong>
+              <ul className="list-disc pl-5 mt-1">
+                <li>
+                  Always import the component using curly braces, regardless of the export method in the component:
+                  <pre className="bg-secondary p-2 rounded-md mt-2">
+                    <code className="text-sm">{"import { MyComponent } from \"./MyComponent\""}</code>
+                  </pre>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <strong>Demo structure:</strong>
+              <ul className="list-disc pl-5 mt-1">
+                <li>The demo code should demonstrate the usage and appearance of the component.</li>
+                <li>
+                  Multiple demo components for different states or variants are welcome. Create them inside the demo file and export them using curly braces:
+                  <pre className="bg-secondary p-2 rounded-md mt-2">
+                    <code className="text-sm">{"export { DemoVariant1, DemoVariant2 }"}</code>
+                  </pre>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <strong>Imports and dependencies:</strong>
+              <ul className="list-disc pl-5 mt-1">
+                <li>You can use any dependencies from npm; we install them automatically.</li>
+                <li>
+                  Be sure to import React if you use it in the demo code:
+                  <pre className="bg-secondary p-2 rounded-md mt-2">
+                    <code className="text-sm">{"import * from 'react'"}</code>
+                  </pre>
+                </li>
+              </ul>
+            </li>
+          </ol>
+        </AlertDescription>
+      </Alert>
+    </div>
   </motion.div>
 )
 

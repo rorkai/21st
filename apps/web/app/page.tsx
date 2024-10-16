@@ -4,6 +4,7 @@ import { HomePageClient } from "./page.client"
 import { Metadata } from "next"
 import Head from "next/head"
 import { supabaseWithAdminAccess } from "@/utils/supabase"
+import { Component, User } from "@/types/global"
 
 export const metadata: Metadata = {
   title: "Home | 21st.dev",
@@ -17,6 +18,7 @@ export default async function HomePage() {
       .select("*, user:users!user_id (*)")
       .limit(40)
       .eq("is_public", true)
+      .returns<(Component & { user: User })[]>()
 
   if (componentsError) {
     return null

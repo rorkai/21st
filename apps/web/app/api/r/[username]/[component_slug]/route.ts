@@ -24,10 +24,8 @@ export async function GET(
       )
     }
 
-    const dependencies = JSON.parse(component.dependencies || "{}")
-    const internalDependencies = JSON.parse(
-      component.internal_dependencies || "{}",
-    )
+    const dependencies = component.dependencies as Record<string, string>
+    const internalDependencies = component.internal_dependencies as Record<string, string>
 
     const componentCodeResponse = await fetch(component.code)
     if (!componentCodeResponse.ok) {

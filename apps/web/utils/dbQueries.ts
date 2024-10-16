@@ -402,3 +402,58 @@ export function useTagInfo(supabase: SupabaseClient<Database>, tagSlug?: string)
     staleTime: 0,
   })
 }
+
+export async function updateComponentWithTags(
+  supabase: SupabaseClient,
+  componentId: number,
+  updatedData: Partial<Component & { tags?: Tag[] }>
+) {
+  const { name, description, license, preview_url, tags } = updatedData
+
+  const tagsJson = tags
+    ? tags.map(tag => ({
+        name: tag.name,
+        slug: tag.slug,
+      }))
+    : null // Если теги не были переданы, передаем null
+
+  const { data, error } = await supabase.rpc('update_component_with_tags', {
+    p_component_id: componentId,
+    p_name: name !== undefined ? name : null,
+    p_description: description !== undefined ? description : null,
+    p_license: license !== undefined ? license : null,
+    p_preview_url: preview_url !== undefined ? preview_url : null,
+    p_tags: tagsJson,
+  })
+
+  if (error) {
+    console.error('Error updating component with tags:', error)
+    throw error
+  }
+
+  return data
+}
+
+export function useUpdateComponentWithTags(
+  supabase: SupabaseClient,
+): UseMutationResult<
+  void,
+  Error,
+  { componentId: number; updatedData: Partial<Component & { tags?: Tag[] }> }
+> {
+  const queryClient = useQueryClient()
+
+  return useMutation<
+    void,
+    Error,
+    { componentId: number; updatedData: Partial<Component & { tags?: Tag[] }> }
+  >({
+    mutationFn: async ({ componentId, updatedData }) => {
+      await updateComponentWithTags(supabase, componentId, updatedData)
+    },
+    onSuccess: (_data, { componentId }) => {
+      queryClient.invalidateQueries({ queryKey: ["component", componentId] })
+      queryClient.invalidateQueries({ queryKey: ["components"] })
+    },
+  })
+}

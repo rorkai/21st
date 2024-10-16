@@ -20,7 +20,7 @@ export default function PublishPage() {
         >
           <div className="w-full h-full z-10 rounded-full bg-foreground" />
         </Link>
-        <div className="flex flex-col items-center gap-7 h-screen w-full">
+        <div className="flex flex-col items-center gap-7 h-screen w-full p-4">
           <ComponentForm />
         </div>
       </SignedIn>

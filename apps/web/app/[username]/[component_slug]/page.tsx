@@ -148,7 +148,7 @@ export default async function ComponentPageLayout({
     ? `"use client";\n${importStatements}\n${rawDemoCode.replace(/^"use client";?\s*/, "")}`
     : `${importStatements}\n${rawDemoCode}`
 
-  const demoComponentName = (component.demo_component_names as Json[])?.[0] as string
+  const demoComponentName = (component.demo_component_names as string[])[0]!
 
   return (
     <div className="w-full ">

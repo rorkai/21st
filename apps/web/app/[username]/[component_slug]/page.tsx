@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { getComponent } from "@/utils/dbQueries"
 import { supabaseWithAdminAccess } from "@/utils/supabase"
 import ErrorPage from "@/components/ErrorPage"
+import { Json } from "@/types/supabase"
 
 export const generateMetadata = async ({
   params,

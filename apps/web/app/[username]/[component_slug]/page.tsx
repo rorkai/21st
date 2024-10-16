@@ -26,7 +26,6 @@ export default async function ComponentPageLayout({
   params: { username: string; component_slug: string }
 }) {
   const { username, component_slug } = params
-  const apiUrl = process.env.NEXT_PUBLIC_CDN_URL
   const { data: component, error } = await getComponent(
     supabaseWithAdminAccess,
     username,
@@ -48,8 +47,13 @@ export default async function ComponentPageLayout({
   const componentAndDemoCodePromises = [
     fetch(component.code).then(async (response) => {
       if (!response.ok) {
-        console.error(`Error loading component code:`, response.statusText)
-        return { data: null, error: new Error(response.statusText) }
+        console.error(`Error fetching component code:`, response.statusText)
+        return {
+          data: null,
+          error: new Error(
+            `Error fetching component code: ${response.statusText}`,
+          ),
+        }
       }
       const code = await response.text()
       return { data: code, error: null }
@@ -57,7 +61,12 @@ export default async function ComponentPageLayout({
     fetch(component.demo_code).then(async (response) => {
       if (!response.ok) {
         console.error(`Error loading component demo code:`, response.statusText)
-        return { data: null, error: new Error(response.statusText) }
+        return {
+          data: null,
+          error: new Error(
+            `Error loading component demo code: ${response.statusText}`,
+          ),
+        }
       }
       const demoCode = await response.text()
       return { data: demoCode, error: null }
@@ -69,12 +78,14 @@ export default async function ComponentPageLayout({
   ).flatMap(([path, slugs]) => {
     const slugArray = Array.isArray(slugs) ? slugs : [slugs]
     return slugArray.map(async (slug) => {
-      const dependencyUrl = `${apiUrl}/${component.user_id}/${slug}.tsx`
+      const fileName = `${slug.split("/").pop()}.tsx`
+      const dependencyUrl = `${process.env.NEXT_PUBLIC_CDN_URL}/${component.user_id}/${fileName}`
       const response = await fetch(dependencyUrl)
       if (!response.ok) {
         console.error(
           `Error downloading file for ${slug}:`,
           response.statusText,
+          dependencyUrl,
         )
         return { data: null, error: new Error(response.statusText) }
       }
@@ -102,7 +113,7 @@ export default async function ComponentPageLayout({
       <ErrorPage
         error={
           new Error(
-            `Error fetching component code: ${codeResult?.error?.message || demoResult?.error?.message}`,
+            codeResult?.error?.message ?? demoResult?.error?.message,
           )
         }
       />
@@ -112,7 +123,7 @@ export default async function ComponentPageLayout({
     (result) => result?.error,
   )
   if (errorResult) {
-    const errorMessage = errorResult.error?.message || "Unknown error"
+    const errorMessage = errorResult.error?.message ?? "Unknown error"
     return (
       <ErrorPage
         error={
@@ -137,16 +148,6 @@ export default async function ComponentPageLayout({
   const code = codeResult?.data as string
   const rawDemoCode = demoResult?.data as string
 
-  const componentNames = component.component_names! as string[]
-
-  const hasUseClient = /^"use client";?\s*/.test(rawDemoCode)
-
-  const importStatements = `import { ${componentNames.join(", ")} } from "./${component.component_slug}";\n`
-
-  const demoCode = hasUseClient
-    ? `"use client";\n${importStatements}\n${rawDemoCode.replace(/^"use client";?\s*/, "")}`
-    : `${importStatements}\n${rawDemoCode}`
-
   const demoComponentName = (component.demo_component_names as string[])[0]!
 
   return (
@@ -154,7 +155,7 @@ export default async function ComponentPageLayout({
       <ComponentPage
         component={component}
         code={code}
-        demoCode={demoCode}
+        demoCode={rawDemoCode}
         dependencies={dependencies}
         demoDependencies={demoDependencies}
         demoComponentName={demoComponentName}

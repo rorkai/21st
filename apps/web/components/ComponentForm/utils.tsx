@@ -5,7 +5,7 @@ import {
   extractDependencies,
   extractExportedTypes,
 } from "@/utils/parsers"
-import { generateFiles } from "@/utils/generateFiles"
+import { generateSandpackFiles } from "@/utils/sandpack"
 
 export const formSchema = z.object({
   name: z.string().min(2, {
@@ -70,7 +70,7 @@ export const prepareFilesForPublishPreview = (
   ${demoCode.replace(/^"use client";?\s*/, "")}
   `
 
-  const files = generateFiles({
+  const files = generateSandpackFiles({
     demoComponentName: demoComponentNames[0]!,
     componentSlug: "Component",
     relativeImportPath: `/components/ui/${publisherUsername}`,

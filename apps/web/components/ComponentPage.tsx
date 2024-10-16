@@ -23,16 +23,15 @@ import {
 import { Hotkey } from "./ui/hotkey"
 import { LikeButton } from "./LikeButton"
 import { useIsMobile } from "@/utils/useMediaQuery"
-import { generateFiles } from "@/utils/generateFiles"
-import { useTheme } from "next-themes"
 import { ThemeToggle } from "./ThemeToggle"
 import { useQuery } from "@tanstack/react-query"
 import { useClerkSupabaseClient } from "@/utils/clerk"
 import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs"
+import { useTheme } from "next-themes"
 
 export const isShowCodeAtom = atom(true)
 
-const ComponentPreview = dynamic(() => import("./ComponentPreview"), {
+const ComponentPagePreview = dynamic(() => import("./ComponentPagePreview"), {
   ssr: false,
   loading: () => null,
 })
@@ -57,15 +56,6 @@ export default function ComponentPage({
   const { user } = useUser()
   const supabase = useClerkSupabaseClient()
   const { theme } = useTheme()
-  const isDarkTheme = theme === "dark"
-  const files = generateFiles({
-    demoComponentName,
-    componentSlug: component.component_slug,
-    relativeImportPath: `/components/ui/${component.user.username}`,
-    code,
-    demoCode,
-    theme: isDarkTheme ? "dark" : "light",
-  })
 
   const { data: liked } = useQuery({
     queryKey: ["hasUserLikedComponent", component.id, user?.id],
@@ -268,15 +258,15 @@ export default function ComponentPage({
         </div>
       </div>
       <div className="flex w-full !flex-grow">
-        <ComponentPreview
+        <ComponentPagePreview
           key={theme}
-          files={files}
+          component={component}
+          code={code}
+          demoCode={demoCode}
           dependencies={dependencies}
           demoDependencies={demoDependencies}
           demoComponentName={demoComponentName}
           internalDependencies={internalDependencies}
-          componentSlug={component.component_slug}
-          componentInfo={component}
         />
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react"
+import { useState } from "react"
 import { useDependencyComponents } from "@/utils/dbQueries"
 import Link from "next/link"
 import { UserAvatar } from "@/components/UserAvatar"
@@ -18,7 +18,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { useTheme } from "next-themes"
 import { useClerkSupabaseClient } from "@/utils/clerk"
 
 export const PreviewInfo = ({
@@ -30,32 +29,16 @@ export const PreviewInfo = ({
   const [copiedLibDependencies, setCopiedLibDependencies] = useState(false)
   const [copiedDependency, setCopiedDependency] = useState<string | null>(null)
   const [isLibDepsHovered, setIsLibDepsHovered] = useState(false)
-  const { theme } = useTheme()
-  const isDarkTheme = theme === "dark"
 
-  const parseDependencies = useCallback((deps: any): Record<string, string> => {
-    if (typeof deps === "string") {
-      try {
-        return JSON.parse(deps)
-      } catch (e) {
-        console.error("Failed to parse dependencies:", e)
-        return {}
-      }
-    }
-    return deps || {}
-  }, [])
-
-  const libDependencies = parseDependencies(component.dependencies)
-  const componentDependencies = parseDependencies(
-    component.internal_dependencies,
-  )
+  const npmDependencies = (component.dependencies ?? {}) as Record<string, string>
+  const componentDependencies = (component.internal_dependencies ?? {}) as Record<string, string>
 
   const { data: dependencyComponents, isLoading: isLoadingDependencies } =
     useDependencyComponents(supabase, componentDependencies)
 
   const copyAllDependencies = () => {
     const dependenciesString = Object.entries({
-      ...libDependencies,
+      ...npmDependencies,
     })
       .map(([dep, version]) => `"${dep}": "${version}"`)
       .join(",\n")
@@ -147,7 +130,7 @@ export const PreviewInfo = ({
         </div>
       )}
 
-      {Object.keys(libDependencies).length > 0 && (
+      {Object.keys(npmDependencies).length > 0 && (
         <>
           <Separator className="w-full !my-6" />
           <div
@@ -164,7 +147,7 @@ export const PreviewInfo = ({
                 onClick={copyAllDependencies}
               >
                 {isLibDepsHovered &&
-                  Object.keys(libDependencies).length > 1 && (
+                  Object.keys(npmDependencies).length > 1 && (
                     <span className="whitespace-nowrap">
                       {copiedLibDependencies ? "Copied all!" : "Copy all"}
                     </span>
@@ -173,7 +156,7 @@ export const PreviewInfo = ({
             </div>
 
             <div className="pl-1/3 flex flex-col">
-              {Object.entries(libDependencies).map(([dep, version]) => (
+              {Object.entries(npmDependencies).map(([dep, version]) => (
                 <div
                   key={dep}
                   className="flex items-center justify-between group hover:bg-accent rounded-md p-1 -mx-2"

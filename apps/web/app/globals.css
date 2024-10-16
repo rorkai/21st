@@ -95,17 +95,15 @@ button.sp-icon-standalone.sp-button {
 }
 
 .sp-layout {
-max-height: 100%;
-height: 100%;
-overflow: auto;
+  max-height: 100%;
+  height: 100%;
+  overflow: auto;
 }
-
 
 .sp-preview-iframe {
   border: none;
   height: 100% !important;
   width: 100% !important;
-  min-height: 700px;
   border-radius: 8px !important;
   background: var(--background);
 }

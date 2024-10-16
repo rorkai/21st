@@ -1,4 +1,4 @@
-export function generateFiles({
+export function generateSandpackFiles({
   demoComponentName,
   componentSlug,
   relativeImportPath,
@@ -13,7 +13,6 @@ export function generateFiles({
   demoCode: string
   theme: "light" | "dark"
 }) {
-
   const files = {
     "/App.tsx": `
 import React from 'react';
@@ -316,6 +315,7 @@ module.exports = {
           baseUrl: ".",
           paths: {
             "@/*": ["./*"],
+            "@/components/ui/*": [`@/components/ui/shadcn/*`],
           },
         },
       },

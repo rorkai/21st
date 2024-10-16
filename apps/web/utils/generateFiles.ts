@@ -1,12 +1,14 @@
 export function generateFiles({
   demoComponentName,
   componentSlug,
+  relativeImportPath,
   code,
   demoCode,
   theme,
 }: {
   demoComponentName: string
   componentSlug: string
+  relativeImportPath: string
   code: string
   demoCode: string
   theme: "light" | "dark"
@@ -15,7 +17,7 @@ export function generateFiles({
   const files = {
     "/App.tsx": `
 import React from 'react';
-import { ${demoComponentName} } from './demo';
+import Variants, { ${demoComponentName} } from './demo';
 import { ThemeProvider } from './next-themes';
 import { RouterProvider } from 'next/router';
 
@@ -28,7 +30,7 @@ export default function App() {
             <div className="absolute lab-bg inset-0 size-full bg-[radial-gradient(#00000055_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff22_1px,transparent_1px)] [background-size:16px_16px]">
             </div>
             <div className="flex w-full min-w-[500px] md:w-auto justify-center items-center p-4 relative">
-              <${demoComponentName} />
+              {Variants?.${demoComponentName} ? <Variants.${demoComponentName} /> : <${demoComponentName} />}
             </div>
           </div>
         </div>
@@ -187,7 +189,7 @@ export const ThemeProvider = ({ children, defaultTheme = 'light', enableSystem =
         );
       }
     `,
-    [`/${componentSlug}.tsx`]: code,
+    [`${relativeImportPath}/${componentSlug}.tsx`]: code,
     "/demo.tsx": demoCode,
     "/lib/utils.ts": `
 export function cn(...inputs: (string | undefined)[]) {

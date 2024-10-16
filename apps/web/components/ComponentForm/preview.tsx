@@ -2,13 +2,13 @@ import { useEffect, useState } from "react"
 import { SandpackProvider, SandpackFileExplorer, SandpackCodeViewer } from "@codesandbox/sandpack-react/unstyled"
 import React from "react"
 
-const ComponentPreview = React.lazy(() =>
+const SandpackPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react/unstyled").then((module) => ({
     default: module.SandpackPreview,
   })),
 )
 
-export function Preview({
+export function PublishComponentPreview({
   files,
   dependencies,
   isDebug,
@@ -52,7 +52,7 @@ export function Preview({
   return (
     <div className="w-full bg-[#FAFAFA] rounded-lg">
       <SandpackProvider {...providerProps}>
-        <ComponentPreview />
+        <SandpackPreview />
         {isDebug && (
           <>
             <SandpackFileExplorer />

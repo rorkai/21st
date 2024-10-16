@@ -48,12 +48,15 @@ export function extractExportedTypes(code: string): string[] {
   )
 }
 
-export function extractDemoComponentName(code: string): string {
-  if (!code) return ""
-  const match = code.match(
-    /export\s+(default\s+)?(async\s+)?function\s+([A-Z]\w+)/,
-  )
-  return match && match[3] ? match[3] : ""
+export function extractDemoComponentNames(code: string): string[] {
+  if (!code) return []
+  const match = code.match(/export\s+default\s+{\s*([^}]+)\s*}/s)
+  if (!match || !match[1]) return []
+
+  return match[1]
+    .split(",")
+    .map((name) => name.trim())
+    .filter(Boolean)
 }
 
 export function extractDependencies(code: string): Record<string, string> {
@@ -197,9 +200,9 @@ export function removeComponentImports(
           let end = path.node.end!
 
           const nextChar = demoCode[end]
-          if (nextChar === '\n') {
+          if (nextChar === "\n") {
             end += 1
-          } else if (demoCode.slice(end, end + 2) === '\r\n') {
+          } else if (demoCode.slice(end, end + 2) === "\r\n") {
             end += 2
           }
 
@@ -239,6 +242,6 @@ export function removeAsyncFromExport(code: string): string {
 export function wrapExportInBraces(code: string): string {
   return code.replace(
     /export\s+(?!\{)(?!function|class|interface|type)([^;]+);?/g,
-    'export { $1 };'
-  );
+    "export { $1 };",
+  )
 }

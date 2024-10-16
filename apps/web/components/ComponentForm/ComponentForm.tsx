@@ -9,12 +9,12 @@ import {
   formSchema,
   FormData,
   isFormValid,
-  prepareFilesForPreview,
+  prepareFilesForPublishPreview,
 } from "./utils"
 import {
   extractComponentNames,
   extractDependencies,
-  extractDemoComponentName,
+  extractDemoComponentNames,
   findInternalDependencies,
   removeComponentImports,
   wrapExportInBraces,
@@ -40,9 +40,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form"
-
 import { addTagsToComponent } from "@/utils/dbQueries"
-
 import { ComponentDetails, ComponentDetailsRef } from "./ComponentDetails"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
@@ -51,7 +49,7 @@ import { useClerkSupabaseClient } from "@/utils/clerk"
 import { useUser } from "@clerk/nextjs"
 import { useDebugMode } from "@/hooks/useDebugMode"
 import { Tag } from "@/types/global"
-import { Preview } from "./preview"
+import { PublishComponentPreview } from "./preview"
 import { Hotkey } from "../ui/hotkey"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
@@ -80,13 +78,13 @@ export default function ComponentForm() {
     demoDependencies: Record<string, string>
     internalDependencies: Record<string, string>
     componentNames: string[]
-    demoComponentName: string
+    demoComponentNames: string[]
   }>({
     dependencies: {},
     demoDependencies: {},
     internalDependencies: {},
     componentNames: [],
-    demoComponentName: "",
+    demoComponentNames: [],
   })
 
   const {
@@ -94,7 +92,7 @@ export default function ComponentForm() {
     demoDependencies: parsedDemoDependencies,
     internalDependencies: internalDependencies,
     componentNames: parsedComponentNames,
-    demoComponentName: parsedDemoComponentName,
+    demoComponentNames: parsedDemoComponentNames,
   } = componentDependencies || {}
 
   const {
@@ -131,14 +129,14 @@ export default function ComponentForm() {
         const componentNames = extractComponentNames(code)
         const dependencies = extractDependencies(code)
         const demoDependencies = extractDependencies(demoCode)
-        const demoComponentName = extractDemoComponentName(demoCode)
+        const demoComponentNames = extractDemoComponentNames(demoCode)
         const internalDependencies = findInternalDependencies(code, demoCode)
 
         setComponentDependencies({
           dependencies,
           demoDependencies,
           componentNames,
-          demoComponentName,
+          demoComponentNames,
           internalDependencies,
         })
       } catch (error) {
@@ -183,7 +181,7 @@ export default function ComponentForm() {
     setIsLoading(true)
     try {
       const componentNames = parsedComponentNames
-      const demoComponentName = parsedDemoComponentName
+      const demoComponentNames = parsedDemoComponentNames
       const dependencies = parsedDependencies
 
       const cleanedDemoCode = demoCode
@@ -232,16 +230,16 @@ export default function ComponentForm() {
 
       const componentData = {
         name: data.name,
-        component_names: JSON.stringify(componentNames),
-        demo_component_names: JSON.stringify(demoComponentName),
+        component_names: componentNames,
+        demo_component_names: demoComponentNames,
         component_slug: data.component_slug,
         code: codeUrl,
         demo_code: demoCodeUrl,
         description: data.description,
         user_id: user?.id,
-        dependencies: JSON.stringify(dependencies),
-        demo_dependencies: JSON.stringify(parsedDemoDependencies),
-        internal_dependencies: JSON.stringify(internalDependencies),
+        dependencies: dependencies,
+        demo_dependencies: parsedDemoDependencies,
+        internal_dependencies: internalDependencies,
         preview_url: previewImageUrl,
       }
 
@@ -304,9 +302,10 @@ export default function ComponentForm() {
       Object.keys(internalDependencies ?? {}).length === 0 &&
       importsToRemove?.length === 0
     ) {
-      const { files, dependencies } = prepareFilesForPreview(
+      const { files, dependencies } = prepareFilesForPublishPreview(
         code,
         demoCode,
+        user!.username!,
         isDarkTheme,
       )
       setPreviewProps({ files, dependencies })
@@ -384,7 +383,7 @@ export default function ComponentForm() {
       parsedComponentNames,
     )
     setImportsToRemove(removedImports)
-    const demoComponentName = extractDemoComponentName(modifiedCode)
+    const demoComponentName = extractDemoComponentNames(modifiedCode)
     if (demoComponentName) {
       form.setValue("demo_code", modifiedCode)
     }
@@ -568,7 +567,7 @@ export default function ComponentForm() {
                     />
                     <div className="-mt-10 h-[36px] flex justify-end w-full">
                       <AnimatePresence>
-                        {!!parsedDemoComponentName && !showComponentDetails && (
+                        {!!parsedDemoComponentNames && !showComponentDetails && (
                           <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -597,7 +596,7 @@ export default function ComponentForm() {
                 {isDebug && (
                   <DebugInfoDisplay
                     parsedComponentNames={parsedComponentNames}
-                    parsedDemoComponentName={parsedDemoComponentName}
+                    parsedDemoComponentNames={parsedDemoComponentNames}
                     parsedDependencies={parsedDependencies}
                     parsedDemoDependencies={parsedDemoDependencies}
                   />
@@ -635,7 +634,10 @@ export default function ComponentForm() {
                   className="w-2/3 py-4"
                 >
                   <React.Suspense fallback={<div>Loading preview...</div>}>
-                    <Preview {...previewProps} isDebug={isDebug} />
+                    <PublishComponentPreview
+                      {...previewProps}
+                      isDebug={isDebug}
+                    />
                   </React.Suspense>
                 </motion.div>
               )}
@@ -879,12 +881,12 @@ const DemoComponentGuidelinesAlert = () => (
 
 const DebugInfoDisplay = ({
   parsedComponentNames,
-  parsedDemoComponentName,
+  parsedDemoComponentNames,
   parsedDependencies,
   parsedDemoDependencies,
 }: {
   parsedComponentNames: string[]
-  parsedDemoComponentName: string
+  parsedDemoComponentNames: string[]
   parsedDependencies: Record<string, string>
   parsedDemoDependencies: Record<string, string>
 }) => (
@@ -900,7 +902,7 @@ const DebugInfoDisplay = ({
     <div className="w-full">
       <Label>Demo component name</Label>
       <Input
-        value={parsedDemoComponentName}
+        value={parsedDemoComponentNames?.join(", ")}
         readOnly
         className="mt-1 w-full bg-gray-100"
       />
@@ -941,7 +943,7 @@ const InputInternalDependenciesCard = ({
       demoDependencies: Record<string, string>
       internalDependencies: Record<string, string>
       componentNames: string[]
-      demoComponentName: string
+      demoComponentNames: string[]
     }>
   >
 }) => (

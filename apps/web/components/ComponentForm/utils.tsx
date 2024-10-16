@@ -1,7 +1,7 @@
 import { z } from "zod"
 import {
   extractComponentNames,
-  extractDemoComponentName,
+  extractDemoComponentNames,
   extractDependencies,
   extractExportedTypes,
 } from "@/utils/parsers"
@@ -48,14 +48,15 @@ export const formatComponentName = (name: string): string => {
   return name.replace(/([A-Z])/g, " $1").trim()
 }
 
-export const prepareFilesForPreview = (
+export const prepareFilesForPublishPreview = (
   code: string,
   demoCode: string,
+  publisherUsername: string,
   isDarkTheme: boolean,
 ) => {
   const componentNames = extractComponentNames(code)
   const types = extractExportedTypes(code)
-  const demoComponentName = extractDemoComponentName(demoCode)
+  const demoComponentNames = extractDemoComponentNames(demoCode)
 
   const hasUseClient = /^"use client";?\s*/.test(demoCode)
 
@@ -70,8 +71,9 @@ export const prepareFilesForPreview = (
   `
 
   const files = generateFiles({
-    demoComponentName,
+    demoComponentName: demoComponentNames[0]!,
     componentSlug: "Component",
+    relativeImportPath: `/components/ui/${publisherUsername}`,
     code,
     demoCode: updatedDemoCode,
     theme: isDarkTheme ? "dark" : "light",

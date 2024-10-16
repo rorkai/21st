@@ -61,6 +61,7 @@ export default function ComponentPage({
   const files = generateFiles({
     demoComponentName,
     componentSlug: component.component_slug,
+    relativeImportPath: `/components/ui/${component.user.username}`,
     code,
     demoCode,
     theme: isDarkTheme ? "dark" : "light",

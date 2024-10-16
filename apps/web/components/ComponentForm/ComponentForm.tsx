@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogContent,
@@ -37,7 +38,6 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form"
 
@@ -116,6 +116,8 @@ export default function ComponentForm() {
   )
 
   const componentDetailsRef = useRef<ComponentDetailsRef>(null)
+
+  const [showDemoCodeInput, setShowDemoCodeInput] = useState(false);
 
   useEffect(() => {
     if (showComponentDetails && componentDetailsRef.current) {
@@ -321,9 +323,13 @@ export default function ComponentForm() {
 
   useEffect(() => {
     const keyDownHandler = (e: KeyboardEvent) => {
-      if (e.code === "Enter" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        handleSubmit(e as unknown as React.FormEvent)
+      const formData = form.getValues()
+      const isFormComplete = formData.name && formData.preview_url
+      if (isFormComplete) {
+        if (e.code === "Enter" && (e.metaKey || e.ctrlKey)) {
+          e.preventDefault()
+          handleSubmit(e as unknown as React.FormEvent)
+        }
       }
     }
 
@@ -380,7 +386,6 @@ export default function ComponentForm() {
     setImportsToRemove(removedImports)
     const demoComponentName = extractDemoComponentName(modifiedCode)
     if (demoComponentName) {
-      setShowComponentDetails(true)
       form.setValue("demo_code", modifiedCode)
     }
   }, [form.watch("demo_code")])
@@ -399,12 +404,17 @@ export default function ComponentForm() {
   const mainComponentName = getMainComponentName()
 
   const demoCodeTextAreaRef = useRef<HTMLTextAreaElement>(null)
+  const codeInputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
-    if (parsedComponentNames?.length && demoCodeTextAreaRef.current) {
-      demoCodeTextAreaRef.current.focus()
+    if (!showComponentDetails && codeInputRef.current) {
+      codeInputRef.current.focus()
+    } else if (showComponentDetails && demoCodeTextAreaRef.current) {
+       setTimeout(() => {
+         demoCodeTextAreaRef.current?.focus()
+       }, 0)
     }
-  }, [parsedComponentNames])
+  }, [showComponentDetails])
 
   return (
     <>
@@ -417,11 +427,7 @@ export default function ComponentForm() {
             <div className={`flex gap-4 items-center h-full w-full mt-2`}>
               <div
                 className={cn(
-                  "flex flex-col items-start gap-2 py-10 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[400px]",
-                  showComponentDetails &&
-                    Object.keys(internalDependencies).length === 0
-                    ? "ml-0"
-                    : "mx-auto",
+                  "flex flex-col scrollbar-hide items-start gap-2 py-10 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[400px] ml-0",
                 )}
               >
                 <FormField
@@ -433,15 +439,14 @@ export default function ComponentForm() {
                         <motion.div
                           className="relative"
                           animate={{
-                            height: isEditMode
-                              ? "33vh"
-                              : parsedComponentNames?.length
-                                ? "56px"
-                                : "50px",
+                            height: showDemoCodeInput ? "56px" : "70vh",
                           }}
                           transition={{ duration: 0.3 }}
                         >
+                          {!showDemoCodeInput && <Label>Component code</Label>}
                           <Textarea
+                            ref={codeInputRef}
+                            placeholder="Paste code of your component here"
                             value={field.value}
                             onChange={(e) => {
                               field.onChange(e.target.value)
@@ -450,36 +455,11 @@ export default function ComponentForm() {
                               }
                             }}
                             className={cn(
-                              "mt-1 min-h-[56px] w-full h-full",
-                              field.value.length
-                                ? ""
-                                : "border-none shadow-none text-[20px] bg-transparent",
+                              "mt-1 min-h-[56px] w-full h-full resize-none scrollbar-hide",
                             )}
                           />
-                          {!parsedComponentNames?.length &&
-                            field.value.length === 0 &&
-                            !isPreviewReady &&
-                            !isEditMode && (
-                              <div
-                                className={cn(
-                                  "absolute inset-0 w-full h-full",
-                                  isDarkTheme
-                                    ? "text-gray-400"
-                                    : "text-gray-600",
-                                  "text-[20px] flex items-center justify-center cursor-text",
-                                )}
-                                onClick={() => {
-                                  const textarea =
-                                    document.querySelector("textarea")
-                                  if (textarea) {
-                                    textarea.focus()
-                                  }
-                                }}
-                              >
-                                PASTE COMPONENT .TSX CODE HERE
-                              </div>
-                            )}
-                          {!!parsedComponentNames?.length && !isEditMode && (
+
+                          {!!showDemoCodeInput && !isEditMode && (
                             <motion.div
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
@@ -491,7 +471,11 @@ export default function ComponentForm() {
                                 iconSrc="/tsx-file.svg"
                                 mainText={`${mainComponentName} code`}
                                 subText={`${parsedComponentNames.slice(0, 2).join(", ")}${parsedComponentNames.length > 2 ? ` +${parsedComponentNames.length - 2}` : ""}`}
-                                onEditClick={() => setIsEditMode(true)}
+                                onEditClick={() => {
+                                  setShowDemoCodeInput(false);
+                                  setShowComponentDetails(false);
+                                  codeInputRef.current?.focus()
+                                }}
                               />
                             </motion.div>
                           )}
@@ -501,8 +485,27 @@ export default function ComponentForm() {
                     </FormItem>
                   )}
                 />
+                {!showDemoCodeInput && (
+                  <div className="-mt-5 h-[36px] flex justify-end w-full">
+                    <AnimatePresence>
+                      {!!parsedComponentNames?.length && !showDemoCodeInput && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="mr-2"
+                        >
+                          <Button onClick={() => setShowDemoCodeInput(true)}>
+                            Continue
+                          </Button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
 
-                {!!parsedComponentNames?.length && (
+                {showDemoCodeInput && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -515,9 +518,7 @@ export default function ComponentForm() {
                       name="demo_code"
                       render={({ field }) => (
                         <FormItem className="w-full relative">
-                          {!showComponentDetails && (
-                            <FormLabel>PASTE DEMO CODE HERE [⌘ V]</FormLabel>
-                          )}
+                          {!showComponentDetails && <Label>Demo code</Label>}
                           <FormControl>
                             <motion.div
                               className="relative"
@@ -529,6 +530,7 @@ export default function ComponentForm() {
                               transition={{ duration: 0.3 }}
                             >
                               <Textarea
+                                placeholder="Paste code here to demonstrate the component"
                                 ref={demoCodeTextAreaRef}
                                 value={field.value}
                                 onChange={(e) => {
@@ -549,9 +551,12 @@ export default function ComponentForm() {
                                     iconSrc="/demo-file.svg"
                                     mainText="Demo code"
                                     subText={`for ${parsedComponentNames[0]}`}
-                                    onEditClick={() =>
-                                      setShowComponentDetails(false)
-                                    }
+                                    onEditClick={() => {
+                                      setShowComponentDetails(false);
+                                      setTimeout(() => {
+                                        demoCodeTextAreaRef.current?.focus()
+                                      }, 0)
+                                    }}
                                   />
                                 </motion.div>
                               )}
@@ -561,6 +566,23 @@ export default function ComponentForm() {
                         </FormItem>
                       )}
                     />
+                    <div className="-mt-10 h-[36px] flex justify-end w-full">
+                      <AnimatePresence>
+                        {!!parsedDemoComponentName && !showComponentDetails && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="mr-2"
+                          >
+                            <Button onClick={() => setShowComponentDetails(true)}>
+                              Continie
+                            </Button>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </motion.div>
                 )}
 
@@ -627,12 +649,10 @@ export default function ComponentForm() {
         onAddAnother={handleAddAnother}
         onGoToComponent={handleGoToComponent}
       />
-      {!parsedComponentNames?.length && !isPreviewReady && !isEditMode && (
+      {!showDemoCodeInput && !isPreviewReady && !isEditMode && (
         <CodeGuidelinesAlert />
       )}
-      {!showComponentDetails && !!code.length && (
-        <DemoComponentGuidelinesAlert />
-      )}
+      {showDemoCodeInput && !showComponentDetails && <DemoComponentGuidelinesAlert />}
     </>
   )
 }
@@ -680,6 +700,7 @@ const SuccessDialog = ({
   onAddAnother: () => void
   onGoToComponent: () => void
 }) => {
+  
   useEffect(() => {
     const keyDownHandler = (e: KeyboardEvent) => {
       if (isOpen && e.code === "KeyN") {
@@ -729,16 +750,74 @@ const CodeGuidelinesAlert = () => (
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: 20 }}
     transition={{ duration: 0.3 }}
-    className="absolute bottom-4 mx-auto"
+    className="fixed inset-0 flex justify-end items-center p-10 overflow-auto -z-10"
   >
-    <Alert>
-      <FileTerminal className="h-4 w-4" />
-      <AlertTitle>Entire code should be in a single file</AlertTitle>
-      <AlertDescription>
-        Ensure to include all necessary dependencies to enable everyone <br />
-        to use this component and install it seamlessly via the CLI.
-      </AlertDescription>
-    </Alert>
+    <div className="w-1/2 min-w-[400px]">
+      <Alert className="border-none">
+        <FileTerminal className="h-4 w-4" />
+        <AlertTitle>Component code requirements</AlertTitle>
+        <AlertDescription className="mt-2">
+          <ol className="list-decimal pl-5 space-y-2">
+            <li>
+              <strong>Dependency usage:</strong>
+              <ul className="list-disc pl-5 mt-1">
+                <li>
+                  You can use any dependencies from npm; we install them
+                  automatically.
+                </li>
+                <li>
+                  If your component depends on other components from our
+                  library, make sure they are already published or publish them.
+                </li>
+                <li>
+                  To reference already loaded components, use a direct link to
+                  the component.
+                </li>
+              </ul>
+            </li>
+            <li>
+              <strong>Imports:</strong>
+              <ul className="list-disc pl-5 mt-1">
+                <li>Import internal components using relative paths.</li>
+                <li>
+                  Unlike Next.js, React is not imported automatically. If you
+                  use React, be sure to import it:
+                </li>
+              </ul>
+              <pre className="bg-secondary p-2 rounded-md mt-2">
+                <code className="text-sm">import * from 'react'</code>
+              </pre>
+            </li>
+            <li>
+              <strong>Platform compatibility:</strong>
+              <ul className="list-disc pl-5 mt-1">
+                <li>
+                  Do not use server components or Next.js functions. They are
+                  not supported in the preview.
+                </li>
+                <li>
+                  Despite emulating some Next.js libraries, we do not support it
+                  directly. Make sure your code works in our environment; if it
+                  doesn't, write to @serafimcloud
+                </li>
+              </ul>
+            </li>
+            <li>
+              <strong>Tailwind CSS:</strong>
+              <ul className="list-disc pl-5 mt-1">
+                <li>
+                  Custom Tailwind styles are not yet supported in the preview.
+                </li>
+                <li>
+                  If your component needs additional styles, specify them in the
+                  description so users can install them themselves.
+                </li>
+              </ul>
+            </li>
+          </ol>
+        </AlertDescription>
+      </Alert>
+    </div>
   </motion.div>
 )
 
@@ -748,19 +827,53 @@ const DemoComponentGuidelinesAlert = () => (
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: 20 }}
     transition={{ duration: 0.3, delay: 0.3 }}
-    className="absolute bottom-4 mx-auto"
+    className="fixed inset-0 flex justify-end items-center p-4 overflow-auto -z-10"
   >
-    <Alert>
-      <SunMoon className="h-4 w-4" />
-      <AlertTitle>
-        Demo should demonstrate how it functions and appears
-      </AlertTitle>
-      <AlertDescription>
-        Do not add an import statement for the Component,
-        <br />
-        as it will be imported automatically.
-      </AlertDescription>
-    </Alert>
+    <div className="w-1/2 min-w-[400px]">
+      <Alert className="border-none">
+        <SunMoon className="h-4 w-4" />
+        <AlertTitle>Demo code requirements</AlertTitle>
+        <AlertDescription className="mt-2">
+          <ol className="list-decimal pl-5 space-y-2">
+            <li>
+              <strong>Component import:</strong>
+              <ul className="list-disc pl-5 mt-1">
+                <li>
+                  Always import the component using curly braces, regardless of the export method in the component:
+                  <pre className="bg-secondary p-2 rounded-md mt-2">
+                    <code className="text-sm">{"import { MyComponent } from \"./MyComponent\""}</code>
+                  </pre>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <strong>Demo structure:</strong>
+              <ul className="list-disc pl-5 mt-1">
+                <li>The demo code should demonstrate the usage and appearance of the component.</li>
+                <li>
+                  Multiple demo components for different states or variants are welcome. Create them inside the demo file and export them using curly braces:
+                  <pre className="bg-secondary p-2 rounded-md mt-2">
+                    <code className="text-sm">{"export { DemoVariant1, DemoVariant2 }"}</code>
+                  </pre>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <strong>Imports and dependencies:</strong>
+              <ul className="list-disc pl-5 mt-1">
+                <li>You can use any dependencies from npm; we install them automatically.</li>
+                <li>
+                  Be sure to import React if you use it in the demo code:
+                  <pre className="bg-secondary p-2 rounded-md mt-2">
+                    <code className="text-sm">{"import * from 'react'"}</code>
+                  </pre>
+                </li>
+              </ul>
+            </li>
+          </ol>
+        </AlertDescription>
+      </Alert>
+    </div>
   </motion.div>
 )
 
@@ -777,9 +890,7 @@ const DebugInfoDisplay = ({
 }) => (
   <>
     <div className="w-full">
-      <label className="block text-sm font-medium text-gray-700">
-        Component names
-      </label>
+      <Label>Component names</Label>
       <Textarea
         value={parsedComponentNames?.join(", ")}
         readOnly
@@ -787,9 +898,7 @@ const DebugInfoDisplay = ({
       />
     </div>
     <div className="w-full">
-      <label className="block text-sm font-medium text-gray-700">
-        Demo component name
-      </label>
+      <Label>Demo component name</Label>
       <Input
         value={parsedDemoComponentName}
         readOnly
@@ -797,9 +906,7 @@ const DebugInfoDisplay = ({
       />
     </div>
     <div className="w-full">
-      <label className="block text-sm font-medium text-gray-700">
-        Component dependencies
-      </label>
+      <Label>Component dependencies</Label>
       <Textarea
         value={Object.entries(parsedDependencies ?? {})
           .map(([key, value]) => `${key}: ${value}`)
@@ -809,9 +916,9 @@ const DebugInfoDisplay = ({
       />
     </div>
     <div className="w-full">
-      <label className="block text-sm font-medium text-gray-700">
+      <Label>
         Demo dependencies
-      </label>
+      </Label>
       <Textarea
         value={Object.entries(parsedDemoDependencies ?? {})
           .map(([key, value]) => `${key}: ${value}`)
@@ -847,14 +954,14 @@ const InputInternalDependenciesCard = ({
         <br />
         1. Add it to the Component Community first.
         <br />
-        2. Enter its slug here.
+        2. Enter link to it here.
       </AlertDescription>
     </Alert>
     {Object.entries(internalDependencies ?? {}).map(([path], index) => (
       <div key={path} className={`w-full ${index > 0 ? "mt-2" : ""}`}>
-        <label className="block text-sm font-medium text-gray-700">
-          Add slug for {path}
-        </label>
+        <Label>
+          Paste link to {path}
+        </Label>
         <Input
           onChange={(e) => {
             setComponentDependencies((prev) => ({
@@ -865,7 +972,7 @@ const InputInternalDependenciesCard = ({
               },
             }))
           }}
-          placeholder="Enter component slug"
+          placeholder='For example: "serafimcloud/button"'
           className="mt-1 w-full"
         />
       </div>

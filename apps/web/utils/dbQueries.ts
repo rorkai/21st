@@ -1,4 +1,4 @@
-import { Component, Tag, User } from "@/types/types"
+import { Component, Tag, User } from "@/types/global"
 import {
   UseMutationResult,
   useMutation,
@@ -8,6 +8,7 @@ import {
 import { generateSlug } from "@/components/ComponentForm/useIsCheckSlugAvailable"
 import { SupabaseClient } from "@supabase/supabase-js"
 import { useClerkSupabaseClient } from "./clerk"
+import { Database } from "@/types/supabase"
 
 const componentFields = `
   *,
@@ -15,15 +16,10 @@ const componentFields = `
 `
 
 export async function getComponent(
-  supabase: SupabaseClient | null,
+  supabase: SupabaseClient<Database>,
   username: string,
   slug: string,
-): Promise<{ data: Component | null; error: Error | null }> {
-  if (!supabase) {
-    console.error("Supabase client is null")
-    return { data: null, error: new Error("Supabase client is null") }
-  }
-
+) {
   const { data, error } = await supabase
     .from("components")
     .select(
@@ -35,6 +31,7 @@ export async function getComponent(
     .eq("component_slug", slug)
     .eq("user.username", username)
     .eq("is_public", true)
+    .returns<(Component & { user: User } & { tags: Tag[] })[]>()
     .single()
 
   if (error) {
@@ -50,7 +47,7 @@ export async function getComponent(
 }
 
 export async function getUserData(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   username: string,
 ): Promise<{ data: User | null; error: Error | null }> {
   try {
@@ -65,7 +62,7 @@ export async function getUserData(
       return { data: null, error: new Error(error.message) }
     }
 
-    return data
+    return { data, error: null }
   } catch (error: any) {
     console.error("Error in getUserData:", error)
     return { data: null, error }
@@ -73,14 +70,15 @@ export async function getUserData(
 }
 
 export async function getUserComponents(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
-): Promise<Component[] | null> {
+) {
   const { data, error } = await supabase
     .from("components")
     .select(componentFields)
     .eq("user_id", userId)
     .eq("is_public", true)
+    .returns<(Component & { user: User })[]>()
 
   if (error) {
     console.error("Error fetching user components:", error)
@@ -91,9 +89,9 @@ export async function getUserComponents(
 }
 
 export async function getComponents(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   tagSlug?: string,
-): Promise<Component[]> {
+) {
   let query = supabase
     .from("components")
     .select(
@@ -113,16 +111,18 @@ export async function getComponents(
     query = query.eq("component_tags.tags.slug", tagSlug)
   }
 
-  const { data, error } = await query.limit(1000)
+  const { data, error } = await query
+    .limit(1000)
+    .returns<(Component & { user: User } & { tags: Tag[] })[]>()
 
   if (error) {
     throw new Error(error.message)
   }
-  return (data as Component[]) || []
+  return data as (Component & { user: User } & { tags: Tag[] })[]
 }
 
-export function useComponents(supabase: SupabaseClient, tagSlug?: string) {
-  return useQuery<Component[], Error>({
+export function useComponents(supabase: SupabaseClient<Database>, tagSlug?: string) {
+  return useQuery({
     queryKey: ["components", tagSlug],
     queryFn: () => getComponents(supabase, tagSlug),
     refetchOnWindowFocus: false,
@@ -155,7 +155,7 @@ export function useComponentTags(componentId: string) {
 }
 
 export async function likeComponent(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   componentId: number,
 ) {
@@ -171,7 +171,7 @@ export async function likeComponent(
 }
 
 export async function unlikeComponent(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   componentId: number,
 ) {
@@ -188,7 +188,7 @@ export async function unlikeComponent(
 }
 
 export function useLikeMutation(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string | undefined,
 ): UseMutationResult<void, Error, { componentId: number; liked: boolean }> {
   const queryClient = useQueryClient()
@@ -224,7 +224,7 @@ export function useLikeMutation(
 }
 
 export async function addTagsToComponent(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   componentId: number,
   tags: Tag[],
 ) {
@@ -275,7 +275,7 @@ export async function addTagsToComponent(
 }
 
 export function useAvailableTags() {
-  async function getAvailableTags(supabase: SupabaseClient): Promise<Tag[]> {
+  async function getAvailableTags(supabase: SupabaseClient<Database>): Promise<Tag[]> {
     const { data, error } = await supabase
       .from("tags")
       .select("*")
@@ -298,7 +298,7 @@ export function useAvailableTags() {
 }
 
 export function useComponentOwnerUsername(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   slug: string,
 ) {
   return useQuery<string | null, Error>({
@@ -332,9 +332,9 @@ export function useComponentOwnerUsername(
 }
 
 export async function fetchDependencyComponents(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   dependencySlugs: string[],
-): Promise<Component[]> {
+) {
   const components = await Promise.all(
     dependencySlugs.map(async (slug) => {
       try {
@@ -342,6 +342,7 @@ export async function fetchDependencyComponents(
           .from("components")
           .select(componentFields)
           .eq("component_slug", slug)
+          .returns<(Component & { user: User })[]>()
           .single()
 
         if (error) {
@@ -356,16 +357,16 @@ export async function fetchDependencyComponents(
       }
     }),
   )
-  return components.filter((c): c is Component => c !== null)
+  return components.filter((c) => c !== null) as (Component & { user: User })[]
 }
 
 export function useDependencyComponents(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   componentDependencies: Record<string, string>,
 ) {
   const dependencySlugs = Object.values(componentDependencies)
 
-  return useQuery<Component[], Error>({
+  return useQuery({
     queryKey: ["dependencyComponents", dependencySlugs],
     queryFn: () => fetchDependencyComponents(supabase, dependencySlugs),
     enabled: dependencySlugs.length > 0,
@@ -375,7 +376,7 @@ export function useDependencyComponents(
 }
 
 async function getTagInfo(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   tagSlug: string,
 ): Promise<Tag | null> {
   const { data, error } = await supabase
@@ -392,7 +393,7 @@ async function getTagInfo(
   return data
 }
 
-export function useTagInfo(supabase: SupabaseClient, tagSlug?: string) {
+export function useTagInfo(supabase: SupabaseClient<Database>, tagSlug?: string) {
   return useQuery<Tag | null, Error>({
     queryKey: ["tagInfo", tagSlug],
     queryFn: () => tagSlug ? getTagInfo(supabase, tagSlug) : null,

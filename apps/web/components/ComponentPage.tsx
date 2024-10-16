@@ -10,7 +10,7 @@ import {
   Info,
   Link as LinkIcon,
 } from "lucide-react"
-import { Component } from "@/types/types"
+import { Component, Tag, User } from "@/types/global"
 import { UserAvatar } from "./UserAvatar"
 import Link from "next/link"
 import { atom, useAtom } from "jotai"
@@ -46,7 +46,7 @@ export default function ComponentPage({
   demoComponentName,
   internalDependencies,
 }: {
-  component: Component
+  component: Component & { user: User } & { tags: Tag[] }
   code: string
   demoCode: string
   dependencies: Record<string, string>

@@ -41,7 +41,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 
-import { addTagsToComponent } from "@/utils/dataFetchers"
+import { addTagsToComponent } from "@/utils/dbQueries"
 
 import { ComponentDetails, ComponentDetailsRef } from "./ComponentDetails"
 import { motion, AnimatePresence } from "framer-motion"
@@ -50,7 +50,7 @@ import { FileTerminal, SunMoon, Codepen } from "lucide-react"
 import { useClerkSupabaseClient } from "@/utils/clerk"
 import { useUser } from "@clerk/nextjs"
 import { useDebugMode } from "@/hooks/useDebugMode"
-import { Tag } from "@/types/types"
+import { Tag } from "@/types/global"
 import { Preview } from "./preview"
 import { Hotkey } from "../ui/hotkey"
 import { useTheme } from "next-themes"
@@ -230,8 +230,8 @@ export default function ComponentForm() {
 
       const componentData = {
         name: data.name,
-        component_name: JSON.stringify(componentNames),
-        demo_component_name: demoComponentName,
+        component_names: JSON.stringify(componentNames),
+        demo_component_names: JSON.stringify(demoComponentName),
         component_slug: data.component_slug,
         code: codeUrl,
         demo_code: demoCodeUrl,

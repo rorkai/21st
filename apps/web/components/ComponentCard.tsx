@@ -1,15 +1,15 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link"
 import ComponentPreviewImage from "./ComponentPreviewImage"
-import { Component } from "../types/types"
+import { Component, User } from "../types/global"
 import { UserAvatar } from "./UserAvatar"
 
-interface ComponentCardProps {
-  component: Component
+export function ComponentCard({
+  component,
+}: {
+  component: Component & { user: User }
   isLoading?: boolean
-}
-
-export function ComponentCard({ component }: ComponentCardProps) {
+}) {
   const componentUrl = `/${component.user.username}/${component.component_slug}`
 
   return (

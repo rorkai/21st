@@ -972,7 +972,7 @@ const InputInternalDependenciesCard = ({
               },
             }))
           }}
-          placeholder="Enter component slug"
+          placeholder='For example: "serafimcloud/button"'
           className="mt-1 w-full"
         />
       </div>

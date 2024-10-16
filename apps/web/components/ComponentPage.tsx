@@ -29,7 +29,6 @@ import { useClerkSupabaseClient } from "@/utils/clerk"
 import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs"
 import { useTheme } from "next-themes"
 import { ComponentPagePreview } from "./ComponentPagePreview"
-import { Button } from "./ui/button"
 import { EditComponentDialog } from "./EditComponentDialog"
 import { useUpdateComponentWithTags } from "@/utils/dbQueries"
 
@@ -348,6 +347,7 @@ export default function ComponentPage({
       <EditComponentDialog
         component={component}
         isOpen={isEditDialogOpen}
+        setIsOpen={setIsEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}
         onUpdate={handleUpdate}
       />

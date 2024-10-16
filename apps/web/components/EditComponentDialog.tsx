@@ -4,27 +4,30 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { ComponentDetails } from "./ComponentForm/ComponentDetails"
+import { ComponentDetailsForm } from "./publish/ComponentDetailsForm"
 import { Component, User, Tag } from "@/types/global"
 import { useForm } from "react-hook-form"
-import { FormData } from "./ComponentForm/utils"
+import { FormData } from "./publish/utils"
 import { uploadToR2 } from "@/utils/r2"
-import { useState, useEffect } from "react"
-
-interface EditComponentDialogProps {
-  component: Component & { user: User } & { tags: Tag[] }
-  isOpen: boolean
-  onClose: () => void
-  onUpdate: (updatedData: Partial<Component & { tags?: Tag[] }>) => Promise<void>
-}
+import { useState } from "react"
 
 export function EditComponentDialog({
   component,
   isOpen,
+  setIsOpen,
   onClose,
   onUpdate,
-}: EditComponentDialogProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(isOpen)
+}: {
+  component: Component & { user: User } & { tags: Tag[] }
+  isOpen: boolean
+  // eslint-disable-next-line no-unused-vars
+  setIsOpen: (isOpen: boolean) => void
+  onClose: () => void
+  // eslint-disable-next-line no-unused-vars
+  onUpdate: (
+    updatedData: Partial<Component & { tags?: Tag[] }>,
+  ) => Promise<void>
+}) {
   const form = useForm<FormData>({
     defaultValues: {
       name: component.name,
@@ -35,7 +38,9 @@ export function EditComponentDialog({
   })
 
   const [isLoading, setIsLoading] = useState(false)
-  const [previewImage, setPreviewImage] = useState<string | null>(component.preview_url || null)
+  const [previewImage, setPreviewImage] = useState<string | null>(
+    component.preview_url || null,
+  )
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -75,19 +80,18 @@ export function EditComponentDialog({
     }
 
     if (formData.tags !== component.tags) {
-      updatedData.tags = formData.tags.map(tag => ({
+      updatedData.tags = formData.tags.map((tag) => ({
         id: tag.id!,
         name: tag.name,
         slug: tag.slug,
       }))
     }
 
-    // Обработка preview_url, если было новое изображение
     if (formData.preview_url instanceof File) {
-      const fileExtension = formData.preview_url.name.split('.').pop()
+      const fileExtension = formData.preview_url.name.split(".").pop()
       const fileKey = `${component.user.id}/${component.component_slug}.${fileExtension}`
       const buffer = Buffer.from(await formData.preview_url.arrayBuffer())
-      const base64Content = buffer.toString('base64')
+      const base64Content = buffer.toString("base64")
       const previewImageUrl = await uploadToR2({
         file: {
           name: fileKey,
@@ -95,7 +99,7 @@ export function EditComponentDialog({
           encodedContent: base64Content,
         },
         fileKey,
-        bucketName: 'components-code',
+        bucketName: "components-code",
         contentType: formData.preview_url.type,
       })
       updatedData.preview_url = previewImageUrl
@@ -104,23 +108,18 @@ export function EditComponentDialog({
     await onUpdate(updatedData)
   }
 
-  // Закрываем модальное окно при изменении пропса isOpen
-  useEffect(() => {
-    setIsDialogOpen(isOpen)
-  }, [isOpen])
-
   const handleClose = () => {
-    setIsDialogOpen(false)
+    setIsOpen(false)
     onClose()
   }
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={(open) => setIsDialogOpen(open)}>
+    <Dialog open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit component</DialogTitle>
         </DialogHeader>
-        <ComponentDetails
+        <ComponentDetailsForm
           isEditMode={true}
           form={form}
           previewImage={previewImage}

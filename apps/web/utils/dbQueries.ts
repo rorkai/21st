@@ -5,7 +5,7 @@ import {
   useQueryClient,
   useQuery,
 } from "@tanstack/react-query"
-import { generateSlug } from "@/components/ComponentForm/useIsCheckSlugAvailable"
+import { makeSlugFromName } from "@/components/publish/useIsCheckSlugAvailable"
 import { SupabaseClient } from "@supabase/supabase-js"
 import { useClerkSupabaseClient } from "./clerk"
 import { Database } from "@/types/supabase"
@@ -121,7 +121,10 @@ export async function getComponents(
   return data as (Component & { user: User } & { tags: Tag[] })[]
 }
 
-export function useComponents(supabase: SupabaseClient<Database>, tagSlug?: string) {
+export function useComponents(
+  supabase: SupabaseClient<Database>,
+  tagSlug?: string,
+) {
   return useQuery({
     queryKey: ["components", tagSlug],
     queryFn: () => getComponents(supabase, tagSlug),
@@ -236,7 +239,7 @@ export async function addTagsToComponent(
     } else {
       const capitalizedName =
         tag.name.charAt(0).toUpperCase() + tag.name.slice(1)
-      const slug = generateSlug(tag.name)
+      const slug = makeSlugFromName(tag.name)
       const { data: existingTag, error: selectError } = await supabase
         .from("tags")
         .select("id")
@@ -275,7 +278,9 @@ export async function addTagsToComponent(
 }
 
 export function useAvailableTags() {
-  async function getAvailableTags(supabase: SupabaseClient<Database>): Promise<Tag[]> {
+  async function getAvailableTags(
+    supabase: SupabaseClient<Database>,
+  ): Promise<Tag[]> {
     const { data, error } = await supabase
       .from("tags")
       .select("*")
@@ -393,10 +398,13 @@ async function getTagInfo(
   return data
 }
 
-export function useTagInfo(supabase: SupabaseClient<Database>, tagSlug?: string) {
+export function useTagInfo(
+  supabase: SupabaseClient<Database>,
+  tagSlug?: string,
+) {
   return useQuery<Tag | null, Error>({
     queryKey: ["tagInfo", tagSlug],
-    queryFn: () => tagSlug ? getTagInfo(supabase, tagSlug) : null,
+    queryFn: () => (tagSlug ? getTagInfo(supabase, tagSlug) : null),
     enabled: !!tagSlug,
     refetchOnMount: true,
     staleTime: 0,
@@ -415,7 +423,7 @@ export async function updateComponentWithTags(
         name: tag.name,
         slug: tag.slug,
       }))
-    : null // Если теги не были переданы, передаем null
+    : null
 
   const { data, error } = await supabase.rpc('update_component_with_tags', {
     p_component_id: componentId,

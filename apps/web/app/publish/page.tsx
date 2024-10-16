@@ -1,13 +1,11 @@
 import React from "react"
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs"
-import ComponentForm from "@/components/ComponentForm/ComponentForm"
+import PublishComponentForm from "@/components/publish/PublishComponentForm"
 
 import Head from "next/head"
 import Link from "next/link"
 
 export default function PublishPage() {
-
-
   return (
     <>
       <Head>
@@ -21,7 +19,7 @@ export default function PublishPage() {
           <div className="w-full h-full z-10 rounded-full bg-foreground" />
         </Link>
         <div className="flex flex-col items-center gap-7 h-screen w-full p-4">
-          <ComponentForm />
+          <PublishComponentForm />
         </div>
       </SignedIn>
       <SignedOut>

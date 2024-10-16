@@ -16,9 +16,6 @@ import {
   extractDependencies,
   extractDemoComponentNames,
   findInternalDependencies,
-  removeComponentImports,
-  wrapExportInBraces,
-  removeAsyncFromExport,
 } from "../../utils/parsers"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -41,7 +38,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { addTagsToComponent } from "@/utils/dbQueries"
-import { ComponentDetails, ComponentDetailsRef } from "./ComponentDetails"
+import { ComponentDetailsForm, ComponentDetailsFormRef } from "./ComponentDetailsForm"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { FileTerminal, SunMoon, Codepen } from "lucide-react"
@@ -55,9 +52,22 @@ import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import { CodeBlock } from "../CodeBlock"
 
-export default function ComponentForm() {
+interface ParsedCodeData {
+  dependencies: Record<string, string>
+  demoDependencies: Record<string, string>
+  internalDependencies: Record<string, string>
+  componentNames: string[]
+  demoComponentNames: string[]
+}
+
+export default function PublishComponentForm() {
+  const { user } = useUser()
+  const client = useClerkSupabaseClient()
+  const router = useRouter()
+  const isDebug = useDebugMode()
   const { theme } = useTheme()
   const isDarkTheme = theme === "dark"
+  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false)
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -71,31 +81,6 @@ export default function ComponentForm() {
       license: "mit",
     },
   })
-
-  const isDebug = useDebugMode()
-  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false)
-  const [componentDependencies, setComponentDependencies] = useState<{
-    dependencies: Record<string, string>
-    demoDependencies: Record<string, string>
-    internalDependencies: Record<string, string>
-    componentNames: string[]
-    demoComponentNames: string[]
-  }>({
-    dependencies: {},
-    demoDependencies: {},
-    internalDependencies: {},
-    componentNames: [],
-    demoComponentNames: [],
-  })
-
-  const {
-    dependencies: parsedDependencies,
-    demoDependencies: parsedDemoDependencies,
-    internalDependencies: internalDependencies,
-    componentNames: parsedComponentNames,
-    demoComponentNames: parsedDemoComponentNames,
-  } = componentDependencies || {}
-
   const {
     component_slug: componentSlug,
     code,
@@ -103,26 +88,28 @@ export default function ComponentForm() {
     tags: validTags,
   } = form.getValues()
 
-  const { user } = useUser()
-  const client = useClerkSupabaseClient()
-  const router = useRouter()
-  const [showComponentDetails, setShowComponentDetails] = useState(false)
+  const [parsedCode, setParsedCode] = useState<ParsedCodeData>({
+    dependencies: {},
+    demoDependencies: {},
+    internalDependencies: {},
+    componentNames: [],
+    demoComponentNames: [],
+  })
+
+  const [showDetailedForm, setShowDetailedForm] = useState(false)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [isEditMode, setIsEditMode] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [importsToRemove, setImportsToRemove] = useState<string[] | undefined>(
-    undefined,
-  )
 
-  const componentDetailsRef = useRef<ComponentDetailsRef>(null)
+  const detailedFormRef = useRef<ComponentDetailsFormRef>(null)
 
   const [showDemoCodeInput, setShowDemoCodeInput] = useState(false)
 
   useEffect(() => {
-    if (showComponentDetails && componentDetailsRef.current) {
-      componentDetailsRef.current.focusNameInput()
+    if (showDetailedForm && detailedFormRef.current) {
+      detailedFormRef.current.focusNameInput()
     }
-  }, [showComponentDetails])
+  }, [showDetailedForm])
 
   useEffect(() => {
     const updateDependencies = () => {
@@ -133,7 +120,7 @@ export default function ComponentForm() {
         const demoComponentNames = extractDemoComponentNames(demoCode)
         const internalDependencies = findInternalDependencies(code, demoCode)
 
-        setComponentDependencies({
+        setParsedCode({
           dependencies,
           demoDependencies,
           componentNames,
@@ -173,7 +160,9 @@ export default function ComponentForm() {
       return
     }
 
-    if (Object.values(internalDependencies ?? {}).some((slug) => !slug)) {
+    if (
+      Object.values(parsedCode.internalDependencies ?? {}).some((slug) => !slug)
+    ) {
       console.error("Internal dependencies not specified")
       alert("Please specify the slug for all internal dependencies")
       return
@@ -181,12 +170,6 @@ export default function ComponentForm() {
 
     setIsLoading(true)
     try {
-      const componentNames = parsedComponentNames
-      const demoComponentNames = parsedDemoComponentNames
-      const dependencies = parsedDependencies
-
-      const cleanedDemoCode = demoCode
-
       const codeFileName = `${data.component_slug}.tsx`
       const demoCodeFileName = `${data.component_slug}.demo.tsx`
 
@@ -204,7 +187,7 @@ export default function ComponentForm() {
           file: {
             name: demoCodeFileName,
             type: "text/plain",
-            textContent: cleanedDemoCode,
+            textContent: demoCode,
           },
           fileKey: `${user.id}/${demoCodeFileName}`,
           bucketName: "components-code",
@@ -231,16 +214,16 @@ export default function ComponentForm() {
 
       const componentData = {
         name: data.name,
-        component_names: componentNames,
-        demo_component_names: demoComponentNames,
+        component_names: parsedCode.componentNames,
+        demo_component_names: parsedCode.demoComponentNames,
         component_slug: data.component_slug,
         code: codeUrl,
         demo_code: demoCodeUrl,
         description: data.description,
         user_id: user?.id,
-        dependencies: dependencies,
-        demo_dependencies: parsedDemoDependencies,
-        internal_dependencies: internalDependencies,
+        dependencies: parsedCode.dependencies,
+        demo_dependencies: parsedCode.demoDependencies,
+        internal_dependencies: parsedCode.internalDependencies,
         preview_url: previewImageUrl,
       }
 
@@ -287,7 +270,7 @@ export default function ComponentForm() {
   const handleAddAnother = () => {
     form.reset()
     setIsSuccessDialogOpen(false)
-    setShowComponentDetails(false)
+    setShowDetailedForm(false)
     setPreviewImage(null)
   }
 
@@ -300,8 +283,7 @@ export default function ComponentForm() {
     if (
       code &&
       demoCode &&
-      Object.keys(internalDependencies ?? {}).length === 0 &&
-      importsToRemove?.length === 0
+      Object.keys(parsedCode.internalDependencies ?? {}).length === 0
     ) {
       const { files, dependencies } = prepareFilesForPublishPreview(
         code,
@@ -313,7 +295,7 @@ export default function ComponentForm() {
     } else {
       setPreviewProps(null)
     }
-  }, [code, demoCode, internalDependencies, importsToRemove])
+  }, [code, demoCode, parsedCode.internalDependencies])
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
@@ -338,62 +320,19 @@ export default function ComponentForm() {
     return () => {
       window.removeEventListener("keydown", keyDownHandler)
     }
-  }, [form, internalDependencies, handleSubmit, onSubmit])
+  }, [form, parsedCode.internalDependencies, handleSubmit, onSubmit])
 
   const isPreviewReady =
     !!previewProps &&
-    Object.keys(internalDependencies).length === 0 &&
-    importsToRemove !== undefined &&
+    Object.keys(parsedCode.internalDependencies).length === 0 &&
     !!code.length &&
     !!demoCode.length
 
-  const [exportWrapped, setExportWrapped] = useState(false)
-
-  useEffect(() => {
-    if (exportWrapped) return
-
-    const code = form.getValues("code")
-    if (!code) return
-
-    const modifiedCode = wrapExportInBraces(code)
-
-    if (modifiedCode !== code) {
-      form.setValue("code", modifiedCode)
-      setExportWrapped(true)
-    } else {
-      setExportWrapped(true)
-    }
-  }, [form.watch("code"), exportWrapped])
-
-  useEffect(() => {
-    const demoCode = form.getValues("demo_code")
-    if (!demoCode) return
-
-    const modifiedDemoCode = removeAsyncFromExport(demoCode)
-
-    if (modifiedDemoCode !== demoCode) {
-      form.setValue("demo_code", modifiedDemoCode)
-    }
-  }, [form.watch("demo_code")])
-
-  useEffect(() => {
-    if (!parsedComponentNames) return
-    const demoCode = form.getValues("demo_code")
-    const { modifiedCode, removedImports } = removeComponentImports(
-      demoCode,
-      parsedComponentNames,
-    )
-    setImportsToRemove(removedImports)
-    const demoComponentName = extractDemoComponentNames(modifiedCode)
-    if (demoComponentName) {
-      form.setValue("demo_code", modifiedCode)
-    }
-  }, [form.watch("demo_code")])
-
   const getMainComponentName = () => {
-    if (!parsedComponentNames || parsedComponentNames.length === 0) return null
+    if (!parsedCode.componentNames || parsedCode.componentNames.length === 0)
+      return null
 
-    const capitalizedComponent = parsedComponentNames.find((name) =>
+    const capitalizedComponent = parsedCode.componentNames.find((name) =>
       /^[A-Z]/.test(name),
     )
     if (!capitalizedComponent) return null
@@ -407,14 +346,14 @@ export default function ComponentForm() {
   const codeInputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
-    if (!showComponentDetails && codeInputRef.current) {
+    if (!showDetailedForm && codeInputRef.current) {
       codeInputRef.current?.focus?.()
-    } else if (showComponentDetails && demoCodeTextAreaRef.current) {
+    } else if (showDetailedForm && demoCodeTextAreaRef.current) {
       setTimeout(() => {
         demoCodeTextAreaRef.current?.focus()
       }, 0)
     }
-  }, [showComponentDetails])
+  }, [showDetailedForm])
 
   return (
     <>
@@ -474,10 +413,10 @@ export default function ComponentForm() {
                                     : "/tsx-file.svg"
                                 }
                                 mainText={`${mainComponentName} code`}
-                                subText={`${parsedComponentNames.slice(0, 2).join(", ")}${parsedComponentNames.length > 2 ? ` +${parsedComponentNames.length - 2}` : ""}`}
+                                subText={`${parsedCode.componentNames.slice(0, 2).join(", ")}${parsedCode.componentNames.length > 2 ? ` +${parsedCode.componentNames.length - 2}` : ""}`}
                                 onEditClick={() => {
                                   setShowDemoCodeInput(false)
-                                  setShowComponentDetails(false)
+                                  setShowDetailedForm(false)
                                   codeInputRef.current?.focus()
                                 }}
                               />
@@ -492,19 +431,20 @@ export default function ComponentForm() {
                 {!showDemoCodeInput && (
                   <div className="-mt-5 h-[36px] flex justify-end w-full">
                     <AnimatePresence>
-                      {!!parsedComponentNames?.length && !showDemoCodeInput && (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="mr-2"
-                        >
-                          <Button onClick={() => setShowDemoCodeInput(true)}>
-                            Continue
-                          </Button>
-                        </motion.div>
-                      )}
+                      {!!parsedCode.componentNames?.length &&
+                        !showDemoCodeInput && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="mr-2"
+                          >
+                            <Button onClick={() => setShowDemoCodeInput(true)}>
+                              Continue
+                            </Button>
+                          </motion.div>
+                        )}
                     </AnimatePresence>
                   </div>
                 )}
@@ -522,12 +462,12 @@ export default function ComponentForm() {
                       name="demo_code"
                       render={({ field }) => (
                         <FormItem className="w-full relative">
-                          {!showComponentDetails && <Label>Demo code</Label>}
+                          {!showDetailedForm && <Label>Demo code</Label>}
                           <FormControl>
                             <motion.div
                               className="relative"
                               animate={{
-                                height: showComponentDetails
+                                height: showDetailedForm
                                   ? "56px"
                                   : "calc(100vh/3)",
                               }}
@@ -543,7 +483,7 @@ export default function ComponentForm() {
                                 className="mt-1 w-full h-full resize-none"
                                 style={{ height: "100%", minHeight: "100%" }}
                               />
-                              {showComponentDetails && (
+                              {showDetailedForm && (
                                 <motion.div
                                   initial={{ opacity: 0 }}
                                   animate={{ opacity: 1 }}
@@ -558,9 +498,9 @@ export default function ComponentForm() {
                                         : "/demo-file.svg"
                                     }
                                     mainText="Demo code"
-                                    subText={`for ${parsedComponentNames[0]}`}
+                                    subText={`for ${parsedCode.componentNames[0]}`}
                                     onEditClick={() => {
-                                      setShowComponentDetails(false)
+                                      setShowDetailedForm(false)
                                       setTimeout(() => {
                                         demoCodeTextAreaRef.current?.focus()
                                       }, 0)
@@ -576,8 +516,8 @@ export default function ComponentForm() {
                     />
                     <div className="-mt-10 h-[36px] flex justify-end w-full">
                       <AnimatePresence>
-                        {!!parsedDemoComponentNames &&
-                          !showComponentDetails && (
+                        {!!parsedCode.demoComponentNames &&
+                          !showDetailedForm && (
                             <motion.div
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
@@ -585,9 +525,7 @@ export default function ComponentForm() {
                               transition={{ duration: 0.3 }}
                               className="mr-2"
                             >
-                              <Button
-                                onClick={() => setShowComponentDetails(true)}
-                              >
+                              <Button onClick={() => setShowDetailedForm(true)}>
                                 Continue
                               </Button>
                             </motion.div>
@@ -597,24 +535,25 @@ export default function ComponentForm() {
                   </motion.div>
                 )}
 
-                {Object.keys(internalDependencies ?? {}).length > 0 &&
-                  showComponentDetails && (
+                {Object.keys(parsedCode.internalDependencies).length > 0 &&
+                  showDetailedForm && (
                     <InputInternalDependenciesCard
-                      internalDependencies={internalDependencies}
-                      setComponentDependencies={setComponentDependencies}
+                      internalDependencies={parsedCode.internalDependencies}
+                      setComponentDependencies={setParsedCode}
                     />
                   )}
 
                 {isDebug && (
                   <DebugInfoDisplay
-                    parsedComponentNames={parsedComponentNames}
-                    parsedDemoComponentNames={parsedDemoComponentNames}
-                    parsedDependencies={parsedDependencies}
-                    parsedDemoDependencies={parsedDemoDependencies}
+                    componentNames={parsedCode.componentNames}
+                    demoComponentNames={parsedCode.demoComponentNames}
+                    dependencies={parsedCode.dependencies}
+                    demoDependencies={parsedCode.demoDependencies}
+                    internalDependencies={parsedCode.internalDependencies}
                   />
                 )}
 
-                {showComponentDetails && (
+                {showDetailedForm && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -622,22 +561,24 @@ export default function ComponentForm() {
                     transition={{ duration: 0.3, delay: 0.3 }}
                     className="w-full"
                   >
-                    <ComponentDetails
-                      ref={componentDetailsRef}
+                    <ComponentDetailsForm
+                      ref={detailedFormRef}
                       form={form}
                       previewImage={previewImage}
                       handleFileChange={handleFileChange}
                       handleSubmit={handleSubmit}
                       isLoading={isLoading}
                       isFormValid={isFormValid}
-                      internalDependencies={internalDependencies ?? {}}
+                      internalDependencies={
+                        parsedCode.internalDependencies ?? {}
+                      }
                       componentName={mainComponentName}
                     />
                   </motion.div>
                 )}
               </div>
 
-              {previewProps && isPreviewReady && showComponentDetails && (
+              {previewProps && isPreviewReady && showDetailedForm && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -666,7 +607,7 @@ export default function ComponentForm() {
       {!showDemoCodeInput && !isPreviewReady && !isEditMode && (
         <CodeGuidelinesAlert />
       )}
-      {showDemoCodeInput && !showComponentDetails && (
+      {showDemoCodeInput && !showDetailedForm && (
         <DemoComponentGuidelinesAlert />
       )}
     </>
@@ -794,7 +735,9 @@ const CodeGuidelinesAlert = () => {
                     React client-side components are fully supported. Be sure to
                     import React:
                   </li>
-                  <CodeBlock code={"\"use client\" \n\nimport React from \"react\""} />
+                  <CodeBlock
+                    code={'"use client" \n\nimport React from "react"'}
+                  />
                   <li>TypeScript is fully supported.</li>
                   <li>
                     Tailwind is fully supported along with custom Tailwind
@@ -854,7 +797,9 @@ const DemoComponentGuidelinesAlert = () => (
                 <li>
                   Always import the component using curly braces, regardless of
                   the export method in the component:
-                  <CodeBlock code={"import { MyComponent } from \"./MyComponent\""} />
+                  <CodeBlock
+                    code={'import { MyComponent } from "./MyComponent"'}
+                  />
                 </li>
               </ul>
             </li>
@@ -867,8 +812,8 @@ const DemoComponentGuidelinesAlert = () => (
                 </li>
                 <li>
                   You can create multiple demo components of different states or
-                  variants. Create them inside the demo file and export them using
-                  curly braces:
+                  variants. Create them inside the demo file and export them
+                  using curly braces:
                   <CodeBlock code={"export { DemoVariant1, DemoVariant2 }"} />
                 </li>
               </ul>
@@ -882,7 +827,7 @@ const DemoComponentGuidelinesAlert = () => (
                 </li>
                 <li>
                   Be sure to import React if you use it in the demo code:
-                  <CodeBlock code={"import React from \"react\""} />
+                  <CodeBlock code={'import React from "react"'} />
                 </li>
               </ul>
             </li>
@@ -894,21 +839,16 @@ const DemoComponentGuidelinesAlert = () => (
 )
 
 const DebugInfoDisplay = ({
-  parsedComponentNames,
-  parsedDemoComponentNames,
-  parsedDependencies,
-  parsedDemoDependencies,
-}: {
-  parsedComponentNames: string[]
-  parsedDemoComponentNames: string[]
-  parsedDependencies: Record<string, string>
-  parsedDemoDependencies: Record<string, string>
-}) => (
+  componentNames,
+  demoComponentNames,
+  dependencies,
+  demoDependencies,
+}: ParsedCodeData) => (
   <>
     <div className="w-full">
       <Label>Component names</Label>
       <Textarea
-        value={parsedComponentNames?.join(", ")}
+        value={componentNames?.join(", ")}
         readOnly
         className="mt-1 w-full bg-gray-100"
       />
@@ -916,7 +856,7 @@ const DebugInfoDisplay = ({
     <div className="w-full">
       <Label>Demo component name</Label>
       <Input
-        value={parsedDemoComponentNames?.join(", ")}
+        value={demoComponentNames?.join(", ")}
         readOnly
         className="mt-1 w-full bg-gray-100"
       />
@@ -924,7 +864,7 @@ const DebugInfoDisplay = ({
     <div className="w-full">
       <Label>Component dependencies</Label>
       <Textarea
-        value={Object.entries(parsedDependencies ?? {})
+        value={Object.entries(dependencies ?? {})
           .map(([key, value]) => `${key}: ${value}`)
           .join("\n")}
         readOnly
@@ -934,7 +874,7 @@ const DebugInfoDisplay = ({
     <div className="w-full">
       <Label>Demo dependencies</Label>
       <Textarea
-        value={Object.entries(parsedDemoDependencies ?? {})
+        value={Object.entries(demoDependencies ?? {})
           .map(([key, value]) => `${key}: ${value}`)
           .join("\n")}
         readOnly
@@ -949,15 +889,7 @@ const InputInternalDependenciesCard = ({
   setComponentDependencies,
 }: {
   internalDependencies: Record<string, string>
-  setComponentDependencies: React.Dispatch<
-    React.SetStateAction<{
-      dependencies: Record<string, string>
-      demoDependencies: Record<string, string>
-      internalDependencies: Record<string, string>
-      componentNames: string[]
-      demoComponentNames: string[]
-    }>
-  >
+  setComponentDependencies: React.Dispatch<React.SetStateAction<ParsedCodeData>>
 }) => (
   <div className="w-full">
     <Alert className="my-2">

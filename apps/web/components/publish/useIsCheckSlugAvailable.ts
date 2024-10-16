@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useClerkSupabaseClient } from "@/utils/clerk"
 import { SupabaseClient } from "@supabase/supabase-js"
 
-export const generateSlug = (name: string): string => {
+export const makeSlugFromName = (name: string): string => {
   return name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
@@ -18,7 +18,7 @@ export const isValidSlug = (slug: string): boolean => {
 const checkSlugUnique = async (
   supabase: SupabaseClient,
   slug: string,
-  userId: string
+  userId: string,
 ): Promise<boolean> => {
   const { data, error } = await supabase
     .from("components")
@@ -37,14 +37,14 @@ const checkSlugUnique = async (
 export const generateUniqueSlug = async (
   supabase: SupabaseClient,
   baseName: string,
-  userId: string
+  userId: string,
 ) => {
-  let newSlug = generateSlug(baseName)
+  let newSlug = makeSlugFromName(baseName)
   let isUnique = await checkSlugUnique(supabase, newSlug, userId)
   let suffix = 1
 
   while (!isUnique) {
-    newSlug = `${generateSlug(baseName)}-${suffix}`
+    newSlug = `${makeSlugFromName(baseName)}-${suffix}`
     isUnique = await checkSlugUnique(supabase, newSlug, userId)
     suffix += 1
   }
@@ -52,7 +52,13 @@ export const generateUniqueSlug = async (
   return newSlug
 }
 
-export const useIsCheckSlugAvailable = ({ slug, userId }: { slug: string; userId: string }) => {
+export const useIsCheckSlugAvailable = ({
+  slug,
+  userId,
+}: {
+  slug: string
+  userId: string
+}) => {
   const client = useClerkSupabaseClient()
 
   const {

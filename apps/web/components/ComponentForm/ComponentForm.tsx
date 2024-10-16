@@ -53,6 +53,7 @@ import { PublishComponentPreview } from "./preview"
 import { Hotkey } from "../ui/hotkey"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
+import { CodeBlock } from "../CodeBlock"
 
 export default function ComponentForm() {
   const { theme } = useTheme()
@@ -115,7 +116,7 @@ export default function ComponentForm() {
 
   const componentDetailsRef = useRef<ComponentDetailsRef>(null)
 
-  const [showDemoCodeInput, setShowDemoCodeInput] = useState(false);
+  const [showDemoCodeInput, setShowDemoCodeInput] = useState(false)
 
   useEffect(() => {
     if (showComponentDetails && componentDetailsRef.current) {
@@ -407,11 +408,11 @@ export default function ComponentForm() {
 
   useEffect(() => {
     if (!showComponentDetails && codeInputRef.current) {
-      codeInputRef.current.focus()
+      codeInputRef.current?.focus?.()
     } else if (showComponentDetails && demoCodeTextAreaRef.current) {
-       setTimeout(() => {
-         demoCodeTextAreaRef.current?.focus()
-       }, 0)
+      setTimeout(() => {
+        demoCodeTextAreaRef.current?.focus()
+      }, 0)
     }
   }, [showComponentDetails])
 
@@ -467,12 +468,16 @@ export default function ComponentForm() {
                               className={`absolute p-2 border rounded-md inset-0 bg-background text-foreground bg-opacity-80 backdrop-blur-sm flex items-center justify-start`}
                             >
                               <EditCodeFileCard
-                                iconSrc={isDarkTheme ? "/tsx-file-dark.svg" : "/tsx-file.svg"}
+                                iconSrc={
+                                  isDarkTheme
+                                    ? "/tsx-file-dark.svg"
+                                    : "/tsx-file.svg"
+                                }
                                 mainText={`${mainComponentName} code`}
                                 subText={`${parsedComponentNames.slice(0, 2).join(", ")}${parsedComponentNames.length > 2 ? ` +${parsedComponentNames.length - 2}` : ""}`}
                                 onEditClick={() => {
-                                  setShowDemoCodeInput(false);
-                                  setShowComponentDetails(false);
+                                  setShowDemoCodeInput(false)
+                                  setShowComponentDetails(false)
                                   codeInputRef.current?.focus()
                                 }}
                               />
@@ -529,7 +534,7 @@ export default function ComponentForm() {
                               transition={{ duration: 0.3 }}
                             >
                               <Textarea
-                                placeholder="Paste code here to demonstrate the component"
+                                placeholder="Paste code that demonstrates usage of the component with all variants"
                                 ref={demoCodeTextAreaRef}
                                 value={field.value}
                                 onChange={(e) => {
@@ -547,11 +552,15 @@ export default function ComponentForm() {
                                   className="absolute p-2 border rounded-md inset-0 bg-background text-foreground bg-opacity-80 backdrop-blur-sm flex items-center justify-start"
                                 >
                                   <EditCodeFileCard
-                                    iconSrc={isDarkTheme ? "/demo-file-dark.svg" : "/demo-file.svg"}
+                                    iconSrc={
+                                      isDarkTheme
+                                        ? "/demo-file-dark.svg"
+                                        : "/demo-file.svg"
+                                    }
                                     mainText="Demo code"
                                     subText={`for ${parsedComponentNames[0]}`}
                                     onEditClick={() => {
-                                      setShowComponentDetails(false);
+                                      setShowComponentDetails(false)
                                       setTimeout(() => {
                                         demoCodeTextAreaRef.current?.focus()
                                       }, 0)
@@ -567,19 +576,22 @@ export default function ComponentForm() {
                     />
                     <div className="-mt-10 h-[36px] flex justify-end w-full">
                       <AnimatePresence>
-                        {!!parsedDemoComponentNames && !showComponentDetails && (
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="mr-2"
-                          >
-                            <Button onClick={() => setShowComponentDetails(true)}>
-                              Continie
-                            </Button>
-                          </motion.div>
-                        )}
+                        {!!parsedDemoComponentNames &&
+                          !showComponentDetails && (
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              transition={{ duration: 0.3 }}
+                              className="mr-2"
+                            >
+                              <Button
+                                onClick={() => setShowComponentDetails(true)}
+                              >
+                                Continue
+                              </Button>
+                            </motion.div>
+                          )}
                       </AnimatePresence>
                     </div>
                   </motion.div>
@@ -654,7 +666,9 @@ export default function ComponentForm() {
       {!showDemoCodeInput && !isPreviewReady && !isEditMode && (
         <CodeGuidelinesAlert />
       )}
-      {showDemoCodeInput && !showComponentDetails && <DemoComponentGuidelinesAlert />}
+      {showDemoCodeInput && !showComponentDetails && (
+        <DemoComponentGuidelinesAlert />
+      )}
     </>
   )
 }
@@ -702,7 +716,6 @@ const SuccessDialog = ({
   onAddAnother: () => void
   onGoToComponent: () => void
 }) => {
-  
   useEffect(() => {
     const keyDownHandler = (e: KeyboardEvent) => {
       if (isOpen && e.code === "KeyN") {
@@ -738,7 +751,7 @@ const SuccessDialog = ({
           </Button>
           <Button onClick={onGoToComponent} variant="default">
             View Component
-            <Hotkey keys={["⏎"]} />
+            <Hotkey keys={["⏎"]} modifier={true} />
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -746,82 +759,80 @@ const SuccessDialog = ({
   )
 }
 
-const CodeGuidelinesAlert = () => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: 20 }}
-    transition={{ duration: 0.3 }}
-    className="fixed inset-0 flex justify-end items-center p-10 overflow-auto -z-10"
-  >
-    <div className="w-1/2 min-w-[400px]">
-      <Alert className="border-none">
-        <FileTerminal className="h-4 w-4" />
-        <AlertTitle>Component code requirements</AlertTitle>
-        <AlertDescription className="mt-2">
-          <ol className="list-decimal pl-5 space-y-2">
-            <li>
-              Dependency usage:
-              <ul className="list-disc pl-5 mt-1">
-                <li>
-                  You can use any dependencies from npm; we install them
-                  automatically.
-                </li>
-                <li>
-                  If your component depends on other components from our
-                  library, make sure they are already published or publish them.
-                </li>
-                <li>
-                  To reference already loaded components, use a direct link to
-                  the component.
-                </li>
-              </ul>
-            </li>
-            <li>
-              Imports:
-              <ul className="list-disc pl-5 mt-1">
-                <li>Import internal components using relative paths.</li>
-                <li>
-                  Unlike Next.js, React is not imported automatically. If you
-                  use React, be sure to import it:
-                </li>
-              </ul>
-              <pre className="bg-secondary p-2 rounded-md mt-2">
-                <code className="text-[12px]">import * from 'react'</code>
-              </pre>
-            </li>
-            <li>
-              Platform compatibility:
-              <ul className="list-disc pl-5 mt-1">
-                <li>
-                  Do not use server components or Next.js functions. They are
-                  not supported in the preview.
-                </li>
-                <li>
-                  Despite emulating some Next.js libraries, we do not support it
-                  directly. Make sure your code works in our environment; if it
-                  doesn't, write to @serafimcloud
-                </li>
-              </ul>
-            </li>
-            <li>
-              Tailwind CSS:
-              <ul className="list-disc pl-5 mt-1">
-                <li>
-                  Custom Tailwind styles are not yet supported in the preview.
-                </li>
-                <li>
-                  If your component needs additional styles, specify them in the
-                  description so users can install them themselves.
-                </li>
-              </ul>
-            </li>
-          </ol>
-        </AlertDescription>
-      </Alert>
-    </div>
-  </motion.div>
-)
+const CodeGuidelinesAlert = () => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      transition={{ duration: 0.3 }}
+      className="fixed inset-0 flex justify-end items-center p-10 overflow-auto -z-10"
+    >
+      <div className="w-1/2 min-w-[400px]">
+        <Alert className="border-none">
+          <FileTerminal className="h-4 w-4" />
+          <AlertTitle>Component code requirements</AlertTitle>
+          <AlertDescription className="mt-2">
+            <ol className="list-decimal pl-5 space-y-2">
+              <li>
+                Using dependencies:
+                <ul className="list-disc pl-5 mt-1">
+                  <li>
+                    You can use any dependencies from npm; we import them
+                    automatically.
+                  </li>
+                  <li>
+                    To import existing components from our registry, paste a
+                    direct link to the component.
+                  </li>
+                </ul>
+              </li>
+              <li>
+                React, TypeScript & Tailwind compatibility:
+                <ul className="list-disc pl-5 mt-1">
+                  <li>
+                    React client-side components are fully supported. Be sure to
+                    import React:
+                  </li>
+                  <CodeBlock code={"\"use client\" \n\nimport React from \"react\""} />
+                  <li>TypeScript is fully supported.</li>
+                  <li>
+                    Tailwind is fully supported along with custom Tailwind
+                    styles from shadcn/ui.
+                  </li>
+                </ul>
+              </li>
+              <li>
+                Next.js & server components compatibility:
+                <ul className="list-disc pl-5 mt-1">
+                  <li>Next.js is partially supported.</li>
+                  <li>React server components are not supported yet.</li>
+                  <li>
+                    While we emulate browser-side Next.js functions, we do not
+                    support Next.js completely. Make sure your code works in our
+                    environment; if it doesn't, contact @serafimcloud on X
+                  </li>
+                </ul>
+              </li>
+              <li>
+                Tailwind CSS:
+                <ul className="list-disc pl-5 mt-1">
+                  <li>
+                    Custom Tailwind styles are not yet supported in the preview.
+                  </li>
+                  <li>
+                    If your component needs additional styles, specify them in
+                    the description so users can install them themselves.
+                  </li>
+                </ul>
+              </li>
+            </ol>
+          </AlertDescription>
+        </Alert>
+      </div>
+    </motion.div>
+  )
+}
 
 const DemoComponentGuidelinesAlert = () => (
   <motion.div
@@ -841,34 +852,37 @@ const DemoComponentGuidelinesAlert = () => (
               Component import:
               <ul className="list-disc pl-5 mt-1">
                 <li>
-                  Always import the component using curly braces, regardless of the export method in the component:
-                  <pre className="bg-secondary p-2 rounded-md mt-2">
-                    <code className="text-sm">{"import { MyComponent } from \"./MyComponent\""}</code>
-                  </pre>
+                  Always import the component using curly braces, regardless of
+                  the export method in the component:
+                  <CodeBlock code={"import { MyComponent } from \"./MyComponent\""} />
                 </li>
               </ul>
             </li>
             <li>
               Demo structure:
               <ul className="list-disc pl-5 mt-1">
-                <li>The demo code should demonstrate the usage and appearance of the component.</li>
                 <li>
-                  Multiple demo components for different states or variants are welcome. Create them inside the demo file and export them using curly braces:
-                  <pre className="bg-secondary p-2 rounded-md mt-2">
-                    <code className="text-sm">{"export { DemoVariant1, DemoVariant2 }"}</code>
-                  </pre>
+                  The demo code should demonstrate the usage and appearance of
+                  the component.
+                </li>
+                <li>
+                  You can create multiple demo components of different states or
+                  variants. Create them inside the demo file and export them using
+                  curly braces:
+                  <CodeBlock code={"export { DemoVariant1, DemoVariant2 }"} />
                 </li>
               </ul>
             </li>
             <li>
               Imports and dependencies:
               <ul className="list-disc pl-5 mt-1">
-                <li>You can use any dependencies from npm; we install them automatically.</li>
+                <li>
+                  You can use any dependencies from npm; we install them
+                  automatically.
+                </li>
                 <li>
                   Be sure to import React if you use it in the demo code:
-                  <pre className="bg-secondary p-2 rounded-md mt-2">
-                    <code className="text-sm">{"import * from 'react'"}</code>
-                  </pre>
+                  <CodeBlock code={"import React from \"react\""} />
                 </li>
               </ul>
             </li>
@@ -918,9 +932,7 @@ const DebugInfoDisplay = ({
       />
     </div>
     <div className="w-full">
-      <Label>
-        Demo dependencies
-      </Label>
+      <Label>Demo dependencies</Label>
       <Textarea
         value={Object.entries(parsedDemoDependencies ?? {})
           .map(([key, value]) => `${key}: ${value}`)
@@ -961,9 +973,7 @@ const InputInternalDependenciesCard = ({
     </Alert>
     {Object.entries(internalDependencies ?? {}).map(([path], index) => (
       <div key={path} className={`w-full ${index > 0 ? "mt-2" : ""}`}>
-        <Label>
-          Paste link to {path}
-        </Label>
+        <Label>Paste link to {path}</Label>
         <Input
           onChange={(e) => {
             setComponentDependencies((prev) => ({

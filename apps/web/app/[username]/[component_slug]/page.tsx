@@ -1,7 +1,7 @@
 import ComponentPage from "@/components/ComponentPage"
 import React from "react"
 import { notFound } from "next/navigation"
-import { getComponent } from "@/utils/dbQueries"
+import { getComponent, getUserData } from "@/utils/dbQueries"
 import { supabaseWithAdminAccess } from "@/utils/supabase"
 import ErrorPage from "@/components/ErrorPage"
 
@@ -15,8 +15,37 @@ export const generateMetadata = async ({
     params.username,
     params.component_slug,
   )
+  const { data: user } = await getUserData(supabaseWithAdminAccess, params.username)
+
+  if (!component || !user) {
+    return {
+      title: "Component Not Found",
+    }
+  }
+
+  const ogImageUrl = `${process.env.NEXT_PUBLIC_APP_URL}/${user.username}/${component.component_slug}/opengraph-image`
+
   return {
-    title: component ? `${component.name} | Component` : "Component Not Found",
+    title: `${component.name} | Component`,
+    description: component.description || `A component by ${user.username}`,
+    openGraph: {
+      title: `${component.name} by ${user.username}`,
+      description: component.description || `A component by ${user.username}`,
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: `Preview of ${component.name} component`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${component.name} by ${user.username}`,
+      description: component.description || `A component by ${user.username}`,
+      images: [ogImageUrl],
+    },
   }
 }
 

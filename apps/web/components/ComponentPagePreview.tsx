@@ -32,7 +32,7 @@ export function ComponentPagePreview({
   demoCode,
   dependencies,
   demoDependencies,
-  demoComponentName,
+  demoComponentNames,
   internalDependencies,
 }: {
   component: Component & { user: User } & { tags: Tag[] }
@@ -40,7 +40,7 @@ export function ComponentPagePreview({
   demoCode: string
   dependencies: Record<string, string>
   demoDependencies: Record<string, string>
-  demoComponentName: string
+  demoComponentNames: string[]
   internalDependencies: Record<string, string>
 }) {
   const sandpackRef = useRef<HTMLDivElement>(null)
@@ -51,7 +51,7 @@ export function ComponentPagePreview({
 
   const files = {
     ...generateSandpackFiles({
-      demoComponentName,
+      demoComponentNames,
       componentSlug: component.component_slug,
       relativeImportPath: `/components/ui/${component.user.username}`,
       code,
@@ -116,6 +116,8 @@ export function ComponentPagePreview({
       dependencies: {
         react: "^18.0.0",
         "react-dom": "^18.0.0",
+        "@radix-ui/react-select": "^1.0.0",
+        "lucide-react": "latest",
         ...dependencies,
         ...demoDependencies,
         ...npmDependenciesOfInternalDependencies,
@@ -188,7 +190,7 @@ function CopyCommandSection({
 }: {
   component: Component & { user: User }
 }) {
-  const installUrl = `${process.env.NEXT_PUBLIC_API_URL}/r/${component.user.username}/${component.component_slug}`
+  const installUrl = `${process.env.NEXT_PUBLIC_APP_URL}/r/${component.user.username}/${component.component_slug}`
   const [copied, setCopied] = useState(false)
 
   const copyCommand = () => {

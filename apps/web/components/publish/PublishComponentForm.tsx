@@ -440,7 +440,7 @@ export default function PublishComponentForm() {
                             transition={{ duration: 0.3 }}
                             className="mr-2"
                           >
-                            <Button onClick={() => setShowDemoCodeInput(true)}>
+                            <Button size="sm" onClick={() => setShowDemoCodeInput(true)}>
                               Continue
                             </Button>
                           </motion.div>
@@ -525,7 +525,7 @@ export default function PublishComponentForm() {
                               transition={{ duration: 0.3 }}
                               className="mr-2"
                             >
-                              <Button onClick={() => setShowDetailedForm(true)}>
+                              <Button size="sm" onClick={() => setShowDetailedForm(true)}>
                                 Continue
                               </Button>
                             </motion.div>

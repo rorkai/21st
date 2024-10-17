@@ -50,7 +50,7 @@ import { PublishComponentPreview } from "./preview"
 import { Hotkey } from "../ui/hotkey"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
-import { CodeBlock } from "../CodeBlock"
+import { Code } from "@/components/ui/code"
 
 interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -608,7 +608,7 @@ export default function PublishComponentForm() {
         <CodeGuidelinesAlert />
       )}
       {showDemoCodeInput && !showDetailedForm && (
-        <DemoComponentGuidelinesAlert />
+        <DemoComponentGuidelinesAlert publisherUsername={user?.username!} />
       )}
     </>
   )
@@ -735,7 +735,8 @@ const CodeGuidelinesAlert = () => {
                     React client-side components are fully supported. Be sure to
                     import React:
                   </li>
-                  <CodeBlock
+                  <Code
+                    display="block"
                     code={'"use client" \n\nimport React from "react"'}
                   />
                   <li>TypeScript is fully supported.</li>
@@ -777,7 +778,11 @@ const CodeGuidelinesAlert = () => {
   )
 }
 
-const DemoComponentGuidelinesAlert = () => (
+const DemoComponentGuidelinesAlert = ({
+  publisherUsername,
+}: {
+  publisherUsername: string
+}) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -792,13 +797,21 @@ const DemoComponentGuidelinesAlert = () => (
         <AlertDescription className="mt-2">
           <ol className="list-decimal pl-5 space-y-2">
             <li>
-              Component import:
+              Component imports:
               <ul className="list-disc pl-5 mt-1">
                 <li>
-                  Always import the component using curly braces, regardless of
-                  the export method in the component:
-                  <CodeBlock
-                    code={'import { MyComponent } from "./MyComponent"'}
+                  Import your component with curly braces from {" "}
+                  <Code code="@/components" /> path:
+                  <Code
+                    display="block"
+                    code={`import { MyComponent } from "@/components/${publisherUsername}/my-component"`}
+                  />
+                </li>
+                <li>
+                  Import external existing components from our registry via <Code code="@/components/<author>/<component-name>" /> paths:
+                  <Code
+                    display="block"
+                    code={`import { OtherComponent } from "@/components/${publisherUsername}/other-component"`}
                   />
                 </li>
               </ul>
@@ -811,10 +824,10 @@ const DemoComponentGuidelinesAlert = () => (
                   the component.
                 </li>
                 <li>
-                  You can create multiple demo components of different states or
-                  variants. Create them inside the demo file and export them
-                  using curly braces:
-                  <CodeBlock code={"export { DemoVariant1, DemoVariant2 }"} />
+                  You can create multiple component demo variants. Export all
+                  demo variants you want to display on the page using curly
+                  braces:
+                  <Code display="block" code={"export { DemoVariant1, DemoVariant2 }"} />
                 </li>
               </ul>
             </li>
@@ -827,7 +840,7 @@ const DemoComponentGuidelinesAlert = () => (
                 </li>
                 <li>
                   Be sure to import React if you use it in the demo code:
-                  <CodeBlock code={'import React from "react"'} />
+                  <Code display="block" code={'import React from "react"'} />
                 </li>
               </ul>
             </li>
@@ -898,14 +911,14 @@ const InputInternalDependenciesCard = ({
       <AlertDescription>
         To use another component within your component:
         <br />
-        1. Add it to the Component Community first.
+        1. Add it to the 21st Registry first.
         <br />
-        2. Enter link to it here.
+        2. Paste the link here.
       </AlertDescription>
     </Alert>
-    {Object.entries(internalDependencies ?? {}).map(([path], index) => (
+    {Object.entries(internalDependencies).map(([path], index) => (
       <div key={path} className={`w-full ${index > 0 ? "mt-2" : ""}`}>
-        <Label>Paste link to {path}</Label>
+        <Label className="text-sm">Paste the link to {path}</Label>
         <Input
           onChange={(e) => {
             setComponentDependencies((prev) => ({
@@ -916,7 +929,7 @@ const InputInternalDependenciesCard = ({
               },
             }))
           }}
-          placeholder='For example: "serafimcloud/button"'
+          placeholder='e.g. "shadcn/button"'
           className="mt-1 w-full"
         />
       </div>

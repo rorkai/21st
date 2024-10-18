@@ -1,22 +1,16 @@
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism"
+import {
+  Prism as SyntaxHighlighter,
+  SyntaxHighlighterProps,
+} from "react-syntax-highlighter"
+import * as highlightThemes from "react-syntax-highlighter/dist/esm/styles/prism"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
-import { CSSProperties } from "react"
 
 const codeVariants = cva("font-mono rounded-md", {
   variants: {
     display: {
       inline: "inline-flex bg-secondary py-0 px-1",
       block: "block bg-secondary p-2 mt-2 mb-4",
-    },
-    theme: {
-      dark: {
-        default: vscDarkPlus,
-      },
-      light: {
-        default: vscDarkPlus,
-      },
     },
     fontSize: {
       xs: "text-xs",
@@ -31,13 +25,15 @@ const codeVariants = cva("font-mono rounded-md", {
   },
 })
 
+type HighlightThemeKey = keyof typeof highlightThemes
+
 interface CodeProps
   extends React.HTMLAttributes<HTMLPreElement>,
     VariantProps<typeof codeVariants> {
   code: string
   fontSize?: "xs" | "sm" | "md" | "lg"
-  language?: string
-  highlightStyles?: { [key: string]: CSSProperties }
+  language?: SyntaxHighlighterProps["language"] | "pseudo"
+  highlightTheme?: HighlightThemeKey
 }
 
 const Code = ({
@@ -45,23 +41,22 @@ const Code = ({
   language = "jsx",
   display,
   fontSize,
-  highlightStyles = vscDarkPlus,
+  highlightTheme = "darcula",
   className,
 }: CodeProps) => {
   return (
     <SyntaxHighlighter
       language={language}
-      style={highlightStyles}
-      customStyle={{
-        background: "transparent",
-        padding: 0,
-        margin: 0,
-      }}
+      style={highlightThemes[highlightTheme]}
       PreTag={({ children }) => (
-        <pre className={cn(codeVariants({ display, fontSize }), className)}>
+        <pre
+          style={highlightThemes[highlightTheme]}
+          className={cn(codeVariants({ fontSize, display }), className)}
+        >
           {children}
         </pre>
       )}
+      CodeTag={({ children }) => <code>{children}</code>}
     >
       {code}
     </SyntaxHighlighter>

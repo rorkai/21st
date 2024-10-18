@@ -100,8 +100,9 @@ export function Header({ tagName, page }: {
 
       <div className="flex items-center gap-4">
         <HeaderServer.SocialIcons />
-        <div className="relative flex items-center max-w-[400px]">
-          <Input
+        {page === "home" && (
+          <div className="relative flex items-center max-w-[400px]">
+            <Input
             ref={inputRef}
             type="text"
             placeholder="Search components..."
@@ -111,8 +112,9 @@ export function Header({ tagName, page }: {
           />
           <div className="absolute top-0 right-3 h-full flex items-center pointer-events-none">
             <Hotkey keys={["K"]} modifier={true} />
+            </div>
           </div>
-        </div>
+        )}
 
         {!isMobile && (
           <>

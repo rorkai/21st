@@ -14,7 +14,6 @@ import { Component, Tag, User } from "@/types/global"
 import { UserAvatar } from "./UserAvatar"
 import Link from "next/link"
 import { atom, useAtom } from "jotai"
-import { motion } from "framer-motion"
 import {
   Tooltip,
   TooltipContent,
@@ -227,17 +226,10 @@ export default function ComponentPage({
     >
       <div className="flex justify-between items-center">
         <div className="flex gap-1 items-center">
-          <motion.div
-            layoutId="logo"
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          >
-            <Link
-              href="/"
-              className="flex items-center justify-center w-5 h-5 rounded-full cursor-pointer"
-            >
-              <div className="w-full h-full rounded-full bg-foreground" />
-            </Link>
-          </motion.div>
+          <Link
+            href="/"
+            className="flex items-center justify-center w-5 h-5 rounded-full cursor-pointer bg-foreground"
+          />
           <ChevronRight size={12} className="text-muted-foreground" />
           <Link
             href={`/${component.user.username}`}

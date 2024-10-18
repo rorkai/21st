@@ -62,18 +62,13 @@ interface HeaderServerProps {
   isHomePage: boolean
 }
 
-export function HeaderServer({
-  tagName,
-  isHomePage,
-}: HeaderServerProps) {
+export function HeaderServer({ tagName, isHomePage }: HeaderServerProps) {
   return (
     <div className="flex items-center">
       <Link
         href="/"
-        className="flex items-center justify-center w-7 h-7 rounded-full cursor-pointer"
-      >
-        <div className="w-full h-full rounded-full bg-foreground" />
-      </Link>
+        className="flex items-center justify-center w-7 h-7 rounded-full cursor-pointer bg-foreground"
+      />
       {!isHomePage && tagName && (
         <>
           <span className="mx-2 text-gray-400">/</span>

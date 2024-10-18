@@ -19,7 +19,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useClerkSupabaseClient } from "@/utils/clerk"
-
+import { toast } from "sonner"
 export const PreviewInfo = ({
   component,
 }: {
@@ -44,12 +44,14 @@ export const PreviewInfo = ({
       .join(",\n")
     navigator.clipboard.writeText(`{\n${dependenciesString}\n}`)
     setCopiedLibDependencies(true)
+    toast("Dependencies copied to clipboard")
     setTimeout(() => setCopiedLibDependencies(false), 2000)
   }
 
   const copySingleDependency = (dep: string, version: string) => {
     navigator.clipboard.writeText(`"${dep}": "${version}"`)
     setCopiedDependency(dep)
+    toast("Dependency copied to clipboard")
     setTimeout(() => setCopiedDependency(null), 2000)
   }
 

@@ -9,6 +9,7 @@ import { makeSlugFromName } from "@/components/publish/useIsCheckSlugAvailable"
 import { SupabaseClient } from "@supabase/supabase-js"
 import { useClerkSupabaseClient } from "./clerk"
 import { Database } from "@/types/supabase"
+import { toast } from "sonner"
 
 const componentFields = `
   *,
@@ -208,8 +209,10 @@ export function useLikeMutation(
       }
       if (liked) {
         await unlikeComponent(supabase, userId, componentId)
+        toast("Component unliked") 
       } else {
         await likeComponent(supabase, userId, componentId)
+        toast("Component liked") 
       }
     },
     onSuccess: (_, { componentId }) => {

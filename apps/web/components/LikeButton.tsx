@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 import { useLikeMutation } from "@/utils/dbQueries"
 import { useUser } from "@clerk/nextjs"
 import { useClerkSupabaseClient } from "@/utils/clerk"
+import { toast } from "sonner"
 
 interface LikeButtonProps {
   componentId: number
@@ -15,7 +16,6 @@ interface LikeButtonProps {
   showTooltip?: boolean
   variant?: "default" | "circle"
   liked: boolean
-  onClick?: () => void
 }
 
 export function LikeButton({
@@ -24,7 +24,6 @@ export function LikeButton({
   showTooltip = false,
   liked,
   variant = "default",
-  onClick,
 }: LikeButtonProps) {
   const { user } = useUser()
   const supabase = useClerkSupabaseClient()
@@ -69,7 +68,7 @@ export function LikeButton({
 
   const button = (
     <button
-      onClick={onClick ? onClick : handleLike}
+      onClick={handleLike}
       disabled={likeMutation.isPending}
       className={buttonClasses}
       onMouseEnter={() => setIsHovered(true)}

@@ -2,7 +2,7 @@
 import localFont from "next/font/local"
 import "./globals.css"
 import { Providers } from "./providers"
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { ThemeProvider } from "next-themes"
 import { cn } from "@/lib/utils"

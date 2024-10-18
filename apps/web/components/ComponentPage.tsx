@@ -31,6 +31,7 @@ import { useTheme } from "next-themes"
 import { ComponentPagePreview } from "./ComponentPagePreview"
 import { EditComponentDialog } from "./EditComponentDialog"
 import { useUpdateComponentWithTags } from "@/utils/dbQueries"
+import { toast } from "sonner"
 
 export const isShowCodeAtom = atom(true)
 
@@ -85,6 +86,7 @@ export default function ComponentPage({
       setTimeout(() => {
         setIsShared(false)
       }, 2000)
+      toast("Link copied to clipboard")
     } catch (err) {
       console.error("Error copying link: ", err)
     }

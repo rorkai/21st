@@ -1,6 +1,7 @@
 import { useSandpack } from "@codesandbox/sandpack-react"
 import { CheckIcon, Clipboard } from "lucide-react"
 import { useState } from "react"
+import { toast } from "sonner"
 
 export const CopyCodeButton = () => {
   const [codeCopied, setCodeCopied] = useState(false)
@@ -12,6 +13,7 @@ export const CopyCodeButton = () => {
     if (fileContent) {
       navigator.clipboard.writeText(fileContent)
       setCodeCopied(true)
+      toast("Code copied to clipboard")
       setTimeout(() => setCodeCopied(false), 2000)
     }
   }

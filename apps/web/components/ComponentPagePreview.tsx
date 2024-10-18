@@ -19,6 +19,7 @@ import { useAtom } from "jotai"
 import { useTheme } from "next-themes"
 import { CopyCodeButton } from "./CopyCodeButton"
 import { generateSandpackFiles } from "@/utils/sandpack"
+import { toast } from "sonner"
 
 const SandpackPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react/unstyled").then((module) => ({
@@ -198,6 +199,7 @@ function CopyCommandSection({
     navigator.clipboard.writeText(command)
     setCopied(true)
     setTimeout(() => setCopied(false), 1000)
+    toast("Command copied to clipboard")
   }
 
   return (

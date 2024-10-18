@@ -41,6 +41,7 @@ import { useTheme } from "next-themes"
 import { useUser } from "@clerk/nextjs"
 import { licenses } from "@/utils/licenses"
 import { TagSelector } from "../TagSelector"
+import { Separator } from "@radix-ui/react-separator"
 
 interface ComponentDetailsFormProps {
   isEditMode?: boolean
@@ -212,11 +213,7 @@ const ComponentDetailsForm = forwardRef<
           {!previewImage ? (
             <div
               {...getRootProps()}
-              className={`mt-1 w-full border border-dashed ${
-                isDarkTheme
-                  ? "border-gray-600 bg-background"
-                  : "border-gray-300 bg-background"
-              } rounded-md p-8 text-center cursor-pointer hover:border-gray-400 transition-colors relative`}
+              className={`flex !justify-between mt-1 w-full border border-dashed bg-background rounded-md p-8 text-center cursor-pointer hover:border-gray-400 transition-colors relative`}
             >
               <input {...getInputProps()} id="preview_image" />
               <CloudUpload strokeWidth={1.5} className="mx-auto h-10 w-10" />
@@ -238,7 +235,7 @@ const ComponentDetailsForm = forwardRef<
               {...getRootProps()}
               className={`mt-1 w-full border ${
                 isDarkTheme ? "border-gray-600" : "border-gray-300"
-              } rounded-md p-2 flex items-center space-x-4 relative`}
+              } rounded-md p-2 flex items-center gap-2 relative`}
             >
               <input {...getInputProps()} id="preview_image" />
               <div className="w-40 h-32 relative">
@@ -254,12 +251,7 @@ const ComponentDetailsForm = forwardRef<
                 />
               </div>
               <div className="flex flex-col items-start">
-                <div className="flex-grow">
-                  <h4 className="text-sm font-medium mb-1">
-                    {componentName ? `${componentName} Cover` : "Cover"}
-                  </h4>
-                </div>
-                <div className="flex flex-col space-x-2">
+                <div className="flex flex-col gap-2">
                   <Button
                     variant="outline"
                     onClick={(e) => {
@@ -280,7 +272,11 @@ const ComponentDetailsForm = forwardRef<
                   >
                     Change cover
                   </Button>
-                  <span className="text-sm text-gray-500 self-center">
+                  <Separator
+                    orientation="horizontal"
+                    className="w-full h-[1px] bg-border"
+                  />
+                  <span className="text-sm text-muted-foreground self-center">
                     or drop it here
                   </span>
                 </div>

@@ -122,6 +122,30 @@ export default function ComponentPage({
 
   useEffect(() => {
     const keyDownHandler = (e: KeyboardEvent) => {
+      if (
+        e.code === "KeyE" &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        !e.shiftKey &&
+        !isEditDialogOpen &&
+        e.target instanceof Element &&
+        !e.target.matches("input, textarea")
+      ) {
+        e.preventDefault()
+        setIsEditDialogOpen(true)
+      }
+    }
+
+    window.addEventListener("keydown", keyDownHandler)
+
+    return () => {
+      window.removeEventListener("keydown", keyDownHandler)
+    }
+  }, [isEditDialogOpen, setIsEditDialogOpen])
+
+  useEffect(() => {
+    const keyDownHandler = (e: KeyboardEvent) => {
       if (e.code === "C" && e.shiftKey && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
         handleShareClick()

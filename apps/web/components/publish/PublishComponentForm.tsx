@@ -659,10 +659,19 @@ const SuccessDialog = ({
 }) => {
   useEffect(() => {
     const keyDownHandler = (e: KeyboardEvent) => {
-      if (isOpen && e.code === "KeyN") {
-        e.preventDefault()
-        onAddAnother()
-      }
+     if (
+       isOpen &&
+       e.code === "KeyN" &&
+       !e.metaKey &&
+       !e.ctrlKey &&
+       !e.altKey &&
+       !e.shiftKey &&
+       e.target instanceof Element &&
+       !e.target.matches("input, textarea")
+     ) {
+       e.preventDefault()
+       onAddAnother()
+     }
       if (isOpen && e.code === "Enter" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
         onGoToComponent()

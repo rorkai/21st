@@ -39,7 +39,15 @@ export function LikeButton({
 
   useEffect(() => {
     const keyDownHandler = (e: KeyboardEvent) => {
-      if (e.code === "KeyL") {
+      if (
+        e.code === "KeyL" &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        !e.shiftKey &&
+        e.target instanceof Element &&
+        !e.target.matches("input, textarea")
+      ) {
         e.preventDefault()
         handleLike(e as unknown as React.MouseEvent)
       }

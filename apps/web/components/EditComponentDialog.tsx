@@ -9,7 +9,7 @@ import { Component, User, Tag } from "@/types/global"
 import { useForm } from "react-hook-form"
 import { FormData } from "./publish/utils"
 import { uploadToR2 } from "@/utils/r2"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 export function EditComponentDialog({
   component,
@@ -108,10 +108,20 @@ export function EditComponentDialog({
     await onUpdate(updatedData)
   }
 
-  const handleClose = () => {
-    setIsOpen(false)
-    onClose()
-  }
+  useEffect(() => {
+    const keyDownHandler = (e: KeyboardEvent) => {
+      if (e.code === "Enter" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        handleSubmit(e as unknown as React.FormEvent)
+      }
+    }
+
+    window.addEventListener("keydown", keyDownHandler)
+
+    return () => {
+      window.removeEventListener("keydown", keyDownHandler)
+    }
+  }, [form, handleSubmit])
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => setIsOpen(open)}>

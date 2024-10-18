@@ -69,9 +69,8 @@ export const prepareFilesForPublishPreview = (
   ${hasUseClient ? `"use client";\n${importStatements}` : importStatements}
   ${demoCode.replace(/^"use client";?\s*/, "")}
   `
-
   const files = generateSandpackFiles({
-    demoComponentName: demoComponentNames[0]!,
+    demoComponentNames: [demoComponentNames[0]!],
     componentSlug: "Component",
     relativeImportPath: `/components/ui/${publisherUsername}`,
     code,

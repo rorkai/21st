@@ -177,8 +177,6 @@ export default async function ComponentPageLayout({
   const code = codeResult?.data as string
   const rawDemoCode = demoResult?.data as string
 
-  const demoComponentName = (component.demo_component_names as string[])[0]!
-
   return (
     <div className="w-full ">
       <ComponentPage
@@ -187,7 +185,7 @@ export default async function ComponentPageLayout({
         demoCode={rawDemoCode}
         dependencies={dependencies}
         demoDependencies={demoDependencies}
-        demoComponentName={demoComponentName}
+        demoComponentNames={component.demo_component_names as string[]}
         internalDependencies={internalDependenciesWithCode}
       />
     </div>

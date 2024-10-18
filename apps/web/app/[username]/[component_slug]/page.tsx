@@ -163,16 +163,8 @@ export default async function ComponentPageLayout({
   }
 
   const internalDependenciesWithCode = internalDependenciesResults
-    .filter((result) => typeof result?.data === "object")
-    .reduce(
-      (acc, result): Record<string, string> => {
-        if (result?.data && typeof result.data === "object") {
-          return { ...acc, ...result.data }
-        }
-        return acc
-      },
-      {} as Record<string, string>,
-    )
+    .filter((result) => result?.data && typeof result.data === "object")
+    .reduce((acc, result) => ({ ...acc, ...(result.data as Record<string, string>) }), {})
 
   const code = codeResult?.data as string
   const rawDemoCode = demoResult?.data as string

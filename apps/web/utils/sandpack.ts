@@ -20,11 +20,12 @@ export function generateSandpackFiles({
 
   if (shouldShowSelect) {
     appTsxContent = `
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ThemeProvider } from './next-themes';
 import { RouterProvider } from 'next/router';
 import DemoComponents from './demo';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectLabel, SelectItem } from './components/ui/select';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem } from './components/ui/select';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const demoComponentNames = ${JSON.stringify(demoComponentNames)};
 
@@ -33,7 +34,7 @@ export default function App() {
 
   const CurrentComponent = DemoComponents[demoComponentNames[currentIndex]];
 
-  const handleSelect = (value: string) => {
+  const handleSelect = (value) => {
     const index = demoComponentNames.indexOf(value);
     if (index !== -1) {
       setCurrentIndex(index);
@@ -59,7 +60,7 @@ export default function App() {
                       <SelectItem key="${name}" value="${name}">
                         ${name.replace(/([A-Z])/g, ' $1').trim()}
                       </SelectItem>
-                      `,
+                      `
                         )
                         .join("")}
                     </SelectGroup>
@@ -67,7 +68,17 @@ export default function App() {
                 </Select>
               </div>
             <div className="flex w-full min-w-[500px] md:w-auto justify-center items-center p-4 relative">         
-              {CurrentComponent ? <CurrentComponent /> : <div>Component not found</div>}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentIndex}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                >
+                  {CurrentComponent ? <CurrentComponent /> : <div>Component not found</div>}
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
         </div>

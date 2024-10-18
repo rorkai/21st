@@ -119,6 +119,7 @@ export function ComponentPagePreview({
         "react-dom": "^18.0.0",
         "@radix-ui/react-select": "^1.0.0",
         "lucide-react": "latest",
+        "framer-motion": "latest",
         ...dependencies,
         ...demoDependencies,
         ...npmDependenciesOfInternalDependencies,

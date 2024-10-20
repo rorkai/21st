@@ -6,6 +6,7 @@ import { Component, User } from "../types/global"
 import { useComponents, useTagInfo } from "@/utils/dbQueries"
 import { Header } from "./Header"
 import { useClerkSupabaseClient } from "@/utils/clerk"
+import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 
 export function ComponentsList({
@@ -21,14 +22,28 @@ export function ComponentsList({
   const { data: fetchedComponents } = useComponents(supabase, tagSlug)
   const { data: tagInfo } = useTagInfo(supabase, tagSlug)
   const components = initialComponents ?? fetchedComponents
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+      },
+    },
+  }
+
   return (
-    <div>
+    <>
       {tagSlug && <Header tagName={tagInfo?.name} page="components" />}
-      <div
+      <motion.div
         className={cn(
           `grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-9 list-none pb-10`,
-          tagSlug ? "mt-20" : "",
+          tagSlug ? "mt-20" : ""
         )}
+        variants={itemVariants}
+        initial="hidden"
+        animate="visible"
       >
         {components?.map((component) => (
           <ComponentCard
@@ -37,7 +52,7 @@ export function ComponentsList({
             isLoading={isLoading}
           />
         ))}
-      </div>
-    </div>
+      </motion.div>
+    </>
   )
 }

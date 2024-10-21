@@ -35,7 +35,7 @@ export async function getComponent(
     .eq("is_public", true)
     .returns<(Component & { user: User } & { tags: Tag[] })[]>()
     .single()
-  
+
   if (error) {
     console.error("Error fetching component:", error)
     return { data: null, error: new Error(error.message) }
@@ -338,35 +338,6 @@ export function useComponentOwnerUsername(
       return user.username
     },
   })
-}
-
-export async function fetchDependencyComponents(
-  supabase: SupabaseClient<Database>,
-  dependencySlugs: string[],
-) {
-  const components = await Promise.all(
-    dependencySlugs.map(async (slug) => {
-      try {
-        const { data, error } = await supabase
-          .from("components")
-          .select(componentReadableDbFields)
-          .eq("component_slug", slug)
-          .returns<(Component & { user: User })[]>()
-          .single()
-
-        if (error) {
-          console.error("Error fetching dependency component:", error)
-          return null
-        }
-
-        return data
-      } catch (error) {
-        console.error("Error fetching dependency component:", error)
-        return null
-      }
-    }),
-  )
-  return components.filter((c) => c !== null) as (Component & { user: User })[]
 }
 
 async function getTagInfo(

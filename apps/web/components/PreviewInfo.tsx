@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { useDependencyComponents } from "@/utils/dbQueries"
 import Link from "next/link"
 import { UserAvatar } from "@/components/UserAvatar"
 import { LoadingSpinner } from "./LoadingSpinner"
@@ -20,6 +19,8 @@ import {
 } from "@/components/ui/tooltip"
 import { useClerkSupabaseClient } from "@/utils/clerk"
 import { toast } from "sonner"
+import { useQuery } from "@tanstack/react-query"
+import { componentReadableDbFields } from "@/utils/dbQueries"
 export const PreviewInfo = ({
   component,
 }: {
@@ -31,10 +32,31 @@ export const PreviewInfo = ({
   const [isLibDepsHovered, setIsLibDepsHovered] = useState(false)
 
   const npmDependencies = (component.dependencies ?? {}) as Record<string, string>
-  const componentDependencies = (component.internal_dependencies ?? {}) as Record<string, string>
+  const directRegistryDependencies = component.direct_registry_dependencies as string[]
 
   const { data: dependencyComponents, isLoading: isLoadingDependencies } =
-    useDependencyComponents(supabase, componentDependencies)
+    useQuery({
+      queryKey: ["registryDependencyComponentsList", directRegistryDependencies],
+      queryFn: async() => {
+        const { data, error } = await supabase
+          .from("components")
+          .select(componentReadableDbFields)
+          .in(
+            "component_slug",
+            directRegistryDependencies.map((d) => d.split("/")[1]),
+          )
+          .returns<(Component & { user: User })[]>()
+
+        if (error) {
+          console.error("Error fetching dependency component:", error)
+          return null
+        }
+
+        return data 
+      },
+      enabled: directRegistryDependencies.length > 0,
+      staleTime: Infinity,
+    })
 
   const copyAllDependencies = () => {
     const dependenciesString = Object.entries({
@@ -221,13 +243,13 @@ export const PreviewInfo = ({
         </>
       )}
 
-      {Object.keys(componentDependencies).length > 0 && (
+      {Object.keys(directRegistryDependencies).length > 0 && (
         <>
           <Separator className="w-full !my-6" />
           <div className="flex flex-col">
             <div className="flex items-center mb-2 justify-between">
               <span className="text-muted-foreground w-full font-medium">
-                Components used in the demo:
+                Registry dependencies:
               </span>
             </div>
             <div className="pl-1/3">
@@ -236,7 +258,7 @@ export const PreviewInfo = ({
               ) : dependencyComponents ? (
                 <ComponentsList initialComponents={dependencyComponents!} />
               ) : (
-                <span>Error loading dependencies</span>
+                <span>Error loading registry dependencies</span>
               )}
             </div>
           </div>

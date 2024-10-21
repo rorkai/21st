@@ -8,10 +8,10 @@ import {
 import { makeSlugFromName } from "@/components/publish/useIsCheckSlugAvailable"
 import { SupabaseClient } from "@supabase/supabase-js"
 import { useClerkSupabaseClient } from "./clerk"
-import { Database, Tables } from "@/types/supabase"
+import { Database } from "@/types/supabase"
 import { toast } from "sonner"
 
-const componentFields = `
+export const componentReadableDbFields = `
   *,
   user:users!user_id (*)
 `
@@ -25,7 +25,7 @@ export async function getComponent(
     .from("components")
     .select(
       `
-      ${componentFields},
+      ${componentReadableDbFields},
       tags:component_tags(tags(name, slug))
     `,
     )
@@ -76,7 +76,7 @@ export async function getUserComponents(
 ) {
   const { data, error } = await supabase
     .from("components")
-    .select(componentFields)
+    .select(componentReadableDbFields)
     .eq("user_id", userId)
     .eq("is_public", true)
     .returns<(Component & { user: User })[]>()
@@ -348,7 +348,7 @@ export async function fetchDependencyComponents(
       try {
         const { data, error } = await supabase
           .from("components")
-          .select(componentFields)
+          .select(componentReadableDbFields)
           .eq("component_slug", slug)
           .returns<(Component & { user: User })[]>()
           .single()
@@ -366,21 +366,6 @@ export async function fetchDependencyComponents(
     }),
   )
   return components.filter((c) => c !== null) as (Component & { user: User })[]
-}
-
-export function useDependencyComponents(
-  supabase: SupabaseClient<Database>,
-  componentDependencies: Record<string, string>,
-) {
-  const dependencySlugs = Object.values(componentDependencies)
-
-  return useQuery({
-    queryKey: ["dependencyComponents", dependencySlugs],
-    queryFn: () => fetchDependencyComponents(supabase, dependencySlugs),
-    enabled: dependencySlugs.length > 0,
-    refetchOnMount: true,
-    staleTime: 0,
-  })
 }
 
 async function getTagInfo(

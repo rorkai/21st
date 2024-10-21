@@ -5,22 +5,16 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { uploadToR2 } from "../../utils/r2"
-import {
-  formSchema,
-  FormData,
-  isFormValid,
-  prepareFilesForPublishPreview,
-} from "./utils"
+import { formSchema, FormData, isFormValid } from "./utils"
 import {
   extractComponentNames,
-  extractDependencies,
+  extractNPMDependencies,
   extractDemoComponentNames,
-  findInternalDependencies,
+  extractRegistryDependencies,
+  extractAmbigiousRegistryDependencies,
 } from "../../utils/parsers"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Label } from "@/components/ui/label"
 import {
   Dialog,
@@ -38,10 +32,12 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { addTagsToComponent } from "@/utils/dbQueries"
-import { ComponentDetailsForm, ComponentDetailsFormRef } from "./ComponentDetailsForm"
+import {
+  ComponentDetailsForm,
+  ComponentDetailsFormRef,
+} from "./ComponentDetailsForm"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
-import { FileTerminal, SunMoon, Codepen } from "lucide-react"
 import { useClerkSupabaseClient } from "@/utils/clerk"
 import { useUser } from "@clerk/nextjs"
 import { useDebugMode } from "@/hooks/useDebugMode"
@@ -50,12 +46,19 @@ import { PublishComponentPreview } from "./preview"
 import { Hotkey } from "../ui/hotkey"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
-import { Code } from "@/components/ui/code"
+import {
+  CodeGuidelinesAlert,
+  DebugInfoDisplay,
+  DemoComponentGuidelinesAlert,
+  ResolveUnknownDependenciesCard,
+} from "./info-cards"
+import { makeSlugFromName } from "./useIsCheckSlugAvailable"
 
-interface ParsedCodeData {
+export interface ParsedCodeData {
   dependencies: Record<string, string>
   demoDependencies: Record<string, string>
-  internalDependencies: Record<string, string>
+  registryDependencies: Record<string, string>
+  unknownDependencies: string[]
   componentNames: string[]
   demoComponentNames: string[]
 }
@@ -91,7 +94,8 @@ export default function PublishComponentForm() {
   const [parsedCode, setParsedCode] = useState<ParsedCodeData>({
     dependencies: {},
     demoDependencies: {},
-    internalDependencies: {},
+    registryDependencies: {},
+    unknownDependencies: [],
     componentNames: [],
     demoComponentNames: [],
   })
@@ -112,27 +116,44 @@ export default function PublishComponentForm() {
   }, [showDetailedForm])
 
   useEffect(() => {
-    const updateDependencies = () => {
+    const parseDependenciesFromCode = () => {
       try {
         const componentNames = extractComponentNames(code)
-        const dependencies = extractDependencies(code)
-        const demoDependencies = extractDependencies(demoCode)
+        const possibleComponentSlugs = componentNames.map((name) =>
+          makeSlugFromName(name),
+        )
+        const dependencies = extractNPMDependencies(code)
+        const demoDependencies = extractNPMDependencies(demoCode)
         const demoComponentNames = extractDemoComponentNames(demoCode)
-        const internalDependencies = findInternalDependencies(code, demoCode)
+        const registryDependencies = extractRegistryDependencies(code)
+        const ambigiousRegistryDependencies = {
+          ...extractAmbigiousRegistryDependencies(code),
+          ...extractAmbigiousRegistryDependencies(demoCode),
+        }
+        console.log(
+          "ambigiousRegistryDependencies",
+          ambigiousRegistryDependencies,
+        )
+        console.log("possibleComponentSlugs", possibleComponentSlugs)
+        const unknownDependencies = Object.values(
+          ambigiousRegistryDependencies ?? {},
+        )?.filter((dependency) => !possibleComponentSlugs.includes(dependency))
+        console.log("unknownDependencies", unknownDependencies)
 
         setParsedCode({
           dependencies,
           demoDependencies,
           componentNames,
           demoComponentNames,
-          internalDependencies,
+          unknownDependencies,
+          registryDependencies,
         })
       } catch (error) {
-        console.error("Error updating dependencies:", error)
+        console.error("Error parsing dependencies from code:", error)
       }
     }
 
-    updateDependencies()
+    parseDependenciesFromCode()
   }, [code, demoCode])
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -154,15 +175,7 @@ export default function PublishComponentForm() {
   }
 
   const onSubmit = async (data: FormData) => {
-    if (!user || !user.id) {
-      console.error("User is not authenticated")
-      alert("You must be logged in to add a component.")
-      return
-    }
-
-    if (
-      Object.values(parsedCode.internalDependencies ?? {}).some((slug) => !slug)
-    ) {
+    if (Object.values(parsedCode.registryDependencies).some((slug) => !slug)) {
       console.error("Internal dependencies not specified")
       alert("Please specify the slug for all internal dependencies")
       return
@@ -180,7 +193,7 @@ export default function PublishComponentForm() {
             type: "text/plain",
             textContent: data.code,
           },
-          fileKey: `${user.id}/${codeFileName}`,
+          fileKey: `${user?.id!}/${codeFileName}`,
           bucketName: "components-code",
         }),
         uploadToR2({
@@ -189,7 +202,7 @@ export default function PublishComponentForm() {
             type: "text/plain",
             textContent: demoCode,
           },
-          fileKey: `${user.id}/${demoCodeFileName}`,
+          fileKey: `${user?.id!}/${demoCodeFileName}`,
           bucketName: "components-code",
         }),
       ])
@@ -197,7 +210,7 @@ export default function PublishComponentForm() {
       let previewImageUrl = ""
       if (data.preview_url) {
         const fileExtension = data.preview_url.name.split(".").pop()
-        const fileKey = `${user.id}/${componentSlug}.${fileExtension}`
+        const fileKey = `${user?.id!}/${componentSlug}.${fileExtension}`
         const buffer = Buffer.from(await data.preview_url.arrayBuffer())
         const base64Content = buffer.toString("base64")
         previewImageUrl = await uploadToR2({
@@ -220,10 +233,10 @@ export default function PublishComponentForm() {
         code: codeUrl,
         demo_code: demoCodeUrl,
         description: data.description,
-        user_id: user?.id,
+        user_id: user?.id!,
         dependencies: parsedCode.dependencies,
         demo_dependencies: parsedCode.demoDependencies,
-        internal_dependencies: parsedCode.internalDependencies,
+        internal_dependencies: parsedCode.registryDependencies,
         preview_url: previewImageUrl,
       }
 
@@ -274,29 +287,6 @@ export default function PublishComponentForm() {
     setPreviewImage(null)
   }
 
-  const [previewProps, setPreviewProps] = useState<{
-    files: Record<string, string>
-    dependencies: Record<string, string>
-  } | null>(null)
-
-  useEffect(() => {
-    if (
-      code &&
-      demoCode &&
-      Object.keys(parsedCode.internalDependencies ?? {}).length === 0
-    ) {
-      const { files, dependencies } = prepareFilesForPublishPreview(
-        code,
-        demoCode,
-        user!.username!,
-        isDarkTheme,
-      )
-      setPreviewProps({ files, dependencies })
-    } else {
-      setPreviewProps(null)
-    }
-  }, [code, demoCode, parsedCode.internalDependencies])
-
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
     const formData = form.getValues()
@@ -320,13 +310,20 @@ export default function PublishComponentForm() {
     return () => {
       window.removeEventListener("keydown", keyDownHandler)
     }
-  }, [form, parsedCode.internalDependencies, handleSubmit, onSubmit])
+  }, [form, handleSubmit, onSubmit])
 
   const isPreviewReady =
-    !!previewProps &&
-    Object.keys(parsedCode.internalDependencies).length === 0 &&
+    parsedCode.unknownDependencies.length === 0 &&
     !!code.length &&
     !!demoCode.length
+
+  console.log(
+    "isPreviewReady",
+    isPreviewReady,
+    parsedCode.unknownDependencies,
+    code,
+    demoCode,
+  )
 
   const getMainComponentName = () => {
     if (!parsedCode.componentNames || parsedCode.componentNames.length === 0)
@@ -440,7 +437,10 @@ export default function PublishComponentForm() {
                             transition={{ duration: 0.3 }}
                             className="mr-2"
                           >
-                            <Button size="sm" onClick={() => setShowDemoCodeInput(true)}>
+                            <Button
+                              size="sm"
+                              onClick={() => setShowDemoCodeInput(true)}
+                            >
                               Continue
                             </Button>
                           </motion.div>
@@ -498,7 +498,7 @@ export default function PublishComponentForm() {
                                         : "/demo-file.svg"
                                     }
                                     mainText="Demo code"
-                                    subText={`for ${parsedCode.componentNames[0]}`}
+                                    subText={`for ${parsedCode.componentNames.join(", ")}`}
                                     onEditClick={() => {
                                       setShowDetailedForm(false)
                                       setTimeout(() => {
@@ -525,7 +525,10 @@ export default function PublishComponentForm() {
                               transition={{ duration: 0.3 }}
                               className="mr-2"
                             >
-                              <Button size="sm" onClick={() => setShowDetailedForm(true)}>
+                              <Button
+                                size="sm"
+                                onClick={() => setShowDetailedForm(true)}
+                              >
                                 Continue
                               </Button>
                             </motion.div>
@@ -535,11 +538,22 @@ export default function PublishComponentForm() {
                   </motion.div>
                 )}
 
-                {Object.keys(parsedCode.internalDependencies).length > 0 &&
+                {parsedCode.unknownDependencies.length > 0 &&
                   showDetailedForm && (
-                    <InputInternalDependenciesCard
-                      internalDependencies={parsedCode.internalDependencies}
-                      setComponentDependencies={setParsedCode}
+                    <ResolveUnknownDependenciesCard
+                      unknownDependencies={parsedCode.unknownDependencies}
+                      onDependencyResolved={(username, slug) => {
+                        setParsedCode((prev) => ({
+                          ...prev,
+                          unknownDependencies: prev.unknownDependencies.filter(
+                            (dependency) => dependency !== slug,
+                          ),
+                          registryDependencies: {
+                            ...prev.registryDependencies,
+                            [`${username}/${slug}`]: `@/components/${slug}`,
+                          },
+                        }))
+                      }}
                     />
                   )}
 
@@ -549,36 +563,36 @@ export default function PublishComponentForm() {
                     demoComponentNames={parsedCode.demoComponentNames}
                     dependencies={parsedCode.dependencies}
                     demoDependencies={parsedCode.demoDependencies}
-                    internalDependencies={parsedCode.internalDependencies}
+                    registryDependencies={parsedCode.registryDependencies}
+                    unknownDependencies={parsedCode.unknownDependencies}
                   />
                 )}
 
-                {showDetailedForm && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3, delay: 0.3 }}
-                    className="w-full"
-                  >
-                    <ComponentDetailsForm
-                      ref={detailedFormRef}
-                      form={form}
-                      previewImage={previewImage}
-                      handleFileChange={handleFileChange}
-                      handleSubmit={handleSubmit}
-                      isLoading={isLoading}
-                      isFormValid={isFormValid}
-                      internalDependencies={
-                        parsedCode.internalDependencies ?? {}
-                      }
-                      componentName={mainComponentName}
-                    />
-                  </motion.div>
-                )}
+                {showDetailedForm &&
+                  parsedCode.unknownDependencies.length === 0 && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3, delay: 0.3 }}
+                      className="w-full"
+                    >
+                      <ComponentDetailsForm
+                        ref={detailedFormRef}
+                        form={form}
+                        previewImage={previewImage}
+                        handleFileChange={handleFileChange}
+                        handleSubmit={handleSubmit}
+                        isLoading={isLoading}
+                        isFormValid={isFormValid}
+                        registryDependencies={parsedCode.registryDependencies}
+                        componentName={mainComponentName}
+                      />
+                    </motion.div>
+                  )}
               </div>
 
-              {previewProps && isPreviewReady && showDetailedForm && (
+              {isPreviewReady && showDetailedForm && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -588,8 +602,11 @@ export default function PublishComponentForm() {
                 >
                   <React.Suspense fallback={<div>Loading preview...</div>}>
                     <PublishComponentPreview
-                      {...previewProps}
-                      isDebug={isDebug}
+                      code={code}
+                      demoCode={demoCode}
+                      registryDependencies={parsedCode.registryDependencies}
+                      componentSlug={componentSlug}
+                      isDarkTheme={isDarkTheme}
                     />
                   </React.Suspense>
                 </motion.div>
@@ -608,7 +625,12 @@ export default function PublishComponentForm() {
         <CodeGuidelinesAlert />
       )}
       {showDemoCodeInput && !showDetailedForm && (
-        <DemoComponentGuidelinesAlert publisherUsername={user?.username!} />
+        <DemoComponentGuidelinesAlert
+          mainComponentName={mainComponentName}
+          possibleComponentSlug={makeSlugFromName(
+            mainComponentName ?? "MyComponent",
+          )}
+        />
       )}
     </>
   )
@@ -641,7 +663,9 @@ const EditCodeFileCard = ({
           <p className="text-sm text-gray-600 text-[12px]">{subText}</p>
         </div>
       </div>
-      <Button onClick={onEditClick}>Edit</Button>
+      <Button size="sm" onClick={onEditClick}>
+        Edit
+      </Button>
     </div>
   </div>
 )
@@ -659,19 +683,10 @@ const SuccessDialog = ({
 }) => {
   useEffect(() => {
     const keyDownHandler = (e: KeyboardEvent) => {
-     if (
-       isOpen &&
-       e.code === "KeyN" &&
-       !e.metaKey &&
-       !e.ctrlKey &&
-       !e.altKey &&
-       !e.shiftKey &&
-       e.target instanceof Element &&
-       !e.target.matches("input, textarea")
-     ) {
-       e.preventDefault()
-       onAddAnother()
-     }
+      if (isOpen && e.code === "KeyN") {
+        e.preventDefault()
+        onAddAnother()
+      }
       if (isOpen && e.code === "Enter" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
         onGoToComponent()
@@ -708,240 +723,3 @@ const SuccessDialog = ({
     </Dialog>
   )
 }
-
-const CodeGuidelinesAlert = () => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-      transition={{ duration: 0.3 }}
-      className="fixed inset-0 flex justify-end items-center p-10 overflow-auto -z-10"
-    >
-      <div className="w-1/2 min-w-[400px]">
-        <Alert className="border-none">
-          <FileTerminal className="h-4 w-4" />
-          <AlertTitle>Component code requirements</AlertTitle>
-          <AlertDescription className="mt-2">
-            <ol className="list-decimal pl-5 space-y-2">
-              <li>
-                Using dependencies:
-                <ul className="list-disc pl-5 mt-1">
-                  <li>
-                    You can use any dependencies from npm; we import them
-                    automatically.
-                  </li>
-                  <li>
-                    To import existing components from our registry, paste a
-                    direct link to the component.
-                  </li>
-                </ul>
-              </li>
-              <li>
-                React, TypeScript & Tailwind compatibility:
-                <ul className="list-disc pl-5 mt-1">
-                  <li>
-                    React client-side components are fully supported. Be sure to
-                    import React:
-                  </li>
-                  <Code
-                    display="block"
-                    code={'"use client" \n\nimport React from "react"'}
-                  />
-                  <li>TypeScript is fully supported.</li>
-                  <li>
-                    Tailwind is fully supported along with custom Tailwind
-                    styles from shadcn/ui.
-                  </li>
-                </ul>
-              </li>
-              <li>
-                Next.js & server components compatibility:
-                <ul className="list-disc pl-5 mt-1">
-                  <li>Next.js is partially supported.</li>
-                  <li>React server components are not supported yet.</li>
-                  <li>
-                    While we emulate browser-side Next.js functions, we do not
-                    support Next.js completely. Make sure your code works in our
-                    environment; if it doesn't, contact @serafimcloud on X
-                  </li>
-                </ul>
-              </li>
-              <li>
-                Tailwind CSS:
-                <ul className="list-disc pl-5 mt-1">
-                  <li>
-                    Custom Tailwind styles are not yet supported in the preview.
-                  </li>
-                  <li>
-                    If your component needs additional styles, specify them in
-                    the description so users can install them themselves.
-                  </li>
-                </ul>
-              </li>
-            </ol>
-          </AlertDescription>
-        </Alert>
-      </div>
-    </motion.div>
-  )
-}
-
-const DemoComponentGuidelinesAlert = ({
-  publisherUsername,
-}: {
-  publisherUsername: string
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: 20 }}
-    transition={{ duration: 0.3, delay: 0.3 }}
-    className="fixed inset-0 flex justify-end items-center p-4 overflow-auto -z-10"
-  >
-    <div className="w-1/2 min-w-[400px]">
-      <Alert className="border-none">
-        <SunMoon className="h-4 w-4" />
-        <AlertTitle>Demo code requirements</AlertTitle>
-        <AlertDescription className="mt-2">
-          <ol className="list-decimal pl-5 space-y-2">
-            <li>
-              Component imports:
-              <ul className="list-disc pl-5 mt-1">
-                <li>
-                  Import your component with curly braces from {" "}
-                  <Code code="@/components" /> path:
-                  <Code
-                    display="block"
-                    code={`import { MyComponent } from "@/components/${publisherUsername}/my-component"`}
-                  />
-                </li>
-                <li>
-                  Import external existing components from our registry via <Code code="@/components/<author>/<component-name>" /> paths:
-                  <Code
-                    display="block"
-                    code={`import { OtherComponent } from "@/components/${publisherUsername}/other-component"`}
-                  />
-                </li>
-              </ul>
-            </li>
-            <li>
-              Demo structure:
-              <ul className="list-disc pl-5 mt-1">
-                <li>
-                  The demo code should demonstrate the usage and appearance of
-                  the component.
-                </li>
-                <li>
-                  You can create multiple component demo variants. Export all
-                  demo variants you want to display on the page using curly
-                  braces:
-                  <Code display="block" code={"export { DemoVariant1, DemoVariant2 }"} />
-                </li>
-              </ul>
-            </li>
-            <li>
-              Imports and dependencies:
-              <ul className="list-disc pl-5 mt-1">
-                <li>
-                  You can use any dependencies from npm; we install them
-                  automatically.
-                </li>
-                <li>
-                  Be sure to import React if you use it in the demo code:
-                  <Code display="block" code={'import React from "react"'} />
-                </li>
-              </ul>
-            </li>
-          </ol>
-        </AlertDescription>
-      </Alert>
-    </div>
-  </motion.div>
-)
-
-const DebugInfoDisplay = ({
-  componentNames,
-  demoComponentNames,
-  dependencies,
-  demoDependencies,
-}: ParsedCodeData) => (
-  <>
-    <div className="w-full">
-      <Label>Component names</Label>
-      <Textarea
-        value={componentNames?.join(", ")}
-        readOnly
-        className="mt-1 w-full bg-gray-100"
-      />
-    </div>
-    <div className="w-full">
-      <Label>Demo component name</Label>
-      <Input
-        value={demoComponentNames?.join(", ")}
-        readOnly
-        className="mt-1 w-full bg-gray-100"
-      />
-    </div>
-    <div className="w-full">
-      <Label>Component dependencies</Label>
-      <Textarea
-        value={Object.entries(dependencies ?? {})
-          .map(([key, value]) => `${key}: ${value}`)
-          .join("\n")}
-        readOnly
-        className="mt-1 w-full bg-gray-100"
-      />
-    </div>
-    <div className="w-full">
-      <Label>Demo dependencies</Label>
-      <Textarea
-        value={Object.entries(demoDependencies ?? {})
-          .map(([key, value]) => `${key}: ${value}`)
-          .join("\n")}
-        readOnly
-        className="mt-1 w-full bg-gray-100"
-      />
-    </div>
-  </>
-)
-
-const InputInternalDependenciesCard = ({
-  internalDependencies,
-  setComponentDependencies,
-}: {
-  internalDependencies: Record<string, string>
-  setComponentDependencies: React.Dispatch<React.SetStateAction<ParsedCodeData>>
-}) => (
-  <div className="w-full">
-    <Alert className="my-2">
-      <Codepen className="h-4 w-4" />
-      <AlertTitle>Component dependencies detected</AlertTitle>
-      <AlertDescription>
-        To use another component within your component:
-        <br />
-        1. Add it to the 21st Registry first.
-        <br />
-        2. Paste the link here.
-      </AlertDescription>
-    </Alert>
-    {Object.entries(internalDependencies).map(([path], index) => (
-      <div key={path} className={`w-full ${index > 0 ? "mt-2" : ""}`}>
-        <Label className="text-sm">Paste the link to {path}</Label>
-        <Input
-          onChange={(e) => {
-            setComponentDependencies((prev) => ({
-              ...prev,
-              internalDependencies: {
-                ...prev?.internalDependencies,
-                [path]: e.target.value!!,
-              },
-            }))
-          }}
-          placeholder='e.g. "shadcn/button"'
-          className="mt-1 w-full"
-        />
-      </div>
-    ))}
-  </div>
-)

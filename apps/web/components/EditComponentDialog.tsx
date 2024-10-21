@@ -15,16 +15,14 @@ export function EditComponentDialog({
   component,
   isOpen,
   setIsOpen,
-  onClose,
   onUpdate,
 }: {
   component: Component & { user: User } & { tags: Tag[] }
   isOpen: boolean
   // eslint-disable-next-line no-unused-vars
   setIsOpen: (isOpen: boolean) => void
-  onClose: () => void
-  // eslint-disable-next-line no-unused-vars
   onUpdate: (
+    // eslint-disable-next-line no-unused-vars
     updatedData: Partial<Component & { tags?: Tag[] }>,
   ) => Promise<void>
 }) {
@@ -137,8 +135,8 @@ export function EditComponentDialog({
           handleSubmit={handleSubmit}
           isLoading={isLoading}
           isFormValid={() => true}
-          internalDependencies={{}}
           componentName={component.name}
+          registryDependencies={{}}
         />
       </DialogContent>
     </Dialog>

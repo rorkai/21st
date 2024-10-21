@@ -1,11 +1,4 @@
 import { z } from "zod"
-import {
-  extractComponentNames,
-  extractDemoComponentNames,
-  extractDependencies,
-  extractExportedTypes,
-} from "@/utils/parsers"
-import { generateSandpackFiles } from "@/utils/sandpack"
 
 export const formSchema = z.object({
   name: z.string().min(2, {
@@ -46,44 +39,6 @@ export interface TagOption {
 
 export const formatComponentName = (name: string): string => {
   return name.replace(/([A-Z])/g, " $1").trim()
-}
-
-export const prepareFilesForPublishPreview = (
-  code: string,
-  demoCode: string,
-  publisherUsername: string,
-  isDarkTheme: boolean,
-) => {
-  const componentNames = extractComponentNames(code)
-  const types = extractExportedTypes(code)
-  const demoComponentNames = extractDemoComponentNames(demoCode)
-
-  const hasUseClient = /^"use client";?\s*/.test(demoCode)
-
-  const importStatements = `
-  import { ${componentNames.join(", ")} } from "./Component";\n
-  ${types.length > 0 ? `import { ${types.join(", ")} } from "./Component";\n` : ""}
-  `
-
-  const updatedDemoCode = `
-  ${hasUseClient ? `"use client";\n${importStatements}` : importStatements}
-  ${demoCode.replace(/^"use client";?\s*/, "")}
-  `
-  const files = generateSandpackFiles({
-    demoComponentNames: [demoComponentNames[0]!],
-    componentSlug: "Component",
-    relativeImportPath: `/components/ui/${publisherUsername}`,
-    code,
-    demoCode: updatedDemoCode,
-    theme: isDarkTheme ? "dark" : "light",
-  })
-
-  const dependencies = {
-    ...extractDependencies(code),
-    ...extractDependencies(demoCode),
-  }
-
-  return { files, dependencies }
 }
 
 export const isFormValid = (

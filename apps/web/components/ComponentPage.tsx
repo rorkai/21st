@@ -368,7 +368,6 @@ export default function ComponentPage({
         component={component}
         isOpen={isEditDialogOpen}
         setIsOpen={setIsEditDialogOpen}
-        onClose={() => setIsEditDialogOpen(false)}
         onUpdate={handleUpdate}
       />
     </div>

@@ -54,7 +54,7 @@ interface ComponentDetailsFormProps {
   isLoading: boolean
   // eslint-disable-next-line no-unused-vars
   isFormValid: (...args: any[]) => boolean
-  internalDependencies: Record<string, string>
+  registryDependencies: Record<string, string>
   componentName: string | null
 }
 
@@ -75,7 +75,7 @@ const ComponentDetailsForm = forwardRef<
       handleSubmit,
       isLoading,
       isFormValid,
-      internalDependencies,
+      registryDependencies,
       componentName,
     },
     ref,
@@ -180,7 +180,7 @@ const ComponentDetailsForm = forwardRef<
             }}
             placeholder={
               componentName
-                ? `For example "${componentName.replace(/([a-z])([A-Z])/g, "$1 $2")}"`
+                ? `e.g. "${componentName.replace(/([a-z])([A-Z])/g, "$1 $2")}"`
                 : "Button"
             }
             value={nameField.value}
@@ -194,13 +194,51 @@ const ComponentDetailsForm = forwardRef<
           />
         </div>
 
+        {!isEditMode && (
+          <div className="w-full">
+            <label
+              htmlFor="component_slug"
+              className="block text-sm font-medium"
+            >
+              Slug
+            </label>
+            <Input
+              id="component_slug"
+              {...form.register("component_slug", { required: true })}
+              className="mt-1 w-full"
+              onChange={(e) => {
+                setIsSlugManuallyEdited(true)
+                form.setValue("component_slug", e.target.value)
+              }}
+            />
+
+            {isSlugManuallyEdited && (
+              <>
+                {isSlugChecking ? (
+                  <p className="text-gray-500 text-sm mt-1">
+                    Checking availability...
+                  </p>
+                ) : slugError ? (
+                  <p className="text-red-500 text-sm mt-1">
+                    {slugError.message}
+                  </p>
+                ) : slugAvailable === true ? (
+                  <p className="text-green-500 text-sm mt-1">
+                    This slug is available
+                  </p>
+                ) : null}
+              </>
+            )}
+          </div>
+        )}
+
         <div className="w-full">
           <label htmlFor="description" className="block text-sm font-medium">
             Description
           </label>
           <Input
             id="description"
-            placeholder="Add some description to help others find your component"
+            placeholder="Add some description to help others discover your component"
             {...form.register("description")}
             className="mt-1 w-full"
           />
@@ -213,7 +251,7 @@ const ComponentDetailsForm = forwardRef<
           {!previewImage ? (
             <div
               {...getRootProps()}
-              className={`flex !justify-between mt-1 w-full border border-dashed bg-background rounded-md p-8 text-center cursor-pointer hover:border-gray-400 transition-colors relative`}
+              className={`flex flex-col !justify-between mt-1 w-full border border-dashed bg-background rounded-md p-8 text-center cursor-pointer hover:border-gray-400 transition-colors relative`}
             >
               <input {...getInputProps()} id="preview_image" />
               <CloudUpload strokeWidth={1.5} className="mx-auto h-10 w-10" />
@@ -381,49 +419,11 @@ const ComponentDetailsForm = forwardRef<
           />
         </div>
 
-        {!isEditMode && (
-          <div className="w-full">
-            <label
-              htmlFor="component_slug"
-              className="block text-sm font-medium"
-            >
-              Slug
-            </label>
-            <Input
-              id="component_slug"
-              {...form.register("component_slug", { required: true })}
-              className="mt-1 w-full"
-              onChange={(e) => {
-                setIsSlugManuallyEdited(true)
-                form.setValue("component_slug", e.target.value)
-              }}
-            />
-
-            {isSlugManuallyEdited && (
-              <>
-                {isSlugChecking ? (
-                  <p className="text-gray-500 text-sm mt-1">
-                    Checking availability...
-                  </p>
-                ) : slugError ? (
-                  <p className="text-red-500 text-sm mt-1">
-                    {slugError.message}
-                  </p>
-                ) : slugAvailable === true ? (
-                  <p className="text-green-500 text-sm mt-1">
-                    This slug is available
-                  </p>
-                ) : null}
-              </>
-            )}
-          </div>
-        )}
-
         <Button
           onClick={handleSubmit}
           disabled={
             isLoading ||
-            !isFormValid(form, internalDependencies, slugAvailable === true)
+            !isFormValid(form, registryDependencies, slugAvailable === true)
           }
         >
           {isLoading
@@ -434,7 +434,7 @@ const ComponentDetailsForm = forwardRef<
               ? "Save changes"
               : "Add component"}
           {!isLoading &&
-            isFormValid(form, internalDependencies, slugAvailable === true) && (
+            isFormValid(form, registryDependencies, slugAvailable === true) && (
               <Hotkey keys={["⌘", "⏎"]} isBackgroundDark={true} />
             )}
         </Button>

@@ -19,7 +19,7 @@ import {
 } from "./useIsCheckSlugAvailable"
 import { FormData } from "./utils"
 import { useDropzone } from "react-dropzone"
-import { CloudUpload } from "lucide-react"
+import UploadIcon from "@/components/UploadIcon"
 import { Check, ChevronsUpDown } from "lucide-react"
 import {
   Command,
@@ -213,20 +213,24 @@ const ComponentDetailsForm = forwardRef<
           {!previewImage ? (
             <div
               {...getRootProps()}
-              className={`flex !justify-between mt-1 w-full border border-dashed bg-background rounded-md p-8 text-center cursor-pointer hover:border-gray-400 transition-colors relative`}
+              className={`flex flex-col !justify-between mt-1 w-full border border-dashed bg-background rounded-md p-8 text-center cursor-pointer hover:border-gray-400 transition-colors relative`}
             >
               <input {...getInputProps()} id="preview_image" />
-              <CloudUpload strokeWidth={1.5} className="mx-auto h-10 w-10" />
-              <p className="mt-2 text-sm font-semibold">
+              <UploadIcon />
+              <p className="mt-2 text-sm font-medium">
                 Click to upload&nbsp;
-                <span className="text-gray-600 font-normal">
+                <span className="text-muted-foreground font-normal">
                   or drag and drop
                 </span>
               </p>
-              <p className="mt-1 text-xs text-gray-500">PNG, JPEG (max. 5MB)</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                PNG, JPEG (max. 5MB)
+              </p>
               {isDragActive && (
                 <div className="absolute inset-0 bg-background bg-opacity-90 flex items-center justify-center rounded-md">
-                  <p className="text-sm text-gray-600">Drop image here</p>
+                  <p className="text-sm text-muted-foreground">
+                    Drop image here
+                  </p>
                 </div>
               )}
             </div>

@@ -50,13 +50,42 @@ export function extractExportedTypes(code: string): string[] {
 
 export function extractDemoComponentNames(code: string): string[] {
   if (!code) return []
-  const match = code.match(/export\s+default\s+{\s*([^}]+)\s*}/s)
-  if (!match || !match[1]) return []
 
-  return match[1]
-    .split(",")
-    .map((name) => name.trim())
-    .filter(Boolean)
+  const componentNames: string[] = []
+
+  // Match the original format: export default { ... }
+  const defaultExportMatch = code.match(/export\s+default\s+{\s*([^}]+)\s*}/s)
+  if (defaultExportMatch && defaultExportMatch[1]) {
+    componentNames.push(
+      ...defaultExportMatch[1]
+        .split(",")
+        .map((name) => name.trim())
+        .filter(Boolean)
+    )
+  }
+
+  // Match named exports: export function ComponentName() { ... }
+  const namedExportMatches = code.matchAll(/export\s+function\s+(\w+)/g)
+  for (const match of namedExportMatches) {
+    if (match[1]) {
+      componentNames.push(match[1])
+    }
+  }
+
+  // Match named exports: export { ComponentName }
+  const namedExportBraceMatches = code.matchAll(/export\s*{\s*([^}]+)\s*}/g)
+  for (const match of namedExportBraceMatches) {
+    if (match[1]) {
+      componentNames.push(
+        ...match[1]
+          .split(",")
+          .map((name) => name.trim())
+          .filter(Boolean)
+      )
+    }
+  }
+
+  return [...new Set(componentNames)] // Remove duplicates
 }
 
 export function extractNPMDependencies(code: string): Record<string, string> {

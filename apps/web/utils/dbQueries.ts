@@ -31,10 +31,11 @@ export async function getComponent(
     )
     .eq("component_slug", slug)
     .eq("user.username", username)
+    .not("user", "is", null)
     .eq("is_public", true)
     .returns<(Component & { user: User } & { tags: Tag[] })[]>()
     .single()
-
+  
   if (error) {
     console.error("Error fetching component:", error)
     return { data: null, error: new Error(error.message) }

@@ -13,6 +13,7 @@ import {
 } from "@codesandbox/sandpack-react/unstyled"
 import { useQuery } from "@tanstack/react-query"
 import React, { useMemo } from "react"
+import { LoadingSpinner } from "../LoadingSpinner"
 
 const SandpackPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react/unstyled").then((module) => ({
@@ -38,7 +39,11 @@ export function PublishComponentPreview({
   const isDebug = useDebugMode()
   const supabase = useClerkSupabaseClient()
 
-  const { data: allRegistryDependenciesFiles, error: registryDependenciesError } = useQuery({
+  const {
+    data: allRegistryDependenciesFiles,
+    error: registryDependenciesError,
+    isLoading
+  } = useQuery({
     queryKey: ["allRegistryDependencies", directRegistryDependencies],
     queryFn: async () => {
       const { data: dependencies, error } = await supabase
@@ -183,21 +188,22 @@ export function PublishComponentPreview({
   }
 
   return (
-    <div className="w-full bg-[#FAFAFA] rounded-lg">
+    <div className="w-full h-full bg-[#FAFAFA] rounded-lg">
       {registryDependenciesError && (
-        <div className="text-red-500">
-          Error fetching registry dependencies: {registryDependenciesError.message}
-        </div>
+        <div className="text-red-500">{registryDependenciesError.message}</div>
       )}
-      <SandpackProvider {...providerProps}>
-        <SandpackPreview />
-        {isDebug && (
-          <>
-            <SandpackFileExplorer />
-            <SandpackCodeViewer />
-          </>
-        )}
-      </SandpackProvider>
+      {isLoading && <LoadingSpinner />}
+      {!registryDependenciesError && !isLoading && (
+        <SandpackProvider {...providerProps}>
+          <SandpackPreview showSandpackErrorOverlay={false} />
+          {isDebug && (
+            <>
+              <SandpackFileExplorer />
+              <SandpackCodeViewer />
+            </>
+          )}
+        </SandpackProvider>
+      )}
     </div>
   )
 }

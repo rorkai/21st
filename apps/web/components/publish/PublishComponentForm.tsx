@@ -54,6 +54,7 @@ import {
 } from "./info-cards"
 import { makeSlugFromName } from "./useIsCheckSlugAvailable"
 import { Tables } from "@/types/supabase"
+import { LoadingSpinner } from "../LoadingSpinner"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -605,9 +606,9 @@ export default function PublishComponentForm() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3, delay: 3 }}
-                  className="w-2/3 py-4"
+                  className="w-2/3 h-full py-4"
                 >
-                  <React.Suspense fallback={<div>Loading preview...</div>}>
+                  <React.Suspense fallback={<LoadingSpinner />}>
                     <PublishComponentPreview
                       code={code}
                       demoCode={demoCode}

@@ -333,7 +333,8 @@ export type Database = {
         demo_component_names: Json | null
         name: string | null
         demo_dependencies: Json | null
-        internal_dependencies: Json | null
+        direct_registry_dependencies: Json | null
+        registry: string | null
         preview_url: string | null
         license: string | null
         user_data: Json | null

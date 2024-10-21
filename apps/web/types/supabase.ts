@@ -251,6 +251,17 @@ export type Database = {
         }
         Returns: Database["public"]["CompositeTypes"]["component_with_user"][]
       }
+      update_component_with_tags: {
+        Args: {
+          p_component_id: number
+          p_name?: string
+          p_description?: string
+          p_license?: string
+          p_preview_url?: string
+          p_tags?: Json
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

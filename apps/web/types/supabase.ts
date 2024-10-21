@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      component_dependencies_closure: {
+        Row: {
+          component_id: number
+          dependency_component_id: number
+          depth: number
+        }
+        Insert: {
+          component_id: number
+          dependency_component_id: number
+          depth: number
+        }
+        Update: {
+          component_id?: number
+          dependency_component_id?: number
+          depth?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "component_dependencies_closure_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_dependencies_closure_dependency_component_id_fkey"
+            columns: ["dependency_component_id"]
+            isOneToOne: false
+            referencedRelation: "components"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       component_likes: {
         Row: {
           component_id: number
@@ -83,15 +116,16 @@ export type Database = {
           demo_dependencies: Json | null
           dependencies: Json | null
           description: string | null
+          direct_registry_dependencies: Json
           downloads_count: number
           fts: unknown | null
           id: number
-          internal_dependencies: Json | null
           is_public: boolean
           license: string
           likes_count: number
           name: string
           preview_url: string
+          registry: string
           updated_at: string
           user_id: string
         }
@@ -105,15 +139,16 @@ export type Database = {
           demo_dependencies?: Json | null
           dependencies?: Json | null
           description?: string | null
+          direct_registry_dependencies?: Json
           downloads_count?: number
           fts?: unknown | null
           id?: number
-          internal_dependencies?: Json | null
           is_public?: boolean
           license?: string
           likes_count?: number
           name: string
           preview_url: string
+          registry?: string
           updated_at?: string
           user_id: string
         }
@@ -127,15 +162,16 @@ export type Database = {
           demo_dependencies?: Json | null
           dependencies?: Json | null
           description?: string | null
+          direct_registry_dependencies?: Json
           downloads_count?: number
           fts?: unknown | null
           id?: number
-          internal_dependencies?: Json | null
           is_public?: boolean
           license?: string
           likes_count?: number
           name?: string
           preview_url?: string
+          registry?: string
           updated_at?: string
           user_id?: string
         }
@@ -250,6 +286,30 @@ export type Database = {
           search_query: string
         }
         Returns: Database["public"]["CompositeTypes"]["component_with_user"][]
+      }
+      update_component_dependencies_closure:
+        | {
+            Args: {
+              p_component_id: number
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_component_id: number
+            }
+            Returns: undefined
+          }
+      update_component_with_tags: {
+        Args: {
+          p_component_id: number
+          p_name?: string
+          p_description?: string
+          p_license?: string
+          p_preview_url?: string
+          p_tags?: Json
+        }
+        Returns: undefined
       }
     }
     Enums: {

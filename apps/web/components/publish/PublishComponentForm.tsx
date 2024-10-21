@@ -124,6 +124,9 @@ export default function PublishComponentForm() {
         const possibleComponentSlugs = componentNames.map((name) =>
           makeSlugFromName(name),
         )
+        if (possibleComponentSlugs.length > 0) {
+          form.setValue("component_slug", possibleComponentSlugs[0] ?? "")
+        }
         const dependencies = extractNPMDependencies(code)
         const demoDependencies = extractNPMDependencies(demoCode)
         const demoComponentNames = extractDemoComponentNames(demoCode)

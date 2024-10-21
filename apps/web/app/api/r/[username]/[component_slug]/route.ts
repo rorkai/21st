@@ -1,13 +1,14 @@
 import { supabaseWithAdminAccess } from "@/utils/supabase"
 import { NextRequest, NextResponse } from "next/server"
 import { ComponentRegistryResponse } from "./types"
+import { resolveRegistryDependencyTree } from "@/utils/queries.server"
+import { Tables } from "@/types/supabase";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { username: string; component_slug: string } },
 ) {
   const { username, component_slug } = params
-  const apiUrl = process.env.NEXT_PUBLIC_CDN_URL
 
   try {
     const { data: component, error } = await supabaseWithAdminAccess
@@ -15,7 +16,11 @@ export async function GET(
       .select("*, user:users!user_id(*)")
       .eq("component_slug", component_slug)
       .eq("user.username", username)
+      .returns<
+        (Tables<"components"> & { user: Tables<"users"> })[]
+      >()
       .single()
+
 
     if (error || !component) {
       return NextResponse.json(
@@ -25,56 +30,35 @@ export async function GET(
     }
 
     const dependencies = component.dependencies as Record<string, string>
-    const internalDependencies = component.internal_dependencies as Record<string, string>
+    const directRegistryDependencies =
+      component.direct_registry_dependencies as string[]
 
-    const componentCodeResponse = await fetch(component.code)
-    if (!componentCodeResponse.ok) {
-      throw new Error(
-        `Error fetching component code: ${componentCodeResponse.statusText}`,
-      )
-    }
-    const code = await componentCodeResponse.text()
-
-    const internalDependenciesPromises = Object.entries(
-      internalDependencies,
-    ).flatMap(([path, slugs]) => {
-      const slugArray = Array.isArray(slugs) ? slugs : [slugs]
-      return slugArray.map(async (slug) => {
-        const dependencyUrl = `${apiUrl}/${component.user_id}/${slug}.tsx`
-        const response = await fetch(dependencyUrl)
-        if (!response.ok) {
-          throw new Error(
-            `Error downloading file for ${slug}: ${response.statusText}`,
-          )
-        }
-        const code = await response.text()
-        const fullPath = path.endsWith(".tsx") ? path : `${path}.tsx`
-        return {
-          path: fullPath,
-          content: code,
-          type: "registry:ui",
-          target: "",
-        }
-      })
+    const resolvedRegistryDependencies = await resolveRegistryDependencyTree({
+      supabase: supabaseWithAdminAccess,
+      sourceDependencySlugs: [
+        `${component.user.username}/${component_slug}`,
+        ...directRegistryDependencies,
+      ],
     })
 
-    const internalDependenciesResults = await Promise.all(
-      internalDependenciesPromises,
-    )
+    if (resolvedRegistryDependencies.error) {
+      throw resolvedRegistryDependencies.error
+    }
 
-    const files = [
-      {
-        path: `components/ui/${username}/${component_slug}.tsx`,
+    console.log(resolvedRegistryDependencies.data)
+
+    const files = Object.entries(resolvedRegistryDependencies.data).map(
+      ([path, { code, registry }]) => ({
+        path,
         content: code,
-        type: "registry:ui",
+        type: `registry:${registry}`,
         target: "",
-      },
-      ...internalDependenciesResults,
-    ]
+      }),
+    )
 
     const responseData: ComponentRegistryResponse = {
       name: component_slug,
-      type: "registry:ui",
+      type: `registry:${component.registry}`,
       dependencies:
         Object.keys(dependencies).length > 0
           ? Object.keys(dependencies)

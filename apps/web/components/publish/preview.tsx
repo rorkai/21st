@@ -13,7 +13,7 @@ import {
 import { useQuery } from "@tanstack/react-query"
 import React, { useMemo } from "react"
 import { LoadingSpinner } from "../LoadingSpinner"
-import { resolveRegistryDependencyTree } from "@/utils/dbQueries"
+import { resolveRegistryDependencyTree } from "@/utils/queries.server"
 
 const SandpackPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react/unstyled").then((module) => ({
@@ -24,7 +24,7 @@ const SandpackPreview = React.lazy(() =>
 export function PublishComponentPreview({
   code,
   demoCode,
-  slugToPublish,
+  slugToPublish,  
   registryToPublish = "ui",
   directRegistryDependencies,
   isDarkTheme,
@@ -46,10 +46,10 @@ export function PublishComponentPreview({
   } = useQuery({
     queryKey: ["registryDependencies", directRegistryDependencies],
     queryFn: async () => {
-      const { data, error } = await resolveRegistryDependencyTree(
+      const { data, error } = await resolveRegistryDependencyTree({
         supabase,
-        directRegistryDependencies,
-      )
+        sourceDependencySlugs: directRegistryDependencies,
+      })
       if (error) {
         throw error
       }
@@ -82,7 +82,12 @@ export function PublishComponentPreview({
 
   const files = {
     ...sandpackDefaultFiles,
-    ...registryDependencies,
+    ...Object.fromEntries(
+      Object.entries(registryDependencies ?? {}).map(([key, value]) => [
+        key,
+        value.code,
+      ]),
+    ),
   }
 
   const dependencies = useMemo(() => {

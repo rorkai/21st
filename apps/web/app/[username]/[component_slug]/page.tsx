@@ -1,11 +1,8 @@
 import ComponentPage from "@/components/ComponentPage"
 import React from "react"
 import { notFound } from "next/navigation"
-import {
-  getComponent,
-  getUserData,
-  resolveRegistryDependencyTree,
-} from "@/utils/dbQueries"
+import { getComponent, getUserData } from "@/utils/dbQueries"
+import { resolveRegistryDependencyTree } from "@/utils/queries.server"
 import { supabaseWithAdminAccess } from "@/utils/supabase"
 import ErrorPage from "@/components/ErrorPage"
 
@@ -116,28 +113,35 @@ export default async function ComponentPageServer({
   const [codeResult, demoResult, registryDependenciesResult] =
     await Promise.all([
       ...componentAndDemoCodePromises,
-      resolveRegistryDependencyTree(
-        supabaseWithAdminAccess,
-        directRegistryDependencies,
-      ),
+      resolveRegistryDependencyTree({
+        supabase: supabaseWithAdminAccess,
+        sourceDependencySlugs: directRegistryDependencies,
+      }),
     ])
 
   if (codeResult?.error || demoResult?.error) {
     return (
       <ErrorPage
-        error={codeResult?.error ?? demoResult?.error ?? new Error("Unknown error")}
+        error={
+          codeResult?.error ?? demoResult?.error ?? new Error("Unknown error")
+        }
       />
     )
   }
   if (registryDependenciesResult?.error) {
     return (
       <ErrorPage
-        error={
-          registryDependenciesResult.error ?? new Error("Unknown error")
-        }
+        error={registryDependenciesResult.error ?? new Error("Unknown error")}
       />
     )
   }
+
+  const registryDependencies = Object.fromEntries(
+    Object.entries(registryDependenciesResult?.data!).map(([key, value]) => [
+      key,
+      value.code,
+    ]),
+  )
 
   return (
     <div className="w-full ">
@@ -148,9 +152,7 @@ export default async function ComponentPageServer({
         dependencies={dependencies}
         demoDependencies={demoDependencies}
         demoComponentNames={component.demo_component_names as string[]}
-        registryDependencies={
-          registryDependenciesResult?.data as Record<string, string>
-        }
+        registryDependencies={registryDependencies}
       />
     </div>
   )

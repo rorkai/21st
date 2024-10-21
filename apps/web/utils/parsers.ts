@@ -131,6 +131,7 @@ export function extractNPMDependencies(code: string): Record<string, string> {
 
 export function extractAmbigiousRegistryDependencies(
   code: string,
+  registry: string,
 ): Record<string, string> {
   const registryDeps: Record<string, string> = {}
 
@@ -146,9 +147,12 @@ export function extractAmbigiousRegistryDependencies(
           const source = node.source.value
           if (
             typeof source === "string" &&
-            source.startsWith("@/components/ui/")
+            source.startsWith(`@/components/${registry}/`)
           ) {
-            registryDeps[source] = source.replace("@/components/ui/", "")
+            registryDeps[source] = source.replace(
+              `@/components/${registry}/`,
+              "",
+            )
           }
         },
       })
@@ -162,10 +166,10 @@ export function extractAmbigiousRegistryDependencies(
   return registryDeps
 }
 
-export function extractRegistryDependencies(
+export function extractRegistryDependenciesFromImports(
   code: string,
-): Record<string, string> {
-  const registryDeps: Record<string, string> = {}
+): string[] {
+  const registryDeps = []
 
   const importRegex =
     /import\s+(?:{\s*[\w\s,]+\s*}|\*\s+as\s+\w+|\w+)\s+from\s+['"](\+@[\w-]+\/[\w-]+)['"]/g
@@ -174,7 +178,7 @@ export function extractRegistryDependencies(
   while ((match = importRegex.exec(code)) !== null) {
     const importPath = match[1]!
     const [, author, slug] = importPath.match(/\+@([\w-]+)\/([\w-]+)/)!
-    registryDeps[`@/components/ui/${slug}`] = `${author}/${slug}`
+    registryDeps.push(`${author}/${slug}`)
   }
 
   return registryDeps

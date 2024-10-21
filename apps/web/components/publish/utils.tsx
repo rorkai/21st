@@ -43,7 +43,7 @@ export const formatComponentName = (name: string): string => {
 
 export const isFormValid = (
   form: any,
-  internalDependencies: Record<string, string>,
+  unknownDependencies: string[],
   slugAvailable: boolean | undefined,
 ) => {
   const { name, component_slug, code, demo_code } = form.getValues()
@@ -52,7 +52,7 @@ export const isFormValid = (
     component_slug.length >= 2 &&
     code.length > 0 &&
     demo_code.length > 0 &&
-    Object.values(internalDependencies).every((slug) => slug) &&
+    unknownDependencies.length === 0 &&
     slugAvailable === true
   )
 }

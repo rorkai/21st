@@ -134,9 +134,8 @@ export function EditComponentDialog({
           handleFileChange={handleFileChange}
           handleSubmit={handleSubmit}
           isLoading={isLoading}
-          isFormValid={() => true}
+          unknownDependencies={[]}
           componentName={component.name}
-          registryDependencies={{}}
         />
       </DialogContent>
     </Dialog>

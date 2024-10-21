@@ -17,7 +17,7 @@ import {
   generateUniqueSlug,
   useIsCheckSlugAvailable,
 } from "./useIsCheckSlugAvailable"
-import { FormData } from "./utils"
+import { FormData, isFormValid } from "./utils"
 import { useDropzone } from "react-dropzone"
 import { CloudUpload } from "lucide-react"
 import { Check, ChevronsUpDown } from "lucide-react"
@@ -53,8 +53,7 @@ interface ComponentDetailsFormProps {
   handleSubmit: (event: React.FormEvent) => void
   isLoading: boolean
   // eslint-disable-next-line no-unused-vars
-  isFormValid: (...args: any[]) => boolean
-  registryDependencies: Record<string, string>
+  unknownDependencies: string[]
   componentName: string | null
 }
 
@@ -70,12 +69,11 @@ const ComponentDetailsForm = forwardRef<
     {
       isEditMode,
       form,
+      unknownDependencies,
       previewImage,
       handleFileChange,
       handleSubmit,
       isLoading,
-      isFormValid,
-      registryDependencies,
       componentName,
     },
     ref,
@@ -423,7 +421,7 @@ const ComponentDetailsForm = forwardRef<
           onClick={handleSubmit}
           disabled={
             isLoading ||
-            !isFormValid(form, registryDependencies, slugAvailable === true)
+            !isFormValid(form, unknownDependencies, slugAvailable === true)
           }
         >
           {isLoading
@@ -434,7 +432,7 @@ const ComponentDetailsForm = forwardRef<
               ? "Save changes"
               : "Add component"}
           {!isLoading &&
-            isFormValid(form, registryDependencies, slugAvailable === true) && (
+            isFormValid(form, unknownDependencies, slugAvailable === true) && (
               <Hotkey keys={["⌘", "⏎"]} isBackgroundDark={true} />
             )}
         </Button>

@@ -5,12 +5,12 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { uploadToR2 } from "../../utils/r2"
-import { formSchema, FormData, isFormValid } from "./utils"
+import { formSchema, FormData } from "./utils"
 import {
   extractComponentNames,
   extractNPMDependencies,
   extractDemoComponentNames,
-  extractRegistryDependencies,
+  extractRegistryDependenciesFromImports as extractExactRegistryDependenciesImports,
   extractAmbigiousRegistryDependencies,
 } from "../../utils/parsers"
 import { Button } from "@/components/ui/button"
@@ -53,17 +53,19 @@ import {
   ResolveUnknownDependenciesCard,
 } from "./info-cards"
 import { makeSlugFromName } from "./useIsCheckSlugAvailable"
+import { Tables } from "@/types/supabase"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
   demoDependencies: Record<string, string>
-  registryDependencies: Record<string, string>
+  directRegistryDependencies: string[]
   unknownDependencies: string[]
   componentNames: string[]
   demoComponentNames: string[]
 }
 
 export default function PublishComponentForm() {
+  const registryToPublish = "ui"
   const { user } = useUser()
   const client = useClerkSupabaseClient()
   const router = useRouter()
@@ -94,7 +96,7 @@ export default function PublishComponentForm() {
   const [parsedCode, setParsedCode] = useState<ParsedCodeData>({
     dependencies: {},
     demoDependencies: {},
-    registryDependencies: {},
+    directRegistryDependencies: [],
     unknownDependencies: [],
     componentNames: [],
     demoComponentNames: [],
@@ -125,10 +127,11 @@ export default function PublishComponentForm() {
         const dependencies = extractNPMDependencies(code)
         const demoDependencies = extractNPMDependencies(demoCode)
         const demoComponentNames = extractDemoComponentNames(demoCode)
-        const registryDependencies = extractRegistryDependencies(code)
+        const directRegistryDependencies =
+          extractExactRegistryDependenciesImports(code)
         const ambigiousRegistryDependencies = {
-          ...extractAmbigiousRegistryDependencies(code),
-          ...extractAmbigiousRegistryDependencies(demoCode),
+          ...extractAmbigiousRegistryDependencies(code, registryToPublish),
+          ...extractAmbigiousRegistryDependencies(demoCode, registryToPublish),
         }
         console.log(
           "ambigiousRegistryDependencies",
@@ -136,8 +139,8 @@ export default function PublishComponentForm() {
         )
         console.log("possibleComponentSlugs", possibleComponentSlugs)
         const unknownDependencies = Object.values(
-          ambigiousRegistryDependencies ?? {},
-        )?.filter((dependency) => !possibleComponentSlugs.includes(dependency))
+          ambigiousRegistryDependencies,
+        ).filter((dependency) => !possibleComponentSlugs.includes(dependency))
         console.log("unknownDependencies", unknownDependencies)
 
         setParsedCode({
@@ -146,7 +149,7 @@ export default function PublishComponentForm() {
           componentNames,
           demoComponentNames,
           unknownDependencies,
-          registryDependencies,
+          directRegistryDependencies,
         })
       } catch (error) {
         console.error("Error parsing dependencies from code:", error)
@@ -175,9 +178,9 @@ export default function PublishComponentForm() {
   }
 
   const onSubmit = async (data: FormData) => {
-    if (Object.values(parsedCode.registryDependencies).some((slug) => !slug)) {
-      console.error("Internal dependencies not specified")
-      alert("Please specify the slug for all internal dependencies")
+    if (parsedCode.unknownDependencies.length > 0) {
+      console.error("Unknown dependencies found, can't publish")
+      alert("Please specify the registry slugs for all unknown dependencies")
       return
     }
 
@@ -232,13 +235,13 @@ export default function PublishComponentForm() {
         component_slug: data.component_slug,
         code: codeUrl,
         demo_code: demoCodeUrl,
-        description: data.description,
+        description: data.description ?? null,
         user_id: user?.id!,
         dependencies: parsedCode.dependencies,
         demo_dependencies: parsedCode.demoDependencies,
-        internal_dependencies: parsedCode.registryDependencies,
+        direct_registry_dependencies: parsedCode.directRegistryDependencies,
         preview_url: previewImageUrl,
-      }
+      } as Tables<"components">
 
       const { data: insertedComponent, error } = await client
         .from("components")
@@ -548,10 +551,10 @@ export default function PublishComponentForm() {
                           unknownDependencies: prev.unknownDependencies.filter(
                             (dependency) => dependency !== slug,
                           ),
-                          registryDependencies: {
-                            ...prev.registryDependencies,
-                            [`${username}/${slug}`]: `@/components/${slug}`,
-                          },
+                          directRegistryDependencies: [
+                            ...prev.directRegistryDependencies,
+                            `${username}/${slug}`,
+                          ],
                         }))
                       }}
                     />
@@ -563,7 +566,9 @@ export default function PublishComponentForm() {
                     demoComponentNames={parsedCode.demoComponentNames}
                     dependencies={parsedCode.dependencies}
                     demoDependencies={parsedCode.demoDependencies}
-                    registryDependencies={parsedCode.registryDependencies}
+                    directRegistryDependencies={
+                      parsedCode.directRegistryDependencies
+                    }
                     unknownDependencies={parsedCode.unknownDependencies}
                   />
                 )}
@@ -584,9 +589,8 @@ export default function PublishComponentForm() {
                         handleFileChange={handleFileChange}
                         handleSubmit={handleSubmit}
                         isLoading={isLoading}
-                        isFormValid={isFormValid}
-                        registryDependencies={parsedCode.registryDependencies}
                         componentName={mainComponentName}
+                        unknownDependencies={parsedCode.unknownDependencies}
                       />
                     </motion.div>
                   )}
@@ -604,8 +608,11 @@ export default function PublishComponentForm() {
                     <PublishComponentPreview
                       code={code}
                       demoCode={demoCode}
-                      registryDependencies={parsedCode.registryDependencies}
-                      componentSlug={componentSlug}
+                      slugToPublish={componentSlug}
+                      registryToPublish={registryToPublish}
+                      directRegistryDependencies={
+                        parsedCode.directRegistryDependencies
+                      }
                       isDarkTheme={isDarkTheme}
                     />
                   </React.Suspense>

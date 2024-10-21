@@ -1,4 +1,6 @@
 import { useDebugMode } from "@/hooks/useDebugMode"
+import { Tables } from "@/types/supabase"
+import { useClerkSupabaseClient } from "@/utils/clerk"
 import {
   extractDemoComponentNames,
   extractNPMDependencies,
@@ -21,54 +23,99 @@ const SandpackPreview = React.lazy(() =>
 export function PublishComponentPreview({
   code,
   demoCode,
-  registryDependencies,
-  componentSlug,
+  slugToPublish,
+  registryToPublish = "ui",
+  directRegistryDependencies,
   isDarkTheme,
 }: {
   code: string
   demoCode: string
-  registryDependencies: Record<string, string>
-  componentSlug: string
+  slugToPublish: string
+  registryToPublish: string
+  directRegistryDependencies: string[]
   isDarkTheme: boolean
 }) {
   const isDebug = useDebugMode()
+  const supabase = useClerkSupabaseClient()
 
-  const { data: registryDependenciesFiles } = useQuery({
-    queryKey: ["registryDependencies", registryDependencies],
+  const { data: allRegistryDependenciesFiles, error: registryDependenciesError } = useQuery({
+    queryKey: ["allRegistryDependencies", directRegistryDependencies],
     queryFn: async () => {
-      const promises = Object.entries(registryDependencies).flatMap(
-        ([path, slugs]) => {
-          const slugArray = Array.isArray(slugs) ? slugs : [slugs]
-          return slugArray.map(async (slug) => {
-            const fileName = `${slug.split("/").pop()}.tsx`
-            const dependencyUrl = `${process.env.NEXT_PUBLIC_CDN_URL}/${component.user_id}/${fileName}`
-            const response = await fetch(dependencyUrl)
-            if (!response.ok) {
-              console.error(
-                `Error downloading file for ${slug}:`,
-                response.statusText,
-                dependencyUrl,
-              )
-              return { data: null, error: new Error(response.statusText) }
+      const { data: dependencies, error } = await supabase
+        .from("component_dependencies_closure")
+        .select(
+          `
+          component_id!inner(component_slug),
+          dependency_component_id,
+          components:dependency_component_id (
+            component_slug,
+            registry,
+            code,
+            user:user_id (username)
+          )
+        `,
+        )
+        .in(
+          "component_id.component_slug",
+          directRegistryDependencies.map((dep) => dep.split("/")[1]),
+        )
+        .returns<
+          {
+            components: Partial<Tables<"components">> & {
+              user: { username: string }
             }
+          }[]
+        >()
 
-            const code = await response.text()
-            if (!code) {
-              console.error(
-                `Error loading internal dependency ${slug}: No code returned`,
-              )
-              return { data: null, error: new Error("No code returned") }
-            }
-            const fullPath = path.endsWith(".tsx") ? path : `${path}.tsx`
-            return { data: { [fullPath]: code }, error: null }
-          })
-        },
-      )
-      const results = await Promise.all(promises)
-      if (results.some((result) => result.error)) {
+      if (error) throw new Error("Failed to fetch registry dependencies")
+
+      if (dependencies.length !== directRegistryDependencies.length) {
+        console.error(
+          "Registry dependencies mismatch: not all dependencies are present",
+          dependencies,
+          directRegistryDependencies,
+        )
+        throw new Error(
+          "Registry dependencies mismatch: not all dependencies are present",
+        )
+      }
+
+      const r2FetchPromises = dependencies.map(async (dep) => {
+        const {
+          code: r2Link,
+          component_slug,
+          user: { username },
+          registry,
+        } = dep.components
+
+        const response = await fetch(r2Link!)
+        if (!response.ok) {
+          console.error(
+            `Error downloading file for ${component_slug}:`,
+            response.statusText,
+            r2Link,
+          )
+          return { data: null, error: new Error(response.statusText) }
+        }
+
+        const code = await response.text()
+        if (!code) {
+          console.error(
+            `Error loading dependency ${username}/${component_slug}: No code returned`,
+          )
+          return { data: null, error: new Error("No code returned") }
+        }
+
+        const filePath = `/components/${registry}/${component_slug}.tsx`
+        return { data: { [filePath]: code }, error: null }
+      })
+
+      const fileResults = await Promise.all(r2FetchPromises)
+      if (fileResults.some((result) => result.error)) {
         throw new Error("Error loading registry dependencies")
       }
-      return results
+
+      return fileResults
         .filter((result) => result?.data && typeof result.data === "object")
         .reduce(
           (acc, r) => ({
@@ -78,6 +125,8 @@ export function PublishComponentPreview({
           {},
         )
     },
+    enabled: directRegistryDependencies.length > 0,
+    refetchOnWindowFocus: false,
   })
 
   const demoComponentNames = useMemo(
@@ -88,17 +137,24 @@ export function PublishComponentPreview({
   const sandpackDefaultFiles = useMemo(() => {
     return generateSandpackFiles({
       demoComponentNames,
-      componentSlug,
-      relativeImportPath: `/components/ui`,
+      componentSlug: slugToPublish,
+      relativeImportPath: `/components/${registryToPublish}`,
       code,
       demoCode,
       theme: isDarkTheme ? "dark" : "light",
     })
-  }, [demoComponentNames, componentSlug, code, demoCode, isDarkTheme])
+  }, [
+    demoComponentNames,
+    slugToPublish,
+    code,
+    demoCode,
+    isDarkTheme,
+    registryToPublish,
+  ])
 
   const files = {
     ...sandpackDefaultFiles,
-    ...registryDependenciesFiles,
+    ...allRegistryDependenciesFiles,
   }
 
   const dependencies = useMemo(() => {
@@ -128,6 +184,11 @@ export function PublishComponentPreview({
 
   return (
     <div className="w-full bg-[#FAFAFA] rounded-lg">
+      {registryDependenciesError && (
+        <div className="text-red-500">
+          Error fetching registry dependencies: {registryDependenciesError.message}
+        </div>
+      )}
       <SandpackProvider {...providerProps}>
         <SandpackPreview />
         {isDebug && (

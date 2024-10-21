@@ -59,7 +59,7 @@ export function extractDemoComponentNames(code: string): string[] {
     .filter(Boolean)
 }
 
-export function extractDependencies(code: string): Record<string, string> {
+export function extractNPMDependencies(code: string): Record<string, string> {
   const dependencies: Record<string, string> = {}
   try {
     const ast = parse(code, {
@@ -129,11 +129,10 @@ export function extractDependencies(code: string): Record<string, string> {
   return dependencies
 }
 
-export function findInternalDependencies(
-  componentCode: string,
-  demoCode: string,
+export function extractAmbigiousRegistryDependencies(
+  code: string,
 ): Record<string, string> {
-  const internalDeps: Record<string, string> = {}
+  const registryDeps: Record<string, string> = {}
 
   try {
     const parseAndExtractImports = (code: string) => {
@@ -147,21 +146,49 @@ export function findInternalDependencies(
           const source = node.source.value
           if (
             typeof source === "string" &&
-            source.startsWith("@/components/")
+            source.startsWith("@/components/ui/")
           ) {
-            internalDeps[source] = "latest"
+            registryDeps[source] = source.replace("@/components/ui/", "")
           }
         },
       })
     }
 
-    parseAndExtractImports(componentCode)
-    parseAndExtractImports(demoCode)
+    parseAndExtractImports(code)
   } catch (error) {
-    console.error("Error finding internal dependencies:", error)
+    console.error("Error finding registry dependencies:", error)
   }
 
-  return internalDeps
+  return registryDeps
+}
+
+export function extractRegistryDependencies(
+  code: string,
+): Record<string, string> {
+  const registryDeps: Record<string, string> = {}
+
+  const importRegex =
+    /import\s+(?:{\s*[\w\s,]+\s*}|\*\s+as\s+\w+|\w+)\s+from\s+['"](\+@[\w-]+\/[\w-]+)['"]/g
+  let match
+
+  while ((match = importRegex.exec(code)) !== null) {
+    const importPath = match[1]!
+    const [, author, slug] = importPath.match(/\+@([\w-]+)\/([\w-]+)/)!
+    registryDeps[`@/components/ui/${slug}`] = `${author}/${slug}`
+  }
+
+  return registryDeps
+}
+
+export function replaceRegistryImports(code: string): string {
+  const importRegex =
+    /import\s+(?:{\s*[\w\s,]+\s*}|\*\s+as\s+\w+|\w+)\s+from\s+['"](\+@[\w-]+\/[\w-]+)['"]/g
+
+  return code.replace(importRegex, (match, importPath) => {
+    const [, , slug] = importPath.match(/\+@([\w-]+)\/([\w-]+)/)!
+    const newImportPath = `@/components/ui/${slug}`
+    return match.replace(importPath, newImportPath)
+  })
 }
 
 export function removeComponentImports(

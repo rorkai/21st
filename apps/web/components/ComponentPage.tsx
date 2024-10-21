@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/tooltip"
 import { Hotkey } from "./ui/hotkey"
 import { LikeButton } from "./LikeButton"
-import { useIsMobile } from "@/utils/useMediaQuery"
+import { useIsMobile } from "@/utils/use-media-query"
 import { ThemeToggle } from "./ThemeToggle"
 import { useQuery } from "@tanstack/react-query"
 import { useClerkSupabaseClient } from "@/utils/clerk"

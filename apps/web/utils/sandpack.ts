@@ -13,8 +13,8 @@ export function generateSandpackFiles({
   demoCode: string
   theme: "light" | "dark"
 }) {
-  console.log(demoComponentNames);
-  const shouldShowSelect = demoComponentNames.length > 1;
+  console.log(demoComponentNames)
+  const shouldShowSelect = demoComponentNames.length > 1
 
   let appTsxContent = ""
 
@@ -58,9 +58,9 @@ export default function App() {
                         .map(
                           (name) => `
                       <SelectItem key="${name}" value="${name}">
-                        ${name.replace(/([A-Z])/g, ' $1').trim()}
+                        ${name.replace(/([A-Z])/g, " $1").trim()}
                       </SelectItem>
-                      `
+                      `,
                         )
                         .join("")}
                     </SelectGroup>
@@ -140,6 +140,27 @@ export const ThemeProvider = ({ children, defaultTheme = 'light', enableSystem =
     </ThemeContext.Provider>
   );
 };
+`,
+    "/hooks/use-media-query.tsx": `
+    import * as React from "react"
+
+export function useMediaQuery(query: string) {
+  const [value, setValue] = React.useState(false)
+
+  React.useEffect(() => {
+    function onChange(event: MediaQueryListEvent) {
+      setValue(event.matches)
+    }
+
+    const result = matchMedia(query)
+    result.addEventListener("change", onChange)
+    setValue(result.matches)
+
+    return () => result.removeEventListener("change", onChange)
+  }, [query])
+
+  return value
+}
 `,
     "/components/ui/select.tsx": `
 import * as React from "react"
@@ -553,6 +574,7 @@ module.exports = {
           paths: {
             "@/*": ["./*"],
             "@/components/ui/*": [`@/components/ui/shadcn/*`],
+            "@/hooks/*": [`@/hooks/*`],
           },
         },
       },

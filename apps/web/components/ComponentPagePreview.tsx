@@ -145,7 +145,7 @@ export function ComponentPagePreview({
           transition={{ duration: 0.3 }}
         >
           <Suspense fallback={<LoadingSpinner />}>
-            <SandpackPreview />
+            <SandpackPreview showSandpackErrorOverlay={false} />
           </Suspense>
         </motion.div>
       </SandpackProviderUnstyled>

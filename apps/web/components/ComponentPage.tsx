@@ -41,7 +41,7 @@ export default function ComponentPage({
   dependencies,
   demoDependencies,
   demoComponentNames,
-  internalDependencies,
+  registryDependencies,
 }: {
   component: Component & { user: User } & { tags: Tag[] }
   code: string
@@ -49,7 +49,7 @@ export default function ComponentPage({
   dependencies: Record<string, string>
   demoDependencies: Record<string, string>
   demoComponentNames: string[]
-  internalDependencies: Record<string, string>
+  registryDependencies: Record<string, string>
 }) {
   const [component, setComponent] = useState(initialComponent)
   const { user } = useUser()
@@ -361,7 +361,7 @@ export default function ComponentPage({
           dependencies={dependencies}
           demoDependencies={demoDependencies}
           demoComponentNames={demoComponentNames}
-          internalDependencies={internalDependencies}
+          registryDependencies={registryDependencies}
         />
       </div>
       <EditComponentDialog

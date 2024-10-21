@@ -1,5 +1,4 @@
 import { useDebugMode } from "@/hooks/useDebugMode"
-import { Tables } from "@/types/supabase"
 import { useClerkSupabaseClient } from "@/utils/clerk"
 import {
   extractDemoComponentNames,
@@ -14,6 +13,7 @@ import {
 import { useQuery } from "@tanstack/react-query"
 import React, { useMemo } from "react"
 import { LoadingSpinner } from "../LoadingSpinner"
+import { resolveRegistryDependencyTree } from "@/utils/dbQueries"
 
 const SandpackPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react/unstyled").then((module) => ({
@@ -40,98 +40,21 @@ export function PublishComponentPreview({
   const supabase = useClerkSupabaseClient()
 
   const {
-    data: allRegistryDependenciesFiles,
+    data: registryDependencies,
+    isLoading,
     error: registryDependenciesError,
-    isLoading
   } = useQuery({
-    queryKey: ["allRegistryDependencies", directRegistryDependencies],
+    queryKey: ["registryDependencies", directRegistryDependencies],
     queryFn: async () => {
-      const { data: dependencies, error } = await supabase
-        .from("component_dependencies_closure")
-        .select(
-          `
-          component_id!inner(component_slug),
-          dependency_component_id,
-          components:dependency_component_id (
-            component_slug,
-            registry,
-            code,
-            user:user_id (username)
-          )
-        `,
-        )
-        .in(
-          "component_id.component_slug",
-          directRegistryDependencies.map((dep) => dep.split("/")[1]),
-        )
-        .returns<
-          {
-            components: Partial<Tables<"components">> & {
-              user: { username: string }
-            }
-          }[]
-        >()
-
-      if (error) throw new Error("Failed to fetch registry dependencies")
-
-      if (dependencies.length !== directRegistryDependencies.length) {
-        console.error(
-          "Registry dependencies mismatch: not all dependencies are present",
-          dependencies,
-          directRegistryDependencies,
-        )
-        throw new Error(
-          "Registry dependencies mismatch: not all dependencies are present",
-        )
+      const { data, error } = await resolveRegistryDependencyTree(
+        supabase,
+        directRegistryDependencies,
+      )
+      if (error) {
+        throw error
       }
-
-      const r2FetchPromises = dependencies.map(async (dep) => {
-        const {
-          code: r2Link,
-          component_slug,
-          user: { username },
-          registry,
-        } = dep.components
-
-        const response = await fetch(r2Link!)
-        if (!response.ok) {
-          console.error(
-            `Error downloading file for ${component_slug}:`,
-            response.statusText,
-            r2Link,
-          )
-          return { data: null, error: new Error(response.statusText) }
-        }
-
-        const code = await response.text()
-        if (!code) {
-          console.error(
-            `Error loading dependency ${username}/${component_slug}: No code returned`,
-          )
-          return { data: null, error: new Error("No code returned") }
-        }
-
-        const filePath = `/components/${registry}/${component_slug}.tsx`
-        return { data: { [filePath]: code }, error: null }
-      })
-
-      const fileResults = await Promise.all(r2FetchPromises)
-      if (fileResults.some((result) => result.error)) {
-        throw new Error("Error loading registry dependencies")
-      }
-
-      return fileResults
-        .filter((result) => result?.data && typeof result.data === "object")
-        .reduce(
-          (acc, r) => ({
-            ...acc,
-            ...(r.data as Record<string, string>),
-          }),
-          {},
-        )
+      return data
     },
-    enabled: directRegistryDependencies.length > 0,
-    refetchOnWindowFocus: false,
   })
 
   const demoComponentNames = useMemo(
@@ -159,7 +82,7 @@ export function PublishComponentPreview({
 
   const files = {
     ...sandpackDefaultFiles,
-    ...allRegistryDependenciesFiles,
+    ...registryDependencies,
   }
 
   const dependencies = useMemo(() => {

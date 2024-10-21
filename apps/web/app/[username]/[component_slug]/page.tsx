@@ -1,7 +1,11 @@
 import ComponentPage from "@/components/ComponentPage"
 import React from "react"
 import { notFound } from "next/navigation"
-import { getComponent, getUserData } from "@/utils/dbQueries"
+import {
+  getComponent,
+  getUserData,
+  resolveRegistryDependencyTree,
+} from "@/utils/dbQueries"
 import { supabaseWithAdminAccess } from "@/utils/supabase"
 import ErrorPage from "@/components/ErrorPage"
 
@@ -15,7 +19,10 @@ export const generateMetadata = async ({
     params.username,
     params.component_slug,
   )
-  const { data: user } = await getUserData(supabaseWithAdminAccess, params.username)
+  const { data: user } = await getUserData(
+    supabaseWithAdminAccess,
+    params.username,
+  )
 
   if (!component || !user) {
     return {
@@ -49,7 +56,7 @@ export const generateMetadata = async ({
   }
 }
 
-export default async function ComponentPageLayout({
+export default async function ComponentPageServer({
   params,
 }: {
   params: { username: string; component_slug: string }
@@ -70,8 +77,12 @@ export default async function ComponentPageLayout({
   }
 
   const dependencies = (component.dependencies ?? {}) as Record<string, string>
-  const demoDependencies = (component.demo_dependencies ?? {}) as Record<string, string>
-  const internalDependencies = (component.internal_dependencies ?? {}) as Record<string, string>
+  const demoDependencies = (component.demo_dependencies ?? {}) as Record<
+    string,
+    string
+  >
+  const directRegistryDependencies =
+    component.direct_registry_dependencies as string[]
 
   const componentAndDemoCodePromises = [
     fetch(component.code).then(async (response) => {
@@ -102,83 +113,44 @@ export default async function ComponentPageLayout({
     }),
   ]
 
-  const internalDependenciesPromises = Object.entries(
-    internalDependencies,
-  ).flatMap(([path, slugs]) => {
-    const slugArray = Array.isArray(slugs) ? slugs : [slugs]
-    return slugArray.map(async (slug) => {
-      const fileName = `${slug.split("/").pop()}.tsx`
-      const dependencyUrl = `${process.env.NEXT_PUBLIC_CDN_URL}/${component.user_id}/${fileName}`
-      const response = await fetch(dependencyUrl)
-      if (!response.ok) {
-        console.error(
-          `Error downloading file for ${slug}:`,
-          response.statusText,
-          dependencyUrl,
-        )
-        return { data: null, error: new Error(response.statusText) }
-      }
-
-      const code = await response.text()
-      if (!code) {
-        console.error(
-          `Error loading internal dependency ${slug}: No code returned`,
-        )
-        return { data: null, error: new Error("No code returned") }
-      }
-      const fullPath = path.endsWith(".tsx") ? path : `${path}.tsx`
-      return { data: { [fullPath]: code }, error: null }
-    })
-  })
-
-  const [codeResult, demoResult, ...internalDependenciesResults] =
+  const [codeResult, demoResult, registryDependenciesResult] =
     await Promise.all([
       ...componentAndDemoCodePromises,
-      ...internalDependenciesPromises,
+      resolveRegistryDependencyTree(
+        supabaseWithAdminAccess,
+        directRegistryDependencies,
+      ),
     ])
 
   if (codeResult?.error || demoResult?.error) {
     return (
       <ErrorPage
-        error={
-          new Error(
-            codeResult?.error?.message ?? demoResult?.error?.message,
-          )
-        }
+        error={codeResult?.error ?? demoResult?.error ?? new Error("Unknown error")}
       />
     )
   }
-  const errorResult = internalDependenciesResults?.find(
-    (result) => result?.error,
-  )
-  if (errorResult) {
-    const errorMessage = errorResult.error?.message ?? "Unknown error"
+  if (registryDependenciesResult?.error) {
     return (
       <ErrorPage
         error={
-          new Error(`Error fetching internal dependencies: ${errorMessage}`)
+          registryDependenciesResult.error ?? new Error("Unknown error")
         }
       />
     )
   }
-
-  const internalDependenciesWithCode = internalDependenciesResults
-    .filter((result) => result?.data && typeof result.data === "object")
-    .reduce((acc, result) => ({ ...acc, ...(result.data as Record<string, string>) }), {})
-
-  const code = codeResult?.data as string
-  const rawDemoCode = demoResult?.data as string
 
   return (
     <div className="w-full ">
       <ComponentPage
         component={component}
-        code={code}
-        demoCode={rawDemoCode}
+        code={codeResult?.data as string}
+        demoCode={demoResult?.data as string}
         dependencies={dependencies}
         demoDependencies={demoDependencies}
         demoComponentNames={component.demo_component_names as string[]}
-        internalDependencies={internalDependenciesWithCode}
+        registryDependencies={
+          registryDependenciesResult?.data as Record<string, string>
+        }
       />
     </div>
   )

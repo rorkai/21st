@@ -8,7 +8,7 @@ import {
 import { makeSlugFromName } from "@/components/publish/useIsCheckSlugAvailable"
 import { SupabaseClient } from "@supabase/supabase-js"
 import { useClerkSupabaseClient } from "./clerk"
-import { Database } from "@/types/supabase"
+import { Database, Tables } from "@/types/supabase"
 import { toast } from "sonner"
 
 const componentFields = `
@@ -209,10 +209,10 @@ export function useLikeMutation(
       }
       if (liked) {
         await unlikeComponent(supabase, userId, componentId)
-        toast("Component unliked") 
+        toast("Component unliked")
       } else {
         await likeComponent(supabase, userId, componentId)
-        toast("Component liked") 
+        toast("Component liked")
       }
     },
     onSuccess: (_, { componentId }) => {
@@ -417,18 +417,18 @@ export function useTagInfo(
 export async function updateComponentWithTags(
   supabase: SupabaseClient,
   componentId: number,
-  updatedData: Partial<Component & { tags?: Tag[] }>
+  updatedData: Partial<Component & { tags?: Tag[] }>,
 ) {
   const { name, description, license, preview_url, tags } = updatedData
 
   const tagsJson = tags
-    ? tags.map(tag => ({
+    ? tags.map((tag) => ({
         name: tag.name,
         slug: tag.slug,
       }))
     : null
 
-  const { data, error } = await supabase.rpc('update_component_with_tags', {
+  const { data, error } = await supabase.rpc("update_component_with_tags", {
     p_component_id: componentId,
     p_name: name !== undefined ? name : null,
     p_description: description !== undefined ? description : null,
@@ -438,7 +438,7 @@ export async function updateComponentWithTags(
   })
 
   if (error) {
-    console.error('Error updating component with tags:', error)
+    console.error("Error updating component with tags:", error)
     throw error
   }
 
@@ -467,4 +467,106 @@ export function useUpdateComponentWithTags(
       queryClient.invalidateQueries({ queryKey: ["components"] })
     },
   })
+}
+
+export async function resolveRegistryDependencyTree(
+  supabase: SupabaseClient<Database>,
+  directRegistryDependencies: string[],
+): Promise<
+  { data: Record<string, string>; error: null } | { data: null; error: Error }
+> {
+  const { data: dependencies, error } = await supabase
+    .from("component_dependencies_closure")
+    .select(
+      `
+      component_id!inner(component_slug),
+      dependency_component_id,
+      components:dependency_component_id (
+        component_slug,
+        registry,
+        code,
+        user:user_id (username)
+      )
+    `,
+    )
+    .in(
+      "component_id.component_slug",
+      directRegistryDependencies.map((dep) => dep.split("/")[1]),
+    )
+    .returns<
+      {
+        components: Partial<Tables<"components">> & {
+          user: { username: string }
+        }
+      }[]
+    >()
+
+  if (error)
+    return {
+      data: null,
+      error: new Error(`Failed to fetch registry dependency tree: ${error.message}`),
+    }
+
+  const r2FetchPromises = dependencies.map(async (dep) => {
+    const {
+      code: r2Link,
+      component_slug,
+      user: { username },
+      registry,
+    } = dep.components
+
+    const response = await fetch(r2Link!)
+    if (!response.ok) {
+      console.error(
+        `Error downloading file for ${username}/${component_slug}:`,
+        response.statusText,
+        r2Link,
+      )
+      return {
+        data: null,
+        error: new Error(
+          `Error downloading file for ${username}/${component_slug}: ${response.statusText}`,
+        ),
+      }
+    }
+
+    const code = await response.text()
+    if (!code) {
+      console.error(
+        `Error loading dependency ${username}/${component_slug}: No code returned`,
+      )
+      return {
+        data: null,
+        error: new Error(
+          `Error loading dependency ${username}/${component_slug}: no code returned`,
+        ),
+      }
+    }
+
+    const filePath = `/components/${registry}/${component_slug}.tsx`
+    return { data: { [filePath]: code }, error: null }
+  })
+
+  const fileResults = await Promise.all(r2FetchPromises)
+  if (fileResults.some((result) => result.error)) {
+    return {
+      data: null,
+      error: new Error(
+        `Error loading registry dependencies: ${fileResults.find((result) => result.error)?.error?.message.toLowerCase()}`,
+      ),
+    }
+  }
+
+  return {
+    data: fileResults
+      .filter((result) => result?.data && typeof result.data === "object")
+      .reduce(
+        (acc, r) => ({
+          ...acc,
+          ...(r.data as Record<string, string>),
+        }),
+        {},
+      ),
+    error: null,
+  }
 }

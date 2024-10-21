@@ -34,7 +34,7 @@ export function ComponentPagePreview({
   dependencies,
   demoDependencies,
   demoComponentNames,
-  internalDependencies,
+  registryDependencies,
 }: {
   component: Component & { user: User } & { tags: Tag[] }
   code: string
@@ -42,7 +42,7 @@ export function ComponentPagePreview({
   dependencies: Record<string, string>
   demoDependencies: Record<string, string>
   demoComponentNames: string[]
-  internalDependencies: Record<string, string>
+  registryDependencies: Record<string, string>
 }) {
   const sandpackRef = useRef<HTMLDivElement>(null)
   const { theme } = useTheme()
@@ -54,12 +54,12 @@ export function ComponentPagePreview({
     ...generateSandpackFiles({
       demoComponentNames,
       componentSlug: component.component_slug,
-      relativeImportPath: `/components/ui/${component.user.username}`,
+      relativeImportPath: `/components/${component.registry}`,
       code,
       demoCode,
       theme: isDarkTheme ? "dark" : "light",
     }),
-    ...internalDependencies,
+    ...registryDependencies,
   }
 
   const mainComponentFile = Object.keys(files).find((file) =>
@@ -73,19 +73,19 @@ export function ComponentPagePreview({
   const visibleFiles = [
     demoComponentFile,
     mainComponentFile,
-    ...Object.keys(internalDependencies),
+    ...Object.keys(registryDependencies),
   ].filter((file): file is string => file !== undefined)
 
   const customFileLabels = Object.fromEntries(
-    Object.keys(internalDependencies).map((path) => {
+    Object.keys(registryDependencies).map((path) => {
       const parts = path.split("/")
       const fileName = parts[parts.length - 1]
       return [path, `${fileName} (dependency)`]
     }),
   )
 
-  const npmDependenciesOfInternalDependencies = Object.values(
-    internalDependencies,
+  const npmDependenciesOfDirectRegistryDependencies = Object.values(
+    registryDependencies,
   ).reduce((acc, code) => {
     const extractNpmDependencies = (code: string) => {
       const deps: Record<string, string> = {}
@@ -122,7 +122,7 @@ export function ComponentPagePreview({
         "framer-motion": "latest",
         ...dependencies,
         ...demoDependencies,
-        ...npmDependenciesOfInternalDependencies,
+        ...npmDependenciesOfDirectRegistryDependencies,
       },
     },
     options: {

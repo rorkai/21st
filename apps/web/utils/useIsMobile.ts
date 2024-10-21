@@ -1,4 +1,4 @@
-export function useMediaQuery(query: string): boolean {
+function useMediaQuery(query: string): boolean {
   if (typeof window === 'undefined') {
     return false;
   }

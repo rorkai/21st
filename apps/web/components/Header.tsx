@@ -7,7 +7,7 @@ import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
 import { atom, useAtom } from "jotai"
 import { Input } from "@/components/ui/input"
 import { Hotkey } from "./ui/hotkey"
-import { useIsMobile } from "@/utils/useMediaQuery"
+import { useIsMobile } from "@/utils/useIsMobile"
 import { HeaderServer } from "./HeaderServer"
 import {
   NavigationMenu,

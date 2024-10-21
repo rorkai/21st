@@ -5,7 +5,7 @@ import {
   SandpackCodeViewer,
   SandpackFileExplorer,
 } from "@codesandbox/sandpack-react"
-import { PreviewInfo } from "./PreviewInfo"
+import { ComponentPageInfo } from "./ComponentPageInfo"
 import { SandpackProvider as SandpackProviderUnstyled } from "@codesandbox/sandpack-react/unstyled"
 import { CheckIcon, CopyIcon, Terminal } from "lucide-react"
 import styles from "./ComponentPreview.module.css"
@@ -170,7 +170,7 @@ export function ComponentPagePreview({
                       </div>
                     </>
                   ) : (
-                    <PreviewInfo component={component} />
+                    <ComponentPageInfo component={component} />
                   )}
                 </div>
               </div>

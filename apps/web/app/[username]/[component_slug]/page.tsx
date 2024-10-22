@@ -136,11 +136,15 @@ export default async function ComponentPageServer({
     )
   }
 
-  const registryDependencies = Object.fromEntries(
-    Object.entries(registryDependenciesResult?.data!).map(([key, value]) => [
-      key,
-      value.code,
-    ]),
+  const registryDependenciesData = registryDependenciesResult?.data as {
+    filesWithRegistry: Record<string, { code: string; registry: string }>
+    npmDependencies: Record<string, string>
+  }
+
+  const registryDependenciesFiles = Object.fromEntries(
+    Object.entries(registryDependenciesData.filesWithRegistry).map(
+      ([key, value]) => [key, value.code],
+    ),
   )
 
   return (
@@ -152,7 +156,10 @@ export default async function ComponentPageServer({
         dependencies={dependencies}
         demoDependencies={demoDependencies}
         demoComponentNames={component.demo_component_names as string[]}
-        registryDependencies={registryDependencies}
+        registryDependencies={registryDependenciesFiles}
+        npmDependenciesOfRegistryDependencies={
+          registryDependenciesData.npmDependencies
+        }
       />
     </div>
   )

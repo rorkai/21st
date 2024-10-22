@@ -8,7 +8,13 @@ export async function resolveRegistryDependencyTree({
   supabase: SupabaseClient<Database>
   sourceDependencySlugs: string[]
 }): Promise<
-  | { data: Record<string, { code: string; registry: string }>; error: null }
+  | {
+      data: {
+        filesWithRegistry: Record<string, { code: string; registry: string }>
+        npmDependencies: Record<string, string>
+      }
+      error: null
+    }
   | { data: null; error: Error }
 > {
   const { data: dependencies, error } = await supabase
@@ -21,6 +27,7 @@ export async function resolveRegistryDependencyTree({
         component_slug,
         registry,
         code,
+        dependencies,
         user:user_id (username)
       )
     `,
@@ -33,6 +40,7 @@ export async function resolveRegistryDependencyTree({
       {
         components: Partial<Tables<"components">> & {
           user: { username: string }
+          dependencies: string
         }
       }[]
     >()
@@ -51,6 +59,7 @@ export async function resolveRegistryDependencyTree({
       component_slug,
       user: { username },
       registry,
+      dependencies: npmDependencies,
     } = dep.components
 
     const response = await fetch(r2Link!)
@@ -61,10 +70,11 @@ export async function resolveRegistryDependencyTree({
         r2Link,
       )
       return {
-        data: null,
         error: new Error(
           `Error downloading file for ${username}/${component_slug}: ${response.statusText}`,
         ),
+        npmDependencies: npmDependencies,
+        fileWithRegistry: null,
       }
     }
 
@@ -74,37 +84,42 @@ export async function resolveRegistryDependencyTree({
         `Error loading dependency ${username}/${component_slug}: No code returned`,
       )
       return {
-        data: null,
         error: new Error(
           `Error loading dependency ${username}/${component_slug}: no code returned`,
         ),
+        npmDependencies: npmDependencies,
+        fileWithRegistry: null,
       }
     }
 
     const filePath = `/components/${registry}/${component_slug}.tsx`
-    return { data: { [filePath]: { code, registry } }, error: null }
+    return {
+      error: null,
+      npmDependencies: npmDependencies,
+      fileWithRegistry: { [filePath]: { code, registry: registry! } },
+    }
   })
 
-  const fileResults = await Promise.all(r2FetchPromises)
-  if (fileResults.some((result) => result.error)) {
+  const results = await Promise.all(r2FetchPromises)
+
+  const errors = results.filter((result) => result.error)
+  if (errors.length > 0) {
     return {
       data: null,
       error: new Error(
-        `Error loading registry dependencies: ${fileResults.find((result) => result.error)?.error?.message.toLowerCase()}`,
+        `Error loading registry dependencies: ${errors[0]?.error?.message.toLowerCase()}`,
       ),
     }
   }
 
+  const npmDependencies = Object.assign({}, ...results.map(r => r.npmDependencies))
+  const filesWithRegistry = Object.assign({}, ...results.map(r => r.fileWithRegistry).filter(Boolean))
+
   return {
-    data: fileResults
-      .filter((result) => result?.data && typeof result.data === "object")
-      .reduce(
-        (acc, r) => ({
-          ...acc,
-          ...(r.data as Record<string, { code: string; registry: string }>),
-        }),
-        {},
-      ),
+    data: {
+      filesWithRegistry,
+      npmDependencies,
+    },
     error: null,
   }
 }

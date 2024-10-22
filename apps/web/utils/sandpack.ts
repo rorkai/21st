@@ -13,7 +13,6 @@ export function generateSandpackFiles({
   demoCode: string
   theme: "light" | "dark"
 }) {
-  console.log(demoComponentNames);
   const shouldShowSelect = demoComponentNames.length > 1;
 
   let appTsxContent = ""

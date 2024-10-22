@@ -24,7 +24,7 @@ const SandpackPreview = React.lazy(() =>
 export function PublishComponentPreview({
   code,
   demoCode,
-  slugToPublish,  
+  slugToPublish,
   registryToPublish = "ui",
   directRegistryDependencies,
   isDarkTheme,
@@ -82,20 +82,16 @@ export function PublishComponentPreview({
 
   const files = {
     ...sandpackDefaultFiles,
-    ...Object.fromEntries(
-      Object.entries(registryDependencies ?? {}).map(([key, value]) => [
-        key,
-        value.code,
-      ]),
-    ),
+    ...(registryDependencies?.filesWithRegistry ?? {}),
   }
 
   const dependencies = useMemo(() => {
     return {
       ...extractNPMDependencies(code),
       ...extractNPMDependencies(demoCode),
+      ...(registryDependencies?.npmDependencies || {}),
     }
-  }, [code, demoCode])
+  }, [code, demoCode, registryDependencies?.npmDependencies])
 
   const providerProps = {
     template: "react-ts" as const,

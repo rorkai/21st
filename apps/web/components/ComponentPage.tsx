@@ -42,6 +42,7 @@ export default function ComponentPage({
   demoDependencies,
   demoComponentNames,
   registryDependencies,
+  npmDependenciesOfRegistryDependencies,
 }: {
   component: Component & { user: User } & { tags: Tag[] }
   code: string
@@ -50,6 +51,7 @@ export default function ComponentPage({
   demoDependencies: Record<string, string>
   demoComponentNames: string[]
   registryDependencies: Record<string, string>
+  npmDependenciesOfRegistryDependencies: Record<string, string>
 }) {
   const [component, setComponent] = useState(initialComponent)
   const { user } = useUser()

@@ -16,13 +16,17 @@ export async function GET(
       .select("*, user:users!user_id(*)")
       .eq("component_slug", component_slug)
       .eq("user.username", username)
+      .not("user", "is", null)
       .returns<
         (Tables<"components"> & { user: Tables<"users"> })[]
       >()
       .single()
+    
+    if (error) {
+      throw new Error(`Error fetching component: ${error.message}`)
+    }
 
-
-    if (error || !component) {
+    if (!component) {
       return NextResponse.json(
         { error: "Component not found" },
         { status: 404 },
@@ -47,22 +51,25 @@ export async function GET(
 
     console.log(resolvedRegistryDependencies.data)
 
-    const files = Object.entries(resolvedRegistryDependencies.data).map(
-      ([path, { code, registry }]) => ({
-        path,
+    const files = Object.entries(
+      resolvedRegistryDependencies.data.filesWithRegistry,
+    ).map(([path, { code, registry }]) => ({
+      path,
         content: code,
         type: `registry:${registry}`,
         target: "",
       }),
     )
 
+    const npmDependencies = [
+      ...Object.keys(dependencies),
+      ...Object.keys(resolvedRegistryDependencies.data.npmDependencies),
+    ]
+
     const responseData: ComponentRegistryResponse = {
       name: component_slug,
       type: `registry:${component.registry}`,
-      dependencies:
-        Object.keys(dependencies).length > 0
-          ? Object.keys(dependencies)
-          : undefined,
+      dependencies: npmDependencies.length > 0 ? npmDependencies : undefined,
       files,
     }
 

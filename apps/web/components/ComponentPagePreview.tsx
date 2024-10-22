@@ -74,7 +74,6 @@ export function ComponentPagePreview({
 
   const visibleFiles = [
     demoComponentFile,
-    mainComponentFile,
     ...Object.keys(registryDependencies),
   ].filter((file): file is string => file !== undefined)
 

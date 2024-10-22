@@ -16,7 +16,7 @@ export async function resolveRegistryDependencyTree({
       error: null
     }
   | { data: null; error: Error }
-  > {
+> {
   const filterConditions = sourceDependencySlugs
     .map((slug) => {
       const [username, componentSlug] = slug.split("/")
@@ -102,10 +102,14 @@ export async function resolveRegistryDependencyTree({
     }
   }
 
-  const npmDependencies = Object.assign({}, ...results.map(r => r.npmDependencies))
-  const filesWithRegistry = Object.assign({}, ...results.map(r => r.fileWithRegistry).filter(Boolean))
-
-  console.log("filesWithRegistry", filesWithRegistry)
+  const npmDependencies = Object.assign(
+    {},
+    ...results.map((r) => r.npmDependencies),
+  )
+  const filesWithRegistry = Object.assign(
+    {},
+    ...results.map((r) => r.fileWithRegistry).filter(Boolean),
+  )
 
   return {
     data: {

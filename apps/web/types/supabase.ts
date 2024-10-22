@@ -30,6 +30,13 @@ export type Database = {
             foreignKeyName: "component_dependencies_closure_component_id_fkey"
             columns: ["component_id"]
             isOneToOne: false
+            referencedRelation: "component_dependencies_graph_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_dependencies_closure_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
             referencedRelation: "components"
             referencedColumns: ["id"]
           },
@@ -38,6 +45,13 @@ export type Database = {
             columns: ["component_id"]
             isOneToOne: false
             referencedRelation: "components_with_username"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_dependencies_closure_dependency_component_id_fkey"
+            columns: ["dependency_component_id"]
+            isOneToOne: false
+            referencedRelation: "component_dependencies_graph_view"
             referencedColumns: ["id"]
           },
           {
@@ -77,6 +91,13 @@ export type Database = {
             foreignKeyName: "component_likes_component_id_fkey"
             columns: ["component_id"]
             isOneToOne: false
+            referencedRelation: "component_dependencies_graph_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_likes_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
             referencedRelation: "components"
             referencedColumns: ["id"]
           },
@@ -110,6 +131,13 @@ export type Database = {
           tag_id?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "component_tags_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "component_dependencies_graph_view"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "component_tags_component_id_fkey"
             columns: ["component_id"]
@@ -266,6 +294,87 @@ export type Database = {
       }
     }
     Views: {
+      component_dependencies_graph_view: {
+        Row: {
+          code: string | null
+          component_id: number | null
+          component_names: Json | null
+          component_slug: string | null
+          created_at: string | null
+          demo_code: string | null
+          demo_component_names: Json | null
+          demo_dependencies: Json | null
+          dependencies: Json | null
+          dependency_component_id: number | null
+          depth: number | null
+          description: string | null
+          direct_registry_dependencies: Json | null
+          downloads_count: number | null
+          fts: unknown | null
+          id: number | null
+          is_public: boolean | null
+          license: string | null
+          likes_count: number | null
+          name: string | null
+          preview_url: string | null
+          registry: string | null
+          source_component_author: string | null
+          source_component_slug: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "component_dependencies_closure_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_dependencies_closure_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "component_dependencies_graph_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_dependencies_closure_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components_with_username"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_dependencies_closure_dependency_component_id_fkey"
+            columns: ["dependency_component_id"]
+            isOneToOne: false
+            referencedRelation: "components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_dependencies_closure_dependency_component_id_fkey"
+            columns: ["dependency_component_id"]
+            isOneToOne: false
+            referencedRelation: "component_dependencies_graph_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_dependencies_closure_dependency_component_id_fkey"
+            columns: ["dependency_component_id"]
+            isOneToOne: false
+            referencedRelation: "components_with_username"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "components_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       components_with_username: {
         Row: {
           code: string | null
@@ -288,6 +397,7 @@ export type Database = {
           preview_url: string | null
           registry: string | null
           updated_at: string | null
+          user: Json | null
           user_id: string | null
           username: string | null
         }

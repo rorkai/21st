@@ -16,33 +16,22 @@ export async function resolveRegistryDependencyTree({
       error: null
     }
   | { data: null; error: Error }
-> {
+  > {
+  const filterConditions = sourceDependencySlugs
+    .map((slug) => {
+      const [username, componentSlug] = slug.split("/")
+      return `and(source_username.eq."${username}",source_component_slug.eq."${componentSlug}")`
+    })
+    .join(",")
   const { data: dependencies, error } = await supabase
-    .from("component_dependencies_closure")
-    .select(
-      `
-      component_id!inner(user_id(username), component_slug),
-      dependency_component_id,
-      components:dependency_component_id (
-        component_slug,
-        registry,
-        code,
-        dependencies,
-        user:user_id (username)
-      )
-    `,
-    )
-    .in(
-      "component_id.component_slug",
-      sourceDependencySlugs.map((slug) => slug.split("/")[1]),
-    )
+    .from("component_dependencies_graph_view")
+    .select("*")
+    .or(filterConditions)
     .returns<
-      {
-        components: Partial<Tables<"components">> & {
-          user: { username: string }
-          dependencies: string
-        }
-      }[]
+      (Partial<Tables<"components">> & {
+        source_component_slug: string
+        source_username: string
+      })[]
     >()
 
   if (error)
@@ -56,11 +45,11 @@ export async function resolveRegistryDependencyTree({
   const r2FetchPromises = dependencies.map(async (dep) => {
     const {
       code: r2Link,
-      component_slug,
-      user: { username },
+      source_component_slug: component_slug,
+      source_username: username,
       registry,
       dependencies: npmDependencies,
-    } = dep.components
+    } = dep
 
     const response = await fetch(r2Link!)
     if (!response.ok) {

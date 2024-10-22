@@ -115,7 +115,10 @@ export default async function ComponentPageServer({
       ...componentAndDemoCodePromises,
       resolveRegistryDependencyTree({
         supabase: supabaseWithAdminAccess,
-        sourceDependencySlugs: directRegistryDependencies,
+        sourceDependencySlugs: [
+          `${username}/${component_slug}`,
+          ...directRegistryDependencies,
+        ],
       }),
     ])
 

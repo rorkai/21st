@@ -6,3 +6,9 @@ export const LoadingSpinner = () => (
     <span className="ml-2 text-foreground">Loading...</span>
   </div>
 )
+
+export const LoadingSpinnerPage = () => (
+  <div className="w-full h-screen flex items-center justify-center bg-background">
+    <LoadingSpinner />
+  </div>
+)

@@ -20,7 +20,6 @@ import {
 import { useClerkSupabaseClient } from "@/utils/clerk"
 import { toast } from "sonner"
 import { useQuery } from "@tanstack/react-query"
-import { componentReadableDbFields } from "@/utils/dbQueries"
 
 export const ComponentPageInfo = ({
   component,
@@ -42,22 +41,28 @@ export const ComponentPageInfo = ({
   const { data: dependencyComponents, isLoading: isLoadingDependencies } =
     useQuery({
       queryKey: [
-        "registryDependencyComponentsList",
+        "directRegistryDependenciesComponents",
         directRegistryDependencies,
       ],
       queryFn: async () => {
+        // Using a view here because PostgREST has issues with `or(and(...))` on joined tables
+        // See: https://github.com/PostgREST/postgrest/issues/2563
         const { data, error } = await supabase
-          .from("components")
-          .select(componentReadableDbFields)
-          .in(
-            "component_slug",
-            directRegistryDependencies.map((d) => d.split("/")[1]),
+          .from("components_with_username")
+          .select("*")
+          .or(
+            directRegistryDependencies
+              .map((d) => {
+                const [username, slug] = d.split("/")
+                return `and(username.eq."${username}",component_slug.eq."${slug}")`
+              })
+              .join(","),
           )
           .returns<(Component & { user: User })[]>()
 
         if (error) {
           console.error("Error fetching dependency component:", error)
-          return null
+          throw error
         }
 
         return data

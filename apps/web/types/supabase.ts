@@ -34,10 +34,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "component_dependencies_closure_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components_with_username"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "component_dependencies_closure_dependency_component_id_fkey"
             columns: ["dependency_component_id"]
             isOneToOne: false
             referencedRelation: "components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_dependencies_closure_dependency_component_id_fkey"
+            columns: ["dependency_component_id"]
+            isOneToOne: false
+            referencedRelation: "components_with_username"
             referencedColumns: ["id"]
           },
         ]
@@ -64,6 +78,13 @@ export type Database = {
             columns: ["component_id"]
             isOneToOne: false
             referencedRelation: "components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_likes_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components_with_username"
             referencedColumns: ["id"]
           },
           {
@@ -94,6 +115,13 @@ export type Database = {
             columns: ["component_id"]
             isOneToOne: false
             referencedRelation: "components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_tags_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components_with_username"
             referencedColumns: ["id"]
           },
           {
@@ -238,7 +266,41 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      components_with_username: {
+        Row: {
+          code: string | null
+          component_names: Json | null
+          component_slug: string | null
+          created_at: string | null
+          demo_code: string | null
+          demo_component_names: Json | null
+          demo_dependencies: Json | null
+          dependencies: Json | null
+          description: string | null
+          direct_registry_dependencies: Json | null
+          downloads_count: number | null
+          fts: unknown | null
+          id: number | null
+          is_public: boolean | null
+          license: string | null
+          likes_count: number | null
+          name: string | null
+          preview_url: string | null
+          registry: string | null
+          updated_at: string | null
+          user_id: string | null
+          username: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "components_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       delete_component: {
@@ -276,6 +338,10 @@ export type Database = {
           user_data: Json
           tags: Json
         }[]
+      }
+      is_trigger_operation: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       requesting_user_id: {
         Args: Record<PropertyKey, never>

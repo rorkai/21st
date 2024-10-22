@@ -9,14 +9,14 @@ import {
   SandpackProvider,
   SandpackFileExplorer,
   SandpackCodeViewer,
-} from "@codesandbox/sandpack-react/unstyled"
+} from "@codesandbox/sandpack-react"
 import { useQuery } from "@tanstack/react-query"
 import React, { useMemo } from "react"
 import { LoadingSpinner } from "../LoadingSpinner"
 import { resolveRegistryDependencyTree } from "@/utils/queries.server"
 
 const SandpackPreview = React.lazy(() =>
-  import("@codesandbox/sandpack-react/unstyled").then((module) => ({
+  import("@codesandbox/sandpack-react").then((module) => ({
     default: module.SandpackPreview,
   })),
 )
@@ -119,7 +119,10 @@ export function PublishComponentPreview({
       {isLoading && <LoadingSpinner />}
       {!registryDependenciesError && !isLoading && (
         <SandpackProvider {...providerProps}>
-          <SandpackPreview showSandpackErrorOverlay={false} />
+          <SandpackPreview
+            showSandpackErrorOverlay={false}
+            showOpenInCodeSandbox={true}
+          />
           {isDebug && (
             <>
               <SandpackFileExplorer />

@@ -2,7 +2,7 @@ import { supabaseWithAdminAccess } from "@/utils/supabase"
 import { NextRequest, NextResponse } from "next/server"
 import { ComponentRegistryResponse } from "./types"
 import { resolveRegistryDependencyTree } from "@/utils/queries.server"
-import { Tables } from "@/types/supabase";
+import { Tables } from "@/types/supabase"
 
 export async function GET(
   request: NextRequest,
@@ -17,11 +17,9 @@ export async function GET(
       .eq("component_slug", component_slug)
       .eq("user.username", username)
       .not("user", "is", null)
-      .returns<
-        (Tables<"components"> & { user: Tables<"users"> })[]
-      >()
+      .returns<(Tables<"components"> & { user: Tables<"users"> })[]>()
       .single()
-    
+
     if (error) {
       throw new Error(`Error fetching component: ${error.message}`)
     }
@@ -55,11 +53,10 @@ export async function GET(
       resolvedRegistryDependencies.data.filesWithRegistry,
     ).map(([path, { code, registry }]) => ({
       path,
-        content: code,
-        type: `registry:${registry}`,
-        target: "",
-      }),
-    )
+      content: code,
+      type: `registry:${registry}`,
+      target: "",
+    }))
 
     const npmDependencies = [
       ...Object.keys(dependencies),

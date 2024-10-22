@@ -306,7 +306,6 @@ export type Database = {
           demo_dependencies: Json | null
           dependencies: Json | null
           dependency_component_id: number | null
-          depth: number | null
           description: string | null
           direct_registry_dependencies: Json | null
           downloads_count: number | null
@@ -318,8 +317,8 @@ export type Database = {
           name: string | null
           preview_url: string | null
           registry: string | null
-          source_component_author: string | null
           source_component_slug: string | null
+          source_username: string | null
           updated_at: string | null
           user_id: string | null
         }

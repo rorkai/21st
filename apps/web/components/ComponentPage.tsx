@@ -364,6 +364,9 @@ export default function ComponentPage({
           demoDependencies={demoDependencies}
           demoComponentNames={demoComponentNames}
           registryDependencies={registryDependencies}
+          npmDependenciesOfRegistryDependencies={
+            npmDependenciesOfRegistryDependencies
+          }
         />
       </div>
       <EditComponentDialog

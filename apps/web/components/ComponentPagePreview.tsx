@@ -35,6 +35,7 @@ export function ComponentPagePreview({
   demoDependencies,
   demoComponentNames,
   registryDependencies,
+  npmDependenciesOfRegistryDependencies,
 }: {
   component: Component & { user: User } & { tags: Tag[] }
   code: string
@@ -43,6 +44,7 @@ export function ComponentPagePreview({
   demoDependencies: Record<string, string>
   demoComponentNames: string[]
   registryDependencies: Record<string, string>
+  npmDependenciesOfRegistryDependencies: Record<string, string>
 }) {
   const sandpackRef = useRef<HTMLDivElement>(null)
   const { theme } = useTheme()
@@ -84,30 +86,6 @@ export function ComponentPagePreview({
     }),
   )
 
-  const npmDependenciesOfDirectRegistryDependencies = Object.values(
-    registryDependencies,
-  ).reduce((acc, code) => {
-    const extractNpmDependencies = (code: string) => {
-      const deps: Record<string, string> = {}
-      const lines = code.split("\n")
-      lines.forEach((line) => {
-        if (
-          line.startsWith("import") &&
-          !line.includes("./") &&
-          !line.includes("../") &&
-          !line.includes("@/")
-        ) {
-          const match = line.match(/from\s+['"](.+)['"]/)
-          if (match && match[1]) {
-            deps[match[1]] = "latest"
-          }
-        }
-      })
-      return deps
-    }
-    return { ...acc, ...extractNpmDependencies(code) }
-  }, {})
-
   const providerProps: SandpackProviderProps = {
     theme: isDarkTheme ? "dark" : "light",
     template: "react-ts" as const,
@@ -122,7 +100,7 @@ export function ComponentPagePreview({
         "framer-motion": "latest",
         ...dependencies,
         ...demoDependencies,
-        ...npmDependenciesOfDirectRegistryDependencies,
+        ...npmDependenciesOfRegistryDependencies,
       },
     },
     options: {

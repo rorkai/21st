@@ -33,6 +33,15 @@ You can also copy the code directly from the website, but note that you’ll nee
 
 ## Contributing to 21st
 
+### Prerequisites
+
+- Supabase account
+- Clerk account
+- Installed ngrok or other tunneling software
+- Cloudflare R2 account
+
+### Setup
+
 1. Fork the GitHub repo, clone to your local editor (we recommend Cursor if you're non-technical)
 
 2. Install dependencies (we love `pnpm`)
@@ -40,6 +49,54 @@ You can also copy the code directly from the website, but note that you’ll nee
    ```bash
    pnpm install
    ```
+
+3. Create a `.env` file in root of the project
+
+3. Create a Supabase project, add the `.env` variables like: 
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://*****
+NEXT_PUBLIC_SUPABASE_KEY=*****
+SUPABASE_SERVICE_ROLE_KEY=*****
+```
+
+4. Install Supabase CLI [(link)](https://supabase.com/docs/guides/local-development) and perform a migration to remote DB:
+
+```
+supabase init
+cp db_migrations/*.sql supabase/migrations
+# link local db to your remote project
+supabase link
+supabase start
+supabase db push
+```
+
+5. Create a Clerk project. 
+    1. Add the `.env` variables like:
+
+```
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=*****
+CLERK_SECRET_KEY=***
+```
+    
+Also, add a Supabase integration using JWT [(link)](https://clerk.com/docs/integrations/databases/supabase).
+
+After that, add a webhook to your ngrok url like `https://${your_ngrok_url}/api/webhooks/clerk`, adding the created hook secret to `.env`
+
+```
+CLERK_WEBHOOK_SECRET=*****
+```
+
+6. Create a Cloudflare R2 bucket called `components-code`, update `.env` to:
+
+```
+# public R2 url for view
+NEXT_PUBLIC_CDN_URL=https://*****
+R2_ACCESS_KEY_ID=*****
+R2_SECRET_ACCESS_KEY=*****
+# private R2 url for populating the bucket
+NEXT_PUBLIC_R2_ENDPOINT=https://*****
+```
 
 3. Run the development server:
 

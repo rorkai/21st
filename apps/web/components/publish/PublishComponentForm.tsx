@@ -307,10 +307,10 @@ export default function PublishComponentForm() {
     <>
       <Form
         {...form}
-        className="flex w-full h-full items-center justify-center"
       >
-        <AnimatePresence>
-          <div className={`flex gap-4 items-center h-full w-full mt-2`}>
+        <div className="flex w-full h-full items-center justify-center">
+          <AnimatePresence>
+            <div className={`flex gap-4 items-center h-full w-full mt-2`}>
             <div
               className={cn(
                 "flex flex-col scrollbar-hide items-start gap-2 py-10 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[400px] ml-0",
@@ -327,9 +327,16 @@ export default function PublishComponentForm() {
                   <h2 className="text-3xl font-bold mb-4">
                     Publish your component
                   </h2>
-                  <NameSlugForm form={form} />
+                    <NameSlugForm
+                      form={form}
+                      isReadOnly={false}
+                      placeholderName={"Button"}
+                    />
                   <Button
                     className="mt-4"
+                    disabled={
+                      !form.watch("name") || !form.watch("slug_available")
+                    }
                     size="lg"
                     onClick={() => setFormStep("code")}
                   >
@@ -540,7 +547,8 @@ export default function PublishComponentForm() {
               </motion.div>
             )}
           </div>
-        </AnimatePresence>
+          </AnimatePresence>
+        </div>
       </Form>
       {isDebug && (
         <DebugInfoDisplay

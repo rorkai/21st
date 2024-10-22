@@ -71,7 +71,7 @@ export const useIsCheckSlugAvailable = ({
     queryKey: ["slugCheck", slug, userId],
     queryFn: async () => {
       if (!isValidSlug(slug)) {
-        return false
+        throw new Error("Slug should contain only lowercase letters, numbers and dashes. It should end with a letter or a number")
       }
       return await checkSlugUnique(client, slug, userId)
     },

@@ -83,7 +83,7 @@ export default async function UserProfile({
             </div>
           </div>
           <div className="w-full md:w-[70%]">
-            <ComponentsList initialComponents={components} />
+            <ComponentsList components={components} />
           </div>
         </div>
       </div>

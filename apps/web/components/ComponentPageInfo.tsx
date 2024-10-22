@@ -269,7 +269,7 @@ export const ComponentPageInfo = ({
               {isLoadingDependencies ? (
                 <LoadingSpinner />
               ) : dependencyComponents ? (
-                <ComponentsList initialComponents={dependencyComponents!} />
+                <ComponentsList components={dependencyComponents!} />
               ) : (
                 <span>Error loading registry dependencies</span>
               )}

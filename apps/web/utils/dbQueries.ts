@@ -123,18 +123,6 @@ export async function getComponents(
   return data as (Component & { user: User } & { tags: Tag[] })[]
 }
 
-export function useComponents(
-  supabase: SupabaseClient<Database>,
-  tagSlug?: string,
-) {
-  return useQuery({
-    queryKey: ["components", tagSlug],
-    queryFn: () => getComponents(supabase, tagSlug),
-    refetchOnWindowFocus: false,
-    retry: false,
-  })
-}
-
 export async function getComponentTags(
   componentId: string,
 ): Promise<Tag[] | null> {
@@ -337,37 +325,6 @@ export function useComponentOwnerUsername(
 
       return user.username
     },
-  })
-}
-
-async function getTagInfo(
-  supabase: SupabaseClient<Database>,
-  tagSlug: string,
-): Promise<Tag | null> {
-  const { data, error } = await supabase
-    .from("tags")
-    .select("*")
-    .eq("slug", tagSlug)
-    .single()
-
-  if (error) {
-    console.error("Error fetching tag info:", error)
-    return null
-  }
-
-  return data
-}
-
-export function useTagInfo(
-  supabase: SupabaseClient<Database>,
-  tagSlug?: string,
-) {
-  return useQuery<Tag | null, Error>({
-    queryKey: ["tagInfo", tagSlug],
-    queryFn: () => (tagSlug ? getTagInfo(supabase, tagSlug) : null),
-    enabled: !!tagSlug,
-    refetchOnMount: true,
-    staleTime: 0,
   })
 }
 

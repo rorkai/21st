@@ -55,6 +55,7 @@ export function PublishComponentPreview({
       }
       return data
     },
+    enabled: directRegistryDependencies?.length > 0,
   })
 
   const demoComponentNames = useMemo(

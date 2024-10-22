@@ -1,3 +1,5 @@
+"use client"
+
 import {
   Dialog,
   DialogContent,
@@ -29,6 +31,9 @@ export function EditComponentDialog({
   const form = useForm<FormData>({
     defaultValues: {
       name: component.name,
+      component_slug: component.component_slug,
+      unknown_dependencies: [],
+      slug_available: true,
       description: component.description ?? "",
       license: component.license,
       tags: component.tags,
@@ -133,9 +138,7 @@ export function EditComponentDialog({
           previewImage={previewImage}
           handleFileChange={handleFileChange}
           handleSubmit={handleSubmit}
-          isLoading={isLoading}
-          unknownDependencies={[]}
-          componentName={component.name}
+          isSubmitting={isLoading}
         />
       </DialogContent>
     </Dialog>

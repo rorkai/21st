@@ -89,10 +89,10 @@ export const CodeGuidelinesAlert = () => {
 
 export const DemoComponentGuidelinesAlert = ({
   mainComponentName,
-  possibleComponentSlug,
+  componentSlug,
 }: {
-  mainComponentName: string | null
-  possibleComponentSlug: string
+  mainComponentName: string
+  componentSlug: string
 }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
@@ -115,20 +115,16 @@ export const DemoComponentGuidelinesAlert = ({
                   <Code code="@/components/ui" language="pseudo" /> path:
                   <Code
                     display="block"
-                    code={`import { ${mainComponentName ?? "MyComponent"} } from "@/components/ui/${possibleComponentSlug}"`}
+                    code={`import { ${mainComponentName ?? "MyComponent"} } from "@/components/ui/${componentSlug}"`}
                   />
                 </li>
                 <li>
-                  Import existing components from our registry via{" "}
-                  <Code language="pseudo" code={`+@<author>/<slug>`} /> alias,
-                  e.g.:
+                  Import any existing component from our registry by its slug:
                   <Code
                     display="block"
-                    code={`import { Button } from "+@shadcn/button"`}
+                    code={`import { Button } from "@/components/ui/button"`}
                   />
-                  We will automatically resolve the component from the registry,
-                  and replace the import path in the code (if the component
-                  exists).
+                  We'll ask you to specify the registry URL of the component later
                 </li>
                 <li>
                   You can use any dependencies from npm, e.g.:
@@ -171,6 +167,53 @@ export const DemoComponentGuidelinesAlert = ({
   </motion.div>
 )
 
+const InputUnknownDependency = ({
+  slug,
+  onDependencyResolved,
+}: {
+  slug: string
+  onDependencyResolved: (username: string, slug: string) => void
+}) => {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleSave = () => {
+    const value = inputRef.current?.value
+    const appHost = new URL(process.env.NEXT_PUBLIC_APP_URL!).host
+    if (!value?.includes(appHost)) {
+      setError("Please enter a valid URL")
+      return
+    }
+    const [username, componentSlug] = value
+      .replace(`${appHost}/`, "")
+      .replace("https://", "")
+      .split("/")
+
+    if (!username || !componentSlug) {
+      setError("Couldn't resolve the username")
+      return
+    }
+    onDependencyResolved(username, componentSlug)
+  }
+
+  return (
+    <div className="flex flex-col">
+      <Label className="text-sm">
+        Enter the link to <b>{slug}</b>
+      </Label>
+      <Input
+        ref={inputRef}
+        placeholder='e.g. "https://21st.dev/shadcn/button"'
+        className="mt-1 w-full"
+      />
+      <Label className="text-sm text-red-500">{error}</Label>
+      <Button className="mt-2" onClick={handleSave}>
+        Save
+      </Button>
+    </div>
+  )
+}
+
 export const ResolveUnknownDependenciesCard = ({
   unknownDependencies,
   onDependencyResolved,
@@ -178,54 +221,26 @@ export const ResolveUnknownDependenciesCard = ({
   unknownDependencies: string[]
   onDependencyResolved: (username: string, slug: string) => void
 }) => {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [error, setError] = useState<string | null>(null)
   return (
     <div className="w-full">
       <Alert className="my-2">
-      <Codepen className="h-4 w-4" />
-      <AlertTitle>Unknown dependencies detected</AlertTitle>
-      <AlertDescription>
-        To use another registry component within your component:
-        <br />
-        1. Find it on 21st.dev, or publish it if it's not there
-        <br />
-        2. Paste the link here
-      </AlertDescription>
-    </Alert>
-    {unknownDependencies.map((slug, index) => (
-      <div key={slug} className={`flex flex-col ${index > 0 ? "mt-2" : ""}`}>
-        <Label className="text-sm">Enter the link to <b>{slug}</b></Label>
-        <Input
-          ref={inputRef}
-          placeholder='e.g. "https://21st.dev/shadcn/button"'
-          className="mt-1 w-full"
-        />
-        <Label className="text-sm text-red-500">{error}</Label>
-        <Button
-          className="mt-2"
-          onClick={() => {
-            const value = inputRef.current?.value
-            const appHost = new URL(process.env.NEXT_PUBLIC_APP_URL!).host
-            if (!value?.includes(appHost)) {
-              setError("Please enter a valid URL")
-              return
-            }
-            const [username, slug] = value
-              .replace(`${appHost}/`, "")
-              .replace("https://", "")
-              .split("/")
-            
-            if (!username || !slug) {
-              setError("Couldn't resolve the username")
-              return
-            }
-            onDependencyResolved(username, slug)
-          }}
-        >
-          Save
-        </Button>
-      </div>
+        <Codepen className="h-4 w-4" />
+        <AlertTitle>Unknown dependencies detected</AlertTitle>
+        <AlertDescription>
+          To use another registry component within your component:
+          <br />
+          1. Find it on 21st.dev, or publish it if it's not there
+          <br />
+          2. Paste the link here
+        </AlertDescription>
+      </Alert>
+      {unknownDependencies.map((slug, index) => (
+        <div key={slug} className={`flex flex-col ${index > 0 ? "mt-2" : ""}`}>
+          <InputUnknownDependency
+            slug={slug}
+            onDependencyResolved={onDependencyResolved}
+          />
+        </div>
       ))}
     </div>
   )
@@ -236,7 +251,9 @@ export const DebugInfoDisplay = ({
   demoComponentNames,
   dependencies,
   demoDependencies,
-}: ParsedCodeData) => (
+}: ParsedCodeData & {
+  unknownDependencies: string[]
+}) => (
   <>
     <div className="w-full">
       <Label>Component names</Label>

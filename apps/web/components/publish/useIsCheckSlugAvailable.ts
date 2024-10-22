@@ -55,9 +55,11 @@ export const generateUniqueSlug = async (
 export const useIsCheckSlugAvailable = ({
   slug,
   userId,
+  enabled = true,
 }: {
   slug: string
   userId: string
+  enabled?: boolean
 }) => {
   const client = useClerkSupabaseClient()
 
@@ -73,7 +75,7 @@ export const useIsCheckSlugAvailable = ({
       }
       return await checkSlugUnique(client, slug, userId)
     },
-    enabled: !!slug && !!userId,
+    enabled: !!slug && !!userId && !!enabled,
   })
 
   return {

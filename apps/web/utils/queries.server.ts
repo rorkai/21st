@@ -20,7 +20,7 @@ export async function resolveRegistryDependencyTree({
   const filterConditions = sourceDependencySlugs
     .map((slug) => {
       const [username, componentSlug] = slug.split("/")
-      return `and(source_username.eq."${username}",source_component_slug.eq."${componentSlug}")`
+      return `and(source_author_username.eq."${username}",source_component_slug.eq."${componentSlug}")`
     })
     .join(",")
   const { data: dependencies, error } = await supabase
@@ -29,8 +29,9 @@ export async function resolveRegistryDependencyTree({
     .or(filterConditions)
     .returns<
       (Partial<Tables<"components">> & {
+        dependency_author_username: string
         source_component_slug: string
-        source_username: string
+        source_author_username: string
       })[]
     >()
 
@@ -45,8 +46,8 @@ export async function resolveRegistryDependencyTree({
   const r2FetchPromises = dependencies.map(async (dep) => {
     const {
       code: r2Link,
-      source_component_slug: component_slug,
-      source_username: username,
+      component_slug,
+      dependency_author_username: username,
       registry,
       dependencies: npmDependencies,
     } = dep
@@ -103,6 +104,8 @@ export async function resolveRegistryDependencyTree({
 
   const npmDependencies = Object.assign({}, ...results.map(r => r.npmDependencies))
   const filesWithRegistry = Object.assign({}, ...results.map(r => r.fileWithRegistry).filter(Boolean))
+
+  console.log("filesWithRegistry", filesWithRegistry)
 
   return {
     data: {

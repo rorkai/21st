@@ -60,7 +60,7 @@ export const isFormValid = (form: UseFormReturn<FormData>) => {
     component_slug.length >= 2 &&
     code.length > 0 &&
     demo_code.length > 0 &&
-    !!unknown_dependencies?.length &&
+    unknown_dependencies?.length === 0 &&
     slug_available === true
   )
 }

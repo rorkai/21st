@@ -321,6 +321,12 @@ const NameSlugForm: React.FC<{
     userId: user?.id ?? "",
     enabled: !isReadOnly,
   })
+  if (
+    slugAvailable !== undefined &&
+    form.getValues("slug_available") !== slugAvailable
+  ) {
+    form.setValue("slug_available", slugAvailable)
+  }
 
   const nameInputRef = useRef<HTMLInputElement | null>(null)
   useAutoFocusNameInput(nameInputRef)

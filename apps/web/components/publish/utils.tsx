@@ -26,7 +26,8 @@ export const formSchema = z.object({
     .optional()
     .default([]),
   is_public: z.boolean().default(true),
-  preview_url: z.instanceof(File).optional(),
+  preview_image_data_url: z.string().optional(),
+  preview_image_file: z.instanceof(File).optional(),
   license: z.string().optional(),
   unknown_dependencies: z.array(z.string()),
   direct_registry_dependencies: z.array(z.string()),

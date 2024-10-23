@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 import { UseFormReturn } from "react-hook-form"
-import { FormData } from "./utils"
+import { FormData, isFormValid } from "./utils"
 
 export const useSubmitFormHotkeys = (
   form: UseFormReturn<FormData>,
@@ -9,8 +9,7 @@ export const useSubmitFormHotkeys = (
 ) => {
   useEffect(() => {
     const keyDownHandler = (e: KeyboardEvent) => {
-      const formData = form.getValues()
-      const isFormComplete = formData.name && formData.preview_url
+      const isFormComplete = isFormValid(form)
       if (isFormComplete) {
         if (e.code === "Enter" && (e.metaKey || e.ctrlKey)) {
           e.preventDefault()

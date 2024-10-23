@@ -11,7 +11,7 @@ import { Component, User, Tag } from "@/types/global"
 import { useForm } from "react-hook-form"
 import { FormData } from "./publish/utils"
 import { uploadToR2 } from "@/utils/r2"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 export function EditComponentDialog({
   component,
@@ -31,42 +31,24 @@ export function EditComponentDialog({
   const form = useForm<FormData>({
     defaultValues: {
       name: component.name,
+      code: component.code,
+      demo_code: component.demo_code,
       component_slug: component.component_slug,
       unknown_dependencies: [],
       slug_available: true,
+      preview_image_data_url: component.preview_url,
       description: component.description ?? "",
       license: component.license,
       tags: component.tags,
     },
   })
 
-  const [isLoading, setIsLoading] = useState(false)
-  const [previewImage, setPreviewImage] = useState<string | null>(
-    component.preview_url || null,
-  )
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert("File is too large. Maximum size is 5 MB.")
-        return
-      }
-
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setPreviewImage(e.target?.result as string)
-      }
-      reader.readAsDataURL(file)
-
-      form.setValue("preview_url", file)
-    }
-  }
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     const formData = form.getValues()
-    setIsLoading(true)
+    setIsSubmitting(true)
 
     const updatedData: Partial<Component & { tags?: Tag[] }> = {}
 
@@ -90,41 +72,28 @@ export function EditComponentDialog({
       }))
     }
 
-    if (formData.preview_url instanceof File) {
-      const fileExtension = formData.preview_url.name.split(".").pop()
+    if (formData.preview_image_file instanceof File) {
+      const fileExtension = formData.preview_image_file.name.split(".").pop()
       const fileKey = `${component.user.id}/${component.component_slug}.${fileExtension}`
-      const buffer = Buffer.from(await formData.preview_url.arrayBuffer())
+      const buffer = Buffer.from(
+        await formData.preview_image_file.arrayBuffer(),
+      )
       const base64Content = buffer.toString("base64")
       const previewImageUrl = await uploadToR2({
         file: {
           name: fileKey,
-          type: formData.preview_url.type,
+          type: formData.preview_image_file.type,
           encodedContent: base64Content,
         },
         fileKey,
         bucketName: "components-code",
-        contentType: formData.preview_url.type,
+        contentType: formData.preview_image_file.type,
       })
       updatedData.preview_url = previewImageUrl
     }
 
     await onUpdate(updatedData)
   }
-
-  useEffect(() => {
-    const keyDownHandler = (e: KeyboardEvent) => {
-      if (e.code === "Enter" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        handleSubmit(e as unknown as React.FormEvent)
-      }
-    }
-
-    window.addEventListener("keydown", keyDownHandler)
-
-    return () => {
-      window.removeEventListener("keydown", keyDownHandler)
-    }
-  }, [form, handleSubmit])
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
@@ -135,10 +104,8 @@ export function EditComponentDialog({
         <ComponentDetailsForm
           isEditMode={true}
           form={form}
-          previewImage={previewImage}
-          handleFileChange={handleFileChange}
           handleSubmit={handleSubmit}
-          isSubmitting={isLoading}
+          isSubmitting={isSubmitting}
         />
       </DialogContent>
     </Dialog>

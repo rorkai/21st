@@ -42,8 +42,8 @@ export const licenses: License[] = [
       "Similar to MIT. Allows use, modification, and distribution with minimal restrictions.",
   },
   {
-    value: "unlicense",
-    label: "Unlicense",
+    value: "no-license",
+    label: "No License",
     description:
       "Releases software into the public domain. No restrictions on use or distribution.",
   },

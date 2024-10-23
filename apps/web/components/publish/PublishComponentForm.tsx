@@ -52,7 +52,7 @@ import {
 import { Tables } from "@/types/supabase"
 import { LoadingSpinner } from "../LoadingSpinner"
 import { atom, useAtom } from "jotai"
-import { useSubmitFormHotkeys, useSuccessDialogHotkeys } from "./hotkeys"
+import { useSuccessDialogHotkeys } from "./hotkeys"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -107,8 +107,6 @@ export default function PublishComponentForm() {
     componentNames: [],
     demoComponentNames: [],
   })
-
-  const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
@@ -147,24 +145,6 @@ export default function PublishComponentForm() {
     parseDependenciesFromCode()
   }, [code, demoCode])
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert("File is too large. Maximum size is 5 MB.")
-        return
-      }
-
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setPreviewImage(e.target?.result as string)
-      }
-      reader.readAsDataURL(file)
-
-      form.setValue("preview_url", file)
-    }
-  }
-
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true)
     try {
@@ -192,21 +172,21 @@ export default function PublishComponentForm() {
         }),
       ])
 
-      let previewImageUrl = ""
-      if (data.preview_url) {
-        const fileExtension = data.preview_url.name.split(".").pop()
+      let previewImageR2Url = ""
+      if (data.preview_image_file) {
+        const fileExtension = data.preview_image_file.name.split(".").pop()
         const fileKey = `${user?.id!}/${componentSlug}.${fileExtension}`
-        const buffer = Buffer.from(await data.preview_url.arrayBuffer())
+        const buffer = Buffer.from(await data.preview_image_file.arrayBuffer())
         const base64Content = buffer.toString("base64")
-        previewImageUrl = await uploadToR2({
+        previewImageR2Url = await uploadToR2({
           file: {
             name: fileKey,
-            type: data.preview_url.type,
+            type: data.preview_image_file.type,
             encodedContent: base64Content,
           },
           fileKey,
           bucketName: "components-code",
-          contentType: data.preview_url.type,
+          contentType: data.preview_image_file.type,
         })
       }
 
@@ -222,7 +202,8 @@ export default function PublishComponentForm() {
         dependencies: parsedCode.dependencies,
         demo_dependencies: parsedCode.demoDependencies,
         direct_registry_dependencies: data.direct_registry_dependencies,
-        preview_url: previewImageUrl,
+        preview_url: previewImageR2Url,
+        license: data.license,
       } as Tables<"components">
 
       const { data: insertedComponent, error } = await client
@@ -269,7 +250,6 @@ export default function PublishComponentForm() {
     form.reset()
     setIsSuccessDialogOpen(false)
     setFormStep("nameSlugForm")
-    setPreviewImage(null)
   }
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -277,8 +257,6 @@ export default function PublishComponentForm() {
     const formData = form.getValues()
     onSubmit(formData)
   }
-
-  useSubmitFormHotkeys(form, handleSubmit)
 
   const isPreviewReady =
     unknownDependencies?.length === 0 && !!code.length && !!demoCode.length
@@ -311,7 +289,7 @@ export default function PublishComponentForm() {
                     </h2>
                     <NameSlugForm
                       form={form}
-                      isReadOnly={false}
+                      isSlugReadOnly={false}
                       placeholderName={"Button"}
                     />
                     <Button
@@ -498,8 +476,6 @@ export default function PublishComponentForm() {
                       />
                       <ComponentDetailsForm
                         form={form}
-                        previewImage={previewImage}
-                        handleFileChange={handleFileChange}
                         handleSubmit={handleSubmit}
                         isSubmitting={isSubmitting}
                         isEditMode={false}
@@ -623,11 +599,14 @@ const SuccessDialog = ({
   onGoToComponent,
 }: {
   isOpen: boolean
+  // eslint-disable-next-line no-unused-vars
   onOpenChange: (open: boolean) => void
   onAddAnother: () => void
   onGoToComponent: () => void
 }) => {
   useSuccessDialogHotkeys({ isOpen, onAddAnother, onGoToComponent })
+  const { theme } = useTheme()
+  const isDarkTheme = theme === "dark"
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -646,7 +625,11 @@ const SuccessDialog = ({
           </Button>
           <Button onClick={onGoToComponent} variant="default">
             View Component
-            <Hotkey keys={["⏎"]} modifier={true} />
+            <Hotkey
+              keys={["⏎"]}
+              modifier={true}
+              isBackgroundDark={!isDarkTheme}
+            />
           </Button>
         </DialogFooter>
       </DialogContent>

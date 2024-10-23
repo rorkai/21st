@@ -295,7 +295,7 @@ export default function PublishComponentForm() {
             <div className={`flex gap-4 items-center h-full w-full mt-2`}>
               <div
                 className={cn(
-                  "flex flex-col scrollbar-hide items-start gap-2 py-10 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[400px] ml-0",
+                  "flex flex-col scrollbar-hide items-start gap-2 py-6 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[400px] ml-0",
                 )}
               >
                 {formStep === "nameSlugForm" && (
@@ -327,15 +327,15 @@ export default function PublishComponentForm() {
                   </motion.div>
                 )}
                 {formStep === "code" && (
-                  <>
+                  <div className="w-full">
                     <FormField
                       control={form.control}
                       name="code"
                       render={({ field }) => (
-                        <FormItem className="w-full relative">
+                        <FormItem className="w-full">
                           <FormControl>
                             <motion.div
-                              className="relative"
+                              className="flex flex-col relative"
                               animate={{
                                 height: "70vh",
                               }}
@@ -350,27 +350,28 @@ export default function PublishComponentForm() {
                                   field.onChange(e.target.value)
                                 }}
                                 className={cn(
-                                  "mt-1 min-h-[56px] w-full h-full resize-none scrollbar-hide",
+                                  "w-full flex-grow resize-none scrollbar-hide",
                                 )}
                               />
+                              <div className="absolute bottom-2 right-2 z-2 h-[36px]">
+                                <Button
+                                  size="sm"
+                                  disabled={
+                                    !!code?.length &&
+                                    !parsedCode.componentNames?.length
+                                  }
+                                  onClick={() => setFormStep("demoCode")}
+                                >
+                                  Continue
+                                </Button>
+                              </div>
                             </motion.div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <div className="-mt-5 z-10 pr-2 h-[36px] flex justify-end w-full">
-                      <Button
-                        size="sm"
-                        disabled={
-                          !!code?.length && !parsedCode.componentNames?.length
-                        }
-                        onClick={() => setFormStep("demoCode")}
-                      >
-                        Continue
-                      </Button>
-                    </div>
-                  </>
+                  </div>
                 )}
 
                 {formStep === "demoCode" && (
@@ -392,7 +393,7 @@ export default function PublishComponentForm() {
                               <motion.div
                                 className="relative"
                                 animate={{
-                                  height: "calc(100vh/3)",
+                                  height: "calc(60vh)",
                                 }}
                                 transition={{ duration: 0.3 }}
                               >
@@ -415,20 +416,20 @@ export default function PublishComponentForm() {
                           </FormItem>
                         )}
                       />
+                      <div className="absolute bottom-2 right-2 z-2 h-[36px]">
+                        <Button
+                          size="sm"
+                          disabled={
+                            !!demoCode?.length && !parsedCode.demoComponentNames
+                          }
+                          onClick={() => {
+                            setFormStep("detailedForm")
+                          }}
+                        >
+                          Continue
+                        </Button>
+                      </div>
                     </motion.div>
-                    <div className="-mt-10 z-10 pr-2 h-[36px] flex justify-end w-full">
-                      <Button
-                        size="sm"
-                        disabled={
-                          !!demoCode?.length && !parsedCode.demoComponentNames
-                        }
-                        onClick={() => {
-                          setFormStep("detailedForm")
-                        }}
-                      >
-                        Continue
-                      </Button>
-                    </div>
                   </>
                 )}
 

@@ -171,7 +171,6 @@ export type Database = {
           component_slug: string
           created_at: string
           demo_code: string
-          demo_component_names: Json
           demo_dependencies: Json | null
           demo_direct_registry_dependencies: Json
           dependencies: Json | null
@@ -195,7 +194,6 @@ export type Database = {
           component_slug: string
           created_at?: string
           demo_code: string
-          demo_component_names: Json
           demo_dependencies?: Json | null
           demo_direct_registry_dependencies?: Json
           dependencies?: Json | null
@@ -219,7 +217,6 @@ export type Database = {
           component_slug?: string
           created_at?: string
           demo_code?: string
-          demo_component_names?: Json
           demo_dependencies?: Json | null
           demo_direct_registry_dependencies?: Json
           dependencies?: Json | null
@@ -308,7 +305,6 @@ export type Database = {
           component_slug: string | null
           created_at: string | null
           demo_code: string | null
-          demo_component_names: Json | null
           demo_dependencies: Json | null
           demo_direct_registry_dependencies: Json | null
           dependencies: Json | null
@@ -391,8 +387,8 @@ export type Database = {
           component_slug: string | null
           created_at: string | null
           demo_code: string | null
-          demo_component_names: Json | null
           demo_dependencies: Json | null
+          demo_direct_registry_dependencies: Json | null
           dependencies: Json | null
           description: string | null
           direct_registry_dependencies: Json | null
@@ -515,7 +511,6 @@ export type Database = {
         downloads_count: number | null
         likes_count: number | null
         component_slug: string | null
-        demo_component_names: Json | null
         name: string | null
         demo_dependencies: Json | null
         registry: string | null

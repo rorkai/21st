@@ -215,7 +215,6 @@ export default function PublishComponentForm() {
       const componentData = {
         name: data.name,
         component_names: parsedCode.componentNames,
-        demo_component_names: parsedCode.demoComponentNames,
         component_slug: data.component_slug,
         code: codeUrl,
         demo_code: demoCodeUrl,

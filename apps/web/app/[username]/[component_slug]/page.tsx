@@ -5,6 +5,7 @@ import { getComponent, getUserData } from "@/utils/dbQueries"
 import { resolveRegistryDependencyTree } from "@/utils/queries.server"
 import { supabaseWithAdminAccess } from "@/utils/supabase"
 import ErrorPage from "@/components/ErrorPage"
+import { extractDemoComponentNames } from "@/utils/parsers"
 
 export const generateMetadata = async ({
   params,
@@ -147,6 +148,7 @@ export default async function ComponentPageServer({
       ([key, value]) => [key, value.code],
     ),
   )
+  const demoComponentNames = extractDemoComponentNames(demoResult?.data as string)
 
   return (
     <div className="w-full ">
@@ -156,7 +158,7 @@ export default async function ComponentPageServer({
         demoCode={demoResult?.data as string}
         dependencies={dependencies}
         demoDependencies={demoDependencies}
-        demoComponentNames={component.demo_component_names as string[]}
+        demoComponentNames={demoComponentNames}
         registryDependencies={registryDependenciesFiles}
         npmDependenciesOfRegistryDependencies={
           registryDependenciesData.npmDependencies

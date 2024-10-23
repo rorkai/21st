@@ -20,7 +20,7 @@ import {
 import { useClerkSupabaseClient } from "@/utils/clerk"
 import { toast } from "sonner"
 import { useQuery } from "@tanstack/react-query"
-import { Tag as TagComponent } from "./ui/tag"
+import { Tag as TagComponent } from "@/components/ui/tag"
 
 export const ComponentPageInfo = ({
   component,

@@ -13,25 +13,29 @@ export function generateSandpackFiles({
   demoCode: string
   theme: "light" | "dark"
 }) {
-  const shouldShowSelect = demoComponentNames.length > 1
-
-  let appTsxContent = ""
-
-  if (shouldShowSelect) {
-    appTsxContent = `
+  const appTsxContent = `
 import React, { useState } from 'react';
 import { ThemeProvider } from './next-themes';
 import { RouterProvider } from 'next/router';
-import DemoComponents from './demo';
+import DefaultDemoExport, { ${demoComponentNames.join(", ")} } from './demo';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem } from './components/ui/select';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const demoComponentNames = ${JSON.stringify(demoComponentNames)};
+const DemoComponents = {
+  ...{
+    ${demoComponentNames.map((name) => `"${name}": ${name}`).join(",\n")}
+  },
+  ...DefaultDemoExport,
+};
+
 
 export default function App() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const CurrentComponent = DemoComponents[demoComponentNames[currentIndex]];
+  const CurrentComponent = Object.values(DemoComponents)[currentIndex];
+
+  const showSelect = demoComponentNames.length > 1;
 
   const handleSelect = (value) => {
     const index = demoComponentNames.indexOf(value);
@@ -46,26 +50,28 @@ export default function App() {
         <div className="flex items-center h-screen m-auto justify-center">
           <div className="bg-background text-foreground w-full h-full flex items-center justify-center relative">
             <div className="absolute lab-bg inset-0 size-full bg-[radial-gradient(#00000055_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff22_1px,transparent_1px)] [background-size:16px_16px]"></div>
-             <div className="absolute top-4 right-4">
-            <Select onValueChange={handleSelect} defaultValue={demoComponentNames[0]} className="shadow">
+            {showSelect && (
+              <div className="absolute top-4 right-4">
+                <Select onValueChange={handleSelect} defaultValue={demoComponentNames[0]} className="shadow">
                   <SelectTrigger className="gap-2">
-                    <SelectValue />
+                  <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      ${demoComponentNames
-                        .map(
-                          (name) => `
+                <SelectContent>
+                  <SelectGroup>
+                    ${demoComponentNames
+                      .map(
+                        (name) => `
                       <SelectItem key="${name}" value="${name}">
                         ${name.replace(/([A-Z])/g, " $1").trim()}
                       </SelectItem>
                       `,
-                        )
-                        .join("")}
+                      )
+                      .join("")}
                     </SelectGroup>
                   </SelectContent>
                 </Select>
               </div>
+            )}
             <div className="flex w-full min-w-[500px] md:w-auto justify-center items-center m-12 relative">         
               <AnimatePresence mode="wait">
                 <motion.div
@@ -86,32 +92,6 @@ export default function App() {
   );
 }
 `
-  } else {
-    appTsxContent = `
-import React from 'react';
-import { ThemeProvider } from './next-themes';
-import { RouterProvider } from 'next/router';
-import { ${demoComponentNames[0]} } from './demo';
-
-export default function App() {
-  return (
-    <ThemeProvider attribute="class" defaultTheme="${theme}" enableSystem={false}>
-      <RouterProvider>
-        <div className="flex items-center h-screen m-auto justify-center">
-          <div className="bg-background text-foreground w-full h-full flex items-center justify-center relative">
-            <div className="absolute lab-bg inset-0 size-full bg-[radial-gradient(#00000055_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff22_1px,transparent_1px)] [background-size:16px_16px]"></div>
-            <div className="flex w-full min-w-[500px] md:w-auto justify-center items-center m-12 relative">
-              <${demoComponentNames[0]} />
-            </div>
-          </div>
-        </div>
-      </RouterProvider>
-    </ThemeProvider>
-  );
-}
-`
-  }
-
   const files = {
     "/App.tsx": appTsxContent,
     "/next-themes.tsx": `

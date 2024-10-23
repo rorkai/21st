@@ -6,11 +6,12 @@ export const useSubmitFormHotkeys = (
   form: UseFormReturn<FormData>,
   // eslint-disable-next-line no-unused-vars
   handleSubmit: (event: React.FormEvent) => void,
+  enabled: boolean,
 ) => {
   useEffect(() => {
     const keyDownHandler = (e: KeyboardEvent) => {
       const isFormComplete = isFormValid(form)
-      if (isFormComplete) {
+      if (isFormComplete && enabled) {
         if (e.code === "Enter" && (e.metaKey || e.ctrlKey)) {
           e.preventDefault()
           handleSubmit(e as unknown as React.FormEvent)
@@ -18,12 +19,14 @@ export const useSubmitFormHotkeys = (
       }
     }
 
-    window.addEventListener("keydown", keyDownHandler)
+    if (enabled) {
+      window.addEventListener("keydown", keyDownHandler)
+    }
 
     return () => {
       window.removeEventListener("keydown", keyDownHandler)
     }
-  }, [form, handleSubmit])
+  }, [form, handleSubmit, enabled])
 }
 
 export const useSuccessDialogHotkeys = ({

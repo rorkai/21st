@@ -504,10 +504,11 @@ export default function PublishComponentForm() {
                         }}
                       />
                       <ComponentDetailsForm
+                        isEditMode={false}
                         form={form}
                         handleSubmit={handleSubmit}
                         isSubmitting={isSubmitting}
-                        isEditMode={false}
+                        hotkeysEnabled={!isSuccessDialogOpen}
                       />
                     </motion.div>
                   )}

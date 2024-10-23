@@ -39,6 +39,7 @@ You can also copy the code directly from the website, but note that you’ll nee
 - Clerk account
 - Installed ngrok or other tunneling software
 - Cloudflare R2 account
+- `dotenv` tool [(link)](https://www.dotenv.org/docs/)
 
 ### Setup
 
@@ -52,7 +53,7 @@ You can also copy the code directly from the website, but note that you’ll nee
 
 3. Create a `.env` file in root of the project
 
-3. Create a Supabase project, add the `.env` variables like: 
+4. Create a Supabase project, add the `.env` variables like: 
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://*****
@@ -60,18 +61,18 @@ NEXT_PUBLIC_SUPABASE_KEY=*****
 SUPABASE_SERVICE_ROLE_KEY=*****
 ```
 
-4. Install Supabase CLI [(link)](https://supabase.com/docs/guides/local-development) and perform a migration to remote DB:
+5. Install Supabase CLI [(link)](https://supabase.com/docs/guides/local-development) and perform a migration to remote DB:
 
 ```
 supabase init
-cp db_migrations/*.sql supabase/migrations
+cp db/migrations/*.sql supabase/migrations
 # link local db to your remote project
 supabase link
 supabase start
 supabase db push
 ```
 
-5. Create a Clerk project. 
+6. Create a Clerk project. 
     1. Add the `.env` variables like:
 
 ```
@@ -87,7 +88,7 @@ After that, add a webhook to your ngrok url like `https://${your_ngrok_url}/api/
 CLERK_WEBHOOK_SECRET=*****
 ```
 
-6. Create a Cloudflare R2 bucket called `components-code`, update `.env` to:
+7. Create a Cloudflare R2 bucket called `components-code`, update `.env` to:
 
 ```
 # public R2 url for view
@@ -98,17 +99,17 @@ R2_SECRET_ACCESS_KEY=*****
 NEXT_PUBLIC_R2_ENDPOINT=https://*****
 ```
 
-3. Run the development server:
+8. Run the development server:
 
     ```bash
-    pnpm dev
+    dotenv -- pnpm dev
     ```
 
     This will start the development server for all apps and packages in the monorepo.
 
     This project uses Vercel turborepo. For more information on working with Turborepo, refer to the [Turborepo documentation](https://turbo.build/repo/docs).
 
-4. Open a PR to `main` branch
+9. Open a PR to `main` branch
 
 ## Other ways to contribute
 

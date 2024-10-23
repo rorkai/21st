@@ -10,7 +10,7 @@ export const makeSlugFromName = (name: string): string => {
     .replace(/-+/g, "-")
 }
 
-export const isValidSlug = (slug: string): boolean => {
+const isValidSlug = (slug: string): boolean => {
   const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
   return slugRegex.test(slug)
 }

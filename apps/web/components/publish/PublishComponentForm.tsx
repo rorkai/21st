@@ -52,6 +52,7 @@ import {
 import { Tables } from "@/types/supabase"
 import { LoadingSpinner } from "../LoadingSpinner"
 import { atom, useAtom } from "jotai"
+import { useSubmitFormHotkeys, useSuccessDialogHotkeys } from "./hotkeys"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -277,24 +278,7 @@ export default function PublishComponentForm() {
     onSubmit(formData)
   }
 
-  useEffect(() => {
-    const keyDownHandler = (e: KeyboardEvent) => {
-      const formData = form.getValues()
-      const isFormComplete = formData.name && formData.preview_url
-      if (isFormComplete) {
-        if (e.code === "Enter" && (e.metaKey || e.ctrlKey)) {
-          e.preventDefault()
-          handleSubmit(e as unknown as React.FormEvent)
-        }
-      }
-    }
-
-    window.addEventListener("keydown", keyDownHandler)
-
-    return () => {
-      window.removeEventListener("keydown", keyDownHandler)
-    }
-  }, [form, handleSubmit, onSubmit])
+  useSubmitFormHotkeys(form, handleSubmit)
 
   const isPreviewReady =
     unknownDependencies?.length === 0 && !!code.length && !!demoCode.length
@@ -305,127 +289,69 @@ export default function PublishComponentForm() {
 
   return (
     <>
-      <Form
-        {...form}
-      >
+      <Form {...form}>
         <div className="flex w-full h-full items-center justify-center">
           <AnimatePresence>
             <div className={`flex gap-4 items-center h-full w-full mt-2`}>
-            <div
-              className={cn(
-                "flex flex-col scrollbar-hide items-start gap-2 py-10 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[400px] ml-0",
-              )}
-            >
-              {formStep === "nameSlugForm" && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="flex flex-col justify-center w-full"
-                >
-                  <h2 className="text-3xl font-bold mb-4">
-                    Publish your component
-                  </h2>
+              <div
+                className={cn(
+                  "flex flex-col scrollbar-hide items-start gap-2 py-10 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[400px] ml-0",
+                )}
+              >
+                {formStep === "nameSlugForm" && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex flex-col justify-center w-full"
+                  >
+                    <h2 className="text-3xl font-bold mb-4">
+                      Publish your component
+                    </h2>
                     <NameSlugForm
                       form={form}
                       isReadOnly={false}
                       placeholderName={"Button"}
                     />
-                  <Button
-                    className="mt-4"
-                    disabled={
-                      !form.watch("name") || !form.watch("slug_available")
-                    }
-                    size="lg"
-                    onClick={() => setFormStep("code")}
-                  >
-                    Continue
-                  </Button>
-                </motion.div>
-              )}
-              {formStep === "code" && (
-                <>
-                  <FormField
-                    control={form.control}
-                    name="code"
-                    render={({ field }) => (
-                      <FormItem className="w-full relative">
-                        <FormControl>
-                          <motion.div
-                            className="relative"
-                            animate={{
-                              height: "70vh",
-                            }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            <Label>Component code</Label>
-                            <Textarea
-                              ref={codeInputRef}
-                              placeholder="Paste code of your component here"
-                              value={field.value}
-                              onChange={(e) => {
-                                field.onChange(e.target.value)
-                              }}
-                              className={cn(
-                                "mt-1 min-h-[56px] w-full h-full resize-none scrollbar-hide",
-                              )}
-                            />
-                          </motion.div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="-mt-5 z-10 pr-2 h-[36px] flex justify-end w-full">
                     <Button
-                      size="sm"
+                      className="mt-4"
                       disabled={
-                        !!code?.length && !parsedCode.componentNames?.length
+                        !form.watch("name") || !form.watch("slug_available")
                       }
-                      onClick={() => setFormStep("demoCode")}
+                      size="lg"
+                      onClick={() => setFormStep("code")}
                     >
                       Continue
                     </Button>
-                  </div>
-                </>
-              )}
-
-              {formStep === "demoCode" && (
-                <>
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.3, delay: 0.3 }}
-                    className="w-full"
-                  >
+                  </motion.div>
+                )}
+                {formStep === "code" && (
+                  <>
                     <FormField
                       control={form.control}
-                      name="demo_code"
+                      name="code"
                       render={({ field }) => (
                         <FormItem className="w-full relative">
-                          <Label>Demo code</Label>
                           <FormControl>
                             <motion.div
                               className="relative"
                               animate={{
-                                height: "calc(100vh/3)",
+                                height: "70vh",
                               }}
                               transition={{ duration: 0.3 }}
                             >
+                              <Label>Component code</Label>
                               <Textarea
-                                placeholder="Paste code that demonstrates usage of the component with all variants"
-                                ref={demoCodeTextAreaRef}
+                                ref={codeInputRef}
+                                placeholder="Paste code of your component here"
                                 value={field.value}
                                 onChange={(e) => {
                                   field.onChange(e.target.value)
                                 }}
-                                className="mt-1 w-full h-full resize-none"
-                                style={{
-                                  height: "100%",
-                                  minHeight: "100%",
-                                }}
+                                className={cn(
+                                  "mt-1 min-h-[56px] w-full h-full resize-none scrollbar-hide",
+                                )}
                               />
                             </motion.div>
                           </FormControl>
@@ -433,120 +359,164 @@ export default function PublishComponentForm() {
                         </FormItem>
                       )}
                     />
-                  </motion.div>
-                  <div className="-mt-10 z-10 pr-2 h-[36px] flex justify-end w-full">
-                    <Button
-                      size="sm"
-                      disabled={
-                        !!demoCode?.length && !parsedCode.demoComponentNames
-                      }
-                      onClick={() => {
-                        setFormStep("detailedForm")
-                      }}
+                    <div className="-mt-5 z-10 pr-2 h-[36px] flex justify-end w-full">
+                      <Button
+                        size="sm"
+                        disabled={
+                          !!code?.length && !parsedCode.componentNames?.length
+                        }
+                        onClick={() => setFormStep("demoCode")}
+                      >
+                        Continue
+                      </Button>
+                    </div>
+                  </>
+                )}
+
+                {formStep === "demoCode" && (
+                  <>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 20 }}
+                      transition={{ duration: 0.3, delay: 0.3 }}
+                      className="w-full"
                     >
-                      Continue
-                    </Button>
-                  </div>
-                </>
+                      <FormField
+                        control={form.control}
+                        name="demo_code"
+                        render={({ field }) => (
+                          <FormItem className="w-full relative">
+                            <Label>Demo code</Label>
+                            <FormControl>
+                              <motion.div
+                                className="relative"
+                                animate={{
+                                  height: "calc(100vh/3)",
+                                }}
+                                transition={{ duration: 0.3 }}
+                              >
+                                <Textarea
+                                  placeholder="Paste code that demonstrates usage of the component with all variants"
+                                  ref={demoCodeTextAreaRef}
+                                  value={field.value}
+                                  onChange={(e) => {
+                                    field.onChange(e.target.value)
+                                  }}
+                                  className="mt-1 w-full h-full resize-none"
+                                  style={{
+                                    height: "100%",
+                                    minHeight: "100%",
+                                  }}
+                                />
+                              </motion.div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </motion.div>
+                    <div className="-mt-10 z-10 pr-2 h-[36px] flex justify-end w-full">
+                      <Button
+                        size="sm"
+                        disabled={
+                          !!demoCode?.length && !parsedCode.demoComponentNames
+                        }
+                        onClick={() => {
+                          setFormStep("detailedForm")
+                        }}
+                      >
+                        Continue
+                      </Button>
+                    </div>
+                  </>
+                )}
+
+                {formStep === "detailedForm" &&
+                  unknownDependencies?.length > 0 && (
+                    <ResolveUnknownDependenciesCard
+                      unknownDependencies={unknownDependencies}
+                      onDependencyResolved={(username, slug) => {
+                        form.setValue(
+                          "unknown_dependencies",
+                          unknownDependencies.filter(
+                            (dependency) => dependency !== slug,
+                          ),
+                        )
+                        form.setValue("direct_registry_dependencies", [
+                          ...form.getValues("direct_registry_dependencies"),
+                          `${username}/${slug}`,
+                        ])
+                      }}
+                    />
+                  )}
+
+                {formStep === "detailedForm" &&
+                  unknownDependencies?.length === 0 && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3, delay: 0.3 }}
+                      className="w-full flex flex-col gap-4"
+                    >
+                      <EditCodeFileCard
+                        iconSrc={
+                          isDarkTheme ? "/tsx-file-dark.svg" : "/tsx-file.svg"
+                        }
+                        mainText={`${form.getValues("name")} code`}
+                        subText={`${parsedCode.componentNames.slice(0, 2).join(", ")}${parsedCode.componentNames.length > 2 ? ` +${parsedCode.componentNames.length - 2}` : ""}`}
+                        onEditClick={() => {
+                          setFormStep("code")
+                          codeInputRef.current?.focus()
+                        }}
+                      />
+                      <EditCodeFileCard
+                        iconSrc={
+                          isDarkTheme ? "/demo-file-dark.svg" : "/demo-file.svg"
+                        }
+                        mainText="Demo code"
+                        subText={`${parsedCode.demoComponentNames.slice(0, 2).join(", ")}${parsedCode.demoComponentNames.length > 2 ? ` +${parsedCode.demoComponentNames.length - 2}` : ""}`}
+                        onEditClick={() => {
+                          setFormStep("demoCode")
+                          setTimeout(() => {
+                            demoCodeTextAreaRef.current?.focus()
+                          }, 0)
+                        }}
+                      />
+                      <ComponentDetailsForm
+                        form={form}
+                        previewImage={previewImage}
+                        handleFileChange={handleFileChange}
+                        handleSubmit={handleSubmit}
+                        isSubmitting={isSubmitting}
+                        isEditMode={false}
+                      />
+                    </motion.div>
+                  )}
+              </div>
+
+              {formStep === "detailedForm" && isPreviewReady && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3, delay: 3 }}
+                  className="w-2/3 h-full py-4"
+                >
+                  <React.Suspense fallback={<LoadingSpinner />}>
+                    <PublishComponentPreview
+                      code={code}
+                      demoCode={demoCode}
+                      slugToPublish={componentSlug}
+                      registryToPublish={registryToPublish}
+                      directRegistryDependencies={directRegistryDependencies}
+                      isDarkTheme={isDarkTheme}
+                    />
+                  </React.Suspense>
+                </motion.div>
               )}
-
-              {formStep === "detailedForm" &&
-                unknownDependencies?.length > 0 && (
-                  <ResolveUnknownDependenciesCard
-                    unknownDependencies={unknownDependencies}
-                    onDependencyResolved={(username, slug) => {
-                      console.log("onDependencyResolved username", username)
-                      console.log("onDependencyResolved slug", slug)
-                      console.log(
-                        "onDependencyResolved unknown_dependencies",
-                        unknownDependencies,
-                      )
-                      console.log(
-                        "onDependencyResolved newUnknownDependencies",
-                        unknownDependencies.filter(
-                          (dependency) => dependency !== slug,
-                        ),
-                      )
-                      form.setValue(
-                        "unknown_dependencies",
-                        unknownDependencies.filter(
-                          (dependency) => dependency !== slug,
-                        ),
-                      )
-                      form.setValue("direct_registry_dependencies", [
-                        ...form.getValues("direct_registry_dependencies"),
-                        `${username}/${slug}`,
-                      ])
-                    }}
-                  />
-                )}
-
-              {formStep === "detailedForm" &&
-                unknownDependencies?.length === 0 && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3, delay: 0.3 }}
-                    className="w-full flex flex-col gap-4"
-                  >
-                    <EditCodeFileCard
-                      iconSrc={
-                        isDarkTheme ? "/tsx-file-dark.svg" : "/tsx-file.svg"
-                      }
-                      mainText={`${form.getValues("name")} code`}
-                      subText={`${parsedCode.componentNames.slice(0, 2).join(", ")}${parsedCode.componentNames.length > 2 ? ` +${parsedCode.componentNames.length - 2}` : ""}`}
-                      onEditClick={() => {
-                        setFormStep("code")
-                        codeInputRef.current?.focus()
-                      }}
-                    />
-                    <EditCodeFileCard
-                      iconSrc={
-                        isDarkTheme ? "/demo-file-dark.svg" : "/demo-file.svg"
-                      }
-                      mainText="Demo code"
-                      subText={`${parsedCode.demoComponentNames.slice(0, 2).join(", ")}${parsedCode.demoComponentNames.length > 2 ? ` +${parsedCode.demoComponentNames.length - 2}` : ""}`}
-                      onEditClick={() => {
-                        setFormStep("demoCode")
-                        setTimeout(() => {
-                          demoCodeTextAreaRef.current?.focus()
-                        }, 0)
-                      }}
-                    />
-                    <ComponentDetailsForm
-                      form={form}
-                      previewImage={previewImage}
-                      handleFileChange={handleFileChange}
-                      handleSubmit={handleSubmit}
-                      isSubmitting={isSubmitting}
-                      isEditMode={false}
-                    />
-                  </motion.div>
-                )}
             </div>
-
-            {formStep === "detailedForm" && isPreviewReady && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3, delay: 3 }}
-                className="w-2/3 h-full py-4"
-              >
-                <React.Suspense fallback={<LoadingSpinner />}>
-                  <PublishComponentPreview
-                    code={code}
-                    demoCode={demoCode}
-                    slugToPublish={componentSlug}
-                    registryToPublish={registryToPublish}
-                    directRegistryDependencies={directRegistryDependencies}
-                    isDarkTheme={isDarkTheme}
-                  />
-                </React.Suspense>
-              </motion.div>
-            )}
-          </div>
           </AnimatePresence>
         </div>
       </Form>
@@ -643,23 +613,7 @@ const SuccessDialog = ({
   onAddAnother: () => void
   onGoToComponent: () => void
 }) => {
-  useEffect(() => {
-    const keyDownHandler = (e: KeyboardEvent) => {
-      if (isOpen && e.code === "KeyN") {
-        e.preventDefault()
-        onAddAnother()
-      }
-      if (isOpen && e.code === "Enter" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        onGoToComponent()
-      }
-    }
-
-    window.addEventListener("keydown", keyDownHandler)
-    return () => {
-      window.removeEventListener("keydown", keyDownHandler)
-    }
-  }, [isOpen, onAddAnother, onGoToComponent])
+  useSuccessDialogHotkeys({ isOpen, onAddAnother, onGoToComponent })
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

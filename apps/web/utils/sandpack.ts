@@ -47,7 +47,7 @@ export default function App() {
     <ThemeProvider attribute="class" defaultTheme="${theme}" enableSystem={false}>
       <RouterProvider>
           <div className="relative flex items-center justify-center h-screen w-full m-auto p-16 bg-background text-foreground">
-            <div className="absolute lab-bg inset-0 size-full bg-[radial-gradient(#00000055_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff22_1px,transparent_1px)] [background-size:16px_16px]"></div>
+            <div className="absolute lab-bg inset-0 size-full bg-[radial-gradient(#00000021_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff22_1px,transparent_1px)] [background-size:16px_16px]"></div>
             {showSelect && (
               <div className="absolute z-10 top-4 right-4">
                 <Select onValueChange={handleSelect} defaultValue={demoComponentNames[0]} className="shadow">

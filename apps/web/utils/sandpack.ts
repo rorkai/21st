@@ -19,7 +19,6 @@ import { ThemeProvider } from './next-themes';
 import { RouterProvider } from 'next/router';
 import DefaultDemoExport, { ${demoComponentNames.join(", ")} } from './demo';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem } from './components/ui/select';
-import { motion, AnimatePresence } from 'framer-motion';
 
 const demoComponentNames = ${JSON.stringify(demoComponentNames)};
 const DemoComponents = {

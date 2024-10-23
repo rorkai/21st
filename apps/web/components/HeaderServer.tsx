@@ -1,9 +1,10 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link"
-import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Icons } from "./icons"
 import { ThemeToggle } from "./ThemeToggle"
+
+import { buttonVariants } from "@/components/ui/button"
 
 const uiSystems = [
   {

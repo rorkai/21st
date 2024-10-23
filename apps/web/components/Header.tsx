@@ -7,7 +7,7 @@ import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
 import { atom, useAtom } from "jotai"
 import { Input } from "@/components/ui/input"
 import { Hotkey } from "./ui/hotkey"
-import { useIsMobile } from "@/utils/useIsMobile"
+import { useIsMobile } from "@/utils/use-media-query"
 import { HeaderServer } from "./HeaderServer"
 import {
   NavigationMenu,
@@ -103,15 +103,15 @@ export function Header({ tagName, page }: {
         {page === "home" && (
           <div className="relative flex items-center max-w-[400px]">
             <Input
-            ref={inputRef}
-            type="text"
-            placeholder="Search components..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pr-14"
-          />
-          <div className="absolute top-0 right-3 h-full flex items-center pointer-events-none">
-            <Hotkey keys={["K"]} modifier={true} />
+              ref={inputRef}
+              type="text"
+              placeholder="Search components..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pr-14"
+            />
+            <div className="absolute top-0 right-3 h-full flex items-center pointer-events-none">
+              <Hotkey keys={["K"]} modifier={true} />
             </div>
           </div>
         )}

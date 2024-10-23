@@ -20,6 +20,7 @@ import {
 import { useClerkSupabaseClient } from "@/utils/clerk"
 import { toast } from "sonner"
 import { useQuery } from "@tanstack/react-query"
+import { Tag as TagComponent } from "./ui/tag"
 
 export const ComponentPageInfo = ({
   component,
@@ -151,17 +152,11 @@ export const ComponentPageInfo = ({
         </div>
       )}
       {component.tags && component.tags.length > 0 && (
-        <div className="flex items-center justify-center">
-          <span className="text-muted-foreground w-1/3">Tags:</span>
+        <div className="flex items-start">
+          <span className="text-muted-foreground w-1/3 mt-1">Tags:</span>
           <div className="w-2/3 flex flex-wrap gap-2">
             {component.tags.map((tag) => (
-              <Link
-                key={tag.slug}
-                href={`/s/${tag.slug}`}
-                className="bg-accent hover:bg-accent-hover px-2 py-1 rounded-md transition-colors duration-200"
-              >
-                {tag.name}
-              </Link>
+              <TagComponent key={tag.slug} slug={tag.slug} name={tag.name} />
             ))}
           </div>
         </div>

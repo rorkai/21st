@@ -66,7 +66,7 @@ export default function App() {
                   </SelectContent>
                 </Select>
               </div>
-            <div className="flex w-full min-w-[500px] md:w-auto justify-center items-center p-4 relative">         
+            <div className="flex w-full min-w-[500px] md:w-auto justify-center items-center m-12 relative">         
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentIndex}
@@ -100,7 +100,7 @@ export default function App() {
         <div className="flex items-center h-screen m-auto justify-center">
           <div className="bg-background text-foreground w-full h-full flex items-center justify-center relative">
             <div className="absolute lab-bg inset-0 size-full bg-[radial-gradient(#00000055_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff22_1px,transparent_1px)] [background-size:16px_16px]"></div>
-            <div className="flex w-full min-w-[500px] md:w-auto justify-center items-center p-4 relative">
+            <div className="flex w-full min-w-[500px] md:w-auto justify-center items-center m-12 relative">
               <${demoComponentNames[0]} />
             </div>
           </div>

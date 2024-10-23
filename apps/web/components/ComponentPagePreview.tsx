@@ -128,6 +128,7 @@ export function ComponentPagePreview({
             <SandpackPreview
               showSandpackErrorOverlay={false}
               showOpenInCodeSandbox={false}
+              showRefreshButton={false}
             />
           </Suspense>
         </motion.div>

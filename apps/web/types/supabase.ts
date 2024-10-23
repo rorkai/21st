@@ -14,16 +14,19 @@ export type Database = {
           component_id: number
           dependency_component_id: number
           depth: number
+          is_demo_dependency: boolean
         }
         Insert: {
           component_id: number
           dependency_component_id: number
           depth: number
+          is_demo_dependency?: boolean
         }
         Update: {
           component_id?: number
           dependency_component_id?: number
           depth?: number
+          is_demo_dependency?: boolean
         }
         Relationships: [
           {
@@ -170,6 +173,7 @@ export type Database = {
           demo_code: string
           demo_component_names: Json
           demo_dependencies: Json | null
+          demo_direct_registry_dependencies: Json
           dependencies: Json | null
           description: string | null
           direct_registry_dependencies: Json
@@ -193,6 +197,7 @@ export type Database = {
           demo_code: string
           demo_component_names: Json
           demo_dependencies?: Json | null
+          demo_direct_registry_dependencies?: Json
           dependencies?: Json | null
           description?: string | null
           direct_registry_dependencies?: Json
@@ -216,6 +221,7 @@ export type Database = {
           demo_code?: string
           demo_component_names?: Json
           demo_dependencies?: Json | null
+          demo_direct_registry_dependencies?: Json
           dependencies?: Json | null
           description?: string | null
           direct_registry_dependencies?: Json
@@ -304,14 +310,17 @@ export type Database = {
           demo_code: string | null
           demo_component_names: Json | null
           demo_dependencies: Json | null
+          demo_direct_registry_dependencies: Json | null
           dependencies: Json | null
           dependency_author_username: string | null
           dependency_component_id: number | null
+          depth: number | null
           description: string | null
           direct_registry_dependencies: Json | null
           downloads_count: number | null
           fts: unknown | null
           id: number | null
+          is_demo_dependency: boolean | null
           is_public: boolean | null
           license: string | null
           likes_count: number | null
@@ -509,8 +518,9 @@ export type Database = {
         demo_component_names: Json | null
         name: string | null
         demo_dependencies: Json | null
-        direct_registry_dependencies: Json | null
         registry: string | null
+        direct_registry_dependencies: Json | null
+        demo_direct_registry_dependencies: Json | null
         preview_url: string | null
         license: string | null
         user_data: Json | null

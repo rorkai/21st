@@ -32,15 +32,13 @@ export async function GET(
     }
 
     const dependencies = component.dependencies as Record<string, string>
-    const directRegistryDependencies =
-      component.direct_registry_dependencies as string[]
 
     const resolvedRegistryDependencies = await resolveRegistryDependencyTree({
       supabase: supabaseWithAdminAccess,
       sourceDependencySlugs: [
         `${component.user.username}/${component_slug}`,
-        ...directRegistryDependencies,
       ],
+      withDemoDependencies: false,
     })
 
     if (resolvedRegistryDependencies.error) {
@@ -58,10 +56,10 @@ export async function GET(
       target: "",
     }))
 
-    const npmDependencies = [
+    const npmDependencies = Array.from(new Set([
       ...Object.keys(dependencies),
       ...Object.keys(resolvedRegistryDependencies.data.npmDependencies),
-    ]
+    ]))
 
     const responseData: ComponentRegistryResponse = {
       name: component_slug,

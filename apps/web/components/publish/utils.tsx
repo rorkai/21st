@@ -29,8 +29,14 @@ export const formSchema = z.object({
   preview_image_data_url: z.string().optional(),
   preview_image_file: z.instanceof(File).optional(),
   license: z.string().optional(),
-  unknown_dependencies: z.array(z.string()),
+  unknown_dependencies: z.array(
+    z.object({
+      slugWithUsername: z.string(),
+      isDemoDependency: z.boolean(),
+    }),
+  ),
   direct_registry_dependencies: z.array(z.string()),
+  demo_direct_registry_dependencies: z.array(z.string()),
   slug_available: z.boolean().optional(),
 })
 

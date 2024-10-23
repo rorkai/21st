@@ -78,8 +78,6 @@ export default async function ComponentPageServer({
     string,
     string
   >
-  const directRegistryDependencies =
-    component.direct_registry_dependencies as string[]
 
   const componentAndDemoCodePromises = [
     fetch(component.code).then(async (response) => {
@@ -117,8 +115,8 @@ export default async function ComponentPageServer({
         supabase: supabaseWithAdminAccess,
         sourceDependencySlugs: [
           `${username}/${component_slug}`,
-          ...directRegistryDependencies,
         ],
+        withDemoDependencies: true,
       }),
     ])
 

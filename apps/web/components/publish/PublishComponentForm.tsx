@@ -85,6 +85,7 @@ export default function PublishComponentForm() {
       component_slug: "",
       unknown_dependencies: [],
       direct_registry_dependencies: [],
+      demo_direct_registry_dependencies: [],
       code: "",
       demo_code: "",
       description: "",
@@ -100,6 +101,9 @@ export default function PublishComponentForm() {
   } = form.getValues()
   const unknownDependencies = form.watch("unknown_dependencies")
   const directRegistryDependencies = form.watch("direct_registry_dependencies")
+  const demoDirectRegistryDependencies = form.watch(
+    "demo_direct_registry_dependencies",
+  )
 
   const [formStep, setFormStep] = useAtom(formStepAtom)
   const [parsedCode, setParsedCode] = useState<ParsedCodeData>({
@@ -121,10 +125,7 @@ export default function PublishComponentForm() {
         const demoComponentNames = extractDemoComponentNames(demoCode)
         const directRegistryDependencyImports =
           extractRegistryDependenciesFromImports(code)
-        const ambigiousRegistryDependencies = {
-          ...extractAmbigiousRegistryDependencies(code, registryToPublish),
-          ...extractAmbigiousRegistryDependencies(demoCode, registryToPublish),
-        }
+
         setParsedCode({
           dependencies,
           demoDependencies,
@@ -132,9 +133,25 @@ export default function PublishComponentForm() {
           demoComponentNames,
           directRegistryDependencyImports,
         })
-        const parsedUnknownDependencies = Object.values(
-          ambigiousRegistryDependencies,
-        ).filter((dependency) => componentSlug !== dependency)
+
+        const ambigiousRegistryDependencies = Object.values(
+          extractAmbigiousRegistryDependencies(code, registryToPublish),
+        )
+        const ambigiousDemoDirectRegistryDependencies = Object.values(
+          extractAmbigiousRegistryDependencies(demoCode, registryToPublish),
+        )
+
+        const parsedUnknownDependencies = [
+          ...ambigiousRegistryDependencies,
+          ...ambigiousDemoDirectRegistryDependencies,
+        ]
+          .map((d) => ({
+            slugWithUsername: d,
+            isDemoDependency: ambigiousRegistryDependencies?.includes(d)
+              ? false
+              : true,
+          }))
+          .filter((d) => componentSlug !== d.slugWithUsername)
 
         if (!form.getValues("unknown_dependencies")?.length) {
           form.setValue("unknown_dependencies", parsedUnknownDependencies)
@@ -207,6 +224,8 @@ export default function PublishComponentForm() {
         dependencies: parsedCode.dependencies,
         demo_dependencies: parsedCode.demoDependencies,
         direct_registry_dependencies: data.direct_registry_dependencies,
+        demo_direct_registry_dependencies:
+          data.demo_direct_registry_dependencies,
         preview_url: previewImageR2Url,
         license: data.license,
       } as Tables<"components">
@@ -234,7 +253,7 @@ export default function PublishComponentForm() {
       }
     } catch (error) {
       console.error("Error adding component:", error)
-      const errorMessage = `An error occurred while adding the component${error instanceof Error ? `: ${error.message}` : ''}`
+      const errorMessage = `An error occurred while adding the component${error instanceof Error ? `: ${error.message}` : ""}`
       toast.error(errorMessage)
     } finally {
       setIsSubmitting(false)
@@ -430,14 +449,22 @@ export default function PublishComponentForm() {
                             (dependency) =>
                               !resolvedDependencies
                                 .map((d) => d.slug)
-                                .includes(dependency),
+                                .includes(dependency.slugWithUsername),
                           ),
                         )
                         form.setValue("direct_registry_dependencies", [
                           ...form.getValues("direct_registry_dependencies"),
-                          ...resolvedDependencies.map(
-                            (d) => `${d.username}/${d.slug}`,
+                          ...resolvedDependencies
+                            .filter((d) => !d.isDemoDependency)
+                            .map((d) => `${d.username}/${d.slug}`),
+                        ])
+                        form.setValue("demo_direct_registry_dependencies", [
+                          ...form.getValues(
+                            "demo_direct_registry_dependencies",
                           ),
+                          ...resolvedDependencies
+                            .filter((d) => d.isDemoDependency)
+                            .map((d) => `${d.username}/${d.slug}`),
                         ])
                       }}
                     />
@@ -500,7 +527,10 @@ export default function PublishComponentForm() {
                       demoCode={demoCode}
                       slugToPublish={componentSlug}
                       registryToPublish={registryToPublish}
-                      directRegistryDependencies={directRegistryDependencies}
+                      directRegistryDependencies={[
+                        ...directRegistryDependencies,
+                        ...demoDirectRegistryDependencies,
+                      ]}
                       isDarkTheme={isDarkTheme}
                     />
                   </React.Suspense>

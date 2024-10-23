@@ -35,6 +35,8 @@ export function EditComponentDialog({
       code: component.code,
       demo_code: component.demo_code,
       component_slug: component.component_slug,
+      direct_registry_dependencies: [],
+      demo_direct_registry_dependencies: [],
       unknown_dependencies: [],
       slug_available: true,
       preview_image_data_url: component.preview_url,

@@ -4,9 +4,11 @@ import { SupabaseClient } from "@supabase/supabase-js"
 export async function resolveRegistryDependencyTree({
   supabase,
   sourceDependencySlugs,
+  withDemoDependencies
 }: {
   supabase: SupabaseClient<Database>
   sourceDependencySlugs: string[]
+  withDemoDependencies: boolean
 }): Promise<
   | {
       data: {
@@ -20,7 +22,11 @@ export async function resolveRegistryDependencyTree({
   const filterConditions = sourceDependencySlugs
     .map((slug) => {
       const [username, componentSlug] = slug.split("/")
-      return `and(source_author_username.eq."${username}",source_component_slug.eq."${componentSlug}")`
+      const baseAndCondition = (extra: string) =>
+        `and(source_author_username.eq."${username}",source_component_slug.eq."${componentSlug}"${extra})`
+      return withDemoDependencies
+        ? baseAndCondition("")
+        : baseAndCondition(",or(is_demo_dependency.is.false,depth.eq.0)")
     })
     .join(",")
   const { data: dependencies, error } = await supabase

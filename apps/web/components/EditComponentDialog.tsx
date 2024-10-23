@@ -1,3 +1,5 @@
+"use client"
+
 import {
   Dialog,
   DialogContent,
@@ -9,61 +11,74 @@ import { Component, User, Tag } from "@/types/global"
 import { useForm } from "react-hook-form"
 import { FormData } from "./publish/utils"
 import { uploadToR2 } from "@/utils/r2"
-import { useEffect, useState } from "react"
+import { useMutation } from '@tanstack/react-query'
+import { toast } from 'sonner'
 
 export function EditComponentDialog({
   component,
   isOpen,
   setIsOpen,
-  onClose,
   onUpdate,
 }: {
   component: Component & { user: User } & { tags: Tag[] }
   isOpen: boolean
   // eslint-disable-next-line no-unused-vars
   setIsOpen: (isOpen: boolean) => void
-  onClose: () => void
-  // eslint-disable-next-line no-unused-vars
   onUpdate: (
+    // eslint-disable-next-line no-unused-vars
     updatedData: Partial<Component & { tags?: Tag[] }>,
   ) => Promise<void>
 }) {
   const form = useForm<FormData>({
     defaultValues: {
       name: component.name,
+      code: component.code,
+      demo_code: component.demo_code,
+      component_slug: component.component_slug,
+      direct_registry_dependencies: [],
+      demo_direct_registry_dependencies: [],
+      unknown_dependencies: [],
+      slug_available: true,
+      preview_image_data_url: component.preview_url,
       description: component.description ?? "",
       license: component.license,
       tags: component.tags,
     },
   })
 
-  const [isLoading, setIsLoading] = useState(false)
-  const [previewImage, setPreviewImage] = useState<string | null>(
-    component.preview_url || null,
-  )
+  const uploadToR2Mutation = useMutation({
+    mutationFn: async ({ file, fileKey }: { file: File, fileKey: string }) => {
+      const buffer = Buffer.from(await file.arrayBuffer())
+      const base64Content = buffer.toString("base64")
+      return uploadToR2({
+        file: {
+          name: fileKey,
+          type: file.type,
+          encodedContent: base64Content,
+        },
+        fileKey,
+        bucketName: "components-code",
+        contentType: file.type,
+      })
+    },
+  })
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert("File is too large. Maximum size is 5 MB.")
-        return
-      }
-
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setPreviewImage(e.target?.result as string)
-      }
-      reader.readAsDataURL(file)
-
-      form.setValue("preview_url", file)
-    }
-  }
+  const updateMutation = useMutation({
+    mutationFn: async (updatedData: Partial<Component & { tags?: Tag[] }>) => {
+      await onUpdate(updatedData)
+    },
+    onSuccess: () => {
+      setIsOpen(false)
+    },
+    onError: (error) => {
+      console.error('Failed to update component:', error)
+      toast.error('Failed to update component. Please try again.')
+    },
+  })
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     const formData = form.getValues()
-    setIsLoading(true)
 
     const updatedData: Partial<Component & { tags?: Tag[] }> = {}
 
@@ -87,41 +102,25 @@ export function EditComponentDialog({
       }))
     }
 
-    if (formData.preview_url instanceof File) {
-      const fileExtension = formData.preview_url.name.split(".").pop()
+    if (formData.preview_image_file instanceof File) {
+      const fileExtension = formData.preview_image_file.name.split(".").pop()
       const fileKey = `${component.user.id}/${component.component_slug}.${fileExtension}`
-      const buffer = Buffer.from(await formData.preview_url.arrayBuffer())
-      const base64Content = buffer.toString("base64")
-      const previewImageUrl = await uploadToR2({
-        file: {
-          name: fileKey,
-          type: formData.preview_url.type,
-          encodedContent: base64Content,
-        },
-        fileKey,
-        bucketName: "components-code",
-        contentType: formData.preview_url.type,
-      })
-      updatedData.preview_url = previewImageUrl
-    }
-
-    await onUpdate(updatedData)
-  }
-
-  useEffect(() => {
-    const keyDownHandler = (e: KeyboardEvent) => {
-      if (e.code === "Enter" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        handleSubmit(e as unknown as React.FormEvent)
+      
+      try {
+        const previewImageUrl = await uploadToR2Mutation.mutateAsync({
+          file: formData.preview_image_file,
+          fileKey,
+        })
+        updatedData.preview_url = previewImageUrl
+      } catch (error) {
+        console.error('Failed to upload image:', error)
+        toast.error('Failed to upload image. Please try again.')
+        return
       }
     }
 
-    window.addEventListener("keydown", keyDownHandler)
-
-    return () => {
-      window.removeEventListener("keydown", keyDownHandler)
-    }
-  }, [form, handleSubmit])
+    updateMutation.mutate(updatedData)
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
@@ -132,13 +131,8 @@ export function EditComponentDialog({
         <ComponentDetailsForm
           isEditMode={true}
           form={form}
-          previewImage={previewImage}
-          handleFileChange={handleFileChange}
           handleSubmit={handleSubmit}
-          isLoading={isLoading}
-          isFormValid={() => true}
-          internalDependencies={{}}
-          componentName={component.name}
+          isSubmitting={uploadToR2Mutation.isPending || updateMutation.isPending}
         />
       </DialogContent>
     </Dialog>

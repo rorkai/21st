@@ -50,16 +50,45 @@ export function extractExportedTypes(code: string): string[] {
 
 export function extractDemoComponentNames(code: string): string[] {
   if (!code) return []
-  const match = code.match(/export\s+default\s+{\s*([^}]+)\s*}/s)
-  if (!match || !match[1]) return []
 
-  return match[1]
-    .split(",")
-    .map((name) => name.trim())
-    .filter(Boolean)
+  const componentNames: string[] = []
+
+  // Match the original format: export default { ... }
+  const defaultExportMatch = code.match(/export\s+default\s+{\s*([^}]+)\s*}/s)
+  if (defaultExportMatch && defaultExportMatch[1]) {
+    componentNames.push(
+      ...defaultExportMatch[1]
+        .split(",")
+        .map((name) => name.trim())
+        .filter(Boolean)
+    )
+  }
+
+  // Match named exports: export function ComponentName() { ... }
+  const namedExportMatches = code.matchAll(/export\s+function\s+(\w+)/g)
+  for (const match of namedExportMatches) {
+    if (match[1]) {
+      componentNames.push(match[1])
+    }
+  }
+
+  // Match named exports: export { ComponentName }
+  const namedExportBraceMatches = code.matchAll(/export\s*{\s*([^}]+)\s*}/g)
+  for (const match of namedExportBraceMatches) {
+    if (match[1]) {
+      componentNames.push(
+        ...match[1]
+          .split(",")
+          .map((name) => name.trim())
+          .filter(Boolean)
+      )
+    }
+  }
+
+  return [...new Set(componentNames)] // Remove duplicates
 }
 
-export function extractDependencies(code: string): Record<string, string> {
+export function extractNPMDependencies(code: string): Record<string, string> {
   const dependencies: Record<string, string> = {}
   try {
     const ast = parse(code, {
@@ -129,11 +158,11 @@ export function extractDependencies(code: string): Record<string, string> {
   return dependencies
 }
 
-export function findInternalDependencies(
-  componentCode: string,
-  demoCode: string,
+export function extractAmbigiousRegistryDependencies(
+  code: string,
+  registry: string,
 ): Record<string, string> {
-  const internalDeps: Record<string, string> = {}
+  const registryDeps: Record<string, string> = {}
 
   try {
     const parseAndExtractImports = (code: string) => {
@@ -147,21 +176,52 @@ export function findInternalDependencies(
           const source = node.source.value
           if (
             typeof source === "string" &&
-            source.startsWith("@/components/")
+            source.startsWith(`@/components/${registry}/`)
           ) {
-            internalDeps[source] = "latest"
+            registryDeps[source] = source.replace(
+              `@/components/${registry}/`,
+              "",
+            )
           }
         },
       })
     }
 
-    parseAndExtractImports(componentCode)
-    parseAndExtractImports(demoCode)
+    parseAndExtractImports(code)
   } catch (error) {
-    console.error("Error finding internal dependencies:", error)
+    console.error("Error finding registry dependencies:", error)
   }
 
-  return internalDeps
+  return registryDeps
+}
+
+export function extractRegistryDependenciesFromImports(
+  code: string,
+): string[] {
+  const registryDeps = []
+
+  const importRegex =
+    /import\s+(?:{\s*[\w\s,]+\s*}|\*\s+as\s+\w+|\w+)\s+from\s+['"](\+@[\w-]+\/[\w-]+)['"]/g
+  let match
+
+  while ((match = importRegex.exec(code)) !== null) {
+    const importPath = match[1]!
+    const [, author, slug] = importPath.match(/\+@([\w-]+)\/([\w-]+)/)!
+    registryDeps.push(`${author}/${slug}`)
+  }
+
+  return registryDeps
+}
+
+export function replaceRegistryImports(code: string): string {
+  const importRegex =
+    /import\s+(?:{\s*[\w\s,]+\s*}|\*\s+as\s+\w+|\w+)\s+from\s+['"](\+@[\w-]+\/[\w-]+)['"]/g
+
+  return code.replace(importRegex, (match, importPath) => {
+    const [, , slug] = importPath.match(/\+@([\w-]+)\/([\w-]+)/)!
+    const newImportPath = `@/components/ui/${slug}`
+    return match.replace(importPath, newImportPath)
+  })
 }
 
 export function removeComponentImports(

@@ -1,35 +1,99 @@
-import { useEffect, useState } from "react"
-import { SandpackProvider, SandpackFileExplorer, SandpackCodeViewer } from "@codesandbox/sandpack-react/unstyled"
-import React from "react"
+import { useDebugMode } from "@/hooks/useDebugMode"
+import { useClerkSupabaseClient } from "@/utils/clerk"
+import {
+  extractDemoComponentNames,
+  extractNPMDependencies,
+} from "@/utils/parsers"
+import { generateSandpackFiles } from "@/utils/sandpack"
+import {
+  SandpackProvider,
+  SandpackFileExplorer,
+  SandpackCodeViewer,
+} from "@codesandbox/sandpack-react"
+import { useQuery } from "@tanstack/react-query"
+import React, { useMemo } from "react"
+import { LoadingSpinner } from "../LoadingSpinner"
+import { resolveRegistryDependencyTree } from "@/utils/queries.server"
 
 const SandpackPreview = React.lazy(() =>
-  import("@codesandbox/sandpack-react/unstyled").then((module) => ({
+  import("@codesandbox/sandpack-react").then((module) => ({
     default: module.SandpackPreview,
   })),
 )
 
 export function PublishComponentPreview({
-  files,
-  dependencies,
-  isDebug,
+  code,
+  demoCode,
+  slugToPublish,
+  registryToPublish = "ui",
+  directRegistryDependencies,
+  isDarkTheme,
 }: {
-  files: Record<string, string>
-  dependencies: Record<string, string>
-  isDebug: boolean
+  code: string
+  demoCode: string
+  slugToPublish: string
+  registryToPublish: string
+  directRegistryDependencies: string[]
+  isDarkTheme: boolean
 }) {
-  const [isComponentsLoaded, setIsComponentsLoaded] = useState(false)
+  const isDebug = useDebugMode()
+  const supabase = useClerkSupabaseClient()
 
-  useEffect(() => {
-    const loadComponents = async () => {
-      await import("@codesandbox/sandpack-react/unstyled")
-      setIsComponentsLoaded(true)
-    }
-    loadComponents()
-  }, [])
+  const {
+    data: registryDependencies,
+    isLoading,
+    error: registryDependenciesError,
+  } = useQuery({
+    queryKey: ["registryDependencies", directRegistryDependencies],
+    queryFn: async () => {
+      const { data, error } = await resolveRegistryDependencyTree({
+        supabase,
+        sourceDependencySlugs: directRegistryDependencies,
+        withDemoDependencies: true,
+      })
+      if (error) {
+        throw error
+      }
+      return data
+    },
+    enabled: directRegistryDependencies?.length > 0,
+  })
 
-  if (!isComponentsLoaded) {
-    return <div>Loading preview...</div>
+  const demoComponentNames = useMemo(
+    () => extractDemoComponentNames(demoCode),
+    [demoCode],
+  )
+
+  const sandpackDefaultFiles = useMemo(() => {
+    return generateSandpackFiles({
+      demoComponentNames,
+      componentSlug: slugToPublish,
+      relativeImportPath: `/components/${registryToPublish}`,
+      code,
+      demoCode,
+      theme: isDarkTheme ? "dark" : "light",
+    })
+  }, [
+    demoComponentNames,
+    slugToPublish,
+    code,
+    demoCode,
+    isDarkTheme,
+    registryToPublish,
+  ])
+
+  const files = {
+    ...sandpackDefaultFiles,
+    ...(registryDependencies?.filesWithRegistry ?? {}),
   }
+
+  const dependencies = useMemo(() => {
+    return {
+      ...extractNPMDependencies(code),
+      ...extractNPMDependencies(demoCode),
+      ...(registryDependencies?.npmDependencies || {}),
+    }
+  }, [code, demoCode, registryDependencies?.npmDependencies])
 
   const providerProps = {
     template: "react-ts" as const,
@@ -38,6 +102,8 @@ export function PublishComponentPreview({
       dependencies: {
         react: "^18.0.0",
         "react-dom": "^18.0.0",
+        "tailwind-merge": "latest",
+        "clsx": "latest",
         ...dependencies,
       },
     },
@@ -50,16 +116,25 @@ export function PublishComponentPreview({
   }
 
   return (
-    <div className="w-full bg-[#FAFAFA] rounded-lg">
-      <SandpackProvider {...providerProps}>
-        <SandpackPreview />
-        {isDebug && (
-          <>
-            <SandpackFileExplorer />
-            <SandpackCodeViewer />
-          </>
-        )}
-      </SandpackProvider>
+    <div className="w-full h-full bg-[#FAFAFA] rounded-lg">
+      {registryDependenciesError && (
+        <div className="text-red-500">{registryDependenciesError.message}</div>
+      )}
+      {isLoading && <LoadingSpinner />}
+      {!registryDependenciesError && !isLoading && (
+        <SandpackProvider {...providerProps}>
+          <SandpackPreview
+            showSandpackErrorOverlay={false}
+            showOpenInCodeSandbox={true}
+          />
+          {isDebug && (
+            <>
+              <SandpackFileExplorer />
+              <SandpackCodeViewer />
+            </>
+          )}
+        </SandpackProvider>
+      )}
     </div>
   )
 }

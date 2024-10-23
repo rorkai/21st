@@ -13,26 +13,28 @@ export function generateSandpackFiles({
   demoCode: string
   theme: "light" | "dark"
 }) {
-  console.log(demoComponentNames)
-  const shouldShowSelect = demoComponentNames.length > 1
-
-  let appTsxContent = ""
-
-  if (shouldShowSelect) {
-    appTsxContent = `
+  const appTsxContent = `
 import React, { useState } from 'react';
 import { ThemeProvider } from './next-themes';
 import { RouterProvider } from 'next/router';
-import DemoComponents from './demo';
+import DefaultDemoExport, { ${demoComponentNames.join(", ")} } from './demo';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem } from './components/ui/select';
-import { motion, AnimatePresence } from 'framer-motion';
 
 const demoComponentNames = ${JSON.stringify(demoComponentNames)};
+const DemoComponents = {
+  ...{
+    ${demoComponentNames.map((name) => `"${name}": ${name}`).join(",\n")}
+  },
+  ...DefaultDemoExport,
+};
+
 
 export default function App() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const CurrentComponent = DemoComponents[demoComponentNames[currentIndex]];
+  const CurrentComponent = Object.values(DemoComponents)[currentIndex];
+
+  const showSelect = demoComponentNames.length > 1;
 
   const handleSelect = (value) => {
     const index = demoComponentNames.indexOf(value);
@@ -44,75 +46,39 @@ export default function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="${theme}" enableSystem={false}>
       <RouterProvider>
-        <div className="flex items-center h-screen m-auto justify-center">
-          <div className="bg-background text-foreground w-full h-full flex items-center justify-center relative">
-            <div className="absolute lab-bg inset-0 size-full bg-[radial-gradient(#00000055_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff22_1px,transparent_1px)] [background-size:16px_16px]"></div>
-             <div className="absolute top-4 right-4">
-            <Select onValueChange={handleSelect} defaultValue={demoComponentNames[0]} className="shadow">
+          <div className="relative flex items-center justify-center h-screen w-full m-auto p-16 bg-background text-foreground">
+            <div className="absolute lab-bg inset-0 size-full bg-[radial-gradient(#00000021_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff22_1px,transparent_1px)] [background-size:16px_16px]"></div>
+            {showSelect && (
+              <div className="absolute z-10 top-4 right-4">
+                <Select onValueChange={handleSelect} defaultValue={demoComponentNames[0]} className="shadow">
                   <SelectTrigger className="gap-2">
-                    <SelectValue />
+                  <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      ${demoComponentNames
-                        .map(
-                          (name) => `
+                <SelectContent>
+                  <SelectGroup>
+                    ${demoComponentNames
+                      .map(
+                        (name) => `
                       <SelectItem key="${name}" value="${name}">
                         ${name.replace(/([A-Z])/g, " $1").trim()}
                       </SelectItem>
                       `,
-                        )
-                        .join("")}
+                      )
+                      .join("")}
                     </SelectGroup>
                   </SelectContent>
                 </Select>
               </div>
-            <div className="flex w-full min-w-[500px] md:w-auto justify-center items-center p-4 relative">         
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentIndex}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                >
-                  {CurrentComponent ? <CurrentComponent /> : <div>Component not found</div>}
-                </motion.div>
-              </AnimatePresence>
+            )}
+            <div className="flex w-full justify-center relative">
+              {CurrentComponent ? <CurrentComponent /> : <div>Component not found</div>}
             </div>
           </div>
-        </div>
-      </RouterProvider>
+        </RouterProvider>
     </ThemeProvider>
   );
 }
 `
-  } else {
-    appTsxContent = `
-import React from 'react';
-import { ThemeProvider } from './next-themes';
-import { RouterProvider } from 'next/router';
-import { ${demoComponentNames[0]} } from './demo';
-
-export default function App() {
-  return (
-    <ThemeProvider attribute="class" defaultTheme="${theme}" enableSystem={false}>
-      <RouterProvider>
-        <div className="flex items-center h-screen m-auto justify-center">
-          <div className="bg-background text-foreground w-full h-full flex items-center justify-center relative">
-            <div className="absolute lab-bg inset-0 size-full bg-[radial-gradient(#00000055_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff22_1px,transparent_1px)] [background-size:16px_16px]"></div>
-            <div className="flex w-full min-w-[500px] md:w-auto justify-center items-center p-4 relative">
-              <${demoComponentNames[0]} />
-            </div>
-          </div>
-        </div>
-      </RouterProvider>
-    </ThemeProvider>
-  );
-}
-`
-  }
-
   const files = {
     "/App.tsx": appTsxContent,
     "/next-themes.tsx": `
@@ -142,7 +108,7 @@ export const ThemeProvider = ({ children, defaultTheme = 'light', enableSystem =
 };
 `,
     "/hooks/use-media-query.tsx": `
-    import * as React from "react"
+import * as React from "react"
 
 export function useMediaQuery(query: string) {
   const [value, setValue] = React.useState(false)
@@ -449,8 +415,11 @@ export {
     [`${relativeImportPath}/${componentSlug}.tsx`]: code,
     "/demo.tsx": demoCode,
     "/lib/utils.ts": `
-export function cn(...inputs: (string | undefined)[]) {
-  return inputs.filter(Boolean).join(' ');
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
 }
 `,
     "/globals.css": `
@@ -573,8 +542,6 @@ module.exports = {
           baseUrl: ".",
           paths: {
             "@/*": ["./*"],
-            "@/components/ui/*": [`@/components/ui/shadcn/*`],
-            "@/hooks/*": [`@/hooks/*`],
           },
         },
       },

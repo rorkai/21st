@@ -41,7 +41,8 @@ export default function ComponentPage({
   dependencies,
   demoDependencies,
   demoComponentNames,
-  internalDependencies,
+  registryDependencies,
+  npmDependenciesOfRegistryDependencies,
 }: {
   component: Component & { user: User } & { tags: Tag[] }
   code: string
@@ -49,7 +50,8 @@ export default function ComponentPage({
   dependencies: Record<string, string>
   demoDependencies: Record<string, string>
   demoComponentNames: string[]
-  internalDependencies: Record<string, string>
+  registryDependencies: Record<string, string>
+  npmDependenciesOfRegistryDependencies: Record<string, string>
 }) {
   const [component, setComponent] = useState(initialComponent)
   const { user } = useUser()
@@ -361,14 +363,16 @@ export default function ComponentPage({
           dependencies={dependencies}
           demoDependencies={demoDependencies}
           demoComponentNames={demoComponentNames}
-          internalDependencies={internalDependencies}
+          registryDependencies={registryDependencies}
+          npmDependenciesOfRegistryDependencies={
+            npmDependenciesOfRegistryDependencies
+          }
         />
       </div>
       <EditComponentDialog
         component={component}
         isOpen={isEditDialogOpen}
         setIsOpen={setIsEditDialogOpen}
-        onClose={() => setIsEditDialogOpen(false)}
         onUpdate={handleUpdate}
       />
     </div>

@@ -5,7 +5,7 @@ import {
   SandpackCodeViewer,
   SandpackFileExplorer,
 } from "@codesandbox/sandpack-react"
-import { PreviewInfo } from "./PreviewInfo"
+import { ComponentPageInfo } from "./ComponentPageInfo"
 import { SandpackProvider as SandpackProviderUnstyled } from "@codesandbox/sandpack-react/unstyled"
 import { CheckIcon, CopyIcon, Terminal } from "lucide-react"
 import styles from "./ComponentPreview.module.css"
@@ -34,7 +34,8 @@ export function ComponentPagePreview({
   dependencies,
   demoDependencies,
   demoComponentNames,
-  internalDependencies,
+  registryDependencies,
+  npmDependenciesOfRegistryDependencies,
 }: {
   component: Component & { user: User } & { tags: Tag[] }
   code: string
@@ -42,7 +43,8 @@ export function ComponentPagePreview({
   dependencies: Record<string, string>
   demoDependencies: Record<string, string>
   demoComponentNames: string[]
-  internalDependencies: Record<string, string>
+  registryDependencies: Record<string, string>
+  npmDependenciesOfRegistryDependencies: Record<string, string>
 }) {
   const sandpackRef = useRef<HTMLDivElement>(null)
   const { theme } = useTheme()
@@ -54,12 +56,12 @@ export function ComponentPagePreview({
     ...generateSandpackFiles({
       demoComponentNames,
       componentSlug: component.component_slug,
-      relativeImportPath: `/components/ui/${component.user.username}`,
+      relativeImportPath: `/components/${component.registry}`,
       code,
       demoCode,
       theme: isDarkTheme ? "dark" : "light",
     }),
-    ...internalDependencies,
+    ...registryDependencies,
   }
 
   const mainComponentFile = Object.keys(files).find((file) =>
@@ -73,40 +75,18 @@ export function ComponentPagePreview({
   const visibleFiles = [
     demoComponentFile,
     mainComponentFile,
-    ...Object.keys(internalDependencies),
+    ...Object.keys(registryDependencies).filter(
+      (file) => file !== mainComponentFile,
+    ),
   ].filter((file): file is string => file !== undefined)
 
   const customFileLabels = Object.fromEntries(
-    Object.keys(internalDependencies).map((path) => {
+    Object.keys(registryDependencies).map((path) => {
       const parts = path.split("/")
       const fileName = parts[parts.length - 1]
       return [path, `${fileName} (dependency)`]
     }),
   )
-
-  const npmDependenciesOfInternalDependencies = Object.values(
-    internalDependencies,
-  ).reduce((acc, code) => {
-    const extractNpmDependencies = (code: string) => {
-      const deps: Record<string, string> = {}
-      const lines = code.split("\n")
-      lines.forEach((line) => {
-        if (
-          line.startsWith("import") &&
-          !line.includes("./") &&
-          !line.includes("../") &&
-          !line.includes("@/")
-        ) {
-          const match = line.match(/from\s+['"](.+)['"]/)
-          if (match && match[1]) {
-            deps[match[1]] = "latest"
-          }
-        }
-      })
-      return deps
-    }
-    return { ...acc, ...extractNpmDependencies(code) }
-  }, {})
 
   const providerProps: SandpackProviderProps = {
     theme: isDarkTheme ? "dark" : "light",
@@ -119,10 +99,11 @@ export function ComponentPagePreview({
         "react-dom": "^18.0.0",
         "@radix-ui/react-select": "^1.0.0",
         "lucide-react": "latest",
-        "framer-motion": "latest",
+        "tailwind-merge": "latest",
+        "clsx": "latest",
         ...dependencies,
         ...demoDependencies,
-        ...npmDependenciesOfInternalDependencies,
+        ...npmDependenciesOfRegistryDependencies,
       },
     },
     options: {
@@ -145,7 +126,11 @@ export function ComponentPagePreview({
           transition={{ duration: 0.3 }}
         >
           <Suspense fallback={<LoadingSpinner />}>
-            <SandpackPreview />
+            <SandpackPreview
+              showSandpackErrorOverlay={false}
+              showOpenInCodeSandbox={false}
+              showRefreshButton={false}
+            />
           </Suspense>
         </motion.div>
       </SandpackProviderUnstyled>
@@ -170,7 +155,7 @@ export function ComponentPagePreview({
                       </div>
                     </>
                   ) : (
-                    <PreviewInfo component={component} />
+                    <ComponentPageInfo component={component} />
                   )}
                 </div>
               </div>

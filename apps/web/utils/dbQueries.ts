@@ -11,7 +11,7 @@ import { useClerkSupabaseClient } from "./clerk"
 import { Database } from "@/types/supabase"
 import { toast } from "sonner"
 
-const componentFields = `
+export const componentReadableDbFields = `
   *,
   user:users!user_id (*)
 `
@@ -25,12 +25,13 @@ export async function getComponent(
     .from("components")
     .select(
       `
-      ${componentFields},
+      ${componentReadableDbFields},
       tags:component_tags(tags(name, slug))
     `,
     )
     .eq("component_slug", slug)
     .eq("user.username", username)
+    .not("user", "is", null)
     .eq("is_public", true)
     .returns<(Component & { user: User } & { tags: Tag[] })[]>()
     .single()
@@ -76,7 +77,7 @@ export async function getUserComponents(
 ) {
   const { data, error } = await supabase
     .from("components")
-    .select(componentFields)
+    .select(componentReadableDbFields)
     .eq("user_id", userId)
     .eq("is_public", true)
     .returns<(Component & { user: User })[]>()
@@ -120,18 +121,6 @@ export async function getComponents(
     throw new Error(error.message)
   }
   return data as (Component & { user: User } & { tags: Tag[] })[]
-}
-
-export function useComponents(
-  supabase: SupabaseClient<Database>,
-  tagSlug?: string,
-) {
-  return useQuery({
-    queryKey: ["components", tagSlug],
-    queryFn: () => getComponents(supabase, tagSlug),
-    refetchOnWindowFocus: false,
-    retry: false,
-  })
 }
 
 export async function getComponentTags(
@@ -209,10 +198,10 @@ export function useLikeMutation(
       }
       if (liked) {
         await unlikeComponent(supabase, userId, componentId)
-        toast("Component unliked") 
+        toast("Component unliked")
       } else {
         await likeComponent(supabase, userId, componentId)
-        toast("Component liked") 
+        toast("Component liked")
       }
     },
     onSuccess: (_, { componentId }) => {
@@ -339,96 +328,21 @@ export function useComponentOwnerUsername(
   })
 }
 
-export async function fetchDependencyComponents(
-  supabase: SupabaseClient<Database>,
-  dependencySlugs: string[],
-) {
-  const components = await Promise.all(
-    dependencySlugs.map(async (slug) => {
-      try {
-        const { data, error } = await supabase
-          .from("components")
-          .select(componentFields)
-          .eq("component_slug", slug)
-          .returns<(Component & { user: User })[]>()
-          .single()
-
-        if (error) {
-          console.error("Error fetching dependency component:", error)
-          return null
-        }
-
-        return data
-      } catch (error) {
-        console.error("Error fetching dependency component:", error)
-        return null
-      }
-    }),
-  )
-  return components.filter((c) => c !== null) as (Component & { user: User })[]
-}
-
-export function useDependencyComponents(
-  supabase: SupabaseClient<Database>,
-  componentDependencies: Record<string, string>,
-) {
-  const dependencySlugs = Object.values(componentDependencies)
-
-  return useQuery({
-    queryKey: ["dependencyComponents", dependencySlugs],
-    queryFn: () => fetchDependencyComponents(supabase, dependencySlugs),
-    enabled: dependencySlugs.length > 0,
-    refetchOnMount: true,
-    staleTime: 0,
-  })
-}
-
-async function getTagInfo(
-  supabase: SupabaseClient<Database>,
-  tagSlug: string,
-): Promise<Tag | null> {
-  const { data, error } = await supabase
-    .from("tags")
-    .select("*")
-    .eq("slug", tagSlug)
-    .single()
-
-  if (error) {
-    console.error("Error fetching tag info:", error)
-    return null
-  }
-
-  return data
-}
-
-export function useTagInfo(
-  supabase: SupabaseClient<Database>,
-  tagSlug?: string,
-) {
-  return useQuery<Tag | null, Error>({
-    queryKey: ["tagInfo", tagSlug],
-    queryFn: () => (tagSlug ? getTagInfo(supabase, tagSlug) : null),
-    enabled: !!tagSlug,
-    refetchOnMount: true,
-    staleTime: 0,
-  })
-}
-
 export async function updateComponentWithTags(
   supabase: SupabaseClient,
   componentId: number,
-  updatedData: Partial<Component & { tags?: Tag[] }>
+  updatedData: Partial<Component & { tags?: Tag[] }>,
 ) {
   const { name, description, license, preview_url, tags } = updatedData
 
   const tagsJson = tags
-    ? tags.map(tag => ({
+    ? tags.map((tag) => ({
         name: tag.name,
         slug: tag.slug,
       }))
     : null
 
-  const { data, error } = await supabase.rpc('update_component_with_tags', {
+  const { data, error } = await supabase.rpc("update_component_with_tags", {
     p_component_id: componentId,
     p_name: name !== undefined ? name : null,
     p_description: description !== undefined ? description : null,
@@ -438,7 +352,7 @@ export async function updateComponentWithTags(
   })
 
   if (error) {
-    console.error('Error updating component with tags:', error)
+    console.error("Error updating component with tags:", error)
     throw error
   }
 

@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { useDependencyComponents } from "@/utils/dbQueries"
 import Link from "next/link"
 import { UserAvatar } from "@/components/UserAvatar"
 import { LoadingSpinner } from "./LoadingSpinner"
@@ -20,9 +19,10 @@ import {
 } from "@/components/ui/tooltip"
 import { useClerkSupabaseClient } from "@/utils/clerk"
 import { toast } from "sonner"
+import { useQuery } from "@tanstack/react-query"
 import { Tag as TagComponent } from "./ui/tag"
 
-export const PreviewInfo = ({
+export const ComponentPageInfo = ({
   component,
 }: {
   component: Component & { user: User } & { tags: Tag[] }
@@ -32,11 +32,45 @@ export const PreviewInfo = ({
   const [copiedDependency, setCopiedDependency] = useState<string | null>(null)
   const [isLibDepsHovered, setIsLibDepsHovered] = useState(false)
 
-  const npmDependencies = (component.dependencies ?? {}) as Record<string, string>
-  const componentDependencies = (component.internal_dependencies ?? {}) as Record<string, string>
+  const npmDependencies = (component.dependencies ?? {}) as Record<
+    string,
+    string
+  >
+  const directRegistryDependencies =
+    component.direct_registry_dependencies as string[]
 
   const { data: dependencyComponents, isLoading: isLoadingDependencies } =
-    useDependencyComponents(supabase, componentDependencies)
+    useQuery({
+      queryKey: [
+        "directRegistryDependenciesComponents",
+        directRegistryDependencies,
+      ],
+      queryFn: async () => {
+        // Using a view here because PostgREST has issues with `or(and(...))` on joined tables
+        // See: https://github.com/PostgREST/postgrest/issues/2563
+        const { data, error } = await supabase
+          .from("components_with_username")
+          .select("*")
+          .or(
+            directRegistryDependencies
+              .map((d) => {
+                const [username, slug] = d.split("/")
+                return `and(username.eq."${username}",component_slug.eq."${slug}")`
+              })
+              .join(","),
+          )
+          .returns<(Component & { user: User })[]>()
+
+        if (error) {
+          console.error("Error fetching dependency component:", error)
+          throw error
+        }
+
+        return data
+      },
+      enabled: directRegistryDependencies.length > 0,
+      staleTime: Infinity,
+    })
 
   const copyAllDependencies = () => {
     const dependenciesString = Object.entries({
@@ -217,22 +251,22 @@ export const PreviewInfo = ({
         </>
       )}
 
-      {Object.keys(componentDependencies).length > 0 && (
+      {Object.keys(directRegistryDependencies).length > 0 && (
         <>
           <Separator className="w-full !my-6" />
           <div className="flex flex-col">
             <div className="flex items-center mb-2 justify-between">
               <span className="text-muted-foreground w-full font-medium">
-                Components used in the demo:
+                Registry dependencies:
               </span>
             </div>
             <div className="pl-1/3">
               {isLoadingDependencies ? (
                 <LoadingSpinner />
               ) : dependencyComponents ? (
-                <ComponentsList initialComponents={dependencyComponents!} />
+                <ComponentsList components={dependencyComponents!} />
               ) : (
-                <span>Error loading dependencies</span>
+                <span>Error loading registry dependencies</span>
               )}
             </div>
           </div>

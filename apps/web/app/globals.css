@@ -28,14 +28,6 @@ iframe {
   background: var(--background);
 }
 
-.sp-preview-actions {
-  display: none;
-}
-
-button.sp-icon-standalone.sp-button {
-  display: none;
-}
-
 .sp-wrapper {
   height: 100%;
   width: 100%;

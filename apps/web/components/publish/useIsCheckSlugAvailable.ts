@@ -10,7 +10,7 @@ export const makeSlugFromName = (name: string): string => {
     .replace(/-+/g, "-")
 }
 
-export const isValidSlug = (slug: string): boolean => {
+const isValidSlug = (slug: string): boolean => {
   const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
   return slugRegex.test(slug)
 }
@@ -55,9 +55,11 @@ export const generateUniqueSlug = async (
 export const useIsCheckSlugAvailable = ({
   slug,
   userId,
+  enabled = true,
 }: {
   slug: string
   userId: string
+  enabled?: boolean
 }) => {
   const client = useClerkSupabaseClient()
 
@@ -69,11 +71,11 @@ export const useIsCheckSlugAvailable = ({
     queryKey: ["slugCheck", slug, userId],
     queryFn: async () => {
       if (!isValidSlug(slug)) {
-        return false
+        throw new Error("Slug should contain only lowercase letters, numbers and dashes. It should end with a letter or a number")
       }
       return await checkSlugUnique(client, slug, userId)
     },
-    enabled: !!slug && !!userId,
+    enabled: !!slug && !!userId && !!enabled,
   })
 
   return {

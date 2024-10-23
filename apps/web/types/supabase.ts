@@ -9,6 +9,70 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      component_dependencies_closure: {
+        Row: {
+          component_id: number
+          dependency_component_id: number
+          depth: number
+          is_demo_dependency: boolean
+        }
+        Insert: {
+          component_id: number
+          dependency_component_id: number
+          depth: number
+          is_demo_dependency?: boolean
+        }
+        Update: {
+          component_id?: number
+          dependency_component_id?: number
+          depth?: number
+          is_demo_dependency?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "component_dependencies_closure_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "component_dependencies_graph_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_dependencies_closure_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_dependencies_closure_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components_with_username"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_dependencies_closure_dependency_component_id_fkey"
+            columns: ["dependency_component_id"]
+            isOneToOne: false
+            referencedRelation: "component_dependencies_graph_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_dependencies_closure_dependency_component_id_fkey"
+            columns: ["dependency_component_id"]
+            isOneToOne: false
+            referencedRelation: "components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_dependencies_closure_dependency_component_id_fkey"
+            columns: ["dependency_component_id"]
+            isOneToOne: false
+            referencedRelation: "components_with_username"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       component_likes: {
         Row: {
           component_id: number
@@ -30,7 +94,21 @@ export type Database = {
             foreignKeyName: "component_likes_component_id_fkey"
             columns: ["component_id"]
             isOneToOne: false
+            referencedRelation: "component_dependencies_graph_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_likes_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
             referencedRelation: "components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_likes_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components_with_username"
             referencedColumns: ["id"]
           },
           {
@@ -60,7 +138,21 @@ export type Database = {
             foreignKeyName: "component_tags_component_id_fkey"
             columns: ["component_id"]
             isOneToOne: false
+            referencedRelation: "component_dependencies_graph_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_tags_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
             referencedRelation: "components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_tags_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components_with_username"
             referencedColumns: ["id"]
           },
           {
@@ -79,19 +171,20 @@ export type Database = {
           component_slug: string
           created_at: string
           demo_code: string
-          demo_component_names: Json
           demo_dependencies: Json | null
+          demo_direct_registry_dependencies: Json
           dependencies: Json | null
           description: string | null
+          direct_registry_dependencies: Json
           downloads_count: number
           fts: unknown | null
           id: number
-          internal_dependencies: Json | null
           is_public: boolean
           license: string
           likes_count: number
           name: string
           preview_url: string
+          registry: string
           updated_at: string
           user_id: string
         }
@@ -101,19 +194,20 @@ export type Database = {
           component_slug: string
           created_at?: string
           demo_code: string
-          demo_component_names: Json
           demo_dependencies?: Json | null
+          demo_direct_registry_dependencies?: Json
           dependencies?: Json | null
           description?: string | null
+          direct_registry_dependencies?: Json
           downloads_count?: number
           fts?: unknown | null
           id?: number
-          internal_dependencies?: Json | null
           is_public?: boolean
           license?: string
           likes_count?: number
           name: string
           preview_url: string
+          registry?: string
           updated_at?: string
           user_id: string
         }
@@ -123,19 +217,20 @@ export type Database = {
           component_slug?: string
           created_at?: string
           demo_code?: string
-          demo_component_names?: Json
           demo_dependencies?: Json | null
+          demo_direct_registry_dependencies?: Json
           dependencies?: Json | null
           description?: string | null
+          direct_registry_dependencies?: Json
           downloads_count?: number
           fts?: unknown | null
           id?: number
-          internal_dependencies?: Json | null
           is_public?: boolean
           license?: string
           likes_count?: number
           name?: string
           preview_url?: string
+          registry?: string
           updated_at?: string
           user_id?: string
         }
@@ -202,7 +297,125 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      component_dependencies_graph_view: {
+        Row: {
+          code: string | null
+          component_id: number | null
+          component_names: Json | null
+          component_slug: string | null
+          created_at: string | null
+          demo_code: string | null
+          demo_dependencies: Json | null
+          demo_direct_registry_dependencies: Json | null
+          dependencies: Json | null
+          dependency_author_username: string | null
+          dependency_component_id: number | null
+          depth: number | null
+          description: string | null
+          direct_registry_dependencies: Json | null
+          downloads_count: number | null
+          fts: unknown | null
+          id: number | null
+          is_demo_dependency: boolean | null
+          is_public: boolean | null
+          license: string | null
+          likes_count: number | null
+          name: string | null
+          preview_url: string | null
+          registry: string | null
+          source_author_username: string | null
+          source_component_slug: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "component_dependencies_closure_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_dependencies_closure_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "component_dependencies_graph_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_dependencies_closure_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components_with_username"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_dependencies_closure_dependency_component_id_fkey"
+            columns: ["dependency_component_id"]
+            isOneToOne: false
+            referencedRelation: "components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_dependencies_closure_dependency_component_id_fkey"
+            columns: ["dependency_component_id"]
+            isOneToOne: false
+            referencedRelation: "component_dependencies_graph_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_dependencies_closure_dependency_component_id_fkey"
+            columns: ["dependency_component_id"]
+            isOneToOne: false
+            referencedRelation: "components_with_username"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "components_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      components_with_username: {
+        Row: {
+          code: string | null
+          component_names: Json | null
+          component_slug: string | null
+          created_at: string | null
+          demo_code: string | null
+          demo_dependencies: Json | null
+          demo_direct_registry_dependencies: Json | null
+          dependencies: Json | null
+          description: string | null
+          direct_registry_dependencies: Json | null
+          downloads_count: number | null
+          fts: unknown | null
+          id: number | null
+          is_public: boolean | null
+          license: string | null
+          likes_count: number | null
+          name: string | null
+          preview_url: string | null
+          registry: string | null
+          updated_at: string | null
+          user: Json | null
+          user_id: string | null
+          username: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "components_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       delete_component: {
@@ -241,6 +454,10 @@ export type Database = {
           tags: Json
         }[]
       }
+      is_trigger_operation: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       requesting_user_id: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -251,6 +468,19 @@ export type Database = {
         }
         Returns: Database["public"]["CompositeTypes"]["component_with_user"][]
       }
+      update_component_dependencies_closure:
+        | {
+            Args: {
+              p_component_id: number
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_component_id: number
+            }
+            Returns: undefined
+          }
       update_component_with_tags: {
         Args: {
           p_component_id: number
@@ -281,10 +511,11 @@ export type Database = {
         downloads_count: number | null
         likes_count: number | null
         component_slug: string | null
-        demo_component_names: Json | null
         name: string | null
         demo_dependencies: Json | null
-        internal_dependencies: Json | null
+        registry: string | null
+        direct_registry_dependencies: Json | null
+        demo_direct_registry_dependencies: Json | null
         preview_url: string | null
         license: string | null
         user_data: Json | null

@@ -1,11 +1,5 @@
+import { UseFormReturn } from "react-hook-form"
 import { z } from "zod"
-import {
-  extractComponentNames,
-  extractDemoComponentNames,
-  extractDependencies,
-  extractExportedTypes,
-} from "@/utils/parsers"
-import { generateSandpackFiles } from "@/utils/sandpack"
 
 export const formSchema = z.object({
   name: z.string().min(2, {
@@ -32,8 +26,18 @@ export const formSchema = z.object({
     .optional()
     .default([]),
   is_public: z.boolean().default(true),
-  preview_url: z.instanceof(File).optional(),
+  preview_image_data_url: z.string().optional(),
+  preview_image_file: z.instanceof(File).optional(),
   license: z.string().optional(),
+  unknown_dependencies: z.array(
+    z.object({
+      slugWithUsername: z.string(),
+      isDemoDependency: z.boolean(),
+    }),
+  ),
+  direct_registry_dependencies: z.array(z.string()),
+  demo_direct_registry_dependencies: z.array(z.string()),
+  slug_available: z.boolean().optional(),
 })
 
 export type FormData = z.infer<typeof formSchema>
@@ -48,56 +52,22 @@ export const formatComponentName = (name: string): string => {
   return name.replace(/([A-Z])/g, " $1").trim()
 }
 
-export const prepareFilesForPublishPreview = (
-  code: string,
-  demoCode: string,
-  publisherUsername: string,
-  isDarkTheme: boolean,
-) => {
-  const componentNames = extractComponentNames(code)
-  const types = extractExportedTypes(code)
-  const demoComponentNames = extractDemoComponentNames(demoCode)
-
-  const hasUseClient = /^"use client";?\s*/.test(demoCode)
-
-  const importStatements = `
-  import { ${componentNames.join(", ")} } from "./Component";\n
-  ${types.length > 0 ? `import { ${types.join(", ")} } from "./Component";\n` : ""}
-  `
-
-  const updatedDemoCode = `
-  ${hasUseClient ? `"use client";\n${importStatements}` : importStatements}
-  ${demoCode.replace(/^"use client";?\s*/, "")}
-  `
-  const files = generateSandpackFiles({
-    demoComponentNames: [demoComponentNames[0]!],
-    componentSlug: "Component",
-    relativeImportPath: `/components/ui/${publisherUsername}`,
+export const isFormValid = (form: UseFormReturn<FormData>) => {
+  const {
+    name,
+    component_slug,
     code,
-    demoCode: updatedDemoCode,
-    theme: isDarkTheme ? "dark" : "light",
-  })
+    demo_code,
+    slug_available,
+    unknown_dependencies,
+  } = form.getValues()
 
-  const dependencies = {
-    ...extractDependencies(code),
-    ...extractDependencies(demoCode),
-  }
-
-  return { files, dependencies }
-}
-
-export const isFormValid = (
-  form: any,
-  internalDependencies: Record<string, string>,
-  slugAvailable: boolean | undefined,
-) => {
-  const { name, component_slug, code, demo_code } = form.getValues()
   return (
     name.length >= 2 &&
     component_slug.length >= 2 &&
     code.length > 0 &&
     demo_code.length > 0 &&
-    Object.values(internalDependencies).every((slug) => slug) &&
-    slugAvailable === true
+    unknown_dependencies?.length === 0 &&
+    slug_available === true
   )
 }

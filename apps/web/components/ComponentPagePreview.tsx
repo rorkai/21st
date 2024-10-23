@@ -74,7 +74,10 @@ export function ComponentPagePreview({
 
   const visibleFiles = [
     demoComponentFile,
-    ...Object.keys(registryDependencies),
+    mainComponentFile,
+    ...Object.keys(registryDependencies).filter(
+      (file) => file !== mainComponentFile,
+    ),
   ].filter((file): file is string => file !== undefined)
 
   const customFileLabels = Object.fromEntries(

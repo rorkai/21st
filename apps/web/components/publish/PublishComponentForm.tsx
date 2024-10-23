@@ -53,6 +53,7 @@ import { Tables } from "@/types/supabase"
 import { LoadingSpinner } from "../LoadingSpinner"
 import { atom, useAtom } from "jotai"
 import { useSuccessDialogHotkeys } from "./hotkeys"
+import { toast } from "sonner"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -64,6 +65,7 @@ export interface ParsedCodeData {
 
 type FormStep = "nameSlugForm" | "code" | "demoCode" | "detailedForm"
 
+// TODO: add form persistence and use useAtomWithStorage here
 const formStepAtom = atom<FormStep>("nameSlugForm")
 
 export default function PublishComponentForm() {
@@ -171,6 +173,9 @@ export default function PublishComponentForm() {
           bucketName: "components-code",
         }),
       ])
+      if (!codeUrl || !demoCodeUrl) {
+        throw new Error("Failed to upload code files to R2")
+      }
 
       let previewImageR2Url = ""
       if (data.preview_image_file) {
@@ -229,11 +234,8 @@ export default function PublishComponentForm() {
       }
     } catch (error) {
       console.error("Error adding component:", error)
-      let errorMessage = "An error occurred while adding the component"
-      if (error instanceof Error) {
-        errorMessage += ": " + error.message
-      }
-      alert(errorMessage)
+      const errorMessage = `An error occurred while adding the component${error instanceof Error ? `: ${error.message}` : ''}`
+      toast.error(errorMessage)
     } finally {
       setIsSubmitting(false)
     }

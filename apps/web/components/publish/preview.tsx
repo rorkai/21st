@@ -102,6 +102,8 @@ export function PublishComponentPreview({
       dependencies: {
         react: "^18.0.0",
         "react-dom": "^18.0.0",
+        "tailwind-merge": "latest",
+        "clsx": "latest",
         ...dependencies,
       },
     },

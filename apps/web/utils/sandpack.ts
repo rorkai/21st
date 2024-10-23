@@ -121,7 +121,7 @@ export const ThemeProvider = ({ children, defaultTheme = 'light', enableSystem =
 };
 `,
     "/hooks/use-media-query.tsx": `
-    import * as React from "react"
+import * as React from "react"
 
 export function useMediaQuery(query: string) {
   const [value, setValue] = React.useState(false)
@@ -428,8 +428,11 @@ export {
     [`${relativeImportPath}/${componentSlug}.tsx`]: code,
     "/demo.tsx": demoCode,
     "/lib/utils.ts": `
-export function cn(...inputs: (string | undefined)[]) {
-  return inputs.filter(Boolean).join(' ');
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
 }
 `,
     "/globals.css": `

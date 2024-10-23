@@ -100,6 +100,8 @@ export function ComponentPagePreview({
         "@radix-ui/react-select": "^1.0.0",
         "lucide-react": "latest",
         "framer-motion": "latest",
+        "tailwind-merge": "latest",
+        "clsx": "latest",
         ...dependencies,
         ...demoDependencies,
         ...npmDependenciesOfRegistryDependencies,

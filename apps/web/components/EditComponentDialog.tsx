@@ -11,7 +11,8 @@ import { Component, User, Tag } from "@/types/global"
 import { useForm } from "react-hook-form"
 import { FormData } from "./publish/utils"
 import { uploadToR2 } from "@/utils/r2"
-import { useState } from "react"
+import { useMutation } from '@tanstack/react-query'
+import { toast } from 'sonner'
 
 export function EditComponentDialog({
   component,
@@ -43,12 +44,39 @@ export function EditComponentDialog({
     },
   })
 
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const uploadToR2Mutation = useMutation({
+    mutationFn: async ({ file, fileKey }: { file: File, fileKey: string }) => {
+      const buffer = Buffer.from(await file.arrayBuffer())
+      const base64Content = buffer.toString("base64")
+      return uploadToR2({
+        file: {
+          name: fileKey,
+          type: file.type,
+          encodedContent: base64Content,
+        },
+        fileKey,
+        bucketName: "components-code",
+        contentType: file.type,
+      })
+    },
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: async (updatedData: Partial<Component & { tags?: Tag[] }>) => {
+      await onUpdate(updatedData)
+    },
+    onSuccess: () => {
+      setIsOpen(false)
+    },
+    onError: (error) => {
+      console.error('Failed to update component:', error)
+      toast.error('Failed to update component. Please try again.')
+    },
+  })
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     const formData = form.getValues()
-    setIsSubmitting(true)
 
     const updatedData: Partial<Component & { tags?: Tag[] }> = {}
 
@@ -75,24 +103,21 @@ export function EditComponentDialog({
     if (formData.preview_image_file instanceof File) {
       const fileExtension = formData.preview_image_file.name.split(".").pop()
       const fileKey = `${component.user.id}/${component.component_slug}.${fileExtension}`
-      const buffer = Buffer.from(
-        await formData.preview_image_file.arrayBuffer(),
-      )
-      const base64Content = buffer.toString("base64")
-      const previewImageUrl = await uploadToR2({
-        file: {
-          name: fileKey,
-          type: formData.preview_image_file.type,
-          encodedContent: base64Content,
-        },
-        fileKey,
-        bucketName: "components-code",
-        contentType: formData.preview_image_file.type,
-      })
-      updatedData.preview_url = previewImageUrl
+      
+      try {
+        const previewImageUrl = await uploadToR2Mutation.mutateAsync({
+          file: formData.preview_image_file,
+          fileKey,
+        })
+        updatedData.preview_url = previewImageUrl
+      } catch (error) {
+        console.error('Failed to upload image:', error)
+        toast.error('Failed to upload image. Please try again.')
+        return
+      }
     }
 
-    await onUpdate(updatedData)
+    updateMutation.mutate(updatedData)
   }
 
   return (
@@ -105,7 +130,7 @@ export function EditComponentDialog({
           isEditMode={true}
           form={form}
           handleSubmit={handleSubmit}
-          isSubmitting={isSubmitting}
+          isSubmitting={uploadToR2Mutation.isPending || updateMutation.isPending}
         />
       </DialogContent>
     </Dialog>

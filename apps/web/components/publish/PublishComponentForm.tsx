@@ -295,7 +295,7 @@ export default function PublishComponentForm() {
             <div className={`flex gap-4 items-center h-full w-full mt-2`}>
               <div
                 className={cn(
-                  "flex flex-col scrollbar-hide items-start gap-2 py-6 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[400px] ml-0",
+                  "flex flex-col scrollbar-hide items-start gap-2 py-1 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[450px]",
                 )}
               >
                 {formStep === "nameSlugForm" && (
@@ -327,21 +327,27 @@ export default function PublishComponentForm() {
                   </motion.div>
                 )}
                 {formStep === "code" && (
-                  <div className="w-full">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ duration: 0.3, delay: 0.3 }}
+                    className="w-full"
+                  >
                     <FormField
                       control={form.control}
                       name="code"
                       render={({ field }) => (
-                        <FormItem className="w-full">
+                        <FormItem className="h-full w-full">
+                          <Label>Component code</Label>
                           <FormControl>
                             <motion.div
-                              className="flex flex-col relative"
+                              className="flex flex-col relative w-full"
                               animate={{
                                 height: "70vh",
                               }}
                               transition={{ duration: 0.3 }}
                             >
-                              <Label>Component code</Label>
                               <Textarea
                                 ref={codeInputRef}
                                 placeholder="Paste code of your component here"
@@ -350,28 +356,27 @@ export default function PublishComponentForm() {
                                   field.onChange(e.target.value)
                                 }}
                                 className={cn(
-                                  "w-full flex-grow resize-none scrollbar-hide",
+                                  "h-full w-full flex-grow resize-none scrollbar-hide",
                                 )}
                               />
-                              <div className="absolute bottom-2 right-2 z-2 h-[36px]">
-                                <Button
-                                  size="sm"
-                                  disabled={
-                                    !!code?.length &&
-                                    !parsedCode.componentNames?.length
-                                  }
-                                  onClick={() => setFormStep("demoCode")}
-                                >
-                                  Continue
-                                </Button>
-                              </div>
                             </motion.div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  </div>
+                    <div className="absolute bottom-2 right-2 z-2 h-[36px]">
+                      <Button
+                        size="sm"
+                        disabled={
+                          !code?.length || !parsedCode.componentNames?.length
+                        }
+                        onClick={() => setFormStep("demoCode")}
+                      >
+                        Continue
+                      </Button>
+                    </div>
+                  </motion.div>
                 )}
 
                 {formStep === "demoCode" && (
@@ -393,7 +398,7 @@ export default function PublishComponentForm() {
                               <motion.div
                                 className="relative"
                                 animate={{
-                                  height: "calc(60vh)",
+                                  height: "70vh",
                                 }}
                                 transition={{ duration: 0.3 }}
                               >
@@ -404,7 +409,7 @@ export default function PublishComponentForm() {
                                   onChange={(e) => {
                                     field.onChange(e.target.value)
                                   }}
-                                  className="mt-1 w-full h-full resize-none"
+                                  className="w-full h-full resize-none"
                                   style={{
                                     height: "100%",
                                     minHeight: "100%",
@@ -420,7 +425,8 @@ export default function PublishComponentForm() {
                         <Button
                           size="sm"
                           disabled={
-                            !!demoCode?.length && !parsedCode.demoComponentNames
+                            !demoCode?.length ||
+                            !parsedCode.demoComponentNames?.length
                           }
                           onClick={() => {
                             setFormStep("detailedForm")
@@ -517,6 +523,15 @@ export default function PublishComponentForm() {
                   </React.Suspense>
                 </motion.div>
               )}
+              {formStep === "code" && <CodeGuidelinesAlert />}
+              {formStep === "demoCode" && (
+                <DemoComponentGuidelinesAlert
+                  mainComponentName={
+                    parsedCode.componentNames[0] ?? "MyComponent"
+                  }
+                  componentSlug={componentSlug}
+                />
+              )}
             </div>
           </AnimatePresence>
         </div>
@@ -531,13 +546,6 @@ export default function PublishComponentForm() {
             parsedCode.directRegistryDependencyImports
           }
           unknownDependencies={unknownDependencies}
-        />
-      )}
-      {formStep === "code" && <CodeGuidelinesAlert />}
-      {formStep === "demoCode" && (
-        <DemoComponentGuidelinesAlert
-          mainComponentName={parsedCode.componentNames[0] ?? "MyComponent"}
-          componentSlug={componentSlug}
         />
       )}
       <SuccessDialog

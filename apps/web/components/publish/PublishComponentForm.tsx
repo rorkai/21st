@@ -47,8 +47,8 @@ import {
   CodeGuidelinesAlert,
   DebugInfoDisplay,
   DemoComponentGuidelinesAlert,
-  ResolveUnknownDependenciesCard,
-} from "./info-cards"
+  ResolveUnknownDependenciesAlertForm,
+} from "./alerts"
 import { Tables } from "@/types/supabase"
 import { LoadingSpinner } from "../LoadingSpinner"
 import { atom, useAtom } from "jotai"
@@ -441,18 +441,23 @@ export default function PublishComponentForm() {
 
                 {formStep === "detailedForm" &&
                   unknownDependencies?.length > 0 && (
-                    <ResolveUnknownDependenciesCard
+                    <ResolveUnknownDependenciesAlertForm
                       unknownDependencies={unknownDependencies}
-                      onDependencyResolved={(username, slug) => {
+                      onDependenciesResolved={(resolvedDependencies) => {
                         form.setValue(
                           "unknown_dependencies",
                           unknownDependencies.filter(
-                            (dependency) => dependency !== slug,
+                            (dependency) =>
+                              !resolvedDependencies
+                                .map((d) => d.slug)
+                                .includes(dependency),
                           ),
                         )
                         form.setValue("direct_registry_dependencies", [
                           ...form.getValues("direct_registry_dependencies"),
-                          `${username}/${slug}`,
+                          ...resolvedDependencies.map(
+                            (d) => `${d.username}/${d.slug}`,
+                          ),
                         ])
                       }}
                     />

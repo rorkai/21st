@@ -7,8 +7,94 @@ import { ParsedCodeData } from "./PublishComponentForm"
 import { Textarea } from "../ui/textarea"
 import { Input } from "../ui/input"
 import { Button } from "../ui/button"
-import { useRef, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
+import { FormEvent } from "react"
+
+export const ResolveUnknownDependenciesAlertForm = ({
+  unknownDependencies,
+  onDependenciesResolved,
+}: {
+  unknownDependencies: string[]
+  // eslint-disable-next-line no-unused-vars
+  onDependenciesResolved: (deps: { username: string; slug: string }[]) => void
+}) => {
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    const resolvedDependencies: { username: string; slug: string }[] = []
+    const newErrors: Record<string, string> = {}
+
+    unknownDependencies.forEach((slug) => {
+      const value = formData.get(slug) as string
+      const appHost = new URL(process.env.NEXT_PUBLIC_APP_URL!).host
+
+      if (!value?.includes(appHost)) {
+        newErrors[slug] = "Please enter a valid URL"
+        return
+      }
+
+      const [username, componentSlug] = value
+        .replace(`${appHost}/`, "")
+        .replace("https://", "")
+        .split("/")
+
+      if (!username || !componentSlug) {
+        newErrors[slug] = "Couldn't resolve the username"
+        return
+      }
+
+      resolvedDependencies.push({ username, slug: componentSlug })
+    })
+
+    setErrors(newErrors)
+
+    if (Object.keys(newErrors).length === 0) {
+      onDependenciesResolved(resolvedDependencies)
+    }
+  }
+
+  return (
+    <div className="w-full">
+      <Alert className="my-2">
+        <Codepen className="h-4 w-4" />
+        <AlertTitle>Unknown dependencies detected</AlertTitle>
+        <AlertDescription>
+          To use another registry component within your component:
+          <br />
+          1. Find it on 21st.dev, or publish it if it's not there
+          <br />
+          2. Paste the link here
+        </AlertDescription>
+      </Alert>
+      <form onSubmit={handleSubmit}>
+        {unknownDependencies.map((slug, index) => (
+          <div
+            key={slug}
+            className={`flex flex-col ${index > 0 ? "mt-4" : ""}`}
+          >
+            <Label className="text-sm">
+              Enter the link to <b>{slug}</b>
+            </Label>
+            <Input
+              name={slug}
+              placeholder='e.g. "https://21st.dev/shadcn/button"'
+              className="mt-1 w-full"
+            />
+            {errors[slug] && (
+              <Label className="text-sm text-red-500">{errors[slug]}</Label>
+            )}
+          </div>
+        ))}
+        <Button type="submit" className="mt-4 w-full">
+          Save
+        </Button>
+      </form>
+    </div>
+  )
+}
 
 export const CodeGuidelinesAlert = () => {
   return (
@@ -64,7 +150,11 @@ export const CodeGuidelinesAlert = () => {
                   While we emulate browser-side Next.js functions, we do not
                   support Next.js completely. Make sure your code works in our
                   environment; if it doesn't, contact{" "}
-                  <Link className="font-semibold" href="https://x.com/serafimcloud" target="_blank">
+                  <Link
+                    className="font-semibold"
+                    href="https://x.com/serafimcloud"
+                    target="_blank"
+                  >
                     @serafimcloud
                   </Link>{" "}
                   on X
@@ -163,85 +253,6 @@ export const DemoComponentGuidelinesAlert = ({
     </Alert>
   </motion.div>
 )
-
-const InputUnknownDependency = ({
-  slug,
-  onDependencyResolved,
-}: {
-  slug: string
-  onDependencyResolved: (username: string, slug: string) => void
-}) => {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  const handleSave = () => {
-    const value = inputRef.current?.value
-    const appHost = new URL(process.env.NEXT_PUBLIC_APP_URL!).host
-    if (!value?.includes(appHost)) {
-      setError("Please enter a valid URL")
-      return
-    }
-    const [username, componentSlug] = value
-      .replace(`${appHost}/`, "")
-      .replace("https://", "")
-      .split("/")
-
-    if (!username || !componentSlug) {
-      setError("Couldn't resolve the username")
-      return
-    }
-    onDependencyResolved(username, componentSlug)
-  }
-
-  return (
-    <div className="flex flex-col">
-      <Label className="text-sm">
-        Enter the link to <b>{slug}</b>
-      </Label>
-      <Input
-        ref={inputRef}
-        placeholder='e.g. "https://21st.dev/shadcn/button"'
-        className="mt-1 w-full"
-      />
-      <Label className="text-sm text-red-500">{error}</Label>
-      <Button className="mt-2" onClick={handleSave}>
-        Save
-      </Button>
-    </div>
-  )
-}
-
-export const ResolveUnknownDependenciesCard = ({
-  unknownDependencies,
-  onDependencyResolved,
-}: {
-  unknownDependencies: string[]
-  onDependencyResolved: (username: string, slug: string) => void
-}) => {
-  return (
-    <div className="w-full">
-      <Alert className="my-2">
-        <Codepen className="h-4 w-4" />
-        <AlertTitle>Unknown dependencies detected</AlertTitle>
-        <AlertDescription>
-          To use another registry component within your component:
-          <br />
-          1. Find it on 21st.dev, or publish it if it's not there
-          <br />
-          2. Paste the link here
-        </AlertDescription>
-      </Alert>
-      {unknownDependencies.map((slug, index) => (
-        <div key={slug} className={`flex flex-col ${index > 0 ? "mt-2" : ""}`}>
-          <InputUnknownDependency
-            slug={slug}
-            onDependencyResolved={onDependencyResolved}
-          />
-        </div>
-      ))}
-    </div>
-  )
-}
 
 export const DebugInfoDisplay = ({
   componentNames,

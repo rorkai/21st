@@ -8,6 +8,7 @@ import { Textarea } from "../ui/textarea"
 import { Input } from "../ui/input"
 import { Button } from "../ui/button"
 import { useRef, useState } from "react"
+import Link from "next/link"
 
 export const CodeGuidelinesAlert = () => {
   return (
@@ -50,7 +51,7 @@ export const CodeGuidelinesAlert = () => {
                 <li>TypeScript is fully supported.</li>
                 <li>
                   Tailwind is fully supported along with custom Tailwind styles
-                  from shadcn/ui.
+                  from <Code code="shadcn/ui" language="pseudo" />.
                 </li>
               </ul>
             </li>
@@ -62,7 +63,11 @@ export const CodeGuidelinesAlert = () => {
                 <li>
                   While we emulate browser-side Next.js functions, we do not
                   support Next.js completely. Make sure your code works in our
-                  environment; if it doesn't, contact @serafimcloud on X
+                  environment; if it doesn't, contact{" "}
+                  <Link className="font-semibold" href="https://x.com/serafimcloud" target="_blank">
+                    @serafimcloud
+                  </Link>{" "}
+                  on X
                 </li>
               </ul>
             </li>

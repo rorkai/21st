@@ -22,10 +22,7 @@ import { uiSystems, componentTypes } from "./HeaderServer"
 
 export const searchQueryAtom = atom("")
 
-export function Header({ tagName, page }: {
-  tagName?: string
-  page?: string
-}) {
+export function Header({ tagName, page }: { tagName?: string; page?: string }) {
   const isHomePage = page === "home"
   const isPublishPage = page === "publish"
   const isComponentsPage = page === "components"

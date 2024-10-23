@@ -47,8 +47,7 @@ export default function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="${theme}" enableSystem={false}>
       <RouterProvider>
-        <div className="flex items-center h-screen m-auto justify-center">
-          <div className="bg-background text-foreground w-full h-full flex items-center justify-center relative">
+          <div className="relative flex items-center justify-center h-screen w-full m-auto p-16 bg-background text-foreground">
             <div className="absolute lab-bg inset-0 size-full bg-[radial-gradient(#00000055_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff22_1px,transparent_1px)] [background-size:16px_16px]"></div>
             {showSelect && (
               <div className="absolute top-4 right-4">
@@ -72,22 +71,11 @@ export default function App() {
                 </Select>
               </div>
             )}
-            <div className="flex w-full min-w-[500px] md:w-auto justify-center items-center m-12 relative">         
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentIndex}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                >
-                  {CurrentComponent ? <CurrentComponent /> : <div>Component not found</div>}
-                </motion.div>
-              </AnimatePresence>
+            <div className="flex w-full justify-center relative">
+              {CurrentComponent ? <CurrentComponent /> : <div>Component not found</div>}
             </div>
           </div>
-        </div>
-      </RouterProvider>
+        </RouterProvider>
     </ThemeProvider>
   );
 }
@@ -555,8 +543,6 @@ module.exports = {
           baseUrl: ".",
           paths: {
             "@/*": ["./*"],
-            "@/components/ui/*": [`@/components/ui/shadcn/*`],
-            "@/hooks/*": [`@/hooks/*`],
           },
         },
       },

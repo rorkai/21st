@@ -29,8 +29,13 @@ iframe {
 }
 
 .sp-wrapper {
-  height: 100%;
-  width: 100%;
+  height: 100% !important;
+  width: 100% !important;
+}
+
+.sp-preview-container {
+  height: 100% !important;
+  width: 100% !important;
 }
 
 .css-29ghe2 {

@@ -51,7 +51,6 @@ import {
 } from "./alerts"
 import { Tables } from "@/types/supabase"
 import { LoadingSpinner } from "../LoadingSpinner"
-import { atom, useAtom } from "jotai"
 import { useSuccessDialogHotkeys } from "./hotkeys"
 import { toast } from "sonner"
 
@@ -64,9 +63,6 @@ export interface ParsedCodeData {
 }
 
 type FormStep = "nameSlugForm" | "code" | "demoCode" | "detailedForm"
-
-// TODO: add form persistence and use useAtomWithStorage here
-const formStepAtom = atom<FormStep>("nameSlugForm")
 
 export default function PublishComponentForm() {
   const registryToPublish = "ui"
@@ -105,7 +101,7 @@ export default function PublishComponentForm() {
     "demo_direct_registry_dependencies",
   )
 
-  const [formStep, setFormStep] = useAtom(formStepAtom)
+  const [formStep, setFormStep] = useState<FormStep>("nameSlugForm")
   const [parsedCode, setParsedCode] = useState<ParsedCodeData>({
     dependencies: {},
     demoDependencies: {},

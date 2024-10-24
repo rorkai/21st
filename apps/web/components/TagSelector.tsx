@@ -133,7 +133,7 @@ export function TagSelector<T>({
               ))}
             </CommandGroup>
             {inputValue.trim() !== "" &&
-              !availableTags.some((tag) => getValue(tag) === inputValue) && (
+              !availableTags.some((tag) => getLabel(tag).toLowerCase() === inputValue.toLowerCase()) && (
                 <CommandGroup heading="Create Tag">
                   <CommandItem value={inputValue} onSelect={handleCreate}>
                     <Check className="mr-2 h-4 w-4 opacity-100" />

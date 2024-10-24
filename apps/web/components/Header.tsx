@@ -1,9 +1,16 @@
 "use client"
 
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
+import {
+  SignInButton,
+  SignedIn,
+  SignedOut,
+  useClerk,
+  UserProfile,
+} from "@clerk/nextjs"
+import { UserAvatar } from "./UserAvatar"
 import { atom, useAtom } from "jotai"
 import { Input } from "@/components/ui/input"
 import { Hotkey } from "./ui/hotkey"
@@ -19,6 +26,13 @@ import {
 } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils"
 import { uiSystems, componentTypes } from "./HeaderServer"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { LogOut, User, Settings, X } from "lucide-react"
 
 export const searchQueryAtom = atom("")
 
@@ -29,6 +43,8 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
   const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom)
   const inputRef = React.useRef<HTMLInputElement>(null)
   const isMobile = useIsMobile()
+  const { user, signOut } = useClerk()
+  const [showUserProfile, setShowUserProfile] = useState(false)
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -48,90 +64,138 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
   }, [])
 
   return (
-    <header className="flex fixed top-0 left-0 right-0 h-14 z-50 items-center justify-between border-b border-border px-4 py-3 bg-background text-foreground">
-      <div className="flex items-center gap-4">
-        <HeaderServer tagName={tagName} isHomePage={isHomePage} />
-        {!isMobile && !tagName && !isComponentsPage && (
-          <NavigationMenu>
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-foreground">
-                  UI Systems
-                </NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-background">
-                    {uiSystems.map((system) => (
-                      <ListItem
-                        key={system.title}
-                        title={system.title}
-                        href={system.href}
-                      >
-                        {system.description}
-                      </ListItem>
-                    ))}
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-foreground">
-                  Component Types
-                </NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] bg-background">
-                    {componentTypes.map((component) => (
-                      <ListItem
-                        key={component.title}
-                        title={component.title}
-                        href={component.href}
-                      >
-                        {component.description}
-                      </ListItem>
-                    ))}
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
-        )}
-      </div>
+    <>
+      <header className="flex fixed top-0 left-0 right-0 h-14 z-50 items-center justify-between border-b border-border px-4 py-3 bg-background text-foreground">
+        <div className="flex items-center gap-4">
+          <HeaderServer tagName={tagName} isHomePage={isHomePage} />
+          {!isMobile && !tagName && !isComponentsPage && (
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="text-foreground">
+                    UI Systems
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-background">
+                      {uiSystems.map((system) => (
+                        <ListItem
+                          key={system.title}
+                          title={system.title}
+                          href={system.href}
+                        >
+                          {system.description}
+                        </ListItem>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="text-foreground">
+                    Component Types
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] bg-background">
+                      {componentTypes.map((component) => (
+                        <ListItem
+                          key={component.title}
+                          title={component.title}
+                          href={component.href}
+                        >
+                          {component.description}
+                        </ListItem>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+          )}
+        </div>
 
-      <div className="flex items-center gap-4">
-        <HeaderServer.SocialIcons />
-        {page === "home" && (
-          <div className="relative flex items-center max-w-[400px]">
-            <Input
-              ref={inputRef}
-              type="text"
-              placeholder="Search components..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pr-14"
-            />
-            <div className="absolute top-0 right-3 h-full flex items-center pointer-events-none">
-              <Hotkey keys={["K"]} modifier={true} />
-            </div>
-          </div>
-        )}
-
-        {!isMobile && (
-          <>
-            <SignedIn>
-              {!isPublishPage && (
-                <Button asChild>
-                  <Link href="/publish">Publish</Link>
-                </Button>
-              )}
-              <UserButton />
-            </SignedIn>
-            <SignedOut>
-              <div className="text-sm">
-                <SignInButton />
+        <div className="flex items-center gap-4">
+          <HeaderServer.SocialIcons />
+          {page === "home" && (
+            <div className="relative flex items-center max-w-[400px]">
+              <Input
+                ref={inputRef}
+                type="text"
+                placeholder="Search components..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pr-14"
+              />
+              <div className="absolute top-0 right-3 h-full flex items-center pointer-events-none">
+                <Hotkey keys={["K"]} modifier={true} />
               </div>
-            </SignedOut>
-          </>
-        )}
-      </div>
-    </header>
+            </div>
+          )}
+
+          {!isMobile && (
+            <>
+              <SignedIn>
+                {!isPublishPage && (
+                  <Button asChild>
+                    <Link href="/publish">Publish</Link>
+                  </Button>
+                )}
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="cursor-pointer rounded-full">
+                    <UserAvatar
+                      src={user?.imageUrl}
+                      alt={user?.fullName}
+                      size={32}
+                    />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem
+                      onSelect={() =>
+                        (window.location.href = `/${user?.externalAccounts?.[0]?.username}`)
+                      }
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      My profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setShowUserProfile(true)}>
+                      <Settings className="w-4 h-4 mr-2" />
+                      Manage account
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onSelect={() => signOut({ redirectUrl: "/" })}
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </SignedIn>
+
+              <SignedOut>
+                <div className="text-sm">
+                  <SignInButton />
+                </div>
+              </SignedOut>
+            </>
+          )}
+        </div>
+      </header>
+      {showUserProfile && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-10"
+          onClick={() => setShowUserProfile(false)}
+        >
+          <div className="relative">
+            <UserProfile />
+            <Button
+              variant="ghost"
+              onClick={() => setShowUserProfile(false)}
+              className="absolute top-4 right-4 w-8 h-8 text-muted-foreground text-sm rounded flex items-center justify-center"
+            >
+              <X className="min-w-4 min-h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 

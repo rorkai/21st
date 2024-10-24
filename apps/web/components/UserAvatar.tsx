@@ -7,14 +7,14 @@ export const UserAvatar = ({
   size = 40,
   isClickable,
 }: {
-  src: string
-  alt: string | null
+  src?: string
+  alt?: string | null
   size?: number
   isClickable?: boolean
 }) => {
   return (
     <div
-      className={`relative rounded-full overflow-hidden ${isClickable ? "group" : ""}`}
+      className={`relative rounded-full overflow-hidden bg-muted ${isClickable ? "group" : ""}`}
       style={{ width: size, height: size }}
     >
       <div

@@ -7,18 +7,23 @@ const nextConfig = {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
-      };
+      }
     }
-    return config;
+    return config
   },
   async rewrites() {
     return [
       {
-        source: '/r/:path*',
-        destination: '/api/r/:path*',
+        source: "/r/:path*",
+        destination: "/api/r/:path*",
       },
-    ];
+    ]
   },
-};
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "5mb",
+    },
+  },
+}
 
-export default nextConfig;
+export default nextConfig

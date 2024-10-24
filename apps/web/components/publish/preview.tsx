@@ -84,7 +84,11 @@ export function PublishComponentPreview({
 
   const files = {
     ...sandpackDefaultFiles,
-    ...(registryDependencies?.filesWithRegistry ?? {}),
+    ...Object.fromEntries(
+      Object.entries(registryDependencies?.filesWithRegistry ?? {}).map(
+        ([key, value]) => [key, value.code],
+      ),
+    ),
   }
 
   const dependencies = useMemo(() => {
@@ -103,7 +107,9 @@ export function PublishComponentPreview({
         react: "^18.0.0",
         "react-dom": "^18.0.0",
         "tailwind-merge": "latest",
-        "clsx": "latest",
+        clsx: "latest",
+        "@radix-ui/react-select": "^1.0.0",
+        "lucide-react": "latest",
         ...dependencies,
       },
     },

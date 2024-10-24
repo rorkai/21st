@@ -25,15 +25,15 @@ export default function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={cn(geistSans.variable, geistMono.variable, "px-4 h-full")}
-      >
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <TooltipProvider>
-            <Providers>{children}</Providers>
-          </TooltipProvider>
-          <Toaster />
-        </ThemeProvider>
+      <body className={cn(geistSans.variable, geistMono.variable)}>
+        <div className="px-4 h-full">
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <TooltipProvider>
+              <Providers>{children}</Providers>
+            </TooltipProvider>
+            <Toaster />
+          </ThemeProvider>
+        </div>
       </body>
     </html>
   )

@@ -222,9 +222,7 @@ export default function ComponentPage({
 
   return (
     <div
-      className={`flex flex-col gap-2 rounded-lg h-[98vh] w-full ${
-        isMobile ? "pt-4" : "p-4"
-      } bg-background text-foreground`}
+      className={`flex flex-col gap-2 rounded-lg h-[98vh] w-full py-4 bg-background text-foreground`}
     >
       <div className="flex justify-between items-center">
         <div className="flex gap-1 items-center">

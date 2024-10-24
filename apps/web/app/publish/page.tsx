@@ -18,7 +18,7 @@ export default function PublishPage() {
         >
           <div className="w-full h-full z-10 rounded-full bg-foreground" />
         </Link>
-        <div className="flex flex-row items-center h-screen w-full p-4">
+        <div className="flex flex-row items-center h-screen w-full py-4">
           <PublishComponentForm />
         </div>
       </SignedIn>

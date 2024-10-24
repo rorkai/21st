@@ -31,6 +31,26 @@ export async function GET(
       )
     }
 
+    const userAgent = request.headers.get("user-agent") || ""
+    const isPackageManager = /node-fetch|npm|yarn|pnpm|bun/i.test(userAgent)
+
+    if (isPackageManager) {
+      // This should finish reliably in serverless even without await 
+      // because we are using Vercel In-Function Concurrency
+      // TODO: test this
+      supabaseWithAdminAccess
+        .from("components")
+        .update({ downloads_count: component.downloads_count + 1 })
+        .eq("id", component.id)
+        .then(({ error }) => {
+          if (error) {
+            console.error("Error incrementing downloads count:", error)
+          } else {
+            console.log("Downloads count incremented")
+          }
+        })
+    }
+
     const dependencies = component.dependencies as Record<string, string>
 
     const resolvedRegistryDependencies = await resolveRegistryDependencyTree({
@@ -44,8 +64,6 @@ export async function GET(
     if (resolvedRegistryDependencies.error) {
       throw resolvedRegistryDependencies.error
     }
-
-    console.log(resolvedRegistryDependencies.data)
 
     const files = Object.entries(
       resolvedRegistryDependencies.data.filesWithRegistry,

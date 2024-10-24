@@ -131,7 +131,8 @@ export default async function Image({
             left: "80px",
             right: "80px",
             display: "flex",
-            alignItems: "center",
+            flexDirection: "column",
+            alignItems: "flex-start",
             fontSize: "50px",
             fontWeight: "bold",
             color: "#000000",
@@ -142,12 +143,11 @@ export default async function Image({
             style={{
               overflow: "hidden",
               textOverflow: "ellipsis",
-              
             }}
           >
             {user.username}
           </span>
-          <span style={{ margin: "0 10px", flexShrink: 0 }}>/</span>
+
           <span
             style={{
               overflow: "hidden",

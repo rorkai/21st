@@ -20,6 +20,13 @@ import { useTheme } from "next-themes"
 import { CopyCodeButton } from "./CopyCodeButton"
 import { generateSandpackFiles } from "@/utils/sandpack"
 import { toast } from "sonner"
+import { getPackageRunner } from "@/lib/utils"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 const SandpackPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react/unstyled").then((module) => ({
@@ -179,13 +186,15 @@ function CopyCommandSection({
 }) {
   const installUrl = `${process.env.NEXT_PUBLIC_APP_URL}/r/${component.user.username}/${component.component_slug}`
   const [copied, setCopied] = useState(false)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
-  const copyCommand = () => {
-    const command = `npx shadcn@latest add "${installUrl}"`
+  const copyCommand = (packageManager: string) => {
+    const command = `${getPackageRunner(packageManager)} shadcn@latest add "${installUrl}"`
     navigator.clipboard.writeText(command)
     setCopied(true)
     setTimeout(() => setCopied(false), 1000)
     toast("Command copied to clipboard")
+    setIsDropdownOpen(false)
   }
 
   return (
@@ -205,12 +214,30 @@ function CopyCommandSection({
             </span>
           </code>
         </div>
-        <button
-          onClick={copyCommand}
-          className="flex-shrink-0 ml-3 flex items-center justify-center p-1 hover:bg-zinc-800 text-white w-8 h-8 rounded-md"
+        <DropdownMenu
+          open={isDropdownOpen}
+          onOpenChange={setIsDropdownOpen}
         >
-          {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
-        </button>
+          <DropdownMenuTrigger asChild>
+            <button className="flex-shrink-0 ml-3 flex items-center justify-center p-1 hover:bg-zinc-800 text-white w-8 h-8 rounded-md">
+              {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => copyCommand("npm")}>
+              npm
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => copyCommand("yarn")}>
+              yarn
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => copyCommand("pnpm")}>
+              pnpm
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => copyCommand("bun")}>
+              bun
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   )

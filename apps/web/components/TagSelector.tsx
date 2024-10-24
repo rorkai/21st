@@ -26,6 +26,7 @@ interface TagSelectorProps<T> {
   getValue: (tag: T) => string
   getLabel: (tag: T) => string
   createTag: (inputValue: string) => T
+  className?: string
 }
 
 export function TagSelector<T>({
@@ -35,6 +36,7 @@ export function TagSelector<T>({
   getValue,
   getLabel,
   createTag,
+  className,
 }: TagSelectorProps<T>) {
   const [open, setOpen] = useState(false)
   const [inputValue, setInputValue] = useState("")
@@ -62,13 +64,16 @@ export function TagSelector<T>({
   const handleRemove = (value: string) => {
     onChange(selectedTags.filter((tag) => getValue(tag) !== value))
   }
-
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className={`flex flex-wrap gap-[2px] mt-1 py-[2px] pl-[2px] pr-3 h-auto w-full text-left items-center justify-start min-h-9 ${selectedTags.length > 0 ? "hover:bg-transparent" : ""}`}
+          className={cn(
+            "flex flex-wrap gap-[2px] mt-1 py-[2px] pl-[2px] pr-3 h-auto w-full text-left items-center justify-start min-h-9",
+            className,
+            selectedTags.length > 0 && "hover:bg-background"
+          )}
         >
           {selectedTags.map((tag) => (
             <span

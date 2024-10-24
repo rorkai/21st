@@ -21,6 +21,7 @@ import { useClerkSupabaseClient } from "@/utils/clerk"
 import { toast } from "sonner"
 import { useQuery } from "@tanstack/react-query"
 import { Tag as TagComponent } from "@/components/ui/tag"
+import { Badge } from "@/components/ui/badge"
 
 export const ComponentPageInfo = ({
   component,
@@ -126,6 +127,14 @@ export const ComponentPageInfo = ({
         <div className="flex items-start">
           <span className="text-muted-foreground w-1/3">Description:</span>
           <span className="w-2/3">{component.description}</span>
+        </div>
+      )}
+      {component.registry && (
+        <div className="flex items-start">
+          <span className="text-muted-foreground w-1/3">Registry:</span>
+          <span className="w-2/3">
+            <Badge variant="outline">{component.registry}</Badge>
+          </span>
         </div>
       )}
       {license && (

@@ -4,7 +4,10 @@ import {
   extractDemoComponentNames,
   extractNPMDependencies,
 } from "@/lib/parsers"
-import { generateSandpackFiles } from "@/lib/sandpack"
+import {
+  defaultNPMDependencies as defaultSandpackDependencies,
+  generateSandpackFiles,
+} from "@/lib/sandpack/generate-files"
 import {
   SandpackProvider,
   SandpackFileExplorer,
@@ -104,20 +107,9 @@ export function PublishComponentPreview({
     files,
     customSetup: {
       dependencies: {
-        react: "^18.0.0",
-        "react-dom": "^18.0.0",
-        "tailwind-merge": "latest",
-        clsx: "latest",
-        "@radix-ui/react-select": "^1.0.0",
-        "lucide-react": "latest",
+        ...defaultSandpackDependencies,
         ...dependencies,
       },
-    },
-    options: {
-      externalResources: [
-        "https://cdn.tailwindcss.com",
-        "https://vucvdpamtrjkzmubwlts.supabase.co/storage/v1/object/public/css/combined-tailwind.css",
-      ],
     },
   }
 

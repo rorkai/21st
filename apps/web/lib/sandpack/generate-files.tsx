@@ -1,3 +1,25 @@
+import { Config } from "tailwindcss"
+import { deepMerge } from "../utils"
+import {
+  tailwindConfig as baseTailwindConfig,
+  globalCSS as baseGlobalCSS,
+  tailwindVersion,
+} from "./tailwind-plugins/base"
+import {
+  tailwindConfig as shadcnTailwindConfig,
+  globalCSS as shadcnGlobalCSS,
+} from "./tailwind-plugins/shadcn"
+import endent from "endent"
+
+export const defaultNPMDependencies = {
+  react: "^18.0.0",
+  "react-dom": "^18.0.0",
+  "tailwind-merge": "latest",
+  clsx: "latest",
+  "@radix-ui/react-select": "^1.0.0",
+  "lucide-react": "latest",
+}
+
 export function generateSandpackFiles({
   demoComponentNames,
   componentSlug,
@@ -5,6 +27,8 @@ export function generateSandpackFiles({
   code,
   demoCode,
   theme,
+  tailwindConfigExtensions,
+  tailwindGlobalCSSExtensions,
 }: {
   demoComponentNames: string[]
   componentSlug: string
@@ -12,7 +36,20 @@ export function generateSandpackFiles({
   code: string
   demoCode: string
   theme: "light" | "dark"
+  tailwindConfigExtensions?: Config[]
+  tailwindGlobalCSSExtensions?: string[]
 }) {
+  const tailwindConfig = deepMerge(
+    baseTailwindConfig,
+    shadcnTailwindConfig,
+    ...(tailwindConfigExtensions ?? []),
+  )
+  const globalCSS = endent`
+    ${baseGlobalCSS}
+    ${shadcnGlobalCSS}
+    ${tailwindGlobalCSSExtensions?.join("\n") ?? ""}
+  `
+
   const appTsxContent = `
 import React, { useState } from 'react';
 import { ThemeProvider } from './next-themes';
@@ -81,6 +118,50 @@ export default function App() {
 `
   const files = {
     "/App.tsx": appTsxContent,
+    "/public/index.html": `
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com/${tailwindVersion}"></script>
+    <script>
+      tailwind.config = ${JSON.stringify(tailwindConfig)}
+    </script>
+    <style type="text/tailwindcss">
+      ${globalCSS}
+    </style>
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+`,
+    [`${relativeImportPath}/${componentSlug}.tsx`]: code,
+    "/demo.tsx": demoCode,
+    "/lib/utils.ts": `
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+`,
+    "/tsconfig.json": JSON.stringify(
+      {
+        compilerOptions: {
+          jsx: "react-jsx",
+          esModuleInterop: true,
+          baseUrl: ".",
+          paths: {
+            "@/*": ["./*"],
+          },
+        },
+      },
+      null,
+      2,
+    ),
     "/next-themes.tsx": `
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
@@ -412,142 +493,6 @@ export {
         );
       }
     `,
-    [`${relativeImportPath}/${componentSlug}.tsx`]: code,
-    "/demo.tsx": demoCode,
-    "/lib/utils.ts": `
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
-`,
-    "/globals.css": `
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-html,
-body {
-  max-width: 100vw;
-}
-
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --radius: 0.5rem;
-  }
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-`,
-    "/tailwind.config.js": `
-module.exports = {
-  darkMode: 'class',
-  content: ['./**/*.{js,ts,jsx,tsx}'],
-  theme: {
-    extend: {
-      colors: {
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
-        primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
-        },
-        secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))',
-        },
-        muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))',
-        },
-        accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))',
-        },
-      },
-      borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
-      },
-    },
-  },
-  plugins: [],
-}
-`,
-    "/tsconfig.json": JSON.stringify(
-      {
-        compilerOptions: {
-          jsx: "react-jsx",
-          esModuleInterop: true,
-          baseUrl: ".",
-          paths: {
-            "@/*": ["./*"],
-          },
-        },
-      },
-      null,
-      2,
-    ),
   }
 
   return files

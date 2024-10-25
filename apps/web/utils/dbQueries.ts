@@ -244,6 +244,7 @@ export async function addTagsToComponent(
         const { data: newTag, error: insertError } = await supabase
           .from("tags")
           .insert({ name: capitalizedName, slug })
+          .select()
           .single()
 
         if (insertError) {

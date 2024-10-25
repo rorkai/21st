@@ -37,9 +37,8 @@ You can also copy the code directly from the website, but note that you’ll nee
 
 - Supabase account
 - Clerk account
-- Installed ngrok or other tunneling software
+- ngrok or other tunneling software
 - Cloudflare R2 account
-- `dotenv` tool [(link)](https://www.dotenv.org/docs/)
 
 ### Setup
 
@@ -51,9 +50,11 @@ You can also copy the code directly from the website, but note that you’ll nee
    pnpm install
    ```
 
-3. Create a `.env` file in root of the project
+3. Create a `.env.local` file in the `apps/web` directory
 
-4. Create a Supabase project, add the `.env` variables like: 
+4. Create a [Supabase](https://supabase.com) project and open Project Settings -> Configuration -> API.
+
+Copy "Project URL" and "Project API Keys variables to your `.env.local`: 
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://*****
@@ -61,7 +62,7 @@ NEXT_PUBLIC_SUPABASE_KEY=*****
 SUPABASE_SERVICE_ROLE_KEY=*****
 ```
 
-5. Install Supabase CLI [(link)](https://supabase.com/docs/guides/local-development) and perform a migration to remote DB:
+5. Install [Supabase CLI](https://supabase.com/docs/guides/local-development) and apply DB migrations:
 
 ```
 supabase init
@@ -72,37 +73,39 @@ supabase start
 supabase db push
 ```
 
-6. Create a Clerk project. 
-    1. Add the `.env` variables like:
+6. Create a [Clerk](https://clerk.com) project
+
+Add these variables to `.env.local`:
 
 ```
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=*****
 CLERK_SECRET_KEY=***
 ```
     
-Also, add a Supabase integration using JWT [(link)](https://clerk.com/docs/integrations/databases/supabase).
+In Clerk dashboard add the [Supabase JWT integration](https://clerk.com/docs/integrations/databases/supabase).
 
-After that, add a webhook to your ngrok url like `https://${your_ngrok_url}/api/webhooks/clerk`, adding the created hook secret to `.env`
+Launch ngrok and add it's URL `https://${your_ngrok_url}/api/webhooks/clerk` to Clerk dashboard. 
+Copy the webhook secret from Clerk to `.env.local`
 
 ```
 CLERK_WEBHOOK_SECRET=*****
 ```
 
-7. Create a Cloudflare R2 bucket called `components-code`, update `.env` to:
+7. Create a Cloudflare R2 bucket called `components-code`, update the `.env.local` to:
 
 ```
-# public R2 url for view
+# public R2 CDN url
 NEXT_PUBLIC_CDN_URL=https://*****
 R2_ACCESS_KEY_ID=*****
 R2_SECRET_ACCESS_KEY=*****
-# private R2 url for populating the bucket
+# private R2 url used to upload to the bucket
 NEXT_PUBLIC_R2_ENDPOINT=https://*****
 ```
 
 8. Run the development server:
 
     ```bash
-    dotenv -- pnpm dev
+    pnpm dev
     ```
 
     This will start the development server for all apps and packages in the monorepo.
@@ -135,3 +138,5 @@ This project wouldn't be possible without
 - [Cursor](https://cursor.com)
 - [Claude 3.5 Sonnet by Anthropic](https://anthropic.com/)
 - [MagicUI](https://magicui.com)
+
+And, of course, our open source contributors ❤️ 

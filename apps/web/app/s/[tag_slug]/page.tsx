@@ -1,8 +1,8 @@
 import { ComponentsList } from "@/components/ComponentsList"
 import { Header } from "@/components/Header"
 import { Database } from "@/types/supabase"
-import { getComponents } from "@/utils/dbQueries"
-import { supabaseWithAdminAccess } from "@/utils/supabase"
+import { getComponents } from "@/lib/queries"
+import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { SupabaseClient } from "@supabase/supabase-js"
 import { notFound } from "next/navigation"
 

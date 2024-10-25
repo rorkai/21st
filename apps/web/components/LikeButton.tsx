@@ -5,9 +5,9 @@ import { Heart } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
 import { Hotkey } from "./ui/hotkey"
 import { cn } from "@/lib/utils"
-import { useLikeMutation } from "@/utils/dbQueries"
+import { useLikeMutation } from "@/lib/queries"
 import { useUser } from "@clerk/nextjs"
-import { useClerkSupabaseClient } from "@/utils/clerk"
+import { useClerkSupabaseClient } from "@/lib/clerk"
 import { toast } from "sonner"
 
 interface LikeButtonProps {

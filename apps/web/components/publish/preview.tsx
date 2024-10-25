@@ -1,10 +1,10 @@
-import { useDebugMode } from "@/hooks/useDebugMode"
-import { useClerkSupabaseClient } from "@/utils/clerk"
+import { useDebugMode } from "@/hooks/use-debug-mode"
+import { useClerkSupabaseClient } from "@/lib/clerk"
 import {
   extractDemoComponentNames,
   extractNPMDependencies,
-} from "@/utils/parsers"
-import { generateSandpackFiles } from "@/utils/sandpack"
+} from "@/lib/parsers"
+import { generateSandpackFiles } from "@/lib/sandpack"
 import {
   SandpackProvider,
   SandpackFileExplorer,
@@ -13,7 +13,7 @@ import {
 import { useQuery } from "@tanstack/react-query"
 import React, { useMemo } from "react"
 import { LoadingSpinner } from "../LoadingSpinner"
-import { resolveRegistryDependencyTree } from "@/utils/queries.server"
+import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 
 const SandpackPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react").then((module) => ({

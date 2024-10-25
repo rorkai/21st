@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
-import { uploadToR2 } from "../../utils/r2"
+import { uploadToR2 } from "@/lib/r2"
 import { formSchema, FormData } from "./utils"
 import {
   extractComponentNames,
@@ -12,7 +12,7 @@ import {
   extractDemoComponentNames,
   extractRegistryDependenciesFromImports,
   extractAmbigiousRegistryDependencies,
-} from "../../utils/parsers"
+} from "../../lib/parsers"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
@@ -31,13 +31,13 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form"
-import { addTagsToComponent } from "@/utils/dbQueries"
+import { addTagsToComponent } from "@/lib/queries"
 import { ComponentDetailsForm, NameSlugForm } from "./ComponentDetailsForm"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
-import { useClerkSupabaseClient } from "@/utils/clerk"
+import { useClerkSupabaseClient } from "@/lib/clerk"
 import { useUser } from "@clerk/nextjs"
-import { useDebugMode } from "@/hooks/useDebugMode"
+import { useDebugMode } from "@/hooks/use-debug-mode"
 import { Tag } from "@/types/global"
 import { PublishComponentPreview } from "./preview"
 import { Hotkey } from "../ui/hotkey"
@@ -150,9 +150,10 @@ export default function PublishComponentForm() {
           .filter((d) => componentSlug !== d.slugWithUsername)
           .filter(
             (d) =>
-              !(d.isDemoDependency
-                ? demoDirectRegistryDependencies
-                : directRegistryDependencies
+              !(
+                d.isDemoDependency
+                  ? demoDirectRegistryDependencies
+                  : directRegistryDependencies
               ).includes(d.slugWithUsername),
           )
 

@@ -12,13 +12,13 @@ import styles from "./ComponentPreview.module.css"
 import { LoadingSpinner } from "./LoadingSpinner"
 import { SandpackProviderProps } from "@codesandbox/sandpack-react"
 import { motion } from "framer-motion"
-import { useDebugMode } from "@/hooks/useDebugMode"
+import { useDebugMode } from "@/hooks/use-debug-mode"
 import { Component, Tag, User } from "@/types/global"
 import { isShowCodeAtom } from "./ComponentPage"
 import { useAtom } from "jotai"
 import { useTheme } from "next-themes"
 import { CopyCodeButton } from "./CopyCodeButton"
-import { generateSandpackFiles } from "@/utils/sandpack"
+import { generateSandpackFiles } from "@/lib/sandpack"
 import { toast } from "sonner"
 import { getPackageRunner } from "@/lib/utils"
 import {
@@ -107,7 +107,7 @@ export function ComponentPagePreview({
         "@radix-ui/react-select": "^1.0.0",
         "lucide-react": "latest",
         "tailwind-merge": "latest",
-        "clsx": "latest",
+        clsx: "latest",
         ...dependencies,
         ...demoDependencies,
         ...npmDependenciesOfRegistryDependencies,
@@ -214,10 +214,7 @@ function CopyCommandSection({
             </span>
           </code>
         </div>
-        <DropdownMenu
-          open={isDropdownOpen}
-          onOpenChange={setIsDropdownOpen}
-        >
+        <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
           <DropdownMenuTrigger asChild>
             <button className="flex-shrink-0 ml-3 flex items-center justify-center p-1 hover:bg-zinc-800 text-white w-8 h-8 rounded-md">
               {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}

@@ -10,9 +10,9 @@ import { ComponentDetailsForm } from "./publish/ComponentDetailsForm"
 import { Component, User, Tag } from "@/types/global"
 import { useForm } from "react-hook-form"
 import { FormData } from "./publish/utils"
-import { uploadToR2 } from "@/utils/r2"
-import { useMutation } from '@tanstack/react-query'
-import { toast } from 'sonner'
+import { uploadToR2 } from "@/lib/r2"
+import { useMutation } from "@tanstack/react-query"
+import { toast } from "sonner"
 
 export function EditComponentDialog({
   component,
@@ -47,7 +47,7 @@ export function EditComponentDialog({
   })
 
   const uploadToR2Mutation = useMutation({
-    mutationFn: async ({ file, fileKey }: { file: File, fileKey: string }) => {
+    mutationFn: async ({ file, fileKey }: { file: File; fileKey: string }) => {
       const buffer = Buffer.from(await file.arrayBuffer())
       const base64Content = buffer.toString("base64")
       return uploadToR2({
@@ -71,8 +71,8 @@ export function EditComponentDialog({
       setIsOpen(false)
     },
     onError: (error) => {
-      console.error('Failed to update component:', error)
-      toast.error('Failed to update component. Please try again.')
+      console.error("Failed to update component:", error)
+      toast.error("Failed to update component. Please try again.")
     },
   })
 
@@ -105,7 +105,7 @@ export function EditComponentDialog({
     if (formData.preview_image_file instanceof File) {
       const fileExtension = formData.preview_image_file.name.split(".").pop()
       const fileKey = `${component.user.id}/${component.component_slug}.${fileExtension}`
-      
+
       try {
         const previewImageUrl = await uploadToR2Mutation.mutateAsync({
           file: formData.preview_image_file,
@@ -113,8 +113,8 @@ export function EditComponentDialog({
         })
         updatedData.preview_url = previewImageUrl
       } catch (error) {
-        console.error('Failed to upload image:', error)
-        toast.error('Failed to upload image. Please try again.')
+        console.error("Failed to upload image:", error)
+        toast.error("Failed to upload image. Please try again.")
         return
       }
     }
@@ -132,7 +132,9 @@ export function EditComponentDialog({
           isEditMode={true}
           form={form}
           handleSubmit={handleSubmit}
-          isSubmitting={uploadToR2Mutation.isPending || updateMutation.isPending}
+          isSubmitting={
+            uploadToR2Mutation.isPending || updateMutation.isPending
+          }
         />
       </DialogContent>
     </Dialog>

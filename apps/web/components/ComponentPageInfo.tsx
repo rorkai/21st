@@ -6,7 +6,7 @@ import { Component, Tag, User } from "@/types/global"
 import { ArrowUpRight, Check, Copy, Scale } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { ComponentsList } from "./ComponentsList"
-import { getLicenseBySlug } from "@/utils/licenses"
+import { getLicenseBySlug } from "@/lib/licenses"
 import {
   HoverCard,
   HoverCardContent,
@@ -17,7 +17,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { useClerkSupabaseClient } from "@/utils/clerk"
+import { useClerkSupabaseClient } from "@/lib/clerk"
 import { toast } from "sonner"
 import { useQuery } from "@tanstack/react-query"
 import { Tag as TagComponent } from "@/components/ui/tag"

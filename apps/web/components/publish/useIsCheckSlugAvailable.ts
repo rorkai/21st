@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { useClerkSupabaseClient } from "@/utils/clerk"
+import { useClerkSupabaseClient } from "@/lib/clerk"
 import { SupabaseClient } from "@supabase/supabase-js"
 
 export const makeSlugFromName = (name: string): string => {
@@ -71,7 +71,9 @@ export const useIsCheckSlugAvailable = ({
     queryKey: ["slugCheck", slug, userId],
     queryFn: async () => {
       if (!isValidSlug(slug)) {
-        throw new Error("Slug should contain only lowercase letters, numbers and dashes. It should end with a letter or a number")
+        throw new Error(
+          "Slug should contain only lowercase letters, numbers and dashes. It should end with a letter or a number",
+        )
       }
       return await checkSlugUnique(client, slug, userId)
     },

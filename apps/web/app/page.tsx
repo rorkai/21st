@@ -3,7 +3,7 @@ import React from "react"
 import { HomePageClient } from "./page.client"
 import { Metadata } from "next"
 import Head from "next/head"
-import { supabaseWithAdminAccess } from "@/utils/supabase"
+import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { Component, User } from "@/types/global"
 
 export const metadata: Metadata = {

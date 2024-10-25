@@ -1,7 +1,7 @@
-import { supabaseWithAdminAccess } from "@/utils/supabase"
+import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { NextRequest, NextResponse } from "next/server"
 import { ComponentRegistryResponse } from "./types"
-import { resolveRegistryDependencyTree } from "@/utils/queries.server"
+import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 import { Tables } from "@/types/supabase"
 
 export async function GET(
@@ -35,7 +35,7 @@ export async function GET(
     const isPackageManager = /node-fetch|npm|yarn|pnpm|bun/i.test(userAgent)
 
     if (isPackageManager) {
-      // This should finish reliably in serverless even without await 
+      // This should finish reliably in serverless even without await
       // because we are using Vercel In-Function Concurrency
       // TODO: test this
       supabaseWithAdminAccess
@@ -55,9 +55,7 @@ export async function GET(
 
     const resolvedRegistryDependencies = await resolveRegistryDependencyTree({
       supabase: supabaseWithAdminAccess,
-      sourceDependencySlugs: [
-        `${component.user.username}/${component_slug}`,
-      ],
+      sourceDependencySlugs: [`${component.user.username}/${component_slug}`],
       withDemoDependencies: false,
     })
 
@@ -74,10 +72,12 @@ export async function GET(
       target: "",
     }))
 
-    const npmDependencies = Array.from(new Set([
-      ...Object.keys(dependencies),
-      ...Object.keys(resolvedRegistryDependencies.data.npmDependencies),
-    ]))
+    const npmDependencies = Array.from(
+      new Set([
+        ...Object.keys(dependencies),
+        ...Object.keys(resolvedRegistryDependencies.data.npmDependencies),
+      ]),
+    )
 
     const responseData: ComponentRegistryResponse = {
       name: component_slug,

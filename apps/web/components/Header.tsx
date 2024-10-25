@@ -14,7 +14,7 @@ import { UserAvatar } from "./UserAvatar"
 import { atom, useAtom } from "jotai"
 import { Input } from "@/components/ui/input"
 import { Hotkey } from "./ui/hotkey"
-import { useIsMobile } from "@/utils/use-media-query"
+import { useIsMobile } from "@/hooks/use-media-query"
 import { HeaderServer } from "./HeaderServer"
 import {
   NavigationMenu,

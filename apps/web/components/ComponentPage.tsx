@@ -21,15 +21,15 @@ import {
 } from "@/components/ui/tooltip"
 import { Hotkey } from "./ui/hotkey"
 import { LikeButton } from "./LikeButton"
-import { useIsMobile } from "@/utils/use-media-query"
+import { useIsMobile } from "@/hooks/use-media-query"
 import { ThemeToggle } from "./ThemeToggle"
 import { useQuery } from "@tanstack/react-query"
-import { useClerkSupabaseClient } from "@/utils/clerk"
+import { useClerkSupabaseClient } from "@/lib/clerk"
 import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs"
 import { useTheme } from "next-themes"
 import { ComponentPagePreview } from "./ComponentPagePreview"
 import { EditComponentDialog } from "./EditComponentDialog"
-import { useUpdateComponentWithTags } from "@/utils/dbQueries"
+import { useUpdateComponentWithTags } from "@/lib/queries"
 import { toast } from "sonner"
 
 export const isShowCodeAtom = atom(true)

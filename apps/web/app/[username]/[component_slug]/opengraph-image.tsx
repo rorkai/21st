@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { ImageResponse } from "next/og"
-import { getComponent, getUserData } from "@/utils/dbQueries"
-import { supabaseWithAdminAccess } from "@/utils/supabase"
+import { getComponent, getUserData } from "@/lib/queries"
+import { supabaseWithAdminAccess } from "@/lib/supabase"
 
 export const runtime = "edge"
 export const alt = "Open Graph Image"

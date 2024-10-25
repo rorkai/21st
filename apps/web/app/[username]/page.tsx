@@ -2,9 +2,9 @@
 import React from "react"
 import { ComponentsList } from "@/components/ComponentsList"
 import { Header } from "@/components/Header"
-import { getUserData, getUserComponents } from "@/utils/dbQueries"
+import { getUserData, getUserComponents } from "@/lib/queries"
 import { UserAvatar } from "@/components/UserAvatar"
-import { supabaseWithAdminAccess } from "@/utils/supabase"
+import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import ErrorPage from "@/components/ErrorPage"
 

@@ -1,11 +1,11 @@
 import ComponentPage from "@/components/ComponentPage"
 import React from "react"
 import { notFound } from "next/navigation"
-import { getComponent, getUserData } from "@/utils/dbQueries"
-import { resolveRegistryDependencyTree } from "@/utils/queries.server"
-import { supabaseWithAdminAccess } from "@/utils/supabase"
+import { getComponent, getUserData } from "@/lib/queries"
+import { resolveRegistryDependencyTree } from "@/lib/queries.server"
+import { supabaseWithAdminAccess } from "@/lib/supabase"
 import ErrorPage from "@/components/ErrorPage"
-import { extractDemoComponentNames } from "@/utils/parsers"
+import { extractDemoComponentNames } from "@/lib/parsers"
 
 export const generateMetadata = async ({
   params,
@@ -114,9 +114,7 @@ export default async function ComponentPageServer({
       ...componentAndDemoCodePromises,
       resolveRegistryDependencyTree({
         supabase: supabaseWithAdminAccess,
-        sourceDependencySlugs: [
-          `${username}/${component_slug}`,
-        ],
+        sourceDependencySlugs: [`${username}/${component_slug}`],
         withDemoDependencies: true,
       }),
     ])
@@ -148,7 +146,9 @@ export default async function ComponentPageServer({
       ([key, value]) => [key, value.code],
     ),
   )
-  const demoComponentNames = extractDemoComponentNames(demoResult?.data as string)
+  const demoComponentNames = extractDemoComponentNames(
+    demoResult?.data as string,
+  )
 
   return (
     <div className="w-full ">

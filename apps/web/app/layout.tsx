@@ -1,7 +1,7 @@
 // app/layout.tsx
 import localFont from "next/font/local"
 import "./globals.css"
-import { Providers } from "./providers"
+import { AppProviders } from "./providers"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { ThemeProvider } from "next-themes"
@@ -29,7 +29,7 @@ export default function RootLayout({
         <div className="px-4 h-full">
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <TooltipProvider>
-              <Providers>{children}</Providers>
+              <AppProviders>{children}</AppProviders>
             </TooltipProvider>
             <Toaster />
           </ThemeProvider>

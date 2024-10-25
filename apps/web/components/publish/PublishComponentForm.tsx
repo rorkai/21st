@@ -148,10 +148,15 @@ export default function PublishComponentForm() {
               : true,
           }))
           .filter((d) => componentSlug !== d.slugWithUsername)
+          .filter(
+            (d) =>
+              !(d.isDemoDependency
+                ? demoDirectRegistryDependencies
+                : directRegistryDependencies
+              ).includes(d.slugWithUsername),
+          )
 
-        if (!form.getValues("unknown_dependencies")?.length) {
-          form.setValue("unknown_dependencies", parsedUnknownDependencies)
-        }
+        form.setValue("unknown_dependencies", parsedUnknownDependencies)
       } catch (error) {
         console.error("Error parsing dependencies from code:", error)
       }

@@ -1,15 +1,15 @@
+import { merge } from "lodash"
 import type { Config } from "tailwindcss"
-import { tailwindConfig as tailwindAnimatedConfig, globalCSS as tailwindAnimatedGlobalCSS } from "./tailwind-animated"
-import { deepMerge } from "@/lib/utils"
+import {
+  tailwindConfig as tailwindAnimatedConfig,
+  globalCSS as tailwindAnimatedGlobalCSS,
+} from "./tailwind-animated"
 
 export const tailwindVersion = "3.4.5"
 
 export const tailwindConfig: Config = {
   darkMode: ["class"],
-  content: [
-    "app/**/*.{ts,tsx}",
-    "components/**/*.{ts,tsx}",
-  ],
+  content: ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}"],
   theme: {
     container: {
       center: true,
@@ -18,7 +18,7 @@ export const tailwindConfig: Config = {
         "2xl": "1400px",
       },
     },
-    extend: deepMerge(tailwindAnimatedConfig.theme?.extend, {
+    extend: merge(tailwindAnimatedConfig.theme?.extend, {
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

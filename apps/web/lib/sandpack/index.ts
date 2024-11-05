@@ -1,5 +1,4 @@
 import { Config } from "tailwindcss"
-import { deepMerge } from "../utils"
 import {
   tailwindVersion as baseTailwindVersion,
   tailwindConfig as baseTailwindConfig,
@@ -11,6 +10,7 @@ import {
 } from "./tailwind-plugins/shadcn"
 import endent from "endent"
 import { createDataUrl } from "./utils"
+import { merge } from "lodash"
 
 export const BUNDLER_URL = "https://codesandbox-rorkai.vercel.app"
 
@@ -32,7 +32,7 @@ export const generateSandpackExternalResources = ({
   tailwindConfigExtensions?: Config[]
   tailwindGlobalCSSExtensions?: string[]
 }) => {
-  const tailwindConfig = deepMerge(
+  const tailwindConfig = merge(
     baseTailwindConfig,
     shadcnTailwindConfig,
     ...(tailwindConfigExtensions ?? []),
@@ -72,7 +72,7 @@ export function generateSandpackFiles({
   tailwindConfigExtensions?: Config[]
   tailwindGlobalCSSExtensions?: string[]
 }) {
-  const tailwindConfig = deepMerge(
+  const tailwindConfig = merge(
     baseTailwindConfig,
     shadcnTailwindConfig,
     ...(tailwindConfigExtensions ?? []),

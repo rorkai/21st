@@ -1,9 +1,9 @@
 import { Config } from "tailwindcss"
 import { deepMerge } from "../utils"
 import {
+  tailwindVersion as baseTailwindVersion,
   tailwindConfig as baseTailwindConfig,
   globalCSS as baseGlobalCSS,
-  tailwindVersion,
 } from "./tailwind-plugins/base"
 import {
   tailwindConfig as shadcnTailwindConfig,
@@ -18,6 +18,45 @@ export const defaultNPMDependencies = {
   clsx: "latest",
   "@radix-ui/react-select": "^1.0.0",
   "lucide-react": "latest",
+}
+
+const createDataUrl = (content: string, mimeType: string) => {
+  const base64 = btoa(
+    encodeURIComponent(content).replace(/%([0-9A-F]{2})/g, (_, p1) =>
+      String.fromCharCode(parseInt(p1, 16)),
+    ),
+  )
+  return `data:${mimeType};base64,${base64}`
+}
+
+export const generateSandpackExternalResources = ({
+  tailwindVersion = baseTailwindVersion,
+  tailwindConfigExtensions,
+  tailwindGlobalCSSExtensions,
+}: {
+  tailwindVersion?: string
+  tailwindConfigExtensions?: Config[]
+  tailwindGlobalCSSExtensions?: string[]
+}) => {
+  const tailwindConfig = deepMerge(
+    baseTailwindConfig,
+    shadcnTailwindConfig,
+    ...(tailwindConfigExtensions ?? []),
+  )
+  const globalCSS = endent`
+    ${baseGlobalCSS}
+    ${shadcnGlobalCSS}
+    ${tailwindGlobalCSSExtensions?.join("\n") ?? ""}
+  `
+
+  return [
+    `https://cdn.tailwindcss.com/${tailwindVersion}`,
+    createDataUrl(globalCSS, "text/tailwindcss"),
+    createDataUrl(
+      `tailwind.config = ${JSON.stringify(tailwindConfig)}`,
+      "application/javascript",
+    ),
+  ]
 }
 
 export function generateSandpackFiles({
@@ -118,26 +157,28 @@ export default function App() {
 `
   const files = {
     "/App.tsx": appTsxContent,
-    "/public/index.html": `
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://cdn.tailwindcss.com/${tailwindVersion}"></script>
-    <script>
-      tailwind.config = ${JSON.stringify(tailwindConfig)}
-    </script>
-    <style type="text/tailwindcss">
-      ${globalCSS}
-    </style>
-    <title>Document</title>
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
-</html>
-`,
+    "/public/tailwind-config.js": `tailwind.config = ${JSON.stringify(tailwindConfig)}`,
+    "/public/globals.tailwind.css": globalCSS,
+    //     "/public/index.html": `
+    // <!DOCTYPE html>
+    // <html lang="en">
+    //   <head>
+    //     <meta charset="UTF-8" />
+    //     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    //     <script src="https://cdn.tailwindcss.com/${tailwindVersion}"></script>
+    //     <script>
+    //       tailwind.config = ${JSON.stringify(tailwindConfig)}
+    //     </script>
+    //     <style type="text/tailwindcss">
+    //       ${globalCSS}
+    //     </style>
+    //     <title>Document</title>
+    //   </head>
+    //   <body>
+    //     <div id="root"></div>
+    //   </body>
+    // </html>
+    // `,
     [`${relativeImportPath}/${componentSlug}.tsx`]: code,
     "/demo.tsx": demoCode,
     "/lib/utils.ts": `

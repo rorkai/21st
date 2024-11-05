@@ -21,6 +21,7 @@ import { CopyCodeButton } from "./CopyCodeButton"
 import {
   generateSandpackFiles,
   defaultNPMDependencies as defaultSandpackDependencies,
+  generateSandpackExternalResources,
 } from "@/lib/sandpack/generate-files"
 import { toast } from "sonner"
 import { getPackageRunner } from "@/lib/utils"
@@ -112,6 +113,11 @@ export function ComponentPagePreview({
       },
     },
     options: {
+      bundlerURL: "https://codesandbox-rorkai.vercel.app",
+      externalResources: generateSandpackExternalResources({
+        tailwindConfigExtensions: [],
+        tailwindGlobalCSSExtensions: [],
+      }),
       activeFile: demoComponentFile ?? mainComponentFile,
       visibleFiles,
     },

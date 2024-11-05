@@ -6,6 +6,7 @@ import {
 } from "@/lib/parsers"
 import {
   defaultNPMDependencies as defaultSandpackDependencies,
+  generateSandpackExternalResources,
   generateSandpackFiles,
 } from "@/lib/sandpack/generate-files"
 import {
@@ -110,6 +111,13 @@ export function PublishComponentPreview({
         ...defaultSandpackDependencies,
         ...dependencies,
       },
+    },
+    options: {
+      bundlerURL: "https://codesandbox-rorkai.vercel.app",
+      externalResources: generateSandpackExternalResources({
+        tailwindConfigExtensions: [],
+        tailwindGlobalCSSExtensions: [],
+      }),
     },
   }
 

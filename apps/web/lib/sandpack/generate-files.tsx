@@ -157,28 +157,27 @@ export default function App() {
 `
   const files = {
     "/App.tsx": appTsxContent,
-    "/public/tailwind-config.js": `tailwind.config = ${JSON.stringify(tailwindConfig)}`,
-    "/public/globals.tailwind.css": globalCSS,
-    //     "/public/index.html": `
-    // <!DOCTYPE html>
-    // <html lang="en">
-    //   <head>
-    //     <meta charset="UTF-8" />
-    //     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    //     <script src="https://cdn.tailwindcss.com/${tailwindVersion}"></script>
-    //     <script>
-    //       tailwind.config = ${JSON.stringify(tailwindConfig)}
-    //     </script>
-    //     <style type="text/tailwindcss">
-    //       ${globalCSS}
-    //     </style>
-    //     <title>Document</title>
-    //   </head>
-    //   <body>
-    //     <div id="root"></div>
-    //   </body>
-    // </html>
-    // `,
+    // Note: this doesn't work in Sandpack, it's needed only for CodeSandbox
+    "/public/index.html": `
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script src="https://cdn.tailwindcss.com/${baseTailwindVersion}"></script>
+        <script>
+          tailwind.config = ${JSON.stringify(tailwindConfig)}
+        </script>
+        <style type="text/css">
+          ${globalCSS}
+        </style>
+        <title>Document</title>
+      </head>
+      <body>
+        <div id="root"></div>
+      </body>
+    </html>
+    `,
     [`${relativeImportPath}/${componentSlug}.tsx`]: code,
     "/demo.tsx": demoCode,
     "/lib/utils.ts": `

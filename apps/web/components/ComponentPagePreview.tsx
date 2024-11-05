@@ -135,7 +135,7 @@ export function ComponentPagePreview({
           <Suspense fallback={<LoadingSpinner />}>
             <SandpackPreview
               showSandpackErrorOverlay={false}
-              showOpenInCodeSandbox={true}
+              showOpenInCodeSandbox={false}
               showRefreshButton={false}
             />
           </Suspense>

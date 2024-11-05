@@ -22,7 +22,8 @@ import {
   generateSandpackFiles,
   defaultNPMDependencies as defaultSandpackDependencies,
   generateSandpackExternalResources,
-} from "@/lib/sandpack/generate-files"
+  BUNDLER_URL,
+} from "@/lib/sandpack"
 import { toast } from "sonner"
 import { getPackageRunner } from "@/lib/utils"
 import {
@@ -113,7 +114,7 @@ export function ComponentPagePreview({
       },
     },
     options: {
-      bundlerURL: "https://codesandbox-rorkai.vercel.app",
+      bundlerURL: BUNDLER_URL,
       externalResources: generateSandpackExternalResources({
         tailwindConfigExtensions: [],
         tailwindGlobalCSSExtensions: [],

@@ -10,6 +10,9 @@ import {
   globalCSS as shadcnGlobalCSS,
 } from "./tailwind-plugins/shadcn"
 import endent from "endent"
+import { createDataUrl } from "./utils"
+
+export const BUNDLER_URL = "https://codesandbox-rorkai.vercel.app"
 
 export const defaultNPMDependencies = {
   react: "^18.0.0",
@@ -18,15 +21,6 @@ export const defaultNPMDependencies = {
   clsx: "latest",
   "@radix-ui/react-select": "^1.0.0",
   "lucide-react": "latest",
-}
-
-const createDataUrl = (content: string, mimeType: string) => {
-  const base64 = btoa(
-    encodeURIComponent(content).replace(/%([0-9A-F]{2})/g, (_, p1) =>
-      String.fromCharCode(parseInt(p1, 16)),
-    ),
-  )
-  return `data:${mimeType};base64,${base64}`
 }
 
 export const generateSandpackExternalResources = ({

@@ -5,10 +5,11 @@ import {
   extractNPMDependencies,
 } from "@/lib/parsers"
 import {
+  BUNDLER_URL,
   defaultNPMDependencies as defaultSandpackDependencies,
   generateSandpackExternalResources,
   generateSandpackFiles,
-} from "@/lib/sandpack/generate-files"
+} from "@/lib/sandpack"
 import {
   SandpackProvider,
   SandpackFileExplorer,
@@ -113,7 +114,7 @@ export function PublishComponentPreview({
       },
     },
     options: {
-      bundlerURL: "https://codesandbox-rorkai.vercel.app",
+      bundlerURL: BUNDLER_URL,
       externalResources: generateSandpackExternalResources({
         tailwindConfigExtensions: [],
         tailwindGlobalCSSExtensions: [],

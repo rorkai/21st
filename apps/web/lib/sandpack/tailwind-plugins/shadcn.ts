@@ -2,8 +2,8 @@ import { merge } from "lodash"
 import type { Config } from "tailwindcss"
 import {
   tailwindConfig as tailwindAnimatedConfig,
-  globalCSS as tailwindAnimatedGlobalCSS,
-} from "./tailwind-animated"
+  generateGlobalsCSS as generateTailwindAnimatedGlobalsCSS,
+} from "./tailwind-animate"
 
 export const tailwindVersion = "3.4.5"
 
@@ -80,7 +80,7 @@ export const tailwindConfig: Config = {
   },
 }
 
-export const globalCSS: string = `
+export const generateGlobalsCSS = (configs: Config[]) => `
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -159,5 +159,5 @@ export const globalCSS: string = `
   }
 }
 
-${tailwindAnimatedGlobalCSS}
+${generateTailwindAnimatedGlobalsCSS(configs)}
 `

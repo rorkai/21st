@@ -6,11 +6,12 @@ import {
 } from "./tailwind-plugins/base"
 import {
   tailwindConfig as shadcnTailwindConfig,
-  globalCSS as shadcnGlobalCSS,
+  generateGlobalsCSS as generateShadcnGlobalsCSS,
 } from "./tailwind-plugins/shadcn"
 import endent from "endent"
 import { createDataUrl } from "./utils"
 import { merge } from "lodash"
+import { stringifyTailwindConfig } from "./tailwind-plugins/utils"
 
 export const BUNDLER_URL = "https://codesandbox-rorkai.vercel.app"
 
@@ -33,13 +34,16 @@ export const generateSandpackExternalResources = ({
   tailwindGlobalCSSExtensions?: string[]
 }) => {
   const tailwindConfig = merge(
-    baseTailwindConfig,
     shadcnTailwindConfig,
     ...(tailwindConfigExtensions ?? []),
   )
+  console.debug(
+    "generateSandpackExternalResources: tailwindConfig",
+    stringifyTailwindConfig(tailwindConfig),
+  )
   const globalCSS = endent`
     ${baseGlobalCSS}
-    ${shadcnGlobalCSS}
+    ${generateShadcnGlobalsCSS([tailwindConfig])}
     ${tailwindGlobalCSSExtensions?.join("\n") ?? ""}
   `
 
@@ -47,7 +51,7 @@ export const generateSandpackExternalResources = ({
     `https://cdn.tailwindcss.com/${tailwindVersion}`,
     createDataUrl(globalCSS, "text/css"),
     createDataUrl(
-      `tailwind.config = ${JSON.stringify(tailwindConfig)}`,
+      `tailwind.config = ${stringifyTailwindConfig(tailwindConfig)}`,
       "application/javascript",
     ),
   ]
@@ -79,7 +83,7 @@ export function generateSandpackFiles({
   )
   const globalCSS = endent`
     ${baseGlobalCSS}
-    ${shadcnGlobalCSS}
+    ${generateShadcnGlobalsCSS([tailwindConfig])}
     ${tailwindGlobalCSSExtensions?.join("\n") ?? ""}
   `
 
@@ -160,7 +164,7 @@ export default function App() {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <script src="https://cdn.tailwindcss.com/${baseTailwindVersion}"></script>
         <script>
-          tailwind.config = ${JSON.stringify(tailwindConfig)}
+          tailwind.config = ${stringifyTailwindConfig(tailwindConfig)}
         </script>
         <style type="text/css">
           ${globalCSS}

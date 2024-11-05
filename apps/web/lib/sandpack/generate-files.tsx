@@ -51,7 +51,7 @@ export const generateSandpackExternalResources = ({
 
   return [
     `https://cdn.tailwindcss.com/${tailwindVersion}`,
-    createDataUrl(globalCSS, "text/tailwindcss"),
+    createDataUrl(globalCSS, "text/css"),
     createDataUrl(
       `tailwind.config = ${JSON.stringify(tailwindConfig)}`,
       "application/javascript",

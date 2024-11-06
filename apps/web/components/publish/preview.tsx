@@ -116,6 +116,7 @@ export function PublishComponentPreview({
     options: {
       bundlerURL: BUNDLER_URL,
       externalResources: generateSandpackExternalResources({
+        codeFiles: [code, demoCode],
         tailwindConfigExtensions: [],
         tailwindGlobalCSSExtensions: [],
       }),

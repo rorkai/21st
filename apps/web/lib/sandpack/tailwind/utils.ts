@@ -6,16 +6,13 @@ function getNestedValue(obj: any, segments: string[]): any {
   return segments.reduce((acc, segment) => acc?.[segment], obj)
 }
 
-// Generalized theme function to handle merged Tailwind configs and extensions
+// Tailwind-like theme function
 export const theme = (path: string, configExtensions: Config[] = []) => {
-  // First merge base config with any extensions
   const mergedConfig = merge(baseTailwindConfig, ...configExtensions)
-
   const segments = path.split(".")
 
   const themeExtendsValue = segments.reduce((acc, segment) => {
     const value = acc?.[segment]
-    // If the value is a function, execute it with a basic theme helper
     return typeof value === "function"
       ? value({
           theme: (path: string) =>
@@ -25,10 +22,7 @@ export const theme = (path: string, configExtensions: Config[] = []) => {
   }, mergedConfig.theme?.extend)
 
   const themeValue = getNestedValue(mergedConfig.theme, segments)
-
-  // Get value from merged config
   const value = themeExtendsValue ?? themeValue
-
   return value
 }
 
@@ -89,8 +83,19 @@ export function createTailwindConfigFunction(
   return configFn
 }
 
+interface TailwindConfigRegExp extends RegExp {
+  toJSON(): string
+}
+
+export function createTailwindConfigRegExp(
+  regExp: RegExp,
+): TailwindConfigRegExp {
+  const configRegExp = regExp as TailwindConfigRegExp
+  configRegExp.toJSON = () => configRegExp.toString()
+  return configRegExp
+}
+
 export const stringifyTailwindConfig = (config: any): string => {
-  // Step 1: Mark function strings with a special prefix
   const FUNCTION_MARKER = "__FN__"
 
   const processed = JSON.stringify(
@@ -104,7 +109,6 @@ export const stringifyTailwindConfig = (config: any): string => {
     2,
   )
 
-  // Step 2: Remove quotes and marker from function strings
   return processed
     .replace(new RegExp(`"${FUNCTION_MARKER}`, "g"), "")
     .replace(new RegExp(`${FUNCTION_MARKER}"`, "g"), "")

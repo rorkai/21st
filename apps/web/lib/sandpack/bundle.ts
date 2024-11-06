@@ -1,17 +1,17 @@
 import { Config } from "tailwindcss"
 import {
   tailwindVersion as baseTailwindVersion,
-  tailwindConfig as baseTailwindConfig,
   globalCSS as baseGlobalCSS,
-} from "./tailwind-plugins/base"
+} from "./tailwind/base"
 import {
   tailwindConfig as shadcnTailwindConfig,
   generateGlobalsCSS as generateShadcnGlobalsCSS,
-} from "./tailwind-plugins/shadcn"
+} from "./tailwind/shadcn"
 import endent from "endent"
 import { createDataUrl } from "./utils"
-import { merge } from "lodash"
-import { stringifyTailwindConfig } from "./tailwind-plugins/utils"
+import { merge, uniq } from "lodash"
+import { stringifyTailwindConfig } from "./tailwind/utils"
+import { extractClassNamesFromFile } from "./tailwind/extract-classes"
 
 export const BUNDLER_URL = "https://codesandbox-rorkai.vercel.app"
 
@@ -24,24 +24,53 @@ export const defaultNPMDependencies = {
   "lucide-react": "latest",
 }
 
+const generateTailwindResources = ({
+  codeFiles,
+  configExtensions,
+  globalCSSExtensions,
+}: {
+  codeFiles: string[]
+  configExtensions?: Config[]
+  globalCSSExtensions?: string[]
+}) => {
+  const extractedResults = codeFiles.map((file) =>
+    extractClassNamesFromFile(file),
+  ) 
+
+  const tailwindConfig = merge(
+    shadcnTailwindConfig,
+    { safelist: uniq(extractedResults.flat()) },
+    ...(configExtensions ?? []),
+  )
+
+  const globalCSS = endent`
+    ${baseGlobalCSS}
+    ${generateShadcnGlobalsCSS([tailwindConfig])}
+    ${globalCSSExtensions?.join("\n") ?? ""}
+  `
+
+  return {
+    tailwindConfig,
+    globalCSS,
+  }
+}
+
 export const generateSandpackExternalResources = ({
+  codeFiles,
   tailwindVersion = baseTailwindVersion,
   tailwindConfigExtensions,
   tailwindGlobalCSSExtensions,
 }: {
+  codeFiles: string[]
   tailwindVersion?: string
   tailwindConfigExtensions?: Config[]
   tailwindGlobalCSSExtensions?: string[]
 }) => {
-  const tailwindConfig = merge(
-    shadcnTailwindConfig,
-    ...(tailwindConfigExtensions ?? []),
-  )
-  const globalCSS = endent`
-    ${baseGlobalCSS}
-    ${generateShadcnGlobalsCSS([tailwindConfig])}
-    ${tailwindGlobalCSSExtensions?.join("\n") ?? ""}
-  `
+  const { tailwindConfig, globalCSS } = generateTailwindResources({
+    codeFiles,
+    configExtensions: tailwindConfigExtensions,
+    globalCSSExtensions: tailwindGlobalCSSExtensions,
+  })
 
   return [
     `https://cdn.tailwindcss.com/${tailwindVersion}`,
@@ -72,16 +101,11 @@ export function generateSandpackFiles({
   tailwindConfigExtensions?: Config[]
   tailwindGlobalCSSExtensions?: string[]
 }) {
-  const tailwindConfig = merge(
-    baseTailwindConfig,
-    shadcnTailwindConfig,
-    ...(tailwindConfigExtensions ?? []),
-  )
-  const globalCSS = endent`
-    ${baseGlobalCSS}
-    ${generateShadcnGlobalsCSS([tailwindConfig])}
-    ${tailwindGlobalCSSExtensions?.join("\n") ?? ""}
-  `
+  const { tailwindConfig, globalCSS } = generateTailwindResources({
+    codeFiles: [code, demoCode],
+    configExtensions: tailwindConfigExtensions,
+    globalCSSExtensions: tailwindGlobalCSSExtensions,
+  })
 
   const appTsxContent = `
 import React, { useState } from 'react';

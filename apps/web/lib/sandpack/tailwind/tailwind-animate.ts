@@ -84,14 +84,14 @@ function generateAnimateUtilities(theme: (path: string) => any) {
       from {
         ${Object.entries(theme("keyframes.enter.from") || {})
           .map(([key, value]) => `${key}: ${value};`)
-          .join("\n        ")}
+          .join("\n\t")}
       }
     }`,
     `@keyframes exit {
       to {
         ${Object.entries(theme("keyframes.exit.to") || {})
           .map(([key, value]) => `${key}: ${value};`)
-          .join("\n        ")}
+          .join("\n\t")}
       }
     }`,
   ]

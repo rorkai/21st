@@ -23,7 +23,7 @@ import {
   defaultNPMDependencies as defaultSandpackDependencies,
   generateSandpackExternalResources,
   BUNDLER_URL,
-} from "@/lib/sandpack"
+} from "@/lib/sandpack/bundle"
 import { toast } from "sonner"
 import { getPackageRunner } from "@/lib/utils"
 import {
@@ -116,6 +116,7 @@ export function ComponentPagePreview({
     options: {
       bundlerURL: BUNDLER_URL,
       externalResources: generateSandpackExternalResources({
+        codeFiles: [code, demoCode],
         tailwindConfigExtensions: [],
         tailwindGlobalCSSExtensions: [],
       }),

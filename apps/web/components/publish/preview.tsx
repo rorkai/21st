@@ -4,7 +4,12 @@ import {
   extractDemoComponentNames,
   extractNPMDependencies,
 } from "@/lib/parsers"
-import { generateSandpackFiles } from "@/lib/sandpack"
+import {
+  BUNDLER_URL,
+  defaultNPMDependencies as defaultSandpackDependencies,
+  generateSandpackExternalResources,
+  generateSandpackFiles,
+} from "@/lib/sandpack"
 import {
   SandpackProvider,
   SandpackFileExplorer,
@@ -104,20 +109,17 @@ export function PublishComponentPreview({
     files,
     customSetup: {
       dependencies: {
-        react: "^18.0.0",
-        "react-dom": "^18.0.0",
-        "tailwind-merge": "latest",
-        clsx: "latest",
-        "@radix-ui/react-select": "^1.0.0",
-        "lucide-react": "latest",
+        ...defaultSandpackDependencies,
         ...dependencies,
       },
     },
     options: {
-      externalResources: [
-        "https://cdn.tailwindcss.com",
-        "https://vucvdpamtrjkzmubwlts.supabase.co/storage/v1/object/public/css/combined-tailwind.css",
-      ],
+      bundlerURL: BUNDLER_URL,
+      externalResources: generateSandpackExternalResources({
+        codeFiles: [code, demoCode],
+        tailwindConfigExtensions: [],
+        tailwindGlobalCSSExtensions: [],
+      }),
     },
   }
 

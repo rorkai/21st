@@ -18,7 +18,12 @@ import { isShowCodeAtom } from "./ComponentPage"
 import { useAtom } from "jotai"
 import { useTheme } from "next-themes"
 import { CopyCodeButton } from "./CopyCodeButton"
-import { generateSandpackFiles } from "@/lib/sandpack"
+import {
+  generateSandpackFiles,
+  defaultNPMDependencies as defaultSandpackDependencies,
+  generateSandpackExternalResources,
+  BUNDLER_URL,
+} from "@/lib/sandpack/bundle"
 import { toast } from "sonner"
 import { getPackageRunner } from "@/lib/utils"
 import {
@@ -102,22 +107,19 @@ export function ComponentPagePreview({
     customSetup: {
       entry: "/index.tsx",
       dependencies: {
-        react: "^18.0.0",
-        "react-dom": "^18.0.0",
-        "@radix-ui/react-select": "^1.0.0",
-        "lucide-react": "latest",
-        "tailwind-merge": "latest",
-        clsx: "latest",
+        ...defaultSandpackDependencies,
         ...dependencies,
         ...demoDependencies,
         ...npmDependenciesOfRegistryDependencies,
       },
     },
     options: {
-      externalResources: [
-        "https://cdn.tailwindcss.com",
-        "https://vucvdpamtrjkzmubwlts.supabase.co/storage/v1/object/public/css/combined-tailwind.css",
-      ],
+      bundlerURL: BUNDLER_URL,
+      externalResources: generateSandpackExternalResources({
+        codeFiles: [code, demoCode],
+        tailwindConfigExtensions: [],
+        tailwindGlobalCSSExtensions: [],
+      }),
       activeFile: demoComponentFile ?? mainComponentFile,
       visibleFiles,
     },

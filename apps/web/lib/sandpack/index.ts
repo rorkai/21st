@@ -37,10 +37,6 @@ export const generateSandpackExternalResources = ({
     shadcnTailwindConfig,
     ...(tailwindConfigExtensions ?? []),
   )
-  console.debug(
-    "generateSandpackExternalResources: tailwindConfig",
-    stringifyTailwindConfig(tailwindConfig),
-  )
   const globalCSS = endent`
     ${baseGlobalCSS}
     ${generateShadcnGlobalsCSS([tailwindConfig])}

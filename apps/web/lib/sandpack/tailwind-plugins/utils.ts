@@ -16,7 +16,6 @@ export const theme = (path: string, configExtensions: Config[] = []) => {
   const themeExtendsValue = segments.reduce((acc, segment) => {
     const value = acc?.[segment]
     // If the value is a function, execute it with a basic theme helper
-    console.debug("value is a function", value, segments)
     return typeof value === "function"
       ? value({
           theme: (path: string) =>
@@ -29,11 +28,6 @@ export const theme = (path: string, configExtensions: Config[] = []) => {
 
   // Get value from merged config
   const value = themeExtendsValue ?? themeValue
-
-  console.debug("theme: value", value, segments)
-  console.debug("theme: themeValue", themeValue, segments)
-  console.debug("theme: themeExtendsValue", themeExtendsValue, segments)
-  console.debug("theme: mergedConfig.theme", mergedConfig.theme, segments)
 
   return value
 }
@@ -90,7 +84,6 @@ export function createTailwindConfigFunction(
       .replace(/\s*{\s*/g, "{ ") // Clean up curly braces
       .replace(/\s*}\s*/g, " }") // Clean up closing braces
       .trim()
-    console.log("fnStr", fnStr)
     return fnStr
   }
   return configFn

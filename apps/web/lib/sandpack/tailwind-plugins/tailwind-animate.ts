@@ -2,7 +2,12 @@
 // https://github.com/jamiebuilds/tailwindcss-animate/commit/ac0dd3a3c81681b78f1d8ea5e7478044213995e1
 
 import { Config } from "tailwindcss"
-import { createPluginCSSGenerator, createTailwindConfigFunction, generateMatchedUtilities } from "./utils"
+import {
+  createPluginCSSGenerator,
+  createTailwindConfigFunction,
+  generateMatchedUtilities,
+} from "./utils"
+import endent from "endent"
 
 export const tailwindConfig: Config = {
   content: [],
@@ -73,7 +78,7 @@ export const tailwindConfig: Config = {
 }
 
 function generateAnimateUtilities(theme: (path: string) => any) {
-  const utilities = [
+  const keyframes = [
     // Keyframes
     `@keyframes enter {
       from {
@@ -89,7 +94,8 @@ function generateAnimateUtilities(theme: (path: string) => any) {
           .join("\n        ")}
       }
     }`,
-
+  ]
+  const utilities = [
     // Base animation classes
     `.animate-in {
       animation-name: enter;
@@ -196,7 +202,13 @@ function generateAnimateUtilities(theme: (path: string) => any) {
     ),
   ]
 
-  return utilities.join("\n\n")
+  return endent`
+    ${keyframes.join("\n\n")}
+
+    @layer utilities {
+      ${utilities.join("\n\n")}
+    }
+  `
 }
 
 export const generateGlobalsCSS = createPluginCSSGenerator({

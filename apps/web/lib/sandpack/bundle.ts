@@ -11,7 +11,11 @@ import endent from "endent"
 import { createDataUrl } from "./utils"
 import { merge, uniq } from "lodash"
 import { stringifyTailwindConfig } from "./tailwind/utils"
-import { extractClassNamesFromFile } from "./tailwind/extract-classes"
+import {
+  extractClassesWithVariants,
+  extractClassNamesFromFile,
+} from "./tailwind/extract-classes"
+import { generateDataAttributeCSS } from "./tailwind/data-attributes"
 
 export const BUNDLER_URL = "https://codesandbox-rorkai.vercel.app"
 
@@ -33,25 +37,41 @@ const generateTailwindResources = ({
   configExtensions?: Config[]
   globalCSSExtensions?: string[]
 }) => {
-  const extractedResults = codeFiles.map((file) =>
-    extractClassNamesFromFile(file),
-  ) 
+  const extractedClassNames = uniq(
+    codeFiles.map((file) => extractClassNamesFromFile(file)).flat(),
+  )
+  const extractedClassNamesWithVariants = codeFiles.map((file) =>
+    extractClassesWithVariants(file),
+  )
+
+  const dataAttributeCSS = extractedClassNamesWithVariants
+    .flat()
+    .filter(({ pattern }) => !!pattern)
+    .map(({ pattern, variants }) =>
+      generateDataAttributeCSS(pattern!, variants),
+    )
+    .filter(Boolean)
+    .join("\n\n")
+
 
   const tailwindConfig = merge(
     shadcnTailwindConfig,
-    { safelist: uniq(extractedResults.flat()) },
+    { safelist: uniq(extractedClassNames.flat()) },
     ...(configExtensions ?? []),
   )
 
+  // Include the animation utilities layer first, then our data attribute selectors
   const globalCSS = endent`
     ${baseGlobalCSS}
     ${generateShadcnGlobalsCSS([tailwindConfig])}
+    ${dataAttributeCSS}
     ${globalCSSExtensions?.join("\n") ?? ""}
   `
 
   return {
     tailwindConfig,
     globalCSS,
+    extractedClassNames,
   }
 }
 
@@ -101,11 +121,12 @@ export function generateSandpackFiles({
   tailwindConfigExtensions?: Config[]
   tailwindGlobalCSSExtensions?: string[]
 }) {
-  const { tailwindConfig, globalCSS } = generateTailwindResources({
-    codeFiles: [code, demoCode],
-    configExtensions: tailwindConfigExtensions,
-    globalCSSExtensions: tailwindGlobalCSSExtensions,
-  })
+  const { tailwindConfig, globalCSS, extractedClassNames } =
+    generateTailwindResources({
+      codeFiles: [code, demoCode],
+      configExtensions: tailwindConfigExtensions,
+      globalCSSExtensions: tailwindGlobalCSSExtensions,
+    })
 
   const appTsxContent = `
 import React, { useState } from 'react';
@@ -193,6 +214,9 @@ export default function App() {
       </head>
       <body>
         <div id="root"></div>
+        <div id="safelist" style="display: none;">
+          <div class="${extractedClassNames.join(" ")}"></div>
+        </div>
       </body>
     </html>
     `,

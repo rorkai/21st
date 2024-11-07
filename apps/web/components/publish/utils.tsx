@@ -14,6 +14,7 @@ export const formSchema = z.object({
   demo_code: z.string().min(1, {
     message: "Demo code is required.",
   }),
+  registry: z.string().default("ui"),
   description: z.string().optional(),
   tags: z
     .array(

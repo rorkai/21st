@@ -38,6 +38,14 @@ import { Separator } from "@radix-ui/react-separator"
 import { debounce } from "lodash"
 import { useQuery } from "@tanstack/react-query"
 import { useSubmitFormHotkeys } from "./hotkeys"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { FormField } from "../ui/form"
 
 const ComponentDetailsForm = ({
   isEditMode,
@@ -421,6 +429,35 @@ const NameSlugForm: React.FC<{
           }}
           onBlur={nameField.onBlur}
           className="mt-1 w-full"
+        />
+      </div>
+
+      <div className="w-full">
+        <Label htmlFor="registry" className="block text-sm font-medium">
+          Registry
+        </Label>
+        <FormField
+          control={form.control}
+          name="registry"
+          render={({ field }) => (
+            <Select
+              value={field.value}
+              onValueChange={field.onChange}
+              defaultValue="ui"
+            >
+              <SelectTrigger className="w-full mt-1">
+                <SelectValue placeholder="Select a registry" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ui">ui</SelectItem>
+                <SelectItem value="components">components</SelectItem>
+                <SelectItem value="hooks">hooks</SelectItem>
+                <SelectItem value="icons">icons</SelectItem>
+                <SelectItem value="blocks">blocks</SelectItem>
+                <SelectItem value="pages">pages</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         />
       </div>
 

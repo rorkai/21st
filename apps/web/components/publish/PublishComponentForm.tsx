@@ -79,6 +79,7 @@ export default function PublishComponentForm() {
     defaultValues: {
       name: "",
       component_slug: "",
+      registry: "ui",
       unknown_dependencies: [],
       direct_registry_dependencies: [],
       demo_direct_registry_dependencies: [],
@@ -229,6 +230,7 @@ export default function PublishComponentForm() {
         demo_direct_registry_dependencies:
           data.demo_direct_registry_dependencies,
         preview_url: previewImageR2Url,
+        registry: data.registry,
         license: data.license,
       } as Tables<"components">
 

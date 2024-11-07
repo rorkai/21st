@@ -213,16 +213,16 @@ export function extractRegistryDependenciesFromImports(code: string): string[] {
   return registryDeps
 }
 
-export function replaceRegistryImports(code: string): string {
-  const importRegex =
-    /import\s+(?:{\s*[\w\s,]+\s*}|\*\s+as\s+\w+|\w+)\s+from\s+['"](\+@[\w-]+\/[\w-]+)['"]/g
+// export function replaceRegistryImports(code: string): string {
+//   const importRegex =
+//     /import\s+(?:{\s*[\w\s,]+\s*}|\*\s+as\s+\w+|\w+)\s+from\s+['"](\+@[\w-]+\/[\w-]+)['"]/g
 
-  return code.replace(importRegex, (match, importPath) => {
-    const [, , slug] = importPath.match(/\+@([\w-]+)\/([\w-]+)/)!
-    const newImportPath = `@/components/ui/${slug}`
-    return match.replace(importPath, newImportPath)
-  })
-}
+//   return code.replace(importRegex, (match, importPath) => {
+//     const [, , slug] = importPath.match(/\+@([\w-]+)\/([\w-]+)/)!
+//     const newImportPath = `@/components/ui/${slug}`
+//     return match.replace(importPath, newImportPath)
+//   })
+// }
 
 export function removeComponentImports(
   demoCode: string,

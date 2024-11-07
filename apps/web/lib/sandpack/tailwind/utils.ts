@@ -55,7 +55,8 @@ export const generateMatchedUtilities = (
   return Object.entries(filteredValues).flatMap(([key, value]) =>
     Object.entries(patterns).map(([pattern, generator]) => {
       const props = generator(value)
-      return `.${pattern}-${key} { ${Object.entries(props)
+      const className = key === "DEFAULT" ? pattern : `${pattern}-${key}`
+      return `.${className} { ${Object.entries(props)
         .map(([prop, val]) => `${prop}: ${val};`)
         .join(" ")} }`
     }),
@@ -81,18 +82,6 @@ export function createTailwindConfigFunction(
     return fnStr
   }
   return configFn
-}
-
-interface TailwindConfigRegExp extends RegExp {
-  toJSON(): string
-}
-
-export function createTailwindConfigRegExp(
-  regExp: RegExp,
-): TailwindConfigRegExp {
-  const configRegExp = regExp as TailwindConfigRegExp
-  configRegExp.toJSON = () => configRegExp.toString()
-  return configRegExp
 }
 
 export const stringifyTailwindConfig = (config: any): string => {

@@ -9,7 +9,7 @@ import {
   defaultNPMDependencies as defaultSandpackDependencies,
   generateSandpackExternalResources,
   generateSandpackFiles,
-} from "@/lib/sandpack"
+} from "@/lib/sandpack/bundle"
 import {
   SandpackProvider,
   SandpackFileExplorer,

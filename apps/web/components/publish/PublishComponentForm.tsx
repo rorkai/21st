@@ -131,10 +131,10 @@ export default function PublishComponentForm() {
         })
 
         const ambigiousRegistryDependencies = Object.values(
-          extractAmbigiousRegistryDependencies(code, registryToPublish),
+          extractAmbigiousRegistryDependencies(code),
         )
         const ambigiousDemoDirectRegistryDependencies = Object.values(
-          extractAmbigiousRegistryDependencies(demoCode, registryToPublish),
+          extractAmbigiousRegistryDependencies(demoCode),
         )
 
         const parsedUnknownDependencies = [
@@ -142,7 +142,8 @@ export default function PublishComponentForm() {
           ...ambigiousDemoDirectRegistryDependencies,
         ]
           .map((d) => ({
-            slugWithUsername: d,
+            slugWithUsername: d.slug,
+            registry: d.registry,
             isDemoDependency: ambigiousRegistryDependencies?.includes(d)
               ? false
               : true,

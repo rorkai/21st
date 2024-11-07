@@ -32,6 +32,7 @@ export const formSchema = z.object({
   unknown_dependencies: z.array(
     z.object({
       slugWithUsername: z.string(),
+      registry: z.string(),
       isDemoDependency: z.boolean(),
     }),
   ),

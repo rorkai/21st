@@ -15,10 +15,19 @@ export const ResolveUnknownDependenciesAlertForm = ({
   unknownDependencies,
   onDependenciesResolved,
 }: {
-  unknownDependencies: { slugWithUsername: string; isDemoDependency: boolean }[]
+  unknownDependencies: {
+    slugWithUsername: string
+    registry: string
+    isDemoDependency: boolean
+  }[]
   onDependenciesResolved: (
     // eslint-disable-next-line no-unused-vars
-    deps: { username: string; slug: string; isDemoDependency: boolean }[],
+    deps: {
+      username: string
+      slug: string
+      registry: string
+      isDemoDependency: boolean
+    }[],
   ) => void
 }) => {
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -29,35 +38,39 @@ export const ResolveUnknownDependenciesAlertForm = ({
     const resolvedDependencies: {
       username: string
       slug: string
+      registry: string
       isDemoDependency: boolean
     }[] = []
     const newErrors: Record<string, string> = {}
 
-    unknownDependencies.forEach(({ slugWithUsername, isDemoDependency }) => {
-      const value = formData.get(slugWithUsername) as string
-      const appHost = new URL(process.env.NEXT_PUBLIC_APP_URL!).host
+    unknownDependencies.forEach(
+      ({ slugWithUsername, registry, isDemoDependency }) => {
+        const value = formData.get(slugWithUsername) as string
+        const appHost = new URL(process.env.NEXT_PUBLIC_APP_URL!).host
 
-      if (!value?.includes(appHost)) {
-        newErrors[slugWithUsername] = "Please enter a valid URL"
-        return
-      }
+        if (!value?.includes(appHost)) {
+          newErrors[slugWithUsername] = "Please enter a valid URL"
+          return
+        }
 
-      const [username, slug] = value
-        .replace(`${appHost}/`, "")
-        .replace("https://", "")
-        .split("/")
+        const [username, slug] = value
+          .replace(`${appHost}/`, "")
+          .replace("https://", "")
+          .split("/")
 
-      if (!username || !slug) {
-        newErrors[slugWithUsername] = "Couldn't resolve the username"
-        return
-      }
+        if (!username || !slug) {
+          newErrors[slugWithUsername] = "Couldn't resolve the username"
+          return
+        }
 
-      resolvedDependencies.push({
-        username,
-        slug,
-        isDemoDependency,
-      })
-    })
+        resolvedDependencies.push({
+          username,
+          slug,
+          registry,
+          isDemoDependency,
+        })
+      },
+    )
 
     setErrors(newErrors)
 
@@ -80,13 +93,17 @@ export const ResolveUnknownDependenciesAlertForm = ({
         </AlertDescription>
       </Alert>
       <form onSubmit={handleSubmit}>
-        {unknownDependencies.map(({ slugWithUsername }, index) => (
+        {unknownDependencies.map(({ slugWithUsername, registry }, index) => (
           <div
             key={slugWithUsername}
             className={`flex flex-col ${index > 0 ? "mt-4" : ""}`}
           >
             <Label className="text-sm">
-              Enter the link to <b>{slugWithUsername}</b>
+              Enter the link to{" "}
+              <span className="font-semibold">
+                {registry ? `${registry}/` : ""}
+                {slugWithUsername}
+              </span>
             </Label>
             <Input
               name={slugWithUsername}
@@ -94,7 +111,9 @@ export const ResolveUnknownDependenciesAlertForm = ({
               className="mt-1 w-full"
             />
             {errors[slugWithUsername] && (
-              <Label className="text-sm text-red-500">{errors[slugWithUsername]}</Label>
+              <Label className="text-sm text-red-500">
+                {errors[slugWithUsername]}
+              </Label>
             )}
           </div>
         ))}

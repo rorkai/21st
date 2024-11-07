@@ -60,7 +60,7 @@ export function extractDemoComponentNames(code: string): string[] {
       ...defaultExportMatch[1]
         .split(",")
         .map((name) => name.trim())
-        .filter(Boolean)
+        .filter(Boolean),
     )
   }
 
@@ -80,7 +80,7 @@ export function extractDemoComponentNames(code: string): string[] {
         ...match[1]
           .split(",")
           .map((name) => name.trim())
-          .filter(Boolean)
+          .filter(Boolean),
       )
     }
   }
@@ -158,11 +158,11 @@ export function extractNPMDependencies(code: string): Record<string, string> {
   return dependencies
 }
 
-export function extractAmbigiousRegistryDependencies(
-  code: string,
-  registry: string,
-): Record<string, string> {
-  const registryDeps: Record<string, string> = {}
+export function extractAmbigiousRegistryDependencies(code: string) {
+  const registryDeps: Record<
+    string,
+    { importPath: string; slug: string; registry: string }
+  > = {}
 
   try {
     const parseAndExtractImports = (code: string) => {
@@ -176,12 +176,14 @@ export function extractAmbigiousRegistryDependencies(
           const source = node.source.value
           if (
             typeof source === "string" &&
-            source.startsWith(`@/components/${registry}/`)
+            source.match(/^@\/components\/[^/]+\//)
           ) {
-            registryDeps[source] = source.replace(
-              `@/components/${registry}/`,
-              "",
-            )
+            const registry = source.match(/^@\/components\/([^/]+)\//)?.[1]
+            registryDeps[source] = {
+              importPath: source,
+              slug: source.replace(/^@\/components\/[^/]+\//, ""),
+              registry: registry ?? "",
+            }
           }
         },
       })
@@ -195,9 +197,7 @@ export function extractAmbigiousRegistryDependencies(
   return registryDeps
 }
 
-export function extractRegistryDependenciesFromImports(
-  code: string,
-): string[] {
+export function extractRegistryDependenciesFromImports(code: string): string[] {
   const registryDeps = []
 
   const importRegex =

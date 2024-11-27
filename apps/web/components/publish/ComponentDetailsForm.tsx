@@ -46,6 +46,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { FormField } from "../ui/form"
+import { Textarea } from "../ui/textarea"
 
 const ComponentDetailsForm = ({
   isEditMode,
@@ -116,7 +117,7 @@ const ComponentDetailsForm = ({
         <Label htmlFor="description" className="block text-sm font-medium">
           Description
         </Label>
-        <Input
+        <Textarea
           id="description"
           placeholder="Add some description to help others discover your component"
           {...form.register("description")}

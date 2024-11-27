@@ -126,7 +126,7 @@ export const ComponentPageInfo = ({
       {component.description && (
         <div className="flex items-start">
           <span className="text-muted-foreground w-1/3">Description:</span>
-          <span className="w-2/3">{component.description}</span>
+          <span className="w-2/3 whitespace-pre-wrap">{component.description}</span>
         </div>
       )}
       {component.registry && (

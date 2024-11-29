@@ -184,6 +184,7 @@ export type Database = {
           likes_count: number
           name: string
           preview_url: string
+          video_url: string | null
           registry: string
           updated_at: string
           user_id: string
@@ -207,6 +208,7 @@ export type Database = {
           likes_count?: number
           name: string
           preview_url: string
+          video_url?: string | null
           registry?: string
           updated_at?: string
           user_id: string
@@ -230,6 +232,7 @@ export type Database = {
           likes_count?: number
           name?: string
           preview_url?: string
+          video_url?: string | null
           registry?: string
           updated_at?: string
           user_id?: string
@@ -322,6 +325,7 @@ export type Database = {
           likes_count: number | null
           name: string | null
           preview_url: string | null
+          video_url: string | null
           registry: string | null
           source_author_username: string | null
           source_component_slug: string | null
@@ -400,6 +404,7 @@ export type Database = {
           likes_count: number | null
           name: string | null
           preview_url: string | null
+          video_url: string | null
           registry: string | null
           updated_at: string | null
           user: Json | null
@@ -449,6 +454,7 @@ export type Database = {
           demo_dependencies: Json
           internal_dependencies: Json
           preview_url: string
+          video_url: string | null
           license: string
           user_data: Json
           tags: Json
@@ -489,6 +495,7 @@ export type Database = {
           p_license?: string
           p_preview_url?: string
           p_tags?: Json
+          p_video_url?: string | null
         }
         Returns: undefined
       }
@@ -517,6 +524,7 @@ export type Database = {
         direct_registry_dependencies: Json | null
         demo_direct_registry_dependencies: Json | null
         preview_url: string | null
+        video_url: string | null
         license: string | null
         user_data: Json | null
       }

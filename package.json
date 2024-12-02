@@ -5,7 +5,8 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "convert-videos": "node apps/web/video-converter/convertVideos.js"
   },
   "devDependencies": {
     "prettier": "^3.2.5",

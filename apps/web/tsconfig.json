@@ -17,7 +17,8 @@
     "**/*.tsx",
     "global.d.ts",
     ".next/types/**/*.ts",
-    "css/combinedCSS.js"
+    "css/combinedCSS.js",
+    "video-converter/**/*.js"
   ],
   "exclude": ["node_modules"]
 }

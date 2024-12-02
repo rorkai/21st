@@ -144,6 +144,9 @@ importers:
       dotenv:
         specifier: ^16.4.5
         version: 16.4.5
+      ffmpeg:
+        specifier: ^0.0.4
+        version: 0.0.4
       framer-motion:
         specifier: ^11.9.0
         version: 11.11.10(react-dom@18.3.1)(react@18.3.1)
@@ -5972,6 +5975,12 @@ packages:
       web-streams-polyfill: 3.3.3
     dev: true
 
+  /ffmpeg@0.0.4:
+    resolution: {integrity: sha512-3TgWUJJlZGQn+crJFyhsO/oNeRRnGTy6GhgS98oUCIfZrOW5haPPV7DUfOm3xJcHr5q3TJpjk2GudPutrNisRA==}
+    dependencies:
+      when: 3.7.8
+    dev: false
+
   /figures@3.2.0:
     resolution: {integrity: sha512-yaduQFRKLXYOGgEn6AZau90j3ggSOyiqXU0F9JZfeXYhNa+Jk4X+s45A2zg5jns87GAFa34BBm2kXw4XpNcbdg==}
     engines: {node: '>=8'}
@@ -9158,6 +9167,10 @@ packages:
     dependencies:
       tr46: 0.0.3
       webidl-conversions: 3.0.1
+    dev: false
+
+  /when@3.7.8:
+    resolution: {integrity: sha512-5cZ7mecD3eYcMiCH4wtRPA5iFJZ50BJYDfckI5RRpQiktMiYTcn0ccLTZOvcbBume+1304fQztxeNzNS9Gvrnw==}
     dev: false
 
   /which-boxed-primitive@1.0.2:

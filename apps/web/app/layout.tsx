@@ -5,6 +5,7 @@ import { AppProviders } from "./providers"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { ThemeProvider } from "next-themes"
+import { GoogleAnalytics } from "@next/third-parties/google"
 import { cn } from "@/lib/utils"
 
 
@@ -35,6 +36,7 @@ export default function RootLayout({
           </ThemeProvider>
         </div>
       </body>
+      <GoogleAnalytics gaId="G-X7C2K3V7GX" />
     </html>
   )
 }

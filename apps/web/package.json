@@ -21,6 +21,7 @@
     "@clerk/themes": "^2.1.35",
     "@codesandbox/sandpack-react": "^2.19.9",
     "@hookform/resolvers": "^3.9.0",
+    "@next/third-parties": "^15.0.3",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-checkbox": "^1.1.2",

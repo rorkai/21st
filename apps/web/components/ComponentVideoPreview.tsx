@@ -23,7 +23,7 @@ export function ComponentVideoPreview({
     }
   }
 
-  const handleMouseEnter = () => {
+  const playVideo = () => {
     toggleVideoIcon(true)
     const videoElement = videoRef.current
 
@@ -45,7 +45,7 @@ export function ComponentVideoPreview({
     }
   }
 
-  const handleMouseLeave = () => {
+  const stopVideo = () => {
     toggleVideoIcon(false)
     const videoElement = videoRef.current
     if (videoElement) {
@@ -55,8 +55,10 @@ export function ComponentVideoPreview({
 
   return (
     <div
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseEnter={playVideo}
+      onMouseLeave={stopVideo}
+      onTouchStart={playVideo}
+      onTouchEnd={stopVideo}
       className="block"
     >
       <video

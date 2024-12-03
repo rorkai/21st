@@ -433,7 +433,6 @@ ALTER FUNCTION "public"."update_component_dependencies_closure"("p_component_id"
 CREATE OR REPLACE FUNCTION "public"."update_component_fts_after_tag_change"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     AS $$BEGIN
-    -- После добавления или удаления тега обновляем `fts` связанного компонента
     UPDATE components SET fts = NULL WHERE id = NEW.component_id;
     RETURN NULL;
 END;$$;
@@ -447,7 +446,6 @@ CREATE OR REPLACE FUNCTION "public"."update_component_with_tags"("p_component_id
     AS $$
 
 BEGIN
-  -- Обновляем данные компонента, только если новые значения не NULL
   UPDATE components
   SET
     name = COALESCE(p_name, name),
@@ -456,13 +454,10 @@ BEGIN
     preview_url = COALESCE(p_preview_url, preview_url)
   WHERE id = p_component_id;
 
-  -- Обновляем теги, только если новые теги были переданы
   IF p_tags IS NOT NULL THEN
-    -- Удаляем существующие связи тегов с компонентом
     DELETE FROM component_tags
     WHERE component_id = p_component_id;
 
-    -- Проходим по каждому тегу из переданного массива
     DECLARE
       tag_record jsonb;
       tag_slug text;
@@ -471,17 +466,14 @@ BEGIN
       FOR tag_record IN SELECT * FROM jsonb_array_elements(p_tags) LOOP
         tag_slug := tag_record->>'slug';
 
-        -- Проверяем, существует ли тег
         SELECT id INTO tag_id FROM tags WHERE slug = tag_slug;
 
         IF NOT FOUND THEN
-          -- Если тег не существует, создаем его
           INSERT INTO tags (name, slug)
           VALUES (tag_record->>'name', tag_slug)
           RETURNING id INTO tag_id;
         END IF;
 
-        -- Добавляем связь между компонентом и тегом с игнорированием конфликтов
         INSERT INTO component_tags (component_id, tag_id)
         VALUES (p_component_id, tag_id)
         ON CONFLICT DO NOTHING;
@@ -500,7 +492,7 @@ CREATE OR REPLACE FUNCTION "public"."update_fts"() RETURNS "trigger"
     AS $$DECLARE
     tags_text TEXT;
 BEGIN
-    -- Объединяем все теги, связанные с компонентом, в одну строку
+
     SELECT STRING_AGG(t.name, ' ') INTO tags_text
     FROM component_tags ct
     JOIN tags t ON ct.tag_id = t.id

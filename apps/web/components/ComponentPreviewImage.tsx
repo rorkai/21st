@@ -35,7 +35,7 @@ export default function ComponentPreviewImage({
       style={{
         width: "100%",
         height: "100%",
-        objectFit: isPlaceholder ? "cover" : "contain",
+        objectFit: "cover",
         backgroundColor: isPlaceholder ? "transparent" : "",
       }}
     />

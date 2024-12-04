@@ -18,7 +18,7 @@ export default async function HomePage() {
       .select("*, user:users!user_id (*)")
       .limit(40)
       .eq("is_public", true)
-      .order('created_at', { ascending: false })
+      .order("likes_count", { ascending: false })
       .returns<(Component & { user: User })[]>()
 
   if (componentsError) {

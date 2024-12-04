@@ -33,6 +33,7 @@ export async function getComponent(
     .eq("user.username", username)
     .not("user", "is", null)
     .eq("is_public", true)
+    .order("likes_count", { ascending: false })
     .returns<(Component & { user: User } & { tags: Tag[] })[]>()
     .single()
 
@@ -80,6 +81,7 @@ export async function getUserComponents(
     .select(componentReadableDbFields)
     .eq("user_id", userId)
     .eq("is_public", true)
+    .order("likes_count", { ascending: false })
     .returns<(Component & { user: User })[]>()
 
   if (error) {
@@ -108,6 +110,7 @@ export async function getComponents(
   `,
     )
     .eq("is_public", true)
+    .order("likes_count", { ascending: false })
 
   if (tagSlug) {
     query = query.eq("component_tags.tags.slug", tagSlug)

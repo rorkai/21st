@@ -26,7 +26,7 @@ export function HomePageClient({
           .select("*, user:users!user_id (*)")
           .limit(1000)
           .eq("is_public", true)
-          .order('created_at', { ascending: false })
+          .order("likes_count", { ascending: false })
           .returns<(Component & { user: User })[]>()
 
         if (error) {

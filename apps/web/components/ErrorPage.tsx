@@ -6,10 +6,10 @@ export const ErrorPage = ({ error }: { error: Error }) => {
       <h1 className="text-3xl font-bold mb-4">
         Oops! Something went wrong
       </h1>
-      <p className="text-xl mb-8 text-gray-400">
+      <p className="text-xl mb-8 text-muted-foreground">
         We encountered an error while loading this page.
       </p>
-      <p className="text-sm text-gray-400">{error.message}</p>
+      <p className="text-sm text-muted-foreground">{error.message}</p>
     </div>
   )
 }

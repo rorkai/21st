@@ -57,7 +57,7 @@ export default async function UserProfile({
               <h1 className="mt-4 text-[44px] leading-1 font-bold">
                 {user.name}
               </h1>
-              <p className="text-[20px] leading-none text-gray-600">
+              <p className="text-[20px] leading-none text-muted-foreground">
                 @{user.username}
               </p>
               {user.manually_added === true && (

@@ -9,12 +9,13 @@ interface HotkeyProps {
   keys: string[]
   modifier?: boolean
   isBackgroundDark?: boolean
+  isDefaultButton?: boolean
 }
 
 export const Hotkey: React.FC<HotkeyProps> = ({
   keys,
   modifier = false,
-  isBackgroundDark = false,
+  isDefaultButton = false,
 }) => {
   const [, setModifierText] = useState("⌃")
   const [displayKeys, setDisplayKeys] = useState(keys)
@@ -33,7 +34,7 @@ export const Hotkey: React.FC<HotkeyProps> = ({
     : "bg-gradient-to-bl from-transparent via-transparent to-white/20"
 
   return (
-    <span className={cn("inline-flex gap-[2px]", isBackgroundDark ? "text-background" : "text-foreground")}>
+    <span className={cn("inline-flex gap-[2px]", isDefaultButton ? "text-background" : "text-foreground")}>
       {displayKeys.map((key, index) => (
         <kbd
           key={index}

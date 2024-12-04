@@ -78,7 +78,7 @@ export function HeaderServer({ tagName, isHomePage }: HeaderServerProps) {
       />
       {!isHomePage && tagName && (
         <>
-          <span className="mx-2 text-gray-400">/</span>
+          <span className="mx-2 text-muted-foreground">/</span>
           <span className="text-[14px] font-medium">{tagName}</span>
         </>
       )}

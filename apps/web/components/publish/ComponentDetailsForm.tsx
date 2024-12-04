@@ -106,7 +106,7 @@ const ComponentDetailsForm = ({
 
   return (
     <div
-      className={`flex flex-col gap-4 w-full ${isDarkTheme ? "text-foreground" : "text-gray-700"}`}
+      className={`flex flex-col gap-4 w-full ${isDarkTheme ? "text-foreground" : "text-muted-foreground"}`}
     >
       <NameSlugForm
         form={form}
@@ -204,7 +204,7 @@ const ComponentDetailsForm = ({
             </div>
             {isDragActive && (
               <div className="absolute inset-0 bg-background bg-opacity-90 flex items-center justify-center">
-                <p className="text-sm text-gray-600">Drop new image here</p>
+                <p className="text-sm text-muted-foreground">Drop new image here</p>
               </div>
             )}
           </div>
@@ -479,7 +479,7 @@ const NameSlugForm: React.FC<{
         />
 
         {!slug && (
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-muted-foreground text-sm mt-1">
             Slug is used in the URL of your component and file imports, and
             can't be changed later
           </p>
@@ -492,7 +492,7 @@ const NameSlugForm: React.FC<{
         {slug?.length > 0 && !slugError && isSlugManuallyEdited && (
           <>
             {isSlugChecking ? (
-              <p className="text-gray-500 text-sm mt-1">
+              <p className="text-muted-foreground text-sm mt-1">
                 Checking slug availability...
               </p>
             ) : slugAvailable === true ? (

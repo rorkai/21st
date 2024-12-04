@@ -209,7 +209,7 @@ function CopyCommandSection({
         <div className="flex-grow overflow-scroll scrollbar-hide">
           <code className="flex items-center whitespace-nowrap font-mono text-sm">
             <span className="mr-2 text-white">npx</span>
-            <span className="text-gray-400">
+            <span className="text-muted-foreground">
               shadcn@latest add "{installUrl}"
             </span>
           </code>

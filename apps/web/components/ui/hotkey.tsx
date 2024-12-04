@@ -9,17 +9,18 @@ interface HotkeyProps {
   keys: string[]
   modifier?: boolean
   isBackgroundDark?: boolean
-  isDefaultButton?: boolean
+  isOutlineButton?: boolean
 }
 
 export const Hotkey: React.FC<HotkeyProps> = ({
   keys,
   modifier = false,
-  isDefaultButton = false,
+  isOutlineButton = false,
 }) => {
   const [, setModifierText] = useState("⌃")
   const [displayKeys, setDisplayKeys] = useState(keys)
   const { theme } = useTheme()
+  const isContrast = !isOutlineButton
 
   useEffect(() => {
     const isMac = window.navigator.userAgent.includes("Macintosh")
@@ -27,14 +28,19 @@ export const Hotkey: React.FC<HotkeyProps> = ({
     setDisplayKeys(modifier ? [isMac ? "⌘" : "⌃", ...keys] : keys)
   }, [modifier, keys])
 
-  const isDarkTheme = theme === 'dark'
+  const isDarkTheme = theme === "dark"
 
-  const bgGradient = isDarkTheme 
-    ? "bg-gradient-to-bl from-transparent via-transparent to-background/20" 
+  const bgGradient = isDarkTheme
+    ? "bg-gradient-to-bl from-transparent via-transparent to-background/20"
     : "bg-gradient-to-bl from-transparent via-transparent to-white/20"
 
   return (
-    <span className={cn("inline-flex gap-[2px]", isDefaultButton ? "text-background" : "text-foreground")}>
+    <span
+      className={cn(
+        "inline-flex gap-[2px]",
+        isContrast ? "text-background" : "text-foreground",
+      )}
+    >
       {displayKeys.map((key, index) => (
         <kbd
           key={index}

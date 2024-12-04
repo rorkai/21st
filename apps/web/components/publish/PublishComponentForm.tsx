@@ -658,14 +658,13 @@ const SuccessDialog = ({
         <DialogFooter>
           <Button onClick={onAddAnother} variant="outline">
             Add Another
-            <Hotkey keys={["N"]} />
+            <Hotkey keys={["N"]} isOutlineButton />
           </Button>
           <Button onClick={onGoToComponent} variant="default">
             View Component
             <Hotkey
               keys={["⏎"]}
               modifier={true}
-              isDefaultButton={true}
             />
           </Button>
         </DialogFooter>

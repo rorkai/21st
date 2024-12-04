@@ -41,6 +41,7 @@ export function ComponentVideoPreview({
         })
         .catch(() => {})
     } else {
+      videoElement.currentTime = 0
       videoElement.play().catch(() => {})
     }
   }

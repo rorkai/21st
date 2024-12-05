@@ -5,6 +5,7 @@ import { ComponentVideoPreview } from "./ComponentVideoPreview"
 import { Component, User } from "../types/global"
 import { UserAvatar } from "./UserAvatar"
 import { Video } from "lucide-react"
+import { formatDistanceToNow } from "date-fns"
 
 export function ComponentCard({
   component,
@@ -45,6 +46,9 @@ export function ComponentCard({
           <h2 className="text-sm font-medium text-foreground truncate flex-grow">
             {component.name}
           </h2>
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
+            {formatDistanceToNow(new Date(component.created_at), { addSuffix: false, includeSeconds: false }).replace('about ', '')}
+          </span>
         </div>
       </div>
     </Link>

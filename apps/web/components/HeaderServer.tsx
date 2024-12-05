@@ -16,8 +16,13 @@ const uiSystems = [
   },
   {
     title: "MagicUI",
-    href: "/s/magicui",
+    href: "/magicui",
     description: "Enchanting UI components for modern web applications.",
+  },
+  {
+    title: "Aceternity UI",
+    href: "/aceternity",
+    description: "Aceternity UI components for building modern websites.",
   },
 ]
 

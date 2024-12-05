@@ -642,8 +642,6 @@ const SuccessDialog = ({
   onGoToComponent: () => void
 }) => {
   useSuccessDialogHotkeys({ isOpen, onAddAnother, onGoToComponent })
-  const { theme } = useTheme()
-  const isDarkTheme = theme === "dark"
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

@@ -15,12 +15,12 @@ export function ComponentCard({
   const componentUrl = `/${component.user.username}/${component.component_slug}`
 
   return (
-    <Link href={componentUrl} className="block">
+    <Link href={componentUrl} className="block cursor-pointer">
       <div className="overflow-hidden">
         <div className="relative aspect-[4/3] mb-3 group">
           {component.video_url && (
             <div
-              className="absolute top-2 left-2 bg-background bg-opacity-70 rounded-md px-2 py-1 pointer-events-none"
+              className="absolute top-2 left-2 bg-background/90 backdrop-blur rounded-md px-2 py-1 pointer-events-none"
               data-video-icon={`${component.id}`}
             >
               <Video size={16} className="text-foreground" />

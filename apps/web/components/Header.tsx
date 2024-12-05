@@ -17,15 +17,9 @@ import { Hotkey } from "./ui/hotkey"
 import { useIsMobile } from "@/hooks/use-media-query"
 import { HeaderServer } from "./HeaderServer"
 import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
   NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils"
-import { uiSystems, componentTypes } from "./HeaderServer"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,7 +33,6 @@ export const searchQueryAtom = atom("")
 export function Header({ tagName, page }: { tagName?: string; page?: string }) {
   const isHomePage = page === "home"
   const isPublishPage = page === "publish"
-  const isComponentsPage = page === "components"
   const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom)
   const inputRef = React.useRef<HTMLInputElement>(null)
   const isMobile = useIsMobile()
@@ -65,51 +58,9 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
 
   return (
     <>
-      <header className="flex fixed top-0 left-0 right-0 h-14 z-50 items-center justify-between border-b border-border px-4 py-3 bg-background text-foreground">
+      <header className="flex fixed top-0 left-0 right-0 h-14 z-50 items-center justify-between border-b border-border/40 px-4 py-3 bg-background text-foreground">
         <div className="flex items-center gap-4">
           <HeaderServer tagName={tagName} isHomePage={isHomePage} />
-          {!isMobile && !tagName && !isComponentsPage && (
-            <NavigationMenu>
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger className="text-foreground">
-                    UI Systems
-                  </NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-background">
-                      {uiSystems.map((system) => (
-                        <ListItem
-                          key={system.title}
-                          title={system.title}
-                          href={system.href}
-                        >
-                          {system.description}
-                        </ListItem>
-                      ))}
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger className="text-foreground">
-                    Component Types
-                  </NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] bg-background">
-                      {componentTypes.map((component) => (
-                        <ListItem
-                          key={component.title}
-                          title={component.title}
-                          href={component.href}
-                        >
-                          {component.description}
-                        </ListItem>
-                      ))}
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
-          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -125,7 +76,7 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
                 className="pr-14"
               />
               <div className="absolute top-0 right-3 h-full flex items-center pointer-events-none">
-                <Hotkey keys={["K"]} modifier={true} />
+                <Hotkey keys={["K"]} modifier={true} isOutlineButton />
               </div>
             </div>
           )}

@@ -16,6 +16,7 @@ interface LikeButtonProps {
   showTooltip?: boolean
   variant?: "default" | "circle"
   liked: boolean
+  onClick?: () => void
 }
 
 export function LikeButton({
@@ -24,6 +25,7 @@ export function LikeButton({
   showTooltip = false,
   liked,
   variant = "default",
+  onClick,
 }: LikeButtonProps) {
   const { user } = useUser()
   const supabase = useClerkSupabaseClient()
@@ -34,6 +36,7 @@ export function LikeButton({
     e.preventDefault()
     e.stopPropagation()
     likeMutation.mutate({ componentId, liked })
+    toast.success(liked ? "Unliked component" : "Liked component")
   }
 
   useEffect(() => {
@@ -68,7 +71,7 @@ export function LikeButton({
 
   const button = (
     <button
-      onClick={handleLike}
+      onClick={onClick ?? handleLike}
       disabled={likeMutation.isPending}
       className={buttonClasses}
       onMouseEnter={() => setIsHovered(true)}

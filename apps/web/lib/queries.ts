@@ -201,10 +201,8 @@ export function useLikeMutation(
       }
       if (liked) {
         await unlikeComponent(supabase, userId, componentId)
-        toast("Component unliked")
       } else {
         await likeComponent(supabase, userId, componentId)
-        toast("Component liked")
       }
     },
     onSuccess: (_, { componentId }) => {

@@ -18,7 +18,7 @@ export function GitHubStars() {
 
   return (
     <span className="text-sm">
-     Star {stars?.toLocaleString()}
+     Star
     </span>
   )
 } 

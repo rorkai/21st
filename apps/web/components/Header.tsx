@@ -121,9 +121,9 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
               </SignedIn>
 
               <SignedOut>
-                <div className="text-sm">
-                  <SignInButton />
-                </div>
+                <SignInButton>
+                  <Button>Publish</Button>
+                </SignInButton>
               </SignedOut>
             </>
           )}

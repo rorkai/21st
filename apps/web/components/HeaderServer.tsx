@@ -104,7 +104,7 @@ HeaderServer.SocialIcons = function SocialIcons({ isMobile }: { isMobile: boolea
             buttonVariants({
               variant: "ghost",
             }),
-            "h-8 px-3 flex items-center gap-2 bg-foreground text-background hover:border-foreground",
+            "h-8 md:px-3 px-2 flex items-center gap-2 bg-foreground text-background hover:border-foreground",
           )}
         >
           <Icons.gitHub className="h-[18px] w-[18px]" />

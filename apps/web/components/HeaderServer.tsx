@@ -91,7 +91,7 @@ export function HeaderServer({ tagName, isHomePage }: HeaderServerProps) {
   )
 }
 
-HeaderServer.SocialIcons = function SocialIcons() {
+HeaderServer.SocialIcons = function SocialIcons({ isMobile }: { isMobile: boolean }) {
   return (
     <div className="flex items-center gap-[6px]">
       <Link
@@ -108,7 +108,7 @@ HeaderServer.SocialIcons = function SocialIcons() {
           )}
         >
           <Icons.gitHub className="h-[18px] w-[18px]" />
-          <GitHubStars />
+          {!isMobile && <GitHubStars />}
           <span className="sr-only">GitHub</span>
         </div>
       </Link>
@@ -125,9 +125,10 @@ HeaderServer.SocialIcons = function SocialIcons() {
           <span className="sr-only">Twitter</span>
         </div>
       </Link>
-      <ThemeToggle />
     </div>
   )
 }
+
+HeaderServer.ThemeToggle = ThemeToggle
 
 export { uiSystems, componentTypes }

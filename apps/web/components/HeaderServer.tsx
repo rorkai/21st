@@ -53,17 +53,17 @@ const componentTypes = [
     description: "Showcase your product's key features and benefits.",
   },
   {
-    title: "Text",
+    title: "Typography",
     href: "/s/text",
     description: "Typography components for effective content display.",
   },
   {
-    title: "Bento",
+    title: "Bento Grids",
     href: "/s/bento",
     description: "Cool grid layouts that look like Japanese lunch boxes.",
   },
   {
-    title: "Landing Page",
+    title: "Landing Pages",
     href: "/s/landing-page",
     description: "Complete landing page templates and sections.",
   },

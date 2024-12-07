@@ -601,7 +601,9 @@ const EditCodeFileCard = ({
           </div>
           <div className="flex flex-col items-start h-10">
             <p className="font-semibold text-[14px]">{mainText}</p>
-            <p className="text-sm text-muted-foreground text-[12px]">{subText}</p>
+            <p className="text-sm text-muted-foreground text-[12px]">
+              {subText}
+            </p>
           </div>
         </div>
         <Button size="sm" onClick={onEditClick}>
@@ -656,14 +658,11 @@ const SuccessDialog = ({
         <DialogFooter>
           <Button onClick={onAddAnother} variant="outline">
             Add Another
-            <Hotkey keys={["N"]} isOutlineButton />
+            <Hotkey keys={["N"]} variant="outline" />
           </Button>
           <Button onClick={onGoToComponent} variant="default">
             View Component
-            <Hotkey
-              keys={["⏎"]}
-              modifier={true}
-            />
+            <Hotkey keys={["⏎"]} modifier={true} variant="outline" />
           </Button>
         </DialogFooter>
       </DialogContent>

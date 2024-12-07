@@ -199,8 +199,8 @@ function CopyCommandSection({
 
   return (
     <div className="p-4">
-      <p className="text-[14px] font-medium mb-2 whitespace-nowrap overflow-hidden text-ellipsis">
-        Add component to project
+      <p className="text-[14px] font-medium text-foreground mb-2 whitespace-nowrap overflow-hidden text-ellipsis">
+        Install component
       </p>
       <div className="mb-2 mt-4 p-4 h-14 rounded-lg border bg-zinc-950 dark:bg-zinc-900 flex items-center">
         <div className="flex items-center justify-center text-white w-5 h-5 mr-3">

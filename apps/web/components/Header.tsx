@@ -76,7 +76,7 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
                 className="pr-14"
               />
               <div className="absolute top-0 right-3 h-full flex items-center pointer-events-none">
-                <Hotkey keys={["K"]} modifier={true} isOutlineButton />
+                <Hotkey keys={["K"]} modifier={true} variant="outline" />
               </div>
             </div>
           )}

@@ -131,21 +131,22 @@ export default async function Image({
             left: "80px",
             right: "80px",
             display: "flex",
+            color: "#0A0A0A",
             flexDirection: "column",
             alignItems: "flex-start",
             fontSize: "50px",
             fontWeight: "bold",
-            color: "#000000",
             padding: "10px",
           }}
         >
           <span
             style={{
               overflow: "hidden",
+              color: "#A3A3A3",
               textOverflow: "ellipsis",
             }}
           >
-            {user.username}
+            @{user.username}
           </span>
 
           <span
@@ -154,7 +155,7 @@ export default async function Image({
               textOverflow: "ellipsis",
             }}
           >
-            {component_slug}
+            {component.name}
           </span>
         </div>
       </div>

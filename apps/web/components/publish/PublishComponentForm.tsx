@@ -53,6 +53,9 @@ import { Tables } from "@/types/supabase"
 import { LoadingSpinner } from "../LoadingSpinner"
 import { useSuccessDialogHotkeys } from "./hotkeys"
 import { toast } from "sonner"
+import { defaultTailwindConfig, defaultGlobalCss } from "@/lib/sandpack"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -62,7 +65,7 @@ export interface ParsedCodeData {
   demoComponentNames: string[]
 }
 
-type FormStep = "nameSlugForm" | "code" | "demoCode" | "detailedForm"
+type FormStep = "nameSlugForm" | "code" | "demoCode" | "customization" | "detailedForm"
 
 export default function PublishComponentForm() {
   const registryToPublish = "ui"
@@ -111,6 +114,11 @@ export default function PublishComponentForm() {
     demoComponentNames: [],
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const [customTailwindConfig, setCustomTailwindConfig] = useState(
+    defaultTailwindConfig,
+  )
+  const [customGlobalCss, setCustomGlobalCss] = useState(defaultGlobalCss)
 
   useEffect(() => {
     const parseDependenciesFromCode = () => {
@@ -431,15 +439,79 @@ export default function PublishComponentForm() {
                             !demoCode?.length ||
                             !parsedCode.demoComponentNames?.length
                           }
-                          onClick={() => {
-                            setFormStep("detailedForm")
-                          }}
+                          onClick={() => setFormStep("customization")}
                         >
                           Continue
                         </Button>
                       </div>
                     </motion.div>
                   </>
+                )}
+
+                {formStep === "customization" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ duration: 0.3 }}
+                    className="w-full"
+                  >
+                    <div className="flex flex-col gap-4">
+                      <h3 className="text-lg font-semibold">Customize Styling</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Optionally customize the Tailwind configuration and CSS variables for your component.
+                      </p>
+                      
+                      <Tabs defaultValue="tailwind" className="w-full">
+                        <TabsList>
+                          <TabsTrigger value="tailwind">Tailwind Config</TabsTrigger>
+                          <TabsTrigger value="css">Global CSS</TabsTrigger>
+                        </TabsList>
+                        
+                        <TabsContent value="tailwind">
+                          <div className="flex flex-col gap-2">
+                            <Label>Tailwind Configuration</Label>
+                            <ScrollArea className="h-[400px] w-full rounded-md border">
+                              <Textarea
+                                value={customTailwindConfig}
+                                onChange={(e) => setCustomTailwindConfig(e.target.value)}
+                                className="font-mono text-sm h-full"
+                                placeholder="Customize your Tailwind config..."
+                              />
+                            </ScrollArea>
+                          </div>
+                        </TabsContent>
+                        
+                        <TabsContent value="css">
+                          <div className="flex flex-col gap-2">
+                            <Label>CSS Variables</Label>
+                            <ScrollArea className="h-[400px] w-full rounded-md border">
+                              <Textarea
+                                value={customGlobalCss}
+                                onChange={(e) => setCustomGlobalCss(e.target.value)}
+                                className="font-mono text-sm h-full"
+                                placeholder=":root { /* Add your CSS variables here */ }"
+                              />
+                            </ScrollArea>
+                          </div>
+                        </TabsContent>
+                      </Tabs>
+
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => setFormStep("demoCode")}
+                        >
+                          Back
+                        </Button>
+                        <Button
+                          onClick={() => setFormStep("detailedForm")}
+                        >
+                          Continue
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
                 )}
 
                 {formStep === "detailedForm" &&
@@ -507,6 +579,14 @@ export default function PublishComponentForm() {
                           }, 0)
                         }}
                       />
+                      <EditCodeFileCard
+                        iconSrc={
+                          isDarkTheme ? "/css-file-dark.svg" : "/css-file.svg"
+                        }
+                        mainText="Styling"
+                        subText="Tailwind config and global CSS"
+                        onEditClick={() => setFormStep("customization")}
+                      />
                       <ComponentDetailsForm
                         isEditMode={false}
                         form={form}
@@ -537,6 +617,8 @@ export default function PublishComponentForm() {
                         ...demoDirectRegistryDependencies,
                       ]}
                       isDarkTheme={isDarkTheme}
+                      customTailwindConfig={customTailwindConfig}
+                      customGlobalCss={customGlobalCss}
                     />
                   </React.Suspense>
                 </motion.div>

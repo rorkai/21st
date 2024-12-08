@@ -28,6 +28,8 @@ export function PublishComponentPreview({
   registryToPublish = "ui",
   directRegistryDependencies,
   isDarkTheme,
+  customTailwindConfig,
+  customGlobalCss,
 }: {
   code: string
   demoCode: string
@@ -35,6 +37,8 @@ export function PublishComponentPreview({
   registryToPublish: string
   directRegistryDependencies: string[]
   isDarkTheme: boolean
+  customTailwindConfig?: string
+  customGlobalCss?: string
 }) {
   const isDebug = useDebugMode()
   const supabase = useClerkSupabaseClient()
@@ -82,6 +86,8 @@ export function PublishComponentPreview({
       demoCode,
       theme: isDarkTheme ? "dark" : "light",
       css,
+      customTailwindConfig,
+      customGlobalCss,
     })
   }, [
     demoComponentNames,
@@ -90,6 +96,9 @@ export function PublishComponentPreview({
     demoCode,
     isDarkTheme,
     registryToPublish,
+    css,
+    customTailwindConfig,
+    customGlobalCss,
   ])
 
   const files = {
@@ -126,7 +135,7 @@ export function PublishComponentPreview({
     options: {
       externalResources: [
         "https://cdn.tailwindcss.com",
-        "https://vucvdpamtrjkzmubwlts.supabase.co/storage/v1/object/public/css/combined-tailwind.css",
+        "https://vucvdpamtrjkzmubwlts.supabase.co/storage/v1/object/public/css/combined-tailwind.css"
       ],
     },
   }

@@ -568,7 +568,7 @@ export default function PublishComponentForm() {
                       />
                       <EditCodeFileCard
                         iconSrc={
-                          isDarkTheme ? "/demo-file-dark.svg" : "/demo-file.svg"
+                          isDarkTheme ? "/css-file.svg" : "/css-file.svg"
                         }
                         mainText="Demo code"
                         subText={`${parsedCode.demoComponentNames.slice(0, 2).join(", ")}${parsedCode.demoComponentNames.length > 2 ? ` +${parsedCode.demoComponentNames.length - 2}` : ""}`}

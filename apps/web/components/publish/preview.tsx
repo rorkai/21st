@@ -42,7 +42,7 @@ export function PublishComponentPreview({
 }) {
   const isDebug = useDebugMode()
   const supabase = useClerkSupabaseClient()
-  const [css, setCss] = useState("")
+  const [css, setCss] = useState<string | undefined>(undefined)
 
   const {
     data: registryDependencies,
@@ -65,12 +65,15 @@ export function PublishComponentPreview({
   })
 
   useEffect(() => {
-    if (!registryDependencies) return
     fetch("/api/compile-css", {
       method: "POST",
-      body: JSON.stringify({ code, demoCode }),
-    }).then((res) => res.json()).then(setCss)
-  }, [code, demoCode])
+      body: JSON.stringify({ code, demoCode, customTailwindConfig, customGlobalCss }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setCss(data.css)
+      })
+  }, [])
 
   const demoComponentNames = useMemo(
     () => extractDemoComponentNames(demoCode),
@@ -85,7 +88,7 @@ export function PublishComponentPreview({
       code,
       demoCode,
       theme: isDarkTheme ? "dark" : "light",
-      css,
+      css: css ?? "",
       customTailwindConfig,
       customGlobalCss,
     })
@@ -135,10 +138,12 @@ export function PublishComponentPreview({
     options: {
       externalResources: [
         "https://cdn.tailwindcss.com",
-        "https://vucvdpamtrjkzmubwlts.supabase.co/storage/v1/object/public/css/combined-tailwind.css"
+        "https://vucvdpamtrjkzmubwlts.supabase.co/storage/v1/object/public/css/combined-tailwind.css",
       ],
     },
   }
+
+  if (css === undefined) return <LoadingSpinner />
 
   return (
     <div className="w-full h-full bg-[#FAFAFA] rounded-lg">
@@ -146,7 +151,6 @@ export function PublishComponentPreview({
         <div className="text-red-500">{registryDependenciesError.message}</div>
       )}
       {isLoading && <LoadingSpinner />}
-      {css}
       {!registryDependenciesError && !isLoading && (
         <SandpackProvider {...providerProps}>
           <SandpackPreview

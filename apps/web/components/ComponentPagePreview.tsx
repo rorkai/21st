@@ -65,7 +65,13 @@ export function ComponentPagePreview({
     fetch("/api/compile-css", {
       method: "POST",
       body: JSON.stringify({ code, demoCode }),
-    }).then((res) => res.json()).then(setCss)
+    }).then((res) => res.json()).then((data) => {
+      if (data.error) {
+        toast.error(data.error)
+      } else {
+        setCss(data.css)
+      }
+    })
   }, [code, demoCode])
 
   if (!css) return <LoadingSpinner />

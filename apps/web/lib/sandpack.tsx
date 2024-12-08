@@ -104,7 +104,7 @@ a {
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-0;
   }
   body {
     @apply bg-background text-foreground;

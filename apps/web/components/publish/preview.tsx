@@ -11,7 +11,7 @@ import {
   SandpackCodeViewer,
 } from "@codesandbox/sandpack-react"
 import { useQuery } from "@tanstack/react-query"
-import React, { useMemo } from "react"
+import React, { useMemo, useState, useEffect } from "react"
 import { LoadingSpinner } from "../LoadingSpinner"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 
@@ -38,6 +38,7 @@ export function PublishComponentPreview({
 }) {
   const isDebug = useDebugMode()
   const supabase = useClerkSupabaseClient()
+  const [css, setCss] = useState("")
 
   const {
     data: registryDependencies,
@@ -59,6 +60,14 @@ export function PublishComponentPreview({
     enabled: directRegistryDependencies?.length > 0,
   })
 
+  useEffect(() => {
+    if (!registryDependencies) return
+    fetch("/api/compile-css", {
+      method: "POST",
+      body: JSON.stringify({ code, demoCode }),
+    }).then((res) => res.json()).then(setCss)
+  }, [code, demoCode])
+
   const demoComponentNames = useMemo(
     () => extractDemoComponentNames(demoCode),
     [demoCode],
@@ -72,6 +81,7 @@ export function PublishComponentPreview({
       code,
       demoCode,
       theme: isDarkTheme ? "dark" : "light",
+      css,
     })
   }, [
     demoComponentNames,
@@ -127,6 +137,7 @@ export function PublishComponentPreview({
         <div className="text-red-500">{registryDependenciesError.message}</div>
       )}
       {isLoading && <LoadingSpinner />}
+      {css}
       {!registryDependenciesError && !isLoading && (
         <SandpackProvider {...providerProps}>
           <SandpackPreview

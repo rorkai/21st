@@ -5,6 +5,7 @@ export function generateSandpackFiles({
   code,
   demoCode,
   theme,
+  css,
 }: {
   demoComponentNames: string[]
   componentSlug: string
@@ -12,11 +13,13 @@ export function generateSandpackFiles({
   code: string
   demoCode: string
   theme: "light" | "dark"
+  css: string
 }) {
   const appTsxContent = `
 import React, { useState } from 'react';
 import { ThemeProvider } from './next-themes';
 import { RouterProvider } from 'next/router';
+import './styles.css';  // Import the compiled CSS
 import DefaultDemoExport, { ${demoComponentNames.join(", ")} } from './demo';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem } from './components/ui/select';
 
@@ -80,6 +83,7 @@ export default function App() {
 }
 `
   const files = {
+    "/styles.css": css,
     "/App.tsx": appTsxContent,
     "/next-themes.tsx": `
 import React, { createContext, useContext, useState, useEffect } from 'react';

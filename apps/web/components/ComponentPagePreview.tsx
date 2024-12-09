@@ -27,6 +27,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useEffect } from "react"
 
 const SandpackPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react/unstyled").then((module) => ({
@@ -58,6 +59,22 @@ export function ComponentPagePreview({
   const isDarkTheme = theme === "dark"
   const [isShowCode] = useAtom(isShowCodeAtom)
   const isDebug = useDebugMode()
+  const [css, setCss] = useState("")
+
+  useEffect(() => {
+    fetch("/api/compile-css", {
+      method: "POST",
+      body: JSON.stringify({ code, demoCode }),
+    }).then((res) => res.json()).then((data) => {
+      if (data.error) {
+        toast.error(data.error)
+      } else {
+        setCss(data.css)
+      }
+    })
+  }, [code, demoCode])
+
+  if (!css) return <LoadingSpinner />
 
   const files = {
     ...generateSandpackFiles({
@@ -67,6 +84,7 @@ export function ComponentPagePreview({
       code,
       demoCode,
       theme: isDarkTheme ? "dark" : "light",
+      css,
     }),
     ...registryDependencies,
   }

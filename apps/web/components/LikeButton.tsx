@@ -16,6 +16,7 @@ interface LikeButtonProps {
   showTooltip?: boolean
   variant?: "default" | "circle"
   liked: boolean
+  onClick?: () => void
 }
 
 export function LikeButton({
@@ -24,6 +25,7 @@ export function LikeButton({
   showTooltip = false,
   liked,
   variant = "default",
+  onClick,
 }: LikeButtonProps) {
   const { user } = useUser()
   const supabase = useClerkSupabaseClient()
@@ -34,6 +36,7 @@ export function LikeButton({
     e.preventDefault()
     e.stopPropagation()
     likeMutation.mutate({ componentId, liked })
+    toast.success(liked ? "Unliked component" : "Liked component")
   }
 
   useEffect(() => {
@@ -68,7 +71,7 @@ export function LikeButton({
 
   const button = (
     <button
-      onClick={handleLike}
+      onClick={onClick ?? handleLike}
       disabled={likeMutation.isPending}
       className={buttonClasses}
       onMouseEnter={() => setIsHovered(true)}
@@ -93,7 +96,7 @@ export function LikeButton({
         <TooltipContent className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
           <p className="flex items-center">
             {liked ? "Unlike" : "Like"}
-            <Hotkey keys={["L"]}  />
+            <Hotkey keys={["L"]} variant="outline" />
           </p>
         </TooltipContent>
       </Tooltip>

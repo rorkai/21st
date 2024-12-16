@@ -14,7 +14,7 @@ import { UserAvatar } from "./UserAvatar"
 import { atom, useAtom } from "jotai"
 import { Input } from "@/components/ui/input"
 import { Hotkey } from "./ui/hotkey"
-import { useIsMobile } from "@/hooks/use-media-query"
+import { useIsMobile, useMediaQuery } from "@/hooks/use-media-query"
 import { HeaderServer } from "./HeaderServer"
 import {
   NavigationMenuLink,
@@ -36,6 +36,7 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
   const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom)
   const inputRef = React.useRef<HTMLInputElement>(null)
   const isMobile = useIsMobile()
+  const isDesktop = useMediaQuery("(min-width: 1024px)")
   const { user, signOut } = useClerk()
   const [showUserProfile, setShowUserProfile] = useState(false)
 
@@ -64,7 +65,8 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <HeaderServer.SocialIcons />
+          <HeaderServer.SocialIcons isMobile={isMobile} />
+          {!isMobile && <HeaderServer.ThemeToggle />}
           {page === "home" && (
             <div className="relative flex items-center max-w-[400px]">
               <Input
@@ -75,9 +77,11 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pr-14"
               />
-              <div className="absolute top-0 right-3 h-full flex items-center pointer-events-none">
-                <Hotkey keys={["K"]} modifier={true} isOutlineButton />
-              </div>
+              {isDesktop && (
+                <div className="absolute top-0 right-3 h-full flex items-center pointer-events-none">
+                  <Hotkey keys={["K"]} modifier={true} variant="outline" />
+                </div>
+              )}
             </div>
           )}
 
@@ -121,9 +125,9 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
               </SignedIn>
 
               <SignedOut>
-                <div className="text-sm">
-                  <SignInButton />
-                </div>
+                <SignInButton>
+                  <Button>Publish</Button>
+                </SignInButton>
               </SignedOut>
             </>
           )}

@@ -5,22 +5,19 @@ import { useEffect, useState } from "react"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 
-interface HotkeyProps {
-  keys: string[]
-  modifier?: boolean
-  isBackgroundDark?: boolean
-  isOutlineButton?: boolean
-}
-
-export const Hotkey: React.FC<HotkeyProps> = ({
+export const Hotkey = ({
   keys,
   modifier = false,
-  isOutlineButton = false,
+  variant = "primary",
+}: {
+  keys: string[]
+  modifier?: boolean
+  variant?: "primary" | "outline"
 }) => {
   const [, setModifierText] = useState("⌃")
   const [displayKeys, setDisplayKeys] = useState(keys)
   const { theme } = useTheme()
-  const isContrast = !isOutlineButton
+  const isContrast = variant === "outline"
 
   useEffect(() => {
     const isMac = window.navigator.userAgent.includes("Macintosh")
@@ -38,7 +35,7 @@ export const Hotkey: React.FC<HotkeyProps> = ({
     <span
       className={cn(
         "inline-flex gap-[2px]",
-        isContrast ? "text-background" : "text-foreground",
+        isContrast ? "text-foreground" : "text-background",
       )}
     >
       {displayKeys.map((key, index) => (

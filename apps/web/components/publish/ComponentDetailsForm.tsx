@@ -313,7 +313,7 @@ const ComponentDetailsForm = ({
             ? "Save changes"
             : "Add component"}
         {!isSubmitting && isFormValid(form) && (
-          <Hotkey keys={["⌘", "⏎"]} isBackgroundDark={true} />
+          <Hotkey keys={["⌘", "⏎"]} variant="outline" />
         )}
       </Button>
     </div>

@@ -53,17 +53,17 @@ const componentTypes = [
     description: "Showcase your product's key features and benefits.",
   },
   {
-    title: "Text",
+    title: "Typography",
     href: "/s/text",
     description: "Typography components for effective content display.",
   },
   {
-    title: "Bento",
+    title: "Bento Grids",
     href: "/s/bento",
     description: "Cool grid layouts that look like Japanese lunch boxes.",
   },
   {
-    title: "Landing Page",
+    title: "Landing Pages",
     href: "/s/landing-page",
     description: "Complete landing page templates and sections.",
   },
@@ -91,7 +91,7 @@ export function HeaderServer({ tagName, isHomePage }: HeaderServerProps) {
   )
 }
 
-HeaderServer.SocialIcons = function SocialIcons() {
+HeaderServer.SocialIcons = function SocialIcons({ isMobile }: { isMobile: boolean }) {
   return (
     <div className="flex items-center gap-[6px]">
       <Link
@@ -104,11 +104,11 @@ HeaderServer.SocialIcons = function SocialIcons() {
             buttonVariants({
               variant: "ghost",
             }),
-            "h-8 px-3 flex items-center gap-2 bg-foreground text-background hover:border-foreground",
+            "h-8 md:px-3 px-2 flex items-center gap-2 bg-foreground text-background hover:border-foreground",
           )}
         >
           <Icons.gitHub className="h-[18px] w-[18px]" />
-          <GitHubStars />
+          {!isMobile && <GitHubStars />}
           <span className="sr-only">GitHub</span>
         </div>
       </Link>
@@ -125,9 +125,10 @@ HeaderServer.SocialIcons = function SocialIcons() {
           <span className="sr-only">Twitter</span>
         </div>
       </Link>
-      <ThemeToggle />
     </div>
   )
 }
+
+HeaderServer.ThemeToggle = ThemeToggle
 
 export { uiSystems, componentTypes }

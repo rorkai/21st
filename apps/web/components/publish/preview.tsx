@@ -138,7 +138,6 @@ export function PublishComponentPreview({
     options: {
       externalResources: [
         "https://cdn.tailwindcss.com",
-        "https://vucvdpamtrjkzmubwlts.supabase.co/storage/v1/object/public/css/combined-tailwind.css",
       ],
     },
   }

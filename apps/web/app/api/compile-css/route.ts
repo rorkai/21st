@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 
 export async function POST(req: Request) {
   try {
-    const { code, demoCode, customTailwindConfig, customGlobalCss } = await req.json()
+    const { code, demoCode, customTailwindConfig, customGlobalCss, dependencies } = await req.json()
     const filteredCode = code
       .split("\n")
       .filter((line: string) => !line.trim().startsWith("import"))
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
       .filter((line: string) => !line.trim().startsWith("import"))
       .join("\n")
     const css = await compileCSS(
-      `${filteredCode}\n${filteredDemoCode}`,
+      `${filteredCode}\n${filteredDemoCode} ${dependencies.join("\n")}`,
       customTailwindConfig,
       customGlobalCss,
     )

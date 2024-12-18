@@ -35,7 +35,7 @@ export const defaultTailwindConfig =
 }
 `
 
-export const defaultGlobalCss = `
+export const generateGlobalCss = (extensions: string[]) => `
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -110,6 +110,8 @@ a {
     @apply bg-background text-foreground;
   }
 }
+
+${extensions.join("\n")}
 `
 
 export function generateSandpackFiles({
@@ -544,7 +546,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 `,
-    "/globals.css": customGlobalCss ?? defaultGlobalCss,
+    "/globals.css": customGlobalCss ?? generateGlobalCss([]),
     "/tailwind.config.js": customTailwindConfig ?? defaultTailwindConfig,
     "/tsconfig.json": JSON.stringify(
       {

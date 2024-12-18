@@ -115,10 +115,8 @@ export default function PublishComponentForm() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const [customTailwindConfig, setCustomTailwindConfig] = useState(
-    defaultTailwindConfig,
-  )
-  const [customGlobalCss, setCustomGlobalCss] = useState(defaultGlobalCss)
+  const [customTailwindConfig, setCustomTailwindConfig] = useState()
+  const [customGlobalCss, setCustomGlobalCss] = useState()
 
   useEffect(() => {
     const parseDependenciesFromCode = () => {
@@ -471,11 +469,11 @@ export default function PublishComponentForm() {
                         <TabsContent value="tailwind">
                           <div className="flex flex-col gap-2">
                             <Label>Tailwind Configuration</Label>
-                            <ScrollArea className="h-[400px] w-full rounded-md border">
+                            <ScrollArea className="h-[500px] w-full rounded-md border">
                               <Textarea
                                 value={customTailwindConfig}
                                 onChange={(e) => setCustomTailwindConfig(e.target.value)}
-                                className="font-mono text-sm h-full"
+                                className="font-mono text-sm h-full w-full min-h-[500px]"
                                 placeholder="Customize your Tailwind config..."
                               />
                             </ScrollArea>
@@ -485,11 +483,11 @@ export default function PublishComponentForm() {
                         <TabsContent value="css">
                           <div className="flex flex-col gap-2">
                             <Label>CSS Variables</Label>
-                            <ScrollArea className="h-[400px] w-full rounded-md border">
+                            <ScrollArea className="h-[500px] w-full rounded-md border">
                               <Textarea
                                 value={customGlobalCss}
                                 onChange={(e) => setCustomGlobalCss(e.target.value)}
-                                className="font-mono text-sm h-full"
+                                className="font-mono text-sm h-full w-full min-h-[500px]"
                                 placeholder=":root { /* Add your CSS variables here */ }"
                               />
                             </ScrollArea>

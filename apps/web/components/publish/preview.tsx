@@ -67,7 +67,13 @@ export function PublishComponentPreview({
   useEffect(() => {
     fetch("/api/compile-css", {
       method: "POST",
-      body: JSON.stringify({ code, demoCode, customTailwindConfig, customGlobalCss }),
+      body: JSON.stringify({
+        code,
+        demoCode,
+        customTailwindConfig,
+        customGlobalCss,
+        dependencies: Object.values(registryDependencies?.filesWithRegistry ?? {}).map(file => file.code),
+      }),
     })
       .then((res) => res.json())
       .then((data) => {
@@ -136,9 +142,7 @@ export function PublishComponentPreview({
       },
     },
     options: {
-      externalResources: [
-        "https://cdn.tailwindcss.com",
-      ],
+      externalResources: ["https://cdn.tailwindcss.com"],
     },
   }
 

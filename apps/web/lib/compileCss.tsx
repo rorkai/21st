@@ -2,7 +2,7 @@
 
 import tailwindcss from "tailwindcss"
 import postcss from "postcss"
-import { defaultTailwindConfig } from "./sandpack"
+import { defaultTailwindConfig, generateGlobalCss } from "./sandpack"
 import { merge } from "lodash"
 
 export const compileCSS = async (
@@ -36,7 +36,7 @@ export const compileCSS = async (
       content: [{ raw: jsx, extension: "tsx" }],
     }),
   ]).process(
-    globalCss ?? "@tailwind base;@tailwind components;@tailwind utilities;",
+    generateGlobalCss([globalCss ?? ""]),
     {
       from: undefined,
     },

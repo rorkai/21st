@@ -114,6 +114,8 @@ const ComponentDetailsForm = ({
     multiple: false,
   })
 
+  const isDev = process.env.NEXT_PUBLIC_ENV === 'development'
+
   return (
     <div
       className={`flex flex-col gap-4 w-full ${isDarkTheme ? "text-foreground" : "text-muted-foreground"}`}
@@ -223,75 +225,77 @@ const ComponentDetailsForm = ({
         )}
       </div>
 
-      <div className="w-full">
-        <Label htmlFor="preview_video" className="block text-sm font-medium">
-          Video Preview (optional)
-        </Label>
-        {!previewVideoDataUrl ? (
-          <div
-            {...getVideoRootProps()}
-            className={`flex flex-col !justify-between mt-1 w-full border border-dashed bg-background rounded-md p-8 text-center cursor-pointer hover:border-gray-400 transition-colors relative`}
-          >
-            <input {...getVideoInputProps()} id="preview_video" />
-            <UploadIcon />
-            <p className="mt-2 text-sm font-medium">
-              Click to upload&nbsp;
-              <span className="text-muted-foreground font-normal">
-                or drag and drop
-              </span>
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              MOV, MP4 (max. 50MB)
-            </p>
-            {isProcessingVideo && (
-              <div className="absolute inset-0 bg-background bg-opacity-90 flex items-center justify-center rounded-md">
-                <p className="text-sm text-muted-foreground">Processing video...</p>
-              </div>
-            )}
-            {isVideoDragActive && (
-              <div className="absolute inset-0 bg-background bg-opacity-90 flex items-center justify-center rounded-md">
-                <p className="text-sm text-muted-foreground">Drop video here</p>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div
-            className={cn(
-              "mt-1 w-full border rounded-md p-2 flex items-center gap-2 relative",
-              isDarkTheme ? "border-gray-600" : "border-gray-300",
-            )}
-          >
-            <div className="w-40 h-32 relative">
-              <video
-                src={previewVideoDataUrl}
-                controls
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                }}
-                className="rounded-sm border shadow-sm"
-              />
+      {isDev && (
+        <div className="w-full">
+          <Label htmlFor="preview_video" className="block text-sm font-medium">
+            Video Preview (optional)
+          </Label>
+          {!previewVideoDataUrl ? (
+            <div
+              {...getVideoRootProps()}
+              className={`flex flex-col !justify-between mt-1 w-full border border-dashed bg-background rounded-md p-8 text-center cursor-pointer hover:border-gray-400 transition-colors relative`}
+            >
+              <input {...getVideoInputProps()} id="preview_video" />
+              <UploadIcon />
+              <p className="mt-2 text-sm font-medium">
+                Click to upload&nbsp;
+                <span className="text-muted-foreground font-normal">
+                  or drag and drop
+                </span>
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                MOV, MP4 (max. 50MB)
+              </p>
+              {isProcessingVideo && (
+                <div className="absolute inset-0 bg-background bg-opacity-90 flex items-center justify-center rounded-md">
+                  <p className="text-sm text-muted-foreground">Processing video...</p>
+                </div>
+              )}
+              {isVideoDragActive && (
+                <div className="absolute inset-0 bg-background bg-opacity-90 flex items-center justify-center rounded-md">
+                  <p className="text-sm text-muted-foreground">Drop video here</p>
+                </div>
+              )}
             </div>
-            <div className="flex flex-col items-start">
-              <div className="flex flex-col gap-2">
-                <Button
-                  variant="outline"
-                  onClick={openFileDialog}
-                >
-                  Change video
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={removeVideo}
-                >
-                  Remove video
-                </Button>
+          ) : (
+            <div
+              className={cn(
+                "mt-1 w-full border rounded-md p-2 flex items-center gap-2 relative",
+                isDarkTheme ? "border-gray-600" : "border-gray-300",
+              )}
+            >
+              <div className="w-40 h-32 relative">
+                <video
+                  src={previewVideoDataUrl}
+                  controls
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
+                  className="rounded-sm border shadow-sm"
+                />
+              </div>
+              <div className="flex flex-col items-start">
+                <div className="flex flex-col gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={openFileDialog}
+                  >
+                    Change video
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={removeVideo}
+                  >
+                    Remove video
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       <div className="w-full mt-4">
         <label htmlFor="license" className="block text-sm font-medium">

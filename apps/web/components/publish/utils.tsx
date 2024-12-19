@@ -15,6 +15,7 @@ export const formSchema = z.object({
     message: "Demo code is required.",
   }),
   registry: z.string().default("ui"),
+  publish_as_username: z.string().optional(),
   description: z.string().optional(),
   tags: z
     .array(
@@ -29,6 +30,8 @@ export const formSchema = z.object({
   is_public: z.boolean().default(true),
   preview_image_data_url: z.string().optional(),
   preview_image_file: z.instanceof(File).optional(),
+  preview_video_data_url: z.string().optional(),
+  preview_video_file: z.instanceof(File).optional(),
   license: z.string().optional(),
   unknown_dependencies: z.array(
     z.object({

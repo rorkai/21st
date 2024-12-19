@@ -55,6 +55,8 @@ import { useSuccessDialogHotkeys } from "./hotkeys"
 import { toast } from "sonner"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Input } from "@/components/ui/input"
+import { usePublishAs } from "./use-publish-as"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -80,6 +82,7 @@ export default function PublishComponentForm() {
   const { theme } = useTheme()
   const isDarkTheme = theme === "dark"
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false)
+  const isDev = process.env.NEXT_PUBLIC_ENV === 'development'
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -87,6 +90,7 @@ export default function PublishComponentForm() {
       name: "",
       component_slug: "",
       registry: "ui",
+      publish_as_username: user?.username ?? undefined,
       unknown_dependencies: [],
       direct_registry_dependencies: [],
       demo_direct_registry_dependencies: [],
@@ -118,13 +122,20 @@ export default function PublishComponentForm() {
     demoComponentNames: [],
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-
+  
   const [customTailwindConfig, setCustomTailwindConfig] = useState<
     string | undefined
   >(undefined)
   const [customGlobalCss, setCustomGlobalCss] = useState<string | undefined>(
     undefined,
   )
+  const publishAsUsername = form.watch("publish_as_username")
+  if (publishAsUsername === undefined && user?.username) {
+    form.setValue("publish_as_username", user.username)
+  }
+  const { isAdmin, user: publishAsUser } = usePublishAs({
+    username: publishAsUsername ?? "",
+  })
 
   useEffect(() => {
     const parseDependenciesFromCode = () => {
@@ -241,7 +252,7 @@ export default function PublishComponentForm() {
       let previewImageR2Url = ""
       if (data.preview_image_file) {
         const fileExtension = data.preview_image_file.name.split(".").pop()
-        const fileKey = `${user?.id!}/${componentSlug}.${fileExtension}`
+        const fileKey = `${publishAsUser?.id}/${componentSlug}.${fileExtension}`
         const buffer = Buffer.from(await data.preview_image_file.arrayBuffer())
         const base64Content = buffer.toString("base64")
         previewImageR2Url = await uploadToR2({
@@ -256,6 +267,24 @@ export default function PublishComponentForm() {
         })
       }
 
+      let videoR2Url = undefined
+      if (isDev && data.preview_video_file) {
+        const processedVideo = data.preview_video_file
+        const fileKey = `${publishAsUser?.id}/${componentSlug}.mp4`
+        const buffer = Buffer.from(await processedVideo.arrayBuffer())
+        const base64Content = buffer.toString("base64")
+        videoR2Url = await uploadToR2({
+          file: {
+            name: fileKey,
+            type: "video/mp4",
+            encodedContent: base64Content,
+          },
+          fileKey,
+          bucketName: "components-code",
+          contentType: "video/mp4",
+        })
+      }
+
       const componentData = {
         name: data.name,
         component_names: parsedCode.componentNames,
@@ -265,13 +294,14 @@ export default function PublishComponentForm() {
         tailwind_config_extension: tailwindConfigUrl,
         global_css_extension: globalCssUrl,
         description: data.description ?? null,
-        user_id: user?.id!,
+        user_id: publishAsUser?.id,
         dependencies: parsedCode.dependencies,
         demo_dependencies: parsedCode.demoDependencies,
         direct_registry_dependencies: data.direct_registry_dependencies,
         demo_direct_registry_dependencies:
           data.demo_direct_registry_dependencies,
         preview_url: previewImageR2Url,
+        video_url: videoR2Url,
         registry: data.registry,
         license: data.license,
       } as Tables<"components">
@@ -307,8 +337,8 @@ export default function PublishComponentForm() {
   }
 
   const handleGoToComponent = () => {
-    if (user) {
-      router.push(`/${user.username}/${componentSlug}`)
+    if (publishAsUser?.username) {
+      router.push(`/${publishAsUser.username}/${componentSlug}`)
     }
     setIsSuccessDialogOpen(false)
   }
@@ -354,8 +384,27 @@ export default function PublishComponentForm() {
                     <h2 className="text-3xl font-bold mb-4">
                       Publish your component
                     </h2>
+                    {isAdmin && (
+                      <div className="flex flex-col gap-2 mb-4">
+                        <Label
+                          htmlFor="publish-as"
+                          className="block text-sm font-medium"
+                        >
+                          Publish as (admin only)
+                        </Label>
+                        <Input
+                          id="publish-as"
+                          placeholder="Enter username"
+                          value={publishAsUsername}
+                          onChange={(e) =>
+                            form.setValue("publish_as_username", e.target.value)
+                          }
+                        />
+                      </div>
+                    )}
                     <NameSlugForm
                       form={form}
+                      publishAsUserId={publishAsUser?.id}
                       isSlugReadOnly={false}
                       placeholderName={"Button"}
                     />
@@ -785,7 +834,7 @@ const SuccessDialog = ({
           </Button>
           <Button onClick={onGoToComponent} variant="default">
             View Component
-            <Hotkey keys={["⏎"]} modifier={true} variant="outline" />
+            <Hotkey keys={["⏎"]} modifier={true} variant="primary" />
           </Button>
         </DialogFooter>
       </DialogContent>

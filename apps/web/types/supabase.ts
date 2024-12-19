@@ -283,6 +283,7 @@ export type Database = {
           email: string
           id: string
           image_url: string | null
+          is_admin: boolean
           manually_added: boolean
           name: string | null
           updated_at: string | null
@@ -293,6 +294,7 @@ export type Database = {
           email?: string
           id: string
           image_url?: string | null
+          is_admin?: boolean
           manually_added?: boolean
           name?: string | null
           updated_at?: string | null
@@ -303,6 +305,7 @@ export type Database = {
           email?: string
           id?: string
           image_url?: string | null
+          is_admin?: boolean
           manually_added?: boolean
           name?: string | null
           updated_at?: string | null
@@ -536,6 +539,10 @@ export type Database = {
         license: string | null
         video_url: string | null
         user_data: Json | null
+        compiled_css: string | null
+        global_css_extension: string | null
+        tailwind_config_extension: string | null
+        website_url: string | null
       }
     }
   }

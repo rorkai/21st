@@ -53,6 +53,8 @@ import { Tables } from "@/types/supabase"
 import { LoadingSpinner } from "../LoadingSpinner"
 import { useSuccessDialogHotkeys } from "./hotkeys"
 import { toast } from "sonner"
+import { Input } from "@/components/ui/input"
+import { usePublishAs } from "./use-publish-as"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -80,6 +82,7 @@ export default function PublishComponentForm() {
       name: "",
       component_slug: "",
       registry: "ui",
+      publish_as_username: user?.username ?? undefined,
       unknown_dependencies: [],
       direct_registry_dependencies: [],
       demo_direct_registry_dependencies: [],
@@ -111,6 +114,14 @@ export default function PublishComponentForm() {
     demoComponentNames: [],
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const publishAsUsername = form.watch("publish_as_username")
+  if (publishAsUsername === undefined && user?.username) {
+    form.setValue("publish_as_username", user.username)
+  }
+  const { isAdmin, user: publishAsUser } = usePublishAs({
+    username: publishAsUsername ?? "",
+  })
 
   useEffect(() => {
     const parseDependenciesFromCode = () => {
@@ -181,7 +192,7 @@ export default function PublishComponentForm() {
             type: "text/plain",
             textContent: data.code,
           },
-          fileKey: `${user?.id!}/${codeFileName}`,
+          fileKey: `${publishAsUser?.id!}/${codeFileName}`,
           bucketName: "components-code",
         }),
         uploadToR2({
@@ -190,7 +201,7 @@ export default function PublishComponentForm() {
             type: "text/plain",
             textContent: demoCode,
           },
-          fileKey: `${user?.id!}/${demoCodeFileName}`,
+          fileKey: `${publishAsUser?.id!}/${demoCodeFileName}`,
           bucketName: "components-code",
         }),
       ])
@@ -201,7 +212,7 @@ export default function PublishComponentForm() {
       let previewImageR2Url = ""
       if (data.preview_image_file) {
         const fileExtension = data.preview_image_file.name.split(".").pop()
-        const fileKey = `${user?.id!}/${componentSlug}.${fileExtension}`
+        const fileKey = `${publishAsUser?.id}/${componentSlug}.${fileExtension}`
         const buffer = Buffer.from(await data.preview_image_file.arrayBuffer())
         const base64Content = buffer.toString("base64")
         previewImageR2Url = await uploadToR2({
@@ -223,7 +234,7 @@ export default function PublishComponentForm() {
         code: codeUrl,
         demo_code: demoCodeUrl,
         description: data.description ?? null,
-        user_id: user?.id!,
+        user_id: publishAsUser?.id,
         dependencies: parsedCode.dependencies,
         demo_dependencies: parsedCode.demoDependencies,
         direct_registry_dependencies: data.direct_registry_dependencies,
@@ -265,8 +276,8 @@ export default function PublishComponentForm() {
   }
 
   const handleGoToComponent = () => {
-    if (user) {
-      router.push(`/${user.username}/${componentSlug}`)
+    if (publishAsUser?.username) {
+      router.push(`/${publishAsUser.username}/${componentSlug}`)
     }
     setIsSuccessDialogOpen(false)
   }
@@ -312,8 +323,27 @@ export default function PublishComponentForm() {
                     <h2 className="text-3xl font-bold mb-4">
                       Publish your component
                     </h2>
+                    {isAdmin && (
+                      <div className="flex flex-col gap-2 mb-4">
+                        <Label
+                          htmlFor="publish-as"
+                          className="block text-sm font-medium"
+                        >
+                          Publish as (admin only)
+                        </Label>
+                        <Input
+                          id="publish-as"
+                          placeholder="Enter username"
+                          value={publishAsUsername}
+                          onChange={(e) =>
+                            form.setValue("publish_as_username", e.target.value)
+                          }
+                        />
+                      </div>
+                    )}
                     <NameSlugForm
                       form={form}
+                      publishAsUserId={publishAsUser?.id}
                       isSlugReadOnly={false}
                       placeholderName={"Button"}
                     />
@@ -662,7 +692,7 @@ const SuccessDialog = ({
           </Button>
           <Button onClick={onGoToComponent} variant="default">
             View Component
-            <Hotkey keys={["⏎"]} modifier={true} variant="outline" />
+            <Hotkey keys={["⏎"]} modifier={true} variant="primary" />
           </Button>
         </DialogFooter>
       </DialogContent>

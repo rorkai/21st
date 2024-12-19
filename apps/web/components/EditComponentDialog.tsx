@@ -1,11 +1,11 @@
 "use client"
 
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
 import { ComponentDetailsForm } from "./publish/ComponentDetailsForm"
 import { Component, User, Tag } from "@/types/global"
 import { useForm } from "react-hook-form"
@@ -123,20 +123,22 @@ export function EditComponentDialog({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit component</DialogTitle>
-        </DialogHeader>
-        <ComponentDetailsForm
-          isEditMode={true}
-          form={form}
-          handleSubmit={handleSubmit}
-          isSubmitting={
-            uploadToR2Mutation.isPending || updateMutation.isPending
-          }
-        />
-      </DialogContent>
-    </Dialog>
+    <Sheet open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
+      <SheetContent side="right" className="px-0 pb-0 sm:max-w-lg">
+        <SheetHeader className="mb-2 px-6">
+          <SheetTitle>Edit component</SheetTitle>
+        </SheetHeader>
+        <div className="overflow-y-auto h-[calc(100vh-5rem)] px-6">
+          <ComponentDetailsForm
+            isEditMode={true}
+            form={form}
+            handleSubmit={handleSubmit}
+            isSubmitting={
+              uploadToR2Mutation.isPending || updateMutation.isPending
+            }
+          />
+        </div>
+      </SheetContent>
+    </Sheet>
   )
 }

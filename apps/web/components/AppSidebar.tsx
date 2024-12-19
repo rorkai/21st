@@ -18,26 +18,27 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import { useAtom } from "jotai"
+import { atomWithStorage } from "jotai/utils"
+import { useEffect, useRef } from "react"
 
 const landingPageSections = [
   { title: "Announcements", href: "/s/announcements" },
-  { title: "Backgrounds", href: "/s/backgrounds" },
-  { title: "Borders", href: "/s/borders" },
+  { title: "Backgrounds", href: "/s/background" },
+  { title: "Borders", href: "/s/border" },
   { title: "Comparison", href: "/s/comparison" },
-  { title: "Docks", href: "/s/docks" },
+  { title: "Docks", href: "/s/dock" },
   { title: "Features", href: "/s/features" },
   { title: "Footer", href: "/s/footer" },
   { title: "Hero", href: "/s/hero" },
-  { title: "Images", href: "/s/images" },
-  { title: "Maps", href: "/s/maps" },
+  { title: "Images", href: "/s/image" },
+  { title: "Maps", href: "/s/map" },
   { title: "Navigation Menu", href: "/s/navbar-navigation" },
   { title: "Pricing", href: "/s/pricing" },
   { title: "Scroll Area", href: "/s/scroll-area" },
-  { title: "Sparkles", href: "/s/sparkles" },
   { title: "Team", href: "/s/team" },
   { title: "Testimonials", href: "/s/testimonials" },
   { title: "Text", href: "/s/text" },
-  { title: "Text Effects", href: "/s/text-effects" },
   { title: "Video", href: "/s/video" },
 ].sort((a, b) => a.title.localeCompare(b.title))
 
@@ -56,15 +57,16 @@ const uiComponents = [
   { title: "File Upload", href: "/s/file-upload" },
   { title: "Icons", href: "/s/icons" },
   { title: "Input", href: "/s/input" },
-  { title: "Numbers", href: "/s/numbers" },
+  { title: "Numbers", href: "/s/number" },
   { title: "Pagination", href: "/s/pagination" },
   { title: "Sidebar", href: "/s/sidebar" },
-  { title: "Sign In & Sign Up", href: "/s/auth" },
-  { title: "Slider", href: "/s/slider" },
-  { title: "Tables", href: "/s/tables" },
-  { title: "Tags", href: "/s/tags" },
+  { title: "Sign In", href: "/s/sign-in" },
+  { title: "Sign up", href: "/s/registration-signup" },
+  { title: "Carousel / Slider", href: "/s/carousel-slider" },
+  { title: "Tables", href: "/s/table" },
+  { title: "Tags", href: "/s/chip-tag" },
   { title: "Tabs", href: "/s/tab" },
-  { title: "Text Area", href: "/s/text-area" },
+  { title: "Text Area", href: "/s/textarea" },
   { title: "Toast", href: "/s/toast" },
   { title: "Toggle", href: "/s/toggle" },
   { title: "Tooltip", href: "/s/tooltip" },
@@ -83,19 +85,66 @@ const sections = [
   },
 ]
 
+type SidebarState = {
+  openSections: Record<string, boolean>
+  scrollPosition: number
+}
+
+const sidebarStateAtom = atomWithStorage<SidebarState>("sidebarState", {
+  openSections: { "Landing Pages": true, "UI Components": true },
+  scrollPosition: 0,
+})
+
 export function AppSidebar() {
   const pathname = usePathname()
+  const sidebarRef = useRef<HTMLDivElement>(null)
+  const [sidebarState, setSidebarState] = useAtom(sidebarStateAtom)
+  const initialRender = useRef(true)
+
+  useEffect(() => {
+    if (initialRender.current && sidebarRef.current) {
+      sidebarRef.current.scrollTop = sidebarState.scrollPosition
+      initialRender.current = false
+    }
+  }, [])
+
+  const handleScroll = () => {
+    if (sidebarRef.current) {
+      setSidebarState((prev) => ({
+        ...prev,
+        scrollPosition: sidebarRef.current?.scrollTop || 0,
+      }))
+    }
+  }
+
+  if (!sidebarState) {
+    return null
+  }
 
   return (
     <Sidebar>
-      <SidebarContent className="pt-14">
+      <SidebarContent
+        className="pt-14"
+        ref={sidebarRef}
+        onScroll={handleScroll}
+        suppressHydrationWarning
+      >
         <SidebarGroup>
           <SidebarMenu>
             {sections.map((section) => (
               <Collapsible
                 key={section.title}
                 asChild
-                defaultOpen={true}
+                open={sidebarState.openSections[section.title]}
+                onOpenChange={(isOpen) => {
+                  setSidebarState((prev) => ({
+                    ...prev,
+                    openSections: {
+                      ...prev.openSections,
+                      [section.title]: isOpen,
+                    },
+                  }))
+                }}
                 className="group/collapsible"
               >
                 <SidebarMenuItem>
@@ -130,4 +179,4 @@ export function AppSidebar() {
       </SidebarContent>
     </Sidebar>
   )
-} 
+}

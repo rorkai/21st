@@ -9,7 +9,6 @@ import { makeSlugFromName } from "@/components/publish/useIsCheckSlugAvailable"
 import { SupabaseClient } from "@supabase/supabase-js"
 import { useClerkSupabaseClient } from "./clerk"
 import { Database } from "@/types/supabase"
-import { toast } from "sonner"
 
 export const componentReadableDbFields = `
   *,

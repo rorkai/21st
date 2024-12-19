@@ -27,7 +27,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useEffect } from "react"
+import { useCompileCss } from "@/hooks/use-compile-css"
 
 const SandpackPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react/unstyled").then((module) => ({
@@ -44,6 +44,9 @@ export function ComponentPagePreview({
   demoComponentNames,
   registryDependencies,
   npmDependenciesOfRegistryDependencies,
+  tailwindConfig,
+  globalCss,
+  compiledCss,
 }: {
   component: Component & { user: User } & { tags: Tag[] }
   code: string
@@ -53,32 +56,26 @@ export function ComponentPagePreview({
   demoComponentNames: string[]
   registryDependencies: Record<string, string>
   npmDependenciesOfRegistryDependencies: Record<string, string>
+  tailwindConfig?: string
+  globalCss?: string
+  compiledCss?: string
 }) {
   const sandpackRef = useRef<HTMLDivElement>(null)
   const { theme } = useTheme()
   const isDarkTheme = theme === "dark"
   const [isShowCode] = useAtom(isShowCodeAtom)
   const isDebug = useDebugMode()
-  const [css, setCss] = useState("")
 
-  useEffect(() => {
-    fetch("/api/compile-css", {
-      method: "POST",
-      body: JSON.stringify({
-        code,
-        demoCode,
-        dependencies: Object.values(registryDependencies ?? {}),
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.error) {
-          toast.error(data.error)
-        } else {
-          setCss(data.css)
-        }
-      })
-  }, [code, demoCode])
+
+  const css = useCompileCss(
+    code,
+    demoCode,
+    registryDependencies,
+    component,
+    tailwindConfig,
+    globalCss,
+    compiledCss,
+  )
 
   if (!css) return <LoadingSpinner />
 

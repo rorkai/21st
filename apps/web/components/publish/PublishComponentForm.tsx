@@ -53,7 +53,6 @@ import { Tables } from "@/types/supabase"
 import { LoadingSpinner } from "../LoadingSpinner"
 import { useSuccessDialogHotkeys } from "./hotkeys"
 import { toast } from "sonner"
-import { defaultTailwindConfig, defaultGlobalCss } from "@/lib/sandpack"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -65,7 +64,12 @@ export interface ParsedCodeData {
   demoComponentNames: string[]
 }
 
-type FormStep = "nameSlugForm" | "code" | "demoCode" | "customization" | "detailedForm"
+type FormStep =
+  | "nameSlugForm"
+  | "code"
+  | "demoCode"
+  | "customization"
+  | "detailedForm"
 
 export default function PublishComponentForm() {
   const registryToPublish = "ui"
@@ -115,8 +119,12 @@ export default function PublishComponentForm() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const [customTailwindConfig, setCustomTailwindConfig] = useState()
-  const [customGlobalCss, setCustomGlobalCss] = useState()
+  const [customTailwindConfig, setCustomTailwindConfig] = useState<
+    string | undefined
+  >(undefined)
+  const [customGlobalCss, setCustomGlobalCss] = useState<string | undefined>(
+    undefined,
+  )
 
   useEffect(() => {
     const parseDependenciesFromCode = () => {
@@ -180,26 +188,52 @@ export default function PublishComponentForm() {
       const codeFileName = `${data.component_slug}.tsx`
       const demoCodeFileName = `${data.component_slug}.demo.tsx`
 
-      const [codeUrl, demoCodeUrl] = await Promise.all([
-        uploadToR2({
-          file: {
-            name: codeFileName,
-            type: "text/plain",
-            textContent: data.code,
-          },
-          fileKey: `${user?.id!}/${codeFileName}`,
-          bucketName: "components-code",
-        }),
-        uploadToR2({
-          file: {
-            name: demoCodeFileName,
-            type: "text/plain",
-            textContent: demoCode,
-          },
-          fileKey: `${user?.id!}/${demoCodeFileName}`,
-          bucketName: "components-code",
-        }),
-      ])
+      const tailwindConfigFileName = `${data.component_slug}.tailwind.config.js`
+      const globalCssFileName = `${data.component_slug}.global.css`
+
+      const [codeUrl, demoCodeUrl, tailwindConfigUrl, globalCssUrl] =
+        await Promise.all([
+          uploadToR2({
+            file: {
+              name: codeFileName,
+              type: "text/plain",
+              textContent: data.code,
+            },
+            fileKey: `${user?.id!}/${codeFileName}`,
+            bucketName: "components-code",
+          }),
+          uploadToR2({
+            file: {
+              name: demoCodeFileName,
+              type: "text/plain",
+              textContent: demoCode,
+            },
+            fileKey: `${user?.id!}/${demoCodeFileName}`,
+            bucketName: "components-code",
+          }),
+          customTailwindConfig
+            ? uploadToR2({
+                file: {
+                  name: tailwindConfigFileName,
+                  type: "text/plain",
+                  textContent: customTailwindConfig,
+                },
+                fileKey: `${user?.id!}/${tailwindConfigFileName}`,
+                bucketName: "components-code",
+              })
+            : Promise.resolve(null),
+          customGlobalCss
+            ? uploadToR2({
+                file: {
+                  name: globalCssFileName,
+                  type: "text/plain",
+                  textContent: customGlobalCss,
+                },
+                fileKey: `${user?.id!}/${globalCssFileName}`,
+                bucketName: "components-code",
+              })
+            : Promise.resolve(null),
+        ])
       if (!codeUrl || !demoCodeUrl) {
         throw new Error("Failed to upload code files to R2")
       }
@@ -228,6 +262,8 @@ export default function PublishComponentForm() {
         component_slug: data.component_slug,
         code: codeUrl,
         demo_code: demoCodeUrl,
+        tailwind_config_extension: tailwindConfigUrl,
+        global_css_extension: globalCssUrl,
         description: data.description ?? null,
         user_id: user?.id!,
         dependencies: parsedCode.dependencies,
@@ -455,40 +491,49 @@ export default function PublishComponentForm() {
                     className="w-full"
                   >
                     <div className="flex flex-col gap-4">
-                      <h3 className="text-lg font-semibold">Customize Styling</h3>
+                      <h3 className="text-lg font-semibold">
+                        Customize Styling
+                      </h3>
                       <p className="text-sm text-muted-foreground">
-                        Optionally customize the Tailwind configuration and CSS variables for your component.
+                        Optionally customize the Tailwind configuration and CSS
+                        variables for your component.
                       </p>
-                      
+
                       <Tabs defaultValue="tailwind" className="w-full">
                         <TabsList>
-                          <TabsTrigger value="tailwind">Tailwind Config</TabsTrigger>
+                          <TabsTrigger value="tailwind">
+                            Tailwind Config
+                          </TabsTrigger>
                           <TabsTrigger value="css">Global CSS</TabsTrigger>
                         </TabsList>
-                        
+
                         <TabsContent value="tailwind">
                           <div className="flex flex-col gap-2">
                             <Label>Tailwind Configuration</Label>
                             <ScrollArea className="h-[500px] w-full rounded-md border">
                               <Textarea
                                 value={customTailwindConfig}
-                                onChange={(e) => setCustomTailwindConfig(e.target.value)}
+                                onChange={(e) =>
+                                  setCustomTailwindConfig(e.target.value)
+                                }
                                 className="font-mono text-sm h-full w-full min-h-[500px]"
                                 placeholder="Customize your Tailwind config..."
                               />
                             </ScrollArea>
                           </div>
                         </TabsContent>
-                        
+
                         <TabsContent value="css">
                           <div className="flex flex-col gap-2">
                             <Label>CSS Variables</Label>
                             <ScrollArea className="h-[500px] w-full rounded-md border">
                               <Textarea
                                 value={customGlobalCss}
-                                onChange={(e) => setCustomGlobalCss(e.target.value)}
+                                onChange={(e) =>
+                                  setCustomGlobalCss(e.target.value)
+                                }
                                 className="font-mono text-sm h-full w-full min-h-[500px]"
-                                placeholder=":root { /* Add your CSS variables here */ }"
+                                placeholder=":root { /* Add your light mode CSS variables here */ } .dark { /* Add your dark mode CSS variables here */ }"
                               />
                             </ScrollArea>
                           </div>
@@ -502,9 +547,7 @@ export default function PublishComponentForm() {
                         >
                           Back
                         </Button>
-                        <Button
-                          onClick={() => setFormStep("detailedForm")}
-                        >
+                        <Button onClick={() => setFormStep("detailedForm")}>
                           Continue
                         </Button>
                       </div>

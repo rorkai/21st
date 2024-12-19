@@ -43,6 +43,9 @@ export default function ComponentPage({
   demoComponentNames,
   registryDependencies,
   npmDependenciesOfRegistryDependencies,
+  tailwindConfig,
+  globalCss,
+  compiledCss,
 }: {
   component: Component & { user: User } & { tags: Tag[] }
   code: string
@@ -52,6 +55,9 @@ export default function ComponentPage({
   demoComponentNames: string[]
   registryDependencies: Record<string, string>
   npmDependenciesOfRegistryDependencies: Record<string, string>
+  tailwindConfig?: string
+  globalCss?: string
+  compiledCss?: string
 }) {
   const [component, setComponent] = useState(initialComponent)
   const { user } = useUser()
@@ -365,6 +371,9 @@ export default function ComponentPage({
           npmDependenciesOfRegistryDependencies={
             npmDependenciesOfRegistryDependencies
           }
+          tailwindConfig={tailwindConfig}
+          globalCss={globalCss}
+          compiledCss={compiledCss}
         />
       </div>
       <EditComponentDialog

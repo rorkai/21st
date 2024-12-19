@@ -31,18 +31,19 @@ export const useCompileCss = (
           throw new Error(data.error)
         } else {  
           setCss(data.css)
+          return data.css
         }
-      }).then(async () => {
+      }).then(async (compiledCss) => {
         if (component.id) {
           const fileName = `${component.component_slug}.compiled.css`
           const url = await uploadToR2({
             file: {
               name: fileName,
               type: "text/plain",
-              textContent: css!,
+              textContent: compiledCss,
             },
             fileKey: `${component.user_id}/${fileName}`,
-            bucketName: "components",
+            bucketName: "components-code",
           })
           await client.from("components").update({ compiled_css: url }).eq("id", component.id)
         }

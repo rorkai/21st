@@ -133,9 +133,11 @@ export default function PublishComponentForm() {
   if (publishAsUsername === undefined && user?.username) {
     form.setValue("publish_as_username", user.username)
   }
-  const { isAdmin, user: publishAsUser } = usePublishAs({
+  const { user: publishAsUser } = usePublishAs({
     username: publishAsUsername ?? "",
   })
+
+  const isAdmin = true;
 
   useEffect(() => {
     const parseDependenciesFromCode = () => {

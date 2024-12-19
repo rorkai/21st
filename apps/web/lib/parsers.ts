@@ -305,3 +305,30 @@ export function wrapExportInBraces(code: string): string {
     "export { $1 };",
   )
 }
+
+export function extractCssVars(css: string): { light: Record<string, string>; dark: Record<string, string> } {
+  const light: Record<string, string> = {}
+  const dark: Record<string, string> = {}
+
+  // Extract root CSS vars
+  const rootMatch = css.match(/:root\s*{([^}]*)}/)?.[1]
+  if (rootMatch) {
+    const varMatches = rootMatch.matchAll(/--([^:]+):\s*([^;]+);/g)
+    for (const match of varMatches) {
+      const [, name, value] = match
+      light[`--${name?.trim()}`] = value?.trim() ?? ""
+    }
+  }
+
+  // Extract dark mode CSS vars
+  const darkMatch = css.match(/\.dark\s*{([^}]*)}/)?.[1]
+  if (darkMatch) {
+    const varMatches = darkMatch.matchAll(/--([^:]+):\s*([^;]+);/g)
+    for (const match of varMatches) {
+      const [, name, value] = match
+      dark[`--${name?.trim()}`] = value?.trim() ?? ""
+    }
+  }
+
+  return { light, dark }
+}

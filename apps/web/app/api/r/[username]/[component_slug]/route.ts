@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { ComponentRegistryResponse } from "./types"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 import { Tables } from "@/types/supabase"
+import { extractCssVars } from "@/lib/parsers"
 
 export async function GET(
   request: NextRequest,
@@ -79,11 +80,38 @@ export async function GET(
       ]),
     )
 
+    const cssPromises = [
+      component.tailwind_config_extension
+        ? fetch(component.tailwind_config_extension).then((res) => res.text())
+        : Promise.resolve(null),
+      component.global_css_extension
+        ? fetch(component.global_css_extension).then((res) => res.text())
+        : Promise.resolve(null),
+    ]
+
+    const [tailwindConfig, globalCss] = await Promise.all(cssPromises)
+
+    const cssVars = globalCss ? extractCssVars(globalCss) : null
+    const tailwindConfigObject = tailwindConfig
+      ? new Function(
+          "module",
+          `
+        const exports = {};
+        ${tailwindConfig};
+        return module.exports;
+      `,
+        )({ exports: {} })
+      : {}
+
     const responseData: ComponentRegistryResponse = {
       name: component_slug,
       type: `registry:${component.registry}`,
       dependencies: npmDependencies.length > 0 ? npmDependencies : undefined,
       files,
+      ...(cssVars ? { cssVars } : {}),
+      ...(tailwindConfigObject
+        ? { tailwind: { config: tailwindConfigObject } }
+        : {}),
     }
 
     return NextResponse.json(responseData)

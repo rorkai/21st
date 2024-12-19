@@ -107,9 +107,42 @@ export default async function ComponentPageServer({
       const demoCode = await response.text()
       return { data: demoCode, error: null }
     }),
+    component.tailwind_config_extension ? fetch(component.tailwind_config_extension).then(async (response) => {
+      if (!response.ok) {
+        console.error(`Error fetching component tailwind config:`, response.statusText)
+        return {
+          data: null,
+          error: new Error(`Error fetching component tailwind config: ${response.statusText}`),
+        }
+      }
+      const tailwindConfig = await response.text()
+      return { data: tailwindConfig, error: null }
+    }) : Promise.resolve({ data: null, error: null }),
+    component.global_css_extension ? fetch(component.global_css_extension).then(async (response) => {
+      if (!response.ok) {
+        console.error(`Error fetching component global css:`, response.statusText)
+        return {
+          data: null,
+          error: new Error(`Error fetching component global css: ${response.statusText}`),
+        }
+      }
+      const globalCss = await response.text()
+      return { data: globalCss, error: null }
+    }) : Promise.resolve({ data: null, error: null }),
+    component.compiled_css ? fetch(component.compiled_css).then(async (response) => {
+      if (!response.ok) {
+        console.error(`Error fetching component css:`, response.statusText)
+        return {
+          data: null,
+          error: new Error(`Error fetching component css: ${response.statusText}`),
+        }
+      }
+      const componentCss = await response.text()
+      return { data: componentCss, error: null }
+    }) : Promise.resolve({ data: null, error: null }),
   ]
 
-  const [codeResult, demoResult, registryDependenciesResult] =
+  const [codeResult, demoResult, tailwindConfigResult, globalCssResult, compiledCssResult, registryDependenciesResult] =
     await Promise.all([
       ...componentAndDemoCodePromises,
       resolveRegistryDependencyTree({
@@ -119,11 +152,11 @@ export default async function ComponentPageServer({
       }),
     ])
 
-  if (codeResult?.error || demoResult?.error) {
+  if (codeResult?.error || demoResult?.error || tailwindConfigResult?.error || globalCssResult?.error || compiledCssResult?.error) {
     return (
       <ErrorPage
         error={
-          codeResult?.error ?? demoResult?.error ?? new Error("Unknown error")
+          codeResult?.error ?? demoResult?.error ?? tailwindConfigResult?.error ?? globalCssResult?.error ?? compiledCssResult?.error ?? new Error("Unknown error")
         }
       />
     )
@@ -163,6 +196,9 @@ export default async function ComponentPageServer({
         npmDependenciesOfRegistryDependencies={
           registryDependenciesData.npmDependencies
         }
+        tailwindConfig={tailwindConfigResult?.data as string}
+        globalCss={globalCssResult?.data as string}
+        compiledCss={compiledCssResult?.data as string}
       />
     </div>
   )

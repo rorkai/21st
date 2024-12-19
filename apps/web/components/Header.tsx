@@ -75,7 +75,7 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
                 placeholder="Search components..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-14"
+                className={isMobile ? "pr-0" : "pr-14"}
               />
               {isDesktop && (
                 <div className="absolute top-0 right-3 h-full flex items-center pointer-events-none">

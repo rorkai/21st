@@ -167,6 +167,7 @@ export type Database = {
       components: {
         Row: {
           code: string
+          compiled_css: string | null
           component_names: Json
           component_slug: string
           created_at: string
@@ -178,19 +179,23 @@ export type Database = {
           direct_registry_dependencies: Json
           downloads_count: number
           fts: unknown | null
+          global_css_extension: string | null
           id: number
           is_public: boolean
           license: string
           likes_count: number
           name: string
           preview_url: string
-          video_url: string | null
           registry: string
+          tailwind_config_extension: string | null
           updated_at: string
           user_id: string
+          video_url: string | null
+          website_url: string | null
         }
         Insert: {
           code?: string
+          compiled_css?: string | null
           component_names: Json
           component_slug: string
           created_at?: string
@@ -202,19 +207,23 @@ export type Database = {
           direct_registry_dependencies?: Json
           downloads_count?: number
           fts?: unknown | null
+          global_css_extension?: string | null
           id?: number
           is_public?: boolean
           license?: string
           likes_count?: number
           name: string
           preview_url: string
-          video_url?: string | null
           registry?: string
+          tailwind_config_extension?: string | null
           updated_at?: string
           user_id: string
+          video_url?: string | null
+          website_url?: string | null
         }
         Update: {
           code?: string
+          compiled_css?: string | null
           component_names?: Json
           component_slug?: string
           created_at?: string
@@ -226,16 +235,19 @@ export type Database = {
           direct_registry_dependencies?: Json
           downloads_count?: number
           fts?: unknown | null
+          global_css_extension?: string | null
           id?: number
           is_public?: boolean
           license?: string
           likes_count?: number
           name?: string
           preview_url?: string
-          video_url?: string | null
           registry?: string
+          tailwind_config_extension?: string | null
           updated_at?: string
           user_id?: string
+          video_url?: string | null
+          website_url?: string | null
         }
         Relationships: [
           {
@@ -268,9 +280,10 @@ export type Database = {
       users: {
         Row: {
           created_at: string
-          email: string | null
+          email: string
           id: string
           image_url: string | null
+          is_admin: boolean
           manually_added: boolean
           name: string | null
           updated_at: string | null
@@ -278,9 +291,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          email?: string | null
+          email?: string
           id: string
           image_url?: string | null
+          is_admin?: boolean
           manually_added?: boolean
           name?: string | null
           updated_at?: string | null
@@ -288,9 +302,10 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          email?: string | null
+          email?: string
           id?: string
           image_url?: string | null
+          is_admin?: boolean
           manually_added?: boolean
           name?: string | null
           updated_at?: string | null
@@ -325,7 +340,6 @@ export type Database = {
           likes_count: number | null
           name: string | null
           preview_url: string | null
-          video_url: string | null
           registry: string | null
           source_author_username: string | null
           source_component_slug: string | null
@@ -337,14 +351,14 @@ export type Database = {
             foreignKeyName: "component_dependencies_closure_component_id_fkey"
             columns: ["component_id"]
             isOneToOne: false
-            referencedRelation: "components"
+            referencedRelation: "component_dependencies_graph_view"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "component_dependencies_closure_component_id_fkey"
             columns: ["component_id"]
             isOneToOne: false
-            referencedRelation: "component_dependencies_graph_view"
+            referencedRelation: "components"
             referencedColumns: ["id"]
           },
           {
@@ -358,14 +372,14 @@ export type Database = {
             foreignKeyName: "component_dependencies_closure_dependency_component_id_fkey"
             columns: ["dependency_component_id"]
             isOneToOne: false
-            referencedRelation: "components"
+            referencedRelation: "component_dependencies_graph_view"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "component_dependencies_closure_dependency_component_id_fkey"
             columns: ["dependency_component_id"]
             isOneToOne: false
-            referencedRelation: "component_dependencies_graph_view"
+            referencedRelation: "components"
             referencedColumns: ["id"]
           },
           {
@@ -404,12 +418,12 @@ export type Database = {
           likes_count: number | null
           name: string | null
           preview_url: string | null
-          video_url: string | null
           registry: string | null
           updated_at: string | null
           user: Json | null
           user_id: string | null
           username: string | null
+          video_url: string | null
         }
         Relationships: [
           {
@@ -454,7 +468,6 @@ export type Database = {
           demo_dependencies: Json
           internal_dependencies: Json
           preview_url: string
-          video_url: string | null
           license: string
           user_data: Json
           tags: Json
@@ -495,7 +508,6 @@ export type Database = {
           p_license?: string
           p_preview_url?: string
           p_tags?: Json
-          p_video_url?: string | null
         }
         Returns: undefined
       }
@@ -524,9 +536,13 @@ export type Database = {
         direct_registry_dependencies: Json | null
         demo_direct_registry_dependencies: Json | null
         preview_url: string | null
-        video_url: string | null
         license: string | null
+        video_url: string | null
         user_data: Json | null
+        compiled_css: string | null
+        global_css_extension: string | null
+        tailwind_config_extension: string | null
+        website_url: string | null
       }
     }
   }

@@ -227,6 +227,24 @@ export default function PublishComponentForm() {
         })
       }
 
+      let videoR2Url = undefined
+      if (data.preview_video_file) {
+        const processedVideo = data.preview_video_file
+        const fileKey = `${publishAsUser?.id}/${componentSlug}.mp4`
+        const buffer = Buffer.from(await processedVideo.arrayBuffer())
+        const base64Content = buffer.toString("base64")
+        videoR2Url = await uploadToR2({
+          file: {
+            name: fileKey,
+            type: "video/mp4",
+            encodedContent: base64Content,
+          },
+          fileKey,
+          bucketName: "components-code",
+          contentType: "video/mp4",
+        })
+      }
+
       const componentData = {
         name: data.name,
         component_names: parsedCode.componentNames,
@@ -241,6 +259,7 @@ export default function PublishComponentForm() {
         demo_direct_registry_dependencies:
           data.demo_direct_registry_dependencies,
         preview_url: previewImageR2Url,
+        video_url: videoR2Url,
         registry: data.registry,
         license: data.license,
       } as Tables<"components">

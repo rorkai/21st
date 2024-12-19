@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import React, { useState, useCallback, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { Controller, useController, UseFormReturn } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -47,7 +47,7 @@ import {
 } from "@/components/ui/select"
 import { FormField } from "../ui/form"
 import { Textarea } from "../ui/textarea"
-import { User } from "@/types/global"
+import { useVideoDropzone } from "./use-video-dropzone"
 
 const ComponentDetailsForm = ({
   isEditMode,
@@ -70,6 +70,16 @@ const ComponentDetailsForm = ({
   const [open, setOpen] = useState(false)
   const previewImageDataUrl = form.watch("preview_image_data_url")
 
+  const {
+    previewVideoDataUrl,
+    isProcessingVideo,
+    isVideoDragActive,
+    getVideoRootProps,
+    getVideoInputProps,
+    removeVideo,
+    openFileDialog,
+  } = useVideoDropzone({ form })
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
@@ -87,17 +97,16 @@ const ComponentDetailsForm = ({
     }
   }
 
-  const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
+  const {
+    getRootProps: getImageRootProps,
+    getInputProps: getImageInputProps,
+    isDragActive: isImageDragActive,
+  } = useDropzone({
+    onDrop: (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
         handleFileChange({ target: { files: acceptedFiles } } as any)
       }
     },
-    [handleFileChange],
-  )
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
     accept: {
       "image/jpeg": [],
       "image/png": [],
@@ -132,10 +141,10 @@ const ComponentDetailsForm = ({
         </Label>
         {!previewImageDataUrl ? (
           <div
-            {...getRootProps()}
+            {...getImageRootProps()}
             className={`flex flex-col !justify-between mt-1 w-full border border-dashed bg-background rounded-md p-8 text-center cursor-pointer hover:border-gray-400 transition-colors relative`}
           >
-            <input {...getInputProps()} id="preview_image" />
+            <input {...getImageInputProps()} id="preview_image" />
             <UploadIcon />
             <p className="mt-2 text-sm font-medium">
               Click to upload&nbsp;
@@ -146,7 +155,7 @@ const ComponentDetailsForm = ({
             <p className="mt-1 text-xs text-muted-foreground">
               PNG, JPEG (max. 5MB)
             </p>
-            {isDragActive && (
+            {isImageDragActive && (
               <div className="absolute inset-0 bg-background bg-opacity-90 flex items-center justify-center rounded-md">
                 <p className="text-sm text-muted-foreground">Drop image here</p>
               </div>
@@ -154,12 +163,12 @@ const ComponentDetailsForm = ({
           </div>
         ) : (
           <div
-            {...getRootProps()}
+            {...getImageRootProps()}
             className={`mt-1 w-full border ${
               isDarkTheme ? "border-gray-600" : "border-gray-300"
             } rounded-md p-2 flex items-center gap-2 relative`}
           >
-            <input {...getInputProps()} id="preview_image" />
+            <input {...getImageInputProps()} id="preview_image" />
             <div className="w-40 h-32 relative">
               <img
                 src={previewImageDataUrl}
@@ -203,11 +212,83 @@ const ComponentDetailsForm = ({
                 </span>
               </div>
             </div>
-            {isDragActive && (
+            {isImageDragActive && (
               <div className="absolute inset-0 bg-background bg-opacity-90 flex items-center justify-center">
-                <p className="text-sm text-muted-foreground">Drop new image here</p>
+                <p className="text-sm text-muted-foreground">
+                  Drop new image here
+                </p>
               </div>
             )}
+          </div>
+        )}
+      </div>
+
+      <div className="w-full">
+        <Label htmlFor="preview_video" className="block text-sm font-medium">
+          Video Preview (optional)
+        </Label>
+        {!previewVideoDataUrl ? (
+          <div
+            {...getVideoRootProps()}
+            className={`flex flex-col !justify-between mt-1 w-full border border-dashed bg-background rounded-md p-8 text-center cursor-pointer hover:border-gray-400 transition-colors relative`}
+          >
+            <input {...getVideoInputProps()} id="preview_video" />
+            <UploadIcon />
+            <p className="mt-2 text-sm font-medium">
+              Click to upload&nbsp;
+              <span className="text-muted-foreground font-normal">
+                or drag and drop
+              </span>
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              MOV, MP4 (max. 50MB)
+            </p>
+            {isProcessingVideo && (
+              <div className="absolute inset-0 bg-background bg-opacity-90 flex items-center justify-center rounded-md">
+                <p className="text-sm text-muted-foreground">Processing video...</p>
+              </div>
+            )}
+            {isVideoDragActive && (
+              <div className="absolute inset-0 bg-background bg-opacity-90 flex items-center justify-center rounded-md">
+                <p className="text-sm text-muted-foreground">Drop video here</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div
+            className={cn(
+              "mt-1 w-full border rounded-md p-2 flex items-center gap-2 relative",
+              isDarkTheme ? "border-gray-600" : "border-gray-300",
+            )}
+          >
+            <div className="w-40 h-32 relative">
+              <video
+                src={previewVideoDataUrl}
+                controls
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+                className="rounded-sm border shadow-sm"
+              />
+            </div>
+            <div className="flex flex-col items-start">
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="outline"
+                  onClick={openFileDialog}
+                >
+                  Change video
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={removeVideo}
+                >
+                  Remove video
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -314,7 +395,7 @@ const ComponentDetailsForm = ({
             ? "Save changes"
             : "Add component"}
         {!isSubmitting && isFormValid(form) && (
-          <Hotkey keys={["⌘", "⏎"]} variant="primary"  />
+          <Hotkey keys={["⌘", "⏎"]} variant="primary" />
         )}
       </Button>
     </div>
@@ -383,7 +464,12 @@ const NameSlugForm: React.FC<{
   publishAsUserId?: string | null
   isSlugReadOnly: boolean
   placeholderName?: string
-}> = ({ form, publishAsUserId, isSlugReadOnly, placeholderName = "Button" }) => {
+}> = ({
+  form,
+  publishAsUserId,
+  isSlugReadOnly,
+  placeholderName = "Button",
+}) => {
   const { user: currentUser } = useUser()
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false)
   const slug = form.watch("component_slug")

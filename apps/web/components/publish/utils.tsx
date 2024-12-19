@@ -30,6 +30,8 @@ export const formSchema = z.object({
   is_public: z.boolean().default(true),
   preview_image_data_url: z.string().optional(),
   preview_image_file: z.instanceof(File).optional(),
+  preview_video_data_url: z.string().optional(),
+  preview_video_file: z.instanceof(File).optional(),
   license: z.string().optional(),
   unknown_dependencies: z.array(
     z.object({

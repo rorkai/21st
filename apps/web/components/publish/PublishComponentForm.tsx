@@ -75,6 +75,7 @@ export default function PublishComponentForm() {
   const { theme } = useTheme()
   const isDarkTheme = theme === "dark"
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false)
+  const isDev = process.env.NEXT_PUBLIC_ENV === 'development'
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -228,7 +229,7 @@ export default function PublishComponentForm() {
       }
 
       let videoR2Url = undefined
-      if (data.preview_video_file) {
+      if (isDev && data.preview_video_file) {
         const processedVideo = data.preview_video_file
         const fileKey = `${publishAsUser?.id}/${componentSlug}.mp4`
         const buffer = Buffer.from(await processedVideo.arrayBuffer())

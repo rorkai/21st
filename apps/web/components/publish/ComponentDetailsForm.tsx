@@ -114,7 +114,7 @@ const ComponentDetailsForm = ({
     multiple: false,
   })
 
-  const isDev = process.env.NEXT_PUBLIC_ENV === 'development'
+  const isDev = process.env.NODE_ENV === 'development'
 
   return (
     <div

@@ -15,11 +15,12 @@ export function AppProviders({
 }): JSX.Element {
   const pathname = usePathname()
   const isHomePage = pathname === "/"
+  const isTagPage = pathname.startsWith("/s/")
 
   return (
     <QueryClientProvider client={queryClient}>
       <ClerkProvider>
-        {isHomePage ? (
+        {isHomePage || isTagPage ? (
           <SidebarProvider>
             <AppSidebar />
             <SidebarInset>

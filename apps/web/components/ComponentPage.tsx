@@ -251,7 +251,7 @@ export default function ComponentPage({
         </div>
 
         <div className="flex items-center gap-1">
-          {user?.id === component.user_id && (
+         {/*  {user?.id === component.user_id && ( */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
@@ -267,7 +267,7 @@ export default function ComponentPage({
                 <p className="flex items-center">Edit Component</p>
               </TooltipContent>
             </Tooltip>
-          )}
+ {/*          )} */}
           <ThemeToggle />
           <SignedIn>
             <LikeButton

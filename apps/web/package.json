@@ -9,10 +9,11 @@
     "start": "next start",
     "lint": "next lint",
     "build:css": "tailwindcss -i ./input.css -o ./public/compiled-tailwind.css --minify",
-    "combine-css": "node css/combinedCSS.js"
+    "combine-css": "node css/combinedCSS.js",
+    "migrate-r2": "NODE_OPTIONS=\"--loader ts-node/esm\" ts-node migrate-r2/migrate-r2.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.669.0",
+    "@aws-sdk/client-s3": "^3.682.0",
     "@aws-sdk/credential-providers": "^3.670.0",
     "@babel/parser": "^7.25.6",
     "@babel/traverse": "^7.25.6",
@@ -88,5 +89,6 @@
     "tailwindcss": "^3.4.13",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
-  }
+  },
+  "type": "module"
 }

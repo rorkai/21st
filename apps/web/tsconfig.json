@@ -1,6 +1,12 @@
 {
   "extends": "@repo/typescript-config/nextjs.json",
   "compilerOptions": {
+     "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowJs": true,
+    "strict": true,
     "paths": {
       "@/*": ["./*"]
     },
@@ -9,7 +15,11 @@
         "name": "next"
       }
     ],
-    "strictNullChecks": true
+    "strictNullChecks": true,
+  },
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
   },
   "include": [
     "next-env.d.ts",
@@ -19,6 +29,6 @@
     ".next/types/**/*.ts",
     "css/combinedCSS.js",
     "video-converter/**/*.js"
-  ],
+, "migrate-r2/migrate-r2.ts"  ],
   "exclude": ["node_modules"]
 }

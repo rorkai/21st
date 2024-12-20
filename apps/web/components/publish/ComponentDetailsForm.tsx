@@ -133,7 +133,7 @@ const ComponentDetailsForm = ({
           id="description"
           placeholder="Add some description to help others discover your component"
           {...form.register("description")}
-          className="mt-1 w-full"
+          className="mt-1 w-full text-foreground"
         />
       </div>
 
@@ -530,7 +530,7 @@ const NameSlugForm: React.FC<{
             nameField.onChange(e)
           }}
           onBlur={nameField.onBlur}
-          className="mt-1 w-full"
+          className="mt-1 w-full text-foreground"
         />
       </div>
 

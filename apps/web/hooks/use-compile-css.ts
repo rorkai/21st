@@ -19,7 +19,7 @@ export const useCompileCss = (
 
   useEffect(() => {
     if (css) return
-    fetch("http://localhost/compile-css", {
+    fetch(`${process.env.NEXT_PUBLIC_COMPILE_CSS_URL}/compile-css`, {
       method: "POST",
       body: JSON.stringify({
         code,

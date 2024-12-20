@@ -40,7 +40,7 @@ export const compileCSS = async ({
   const globalCss = endent`
     ${baseGlobalCss}
 
-    ${customGlobalCss}
+    ${customGlobalCss || ""}
   `
 
   const result = await postcss([
@@ -57,6 +57,18 @@ export const compileCSS = async ({
 const server = serve({
   port: 80,
   async fetch(req) {
+    const origin = req.headers.get("origin")
+    const allowedOrigins = ["http://localhost:3000", "https://21st.dev"]
+    const headers = {
+      "Access-Control-Allow-Origin": allowedOrigins.includes(origin ?? "") ? origin ?? "" : "",
+      "Access-Control-Allow-Methods": "POST, OPTIONS", 
+      "Access-Control-Allow-Headers": "Content-Type",
+    }
+
+    if (req.method === "OPTIONS") {
+      return new Response(null, { headers })
+    }
+
     const url = new URL(req.url)
 
     if (url.pathname === "/compile-css" && req.method === "POST") {
@@ -89,17 +101,17 @@ const server = serve({
           customGlobalCss,
         })
 
-        return Response.json({ css })
+        return Response.json({ css }, { headers })
       } catch (error) {
         console.error("CSS compilation error:", error)
         return Response.json(
           { error: "Failed to compile CSS" },
-          { status: 500 },
+          { status: 500, headers }
         )
       }
     }
 
-    return new Response("Not Found", { status: 404 })
+    return new Response("Not Found", { status: 404, headers })
   },
 })
 

@@ -4,7 +4,11 @@ import {
   extractDemoComponentNames,
   extractNPMDependencies,
 } from "@/lib/parsers"
-import { defaultGlobalCss, defaultTailwindConfig, generateSandpackFiles } from "@/lib/sandpack"
+import {
+  defaultGlobalCss,
+  defaultTailwindConfig,
+  generateSandpackFiles,
+} from "@/lib/sandpack"
 import {
   SandpackProvider,
   SandpackFileExplorer,
@@ -65,7 +69,7 @@ export function PublishComponentPreview({
   })
 
   useEffect(() => {
-    fetch("http://localhost/compile-css", {
+    fetch(`${process.env.NEXT_PUBLIC_COMPILE_CSS_URL}/compile-css`, {
       method: "POST",
       body: JSON.stringify({
         code,
@@ -74,7 +78,9 @@ export function PublishComponentPreview({
         baseGlobalCss: defaultGlobalCss,
         customTailwindConfig,
         customGlobalCss,
-        dependencies: Object.values(registryDependencies?.filesWithRegistry ?? {}).map(file => file.code),
+        dependencies: Object.values(
+          registryDependencies?.filesWithRegistry ?? {},
+        ).map((file) => file.code),
       }),
     })
       .then((res) => res.json())

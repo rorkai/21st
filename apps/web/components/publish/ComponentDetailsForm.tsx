@@ -248,16 +248,12 @@ const ComponentDetailsForm = ({
               </p>
               {isProcessingVideo && (
                 <div className="absolute inset-0 bg-background bg-opacity-90 flex items-center justify-center rounded-md">
-                  <p className="text-sm text-muted-foreground">
-                    Processing video...
-                  </p>
+                  <p className="text-sm text-muted-foreground">Processing video...</p>
                 </div>
               )}
               {isVideoDragActive && (
                 <div className="absolute inset-0 bg-background bg-opacity-90 flex items-center justify-center rounded-md">
-                  <p className="text-sm text-muted-foreground">
-                    Drop video here
-                  </p>
+                  <p className="text-sm text-muted-foreground">Drop video here</p>
                 </div>
               )}
             </div>
@@ -282,10 +278,16 @@ const ComponentDetailsForm = ({
               </div>
               <div className="flex flex-col items-start">
                 <div className="flex flex-col gap-2">
-                  <Button variant="outline" onClick={openFileDialog}>
+                  <Button
+                    variant="outline"
+                    onClick={openFileDialog}
+                  >
                     Change video
                   </Button>
-                  <Button variant="outline" onClick={removeVideo}>
+                  <Button
+                    variant="outline"
+                    onClick={removeVideo}
+                  >
                     Remove video
                   </Button>
                 </div>

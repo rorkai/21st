@@ -53,6 +53,8 @@ import { Tables } from "@/types/supabase"
 import { LoadingSpinner } from "../LoadingSpinner"
 import { useSuccessDialogHotkeys } from "./hotkeys"
 import { toast } from "sonner"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { usePublishAs } from "./use-publish-as"
 
@@ -64,7 +66,12 @@ export interface ParsedCodeData {
   demoComponentNames: string[]
 }
 
-type FormStep = "nameSlugForm" | "code" | "demoCode" | "detailedForm"
+type FormStep =
+  | "nameSlugForm"
+  | "code"
+  | "demoCode"
+  | "customization"
+  | "detailedForm"
 
 export default function PublishComponentForm() {
   const registryToPublish = "ui"
@@ -115,7 +122,13 @@ export default function PublishComponentForm() {
     demoComponentNames: [],
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-
+  
+  const [customTailwindConfig, setCustomTailwindConfig] = useState<
+    string | undefined
+  >(undefined)
+  const [customGlobalCss, setCustomGlobalCss] = useState<string | undefined>(
+    undefined,
+  )
   const publishAsUsername = form.watch("publish_as_username")
   if (publishAsUsername === undefined && user?.username) {
     form.setValue("publish_as_username", user.username)
@@ -186,26 +199,52 @@ export default function PublishComponentForm() {
       const codeFileName = `${data.component_slug}.tsx`
       const demoCodeFileName = `${data.component_slug}.demo.tsx`
 
-      const [codeUrl, demoCodeUrl] = await Promise.all([
-        uploadToR2({
-          file: {
-            name: codeFileName,
-            type: "text/plain",
-            textContent: data.code,
-          },
-          fileKey: `${publishAsUser?.id!}/${codeFileName}`,
-          bucketName: "components-code",
-        }),
-        uploadToR2({
-          file: {
-            name: demoCodeFileName,
-            type: "text/plain",
-            textContent: demoCode,
-          },
-          fileKey: `${publishAsUser?.id!}/${demoCodeFileName}`,
-          bucketName: "components-code",
-        }),
-      ])
+      const tailwindConfigFileName = `${data.component_slug}.tailwind.config.js`
+      const globalCssFileName = `${data.component_slug}.global.css`
+
+      const [codeUrl, demoCodeUrl, tailwindConfigUrl, globalCssUrl] =
+        await Promise.all([
+          uploadToR2({
+            file: {
+              name: codeFileName,
+              type: "text/plain",
+              textContent: data.code,
+            },
+            fileKey: `${user?.id!}/${codeFileName}`,
+            bucketName: "components-code",
+          }),
+          uploadToR2({
+            file: {
+              name: demoCodeFileName,
+              type: "text/plain",
+              textContent: demoCode,
+            },
+            fileKey: `${user?.id!}/${demoCodeFileName}`,
+            bucketName: "components-code",
+          }),
+          customTailwindConfig
+            ? uploadToR2({
+                file: {
+                  name: tailwindConfigFileName,
+                  type: "text/plain",
+                  textContent: customTailwindConfig,
+                },
+                fileKey: `${user?.id!}/${tailwindConfigFileName}`,
+                bucketName: "components-code",
+              })
+            : Promise.resolve(null),
+          customGlobalCss
+            ? uploadToR2({
+                file: {
+                  name: globalCssFileName,
+                  type: "text/plain",
+                  textContent: customGlobalCss,
+                },
+                fileKey: `${user?.id!}/${globalCssFileName}`,
+                bucketName: "components-code",
+              })
+            : Promise.resolve(null),
+        ])
       if (!codeUrl || !demoCodeUrl) {
         throw new Error("Failed to upload code files to R2")
       }
@@ -252,6 +291,8 @@ export default function PublishComponentForm() {
         component_slug: data.component_slug,
         code: codeUrl,
         demo_code: demoCodeUrl,
+        tailwind_config_extension: tailwindConfigUrl,
+        global_css_extension: globalCssUrl,
         description: data.description ?? null,
         user_id: publishAsUser?.id,
         dependencies: parsedCode.dependencies,
@@ -481,15 +522,86 @@ export default function PublishComponentForm() {
                             !demoCode?.length ||
                             !parsedCode.demoComponentNames?.length
                           }
-                          onClick={() => {
-                            setFormStep("detailedForm")
-                          }}
+                          onClick={() => setFormStep("customization")}
                         >
                           Continue
                         </Button>
                       </div>
                     </motion.div>
                   </>
+                )}
+
+                {formStep === "customization" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ duration: 0.3 }}
+                    className="w-full"
+                  >
+                    <div className="flex flex-col gap-4">
+                      <h3 className="text-lg font-semibold">
+                        Customize Styling
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Optionally customize the Tailwind configuration and CSS
+                        variables for your component.
+                      </p>
+
+                      <Tabs defaultValue="tailwind" className="w-full">
+                        <TabsList>
+                          <TabsTrigger value="tailwind">
+                            Tailwind Config
+                          </TabsTrigger>
+                          <TabsTrigger value="css">Global CSS</TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="tailwind">
+                          <div className="flex flex-col gap-2">
+                            <Label>Tailwind Configuration</Label>
+                            <ScrollArea className="h-[500px] w-full rounded-md border">
+                              <Textarea
+                                value={customTailwindConfig}
+                                onChange={(e) =>
+                                  setCustomTailwindConfig(e.target.value)
+                                }
+                                className="font-mono text-sm h-full w-full min-h-[500px]"
+                                placeholder="Customize your Tailwind config..."
+                              />
+                            </ScrollArea>
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="css">
+                          <div className="flex flex-col gap-2">
+                            <Label>CSS Variables</Label>
+                            <ScrollArea className="h-[500px] w-full rounded-md border">
+                              <Textarea
+                                value={customGlobalCss}
+                                onChange={(e) =>
+                                  setCustomGlobalCss(e.target.value)
+                                }
+                                className="font-mono text-sm h-full w-full min-h-[500px]"
+                                placeholder=":root { /* Add your light mode CSS variables here */ } .dark { /* Add your dark mode CSS variables here */ }"
+                              />
+                            </ScrollArea>
+                          </div>
+                        </TabsContent>
+                      </Tabs>
+
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => setFormStep("demoCode")}
+                        >
+                          Back
+                        </Button>
+                        <Button onClick={() => setFormStep("detailedForm")}>
+                          Continue
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
                 )}
 
                 {formStep === "detailedForm" &&
@@ -546,7 +658,7 @@ export default function PublishComponentForm() {
                       />
                       <EditCodeFileCard
                         iconSrc={
-                          isDarkTheme ? "/demo-file-dark.svg" : "/demo-file.svg"
+                          isDarkTheme ? "/css-file.svg" : "/css-file.svg"
                         }
                         mainText="Demo code"
                         subText={`${parsedCode.demoComponentNames.slice(0, 2).join(", ")}${parsedCode.demoComponentNames.length > 2 ? ` +${parsedCode.demoComponentNames.length - 2}` : ""}`}
@@ -556,6 +668,14 @@ export default function PublishComponentForm() {
                             demoCodeTextAreaRef.current?.focus()
                           }, 0)
                         }}
+                      />
+                      <EditCodeFileCard
+                        iconSrc={
+                          isDarkTheme ? "/css-file-dark.svg" : "/css-file.svg"
+                        }
+                        mainText="Styling"
+                        subText="Tailwind config and global CSS"
+                        onEditClick={() => setFormStep("customization")}
                       />
                       <ComponentDetailsForm
                         isEditMode={false}
@@ -587,6 +707,8 @@ export default function PublishComponentForm() {
                         ...demoDirectRegistryDependencies,
                       ]}
                       isDarkTheme={isDarkTheme}
+                      customTailwindConfig={customTailwindConfig}
+                      customGlobalCss={customGlobalCss}
                     />
                   </React.Suspense>
                 </motion.div>

@@ -4,14 +4,18 @@ import {
   extractDemoComponentNames,
   extractNPMDependencies,
 } from "@/lib/parsers"
-import { generateSandpackFiles } from "@/lib/sandpack"
+import {
+  defaultGlobalCss,
+  defaultTailwindConfig,
+  generateSandpackFiles,
+} from "@/lib/sandpack"
 import {
   SandpackProvider,
   SandpackFileExplorer,
   SandpackCodeViewer,
 } from "@codesandbox/sandpack-react"
 import { useQuery } from "@tanstack/react-query"
-import React, { useMemo } from "react"
+import React, { useMemo, useState, useEffect } from "react"
 import { LoadingSpinner } from "../LoadingSpinner"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 
@@ -28,6 +32,8 @@ export function PublishComponentPreview({
   registryToPublish = "ui",
   directRegistryDependencies,
   isDarkTheme,
+  customTailwindConfig,
+  customGlobalCss,
 }: {
   code: string
   demoCode: string
@@ -35,9 +41,12 @@ export function PublishComponentPreview({
   registryToPublish: string
   directRegistryDependencies: string[]
   isDarkTheme: boolean
+  customTailwindConfig?: string
+  customGlobalCss?: string
 }) {
   const isDebug = useDebugMode()
   const supabase = useClerkSupabaseClient()
+  const [css, setCss] = useState<string | undefined>(undefined)
 
   const {
     data: registryDependencies,
@@ -59,6 +68,27 @@ export function PublishComponentPreview({
     enabled: directRegistryDependencies?.length > 0,
   })
 
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_COMPILE_CSS_URL}/compile-css`, {
+      method: "POST",
+      body: JSON.stringify({
+        code,
+        demoCode,
+        baseTailwindConfig: defaultTailwindConfig,
+        baseGlobalCss: defaultGlobalCss,
+        customTailwindConfig,
+        customGlobalCss,
+        dependencies: Object.values(
+          registryDependencies?.filesWithRegistry ?? {},
+        ).map((file) => file.code),
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setCss(data.css)
+      })
+  }, [])
+
   const demoComponentNames = useMemo(
     () => extractDemoComponentNames(demoCode),
     [demoCode],
@@ -72,6 +102,9 @@ export function PublishComponentPreview({
       code,
       demoCode,
       theme: isDarkTheme ? "dark" : "light",
+      css: css ?? "",
+      customTailwindConfig,
+      customGlobalCss,
     })
   }, [
     demoComponentNames,
@@ -80,6 +113,9 @@ export function PublishComponentPreview({
     demoCode,
     isDarkTheme,
     registryToPublish,
+    css,
+    customTailwindConfig,
+    customGlobalCss,
   ])
 
   const files = {
@@ -114,12 +150,11 @@ export function PublishComponentPreview({
       },
     },
     options: {
-      externalResources: [
-        "https://cdn.tailwindcss.com",
-        "https://vucvdpamtrjkzmubwlts.supabase.co/storage/v1/object/public/css/combined-tailwind.css",
-      ],
+      externalResources: ["https://cdn.tailwindcss.com"],
     },
   }
+
+  if (css === undefined) return <LoadingSpinner />
 
   return (
     <div className="w-full h-full bg-[#FAFAFA] rounded-lg">

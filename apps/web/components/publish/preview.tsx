@@ -4,7 +4,7 @@ import {
   extractDemoComponentNames,
   extractNPMDependencies,
 } from "@/lib/parsers"
-import { generateSandpackFiles } from "@/lib/sandpack"
+import { defaultGlobalCss, defaultTailwindConfig, generateSandpackFiles } from "@/lib/sandpack"
 import {
   SandpackProvider,
   SandpackFileExplorer,
@@ -65,11 +65,13 @@ export function PublishComponentPreview({
   })
 
   useEffect(() => {
-    fetch("/api/compile-css", {
+    fetch("http://localhost/compile-css", {
       method: "POST",
       body: JSON.stringify({
         code,
         demoCode,
+        baseTailwindConfig: defaultTailwindConfig,
+        baseGlobalCss: defaultGlobalCss,
         customTailwindConfig,
         customGlobalCss,
         dependencies: Object.values(registryDependencies?.filesWithRegistry ?? {}).map(file => file.code),

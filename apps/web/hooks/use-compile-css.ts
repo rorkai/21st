@@ -2,6 +2,9 @@ import { useEffect, useState } from "react"
 import { uploadToR2 } from "@/lib/r2"
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import { Component, Tag, User } from "@/types/global"
+import { defaultTailwindConfig } from "@/lib/sandpack"
+import { defaultGlobalCss } from "@/lib/sandpack"
+
 export const useCompileCss = (
   code: string,
   demoCode: string,
@@ -13,13 +16,16 @@ export const useCompileCss = (
 ) => {
   const client = useClerkSupabaseClient()
   const [css, setCss] = useState<string | null>(compiledCss ?? null)
+
   useEffect(() => {
     if (css) return
-    fetch("/api/compile-css", {
+    fetch("http://localhost/compile-css", {
       method: "POST",
       body: JSON.stringify({
         code,
         demoCode,
+        baseTailwindConfig: defaultTailwindConfig,
+        baseGlobalCss: defaultGlobalCss,
         dependencies: Object.values(registryDependencies ?? {}),
         customTailwindConfig: tailwindConfig,
         customGlobalCss: globalCss,

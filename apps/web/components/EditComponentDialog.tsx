@@ -56,18 +56,22 @@ export function EditComponentDialog({
 
   const uploadToR2Mutation = useMutation({
     mutationFn: async ({ file, fileKey }: { file: File; fileKey: string }) => {
+      const actualFileKey = `${component.user.id}/${fileKey}`
       const buffer = Buffer.from(await file.arrayBuffer())
       const base64Content = buffer.toString("base64")
       return uploadToR2({
         file: {
-          name: fileKey,
+          name: actualFileKey,
           type: file.type,
           encodedContent: base64Content,
         },
-        fileKey,
+        fileKey: actualFileKey,
         bucketName: "components-code",
         contentType: file.type,
       })
+    },
+    onError: (error) => {
+      console.error("Failed to upload to R2:", error)
     },
   })
 
@@ -77,6 +81,7 @@ export function EditComponentDialog({
     },
     onSuccess: () => {
       setIsOpen(false)
+      toast.success("Component updated successfully")
     },
     onError: (error) => {
       console.error("Failed to update component:", error)
@@ -112,7 +117,7 @@ export function EditComponentDialog({
 
     if (formData.preview_image_file instanceof File) {
       const fileExtension = formData.preview_image_file.name.split(".").pop()
-      const fileKey = `${component.user.id}/${component.component_slug}.${fileExtension}`
+      const fileKey = `${component.component_slug}.${fileExtension}`
 
       try {
         const previewImageUrl = await uploadToR2Mutation.mutateAsync({
@@ -132,7 +137,15 @@ export function EditComponentDialog({
 
   if (isMobile) {
     return (
-      <Drawer open={isOpen} onOpenChange={setIsOpen}>
+      <Drawer
+        open={isOpen}
+        onOpenChange={(open) => {
+          if (uploadToR2Mutation.isPending || updateMutation.isPending) {
+            return
+          }
+          setIsOpen(open)
+        }}
+      >
         <DrawerContent>
           <DrawerHeader className="mb-2 px-6">
             <DrawerTitle>Edit component</DrawerTitle>
@@ -153,7 +166,15 @@ export function EditComponentDialog({
   }
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
+    <Sheet
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (uploadToR2Mutation.isPending || updateMutation.isPending) {
+          return
+        }
+        setIsOpen(open)
+      }}
+    >
       <SheetContent side="right" className="px-0 pb-0 sm:max-w-lg">
         <SheetHeader className="mb-2 px-6">
           <SheetTitle>Edit component</SheetTitle>

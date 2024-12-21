@@ -15,7 +15,7 @@ export const UserAvatar = ({
   return (
     <div
       className={`relative rounded-full overflow-hidden bg-muted ${isClickable ? "group" : ""}`}
-      style={{ width: size, height: size }}
+      style={{ maxWidth: size, maxHeight: size }}
     >
       <div
         className="absolute inset-0 bg-gradient-radial from-white/30 to-transparent z-10"

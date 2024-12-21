@@ -73,35 +73,25 @@ export function PublishComponentPreview({
     [demoCode],
   )
 
-  const dumySandpackFiles = useMemo(
-    () =>
-      generateSandpackFiles({
-        demoComponentNames,
-        componentSlug: slugToPublish,
-        relativeImportPath: `/components/${registryToPublish}`,
-        code,
-        demoCode,
-        theme: isDarkTheme ? "dark" : "light",
-        css: css ?? "",
-      }),
-    [
-      demoComponentNames,
-      slugToPublish,
-      registryToPublish,
-      code,
-      demoCode,
-      isDarkTheme,
-      css,
-    ]
-  )
+  const dumySandpackFiles = generateSandpackFiles({
+    demoComponentNames,
+    componentSlug: slugToPublish,
+    relativeImportPath: `/components/${registryToPublish}`,
+    code,
+    demoCode,
+    theme: isDarkTheme ? "dark" : "light",
+    css: css ?? "",
+  })
 
-  const shellCode = useMemo(
-    () =>
-      Object.entries(dumySandpackFiles)
-        .filter(([key]) => key.endsWith(".tsx"))
-        .map(([, file]) => file),
-    [dumySandpackFiles]
-  )
+  const shellCode = Object.entries(dumySandpackFiles)
+    .filter(
+      ([key]) =>
+        key.endsWith(".tsx") ||
+        key.endsWith(".jsx") ||
+        key.endsWith(".ts") ||
+        key.endsWith(".js"),
+    )
+    .map(([, file]) => file)
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_COMPILE_CSS_URL}/compile-css`, {
@@ -180,9 +170,6 @@ export function PublishComponentPreview({
         "lucide-react": "latest",
         ...dependencies,
       },
-    },
-    options: {
-      externalResources: ["https://cdn.tailwindcss.com"],
     },
   }
 

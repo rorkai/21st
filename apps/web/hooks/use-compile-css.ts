@@ -19,7 +19,7 @@ export const useCompileCss = (
   const [css, setCss] = useState<string | null>(compiledCss ?? null)
 
   useEffect(() => {
-    if (css) return
+    // if (css) return
     fetch(`${process.env.NEXT_PUBLIC_COMPILE_CSS_URL}/compile-css`, {
       method: "POST",
       body: JSON.stringify({

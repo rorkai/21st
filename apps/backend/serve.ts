@@ -101,8 +101,6 @@ const server = serve({
             .join("\n")
         )
 
-        console.log("filteredDependencies.length", filteredDependencies.length)
-
         const css = await compileCSS({
           jsx: `${filteredCode}\n${filteredDemoCode}\n${filteredDependencies.join("\n")}`,
           baseTailwindConfig,
@@ -110,6 +108,8 @@ const server = serve({
           baseGlobalCss,
           customGlobalCss,
         })
+
+        console.log("css", css)
 
         return Response.json({ css }, { headers })
       } catch (error) {

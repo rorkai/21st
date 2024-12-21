@@ -28,6 +28,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useCompileCss } from "@/hooks/use-compile-css"
+import { useIsMobile } from "@/hooks/use-media-query"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import {
+  Pencil,
+  CodeXml,
+  Info,
+} from "lucide-react"
 
 const SandpackPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react/unstyled").then((module) => ({
@@ -47,6 +58,8 @@ export function ComponentPagePreview({
   tailwindConfig,
   globalCss,
   compiledCss,
+  canEdit,
+  setIsEditDialogOpen,
 }: {
   component: Component & { user: User } & { tags: Tag[] }
   code: string
@@ -59,11 +72,13 @@ export function ComponentPagePreview({
   tailwindConfig?: string
   globalCss?: string
   compiledCss?: string
+  canEdit: boolean
+  setIsEditDialogOpen: (value: boolean) => void
 }) {
   const sandpackRef = useRef<HTMLDivElement>(null)
   const { theme } = useTheme()
   const isDarkTheme = theme === "dark"
-  const [isShowCode] = useAtom(isShowCodeAtom)
+  const [isShowCode, setIsShowCode] = useAtom(isShowCodeAtom)
   const isDebug = useDebugMode()
 
 
@@ -167,6 +182,12 @@ export function ComponentPagePreview({
           <div ref={sandpackRef} className="h-full w-full flex relative">
             <SandpackLayout className="flex w-full flex-row gap-4">
               <div className={`flex flex-col w-full ${styles.customScroller}`}>
+                <MobileControls
+                  isShowCode={isShowCode}
+                  setIsShowCode={setIsShowCode}
+                  canEdit={canEdit}
+                  setIsEditDialogOpen={setIsEditDialogOpen}
+                />
                 <div className="flex w-full flex-col">
                   {isShowCode ? (
                     <>
@@ -257,6 +278,64 @@ function CopyCommandSection({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+    </div>
+  )
+}
+
+const MobileControls = ({
+  isShowCode,
+  setIsShowCode,
+  canEdit,
+  setIsEditDialogOpen,
+}: {
+  isShowCode: boolean
+  setIsShowCode: (value: boolean) => void
+  canEdit: boolean
+  setIsEditDialogOpen: (value: boolean) => void
+}) => {
+  const isMobile = useIsMobile()
+  
+  if (!isMobile) return null
+
+  return (
+    <div className="flex items-center gap-2 p-4 md:hidden">
+      <div className="relative bg-muted rounded-lg h-8 p-0.5 flex flex-1">
+        <div
+          className="absolute inset-y-0.5 rounded-md bg-background shadow transition-all duration-200 ease-in-out"
+          style={{
+            width: "calc(50% - 2px)",
+            left: isShowCode ? "2px" : "calc(50%)",
+          }}
+        />
+        <button
+          onClick={() => setIsShowCode(true)}
+          className={`relative z-2 px-2 flex-1 flex items-center justify-center transition-colors duration-200 ${
+            isShowCode ? "text-foreground" : "text-muted-foreground"
+          }`}
+        >
+          <CodeXml size={18} />
+          <span className="text-[14px] pl-1">Code</span>
+        </button>
+        <button
+          onClick={() => setIsShowCode(false)}
+          className={`relative z-2 px-2 flex-1 flex items-center justify-center transition-colors duration-200 ${
+            !isShowCode ? "text-foreground" : "text-muted-foreground"
+          }`}
+        >
+          <Info size={18} />
+          <span className="pl-1 text-[14px]">Info</span>
+        </button>
+      </div>
+      {canEdit && (
+        <button
+          onClick={() => setIsEditDialogOpen(true)}
+          className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-md relative"
+        >
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Pencil size={16} />
+          </div>
+        </button>
+      )}
     </div>
   )
 }

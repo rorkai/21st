@@ -6,6 +6,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer"
 import { ComponentDetailsForm } from "./publish/ComponentDetailsForm"
 import { Component, User, Tag } from "@/types/global"
 import { useForm } from "react-hook-form"
@@ -13,6 +19,7 @@ import { FormData } from "./publish/utils"
 import { uploadToR2 } from "@/lib/r2"
 import { useMutation } from "@tanstack/react-query"
 import { toast } from "sonner"
+import { useIsMobile } from "@/hooks/use-media-query"
 
 export function EditComponentDialog({
   component,
@@ -29,6 +36,7 @@ export function EditComponentDialog({
     updatedData: Partial<Component & { tags?: Tag[] }>,
   ) => Promise<void>
 }) {
+  const isMobile = useIsMobile()
   const form = useForm<FormData>({
     defaultValues: {
       name: component.name,
@@ -120,6 +128,28 @@ export function EditComponentDialog({
     }
 
     updateMutation.mutate(updatedData)
+  }
+
+  if (isMobile) {
+    return (
+      <Drawer open={isOpen} onOpenChange={setIsOpen}>
+        <DrawerContent>
+          <DrawerHeader className="mb-2 px-6">
+            <DrawerTitle>Edit component</DrawerTitle>
+          </DrawerHeader>
+          <div className="px-6 pb-6 overflow-y-auto max-h-[calc(100dvh-6rem)]">
+            <ComponentDetailsForm
+              isEditMode={true}
+              form={form}
+              handleSubmit={handleSubmit}
+              isSubmitting={
+                uploadToR2Mutation.isPending || updateMutation.isPending
+              }
+            />
+          </div>
+        </DrawerContent>
+      </Drawer>
+    )
   }
 
   return (

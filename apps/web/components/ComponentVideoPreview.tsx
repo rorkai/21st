@@ -70,7 +70,7 @@ export function ComponentVideoPreview({
         loop
         playsInline
         preload="none"
-        className="absolute top-0 left-0 w-full h-full object-cover border border-border rounded-lg opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+        className="absolute top-0 left-0 w-full h-full object-cover rounded-lg opacity-0 transition-opacity duration-300 group-hover:opacity-100"
       />
     </div>
   )

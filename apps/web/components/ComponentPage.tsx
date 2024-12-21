@@ -31,6 +31,7 @@ import { ComponentPagePreview } from "./ComponentPagePreview"
 import { EditComponentDialog } from "./EditComponentDialog"
 import { useUpdateComponentWithTags } from "@/lib/queries"
 import { toast } from "sonner"
+import { usePublishAs } from "./publish/use-publish-as"
 
 export const isShowCodeAtom = atom(true)
 
@@ -64,6 +65,9 @@ export default function ComponentPage({
   const supabase = useClerkSupabaseClient()
   const { theme } = useTheme()
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const { isAdmin } = usePublishAs({ username: user?.username ?? "" })
+
+  const canEdit = user?.id === component.user_id || isAdmin
 
   const { data: liked } = useQuery({
     queryKey: ["hasUserLikedComponent", component.id, user?.id],
@@ -138,6 +142,7 @@ export default function ComponentPage({
         !e.altKey &&
         !e.shiftKey &&
         !isEditDialogOpen &&
+        canEdit &&
         e.target instanceof Element &&
         !e.target.matches("input, textarea")
       ) {
@@ -151,7 +156,7 @@ export default function ComponentPage({
     return () => {
       window.removeEventListener("keydown", keyDownHandler)
     }
-  }, [isEditDialogOpen, setIsEditDialogOpen])
+  }, [isEditDialogOpen, setIsEditDialogOpen, canEdit])
 
   useEffect(() => {
     const keyDownHandler = (e: KeyboardEvent) => {
@@ -257,7 +262,7 @@ export default function ComponentPage({
         </div>
 
         <div className="flex items-center gap-1">
-         {/*  {user?.id === component.user_id && ( */}
+          {canEdit && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
@@ -273,7 +278,7 @@ export default function ComponentPage({
                 <p className="flex items-center">Edit Component</p>
               </TooltipContent>
             </Tooltip>
- {/*          )} */}
+          )}
           <ThemeToggle />
           <SignedIn>
             <LikeButton

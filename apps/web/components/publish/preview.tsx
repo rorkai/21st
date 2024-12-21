@@ -68,6 +68,41 @@ export function PublishComponentPreview({
     enabled: directRegistryDependencies?.length > 0,
   })
 
+  const demoComponentNames = useMemo(
+    () => extractDemoComponentNames(demoCode),
+    [demoCode],
+  )
+
+  const dumySandpackFiles = useMemo(
+    () =>
+      generateSandpackFiles({
+        demoComponentNames,
+        componentSlug: slugToPublish,
+        relativeImportPath: `/components/${registryToPublish}`,
+        code,
+        demoCode,
+        theme: isDarkTheme ? "dark" : "light",
+        css: css ?? "",
+      }),
+    [
+      demoComponentNames,
+      slugToPublish,
+      registryToPublish,
+      code,
+      demoCode,
+      isDarkTheme,
+      css,
+    ]
+  )
+
+  const shellCode = useMemo(
+    () =>
+      Object.entries(dumySandpackFiles)
+        .filter(([key]) => key.endsWith(".tsx"))
+        .map(([, file]) => file),
+    [dumySandpackFiles]
+  )
+
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_COMPILE_CSS_URL}/compile-css`, {
       method: "POST",
@@ -80,7 +115,9 @@ export function PublishComponentPreview({
         customGlobalCss,
         dependencies: Object.values(
           registryDependencies?.filesWithRegistry ?? {},
-        ).map((file) => file.code),
+        )
+          .map((file) => file.code)
+          .concat(shellCode),
       }),
     })
       .then((res) => res.json())
@@ -88,11 +125,6 @@ export function PublishComponentPreview({
         setCss(data.css)
       })
   }, [])
-
-  const demoComponentNames = useMemo(
-    () => extractDemoComponentNames(demoCode),
-    [demoCode],
-  )
 
   const sandpackDefaultFiles = useMemo(() => {
     return generateSandpackFiles({

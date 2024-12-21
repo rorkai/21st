@@ -10,6 +10,7 @@ export const useCompileCss = (
   demoCode: string,
   registryDependencies: Record<string, string>,
   component: Component & { user: User } & { tags: Tag[] },
+  shellCode: string[],
   tailwindConfig?: string,
   globalCss?: string,
   compiledCss?: string,
@@ -26,7 +27,7 @@ export const useCompileCss = (
         demoCode,
         baseTailwindConfig: defaultTailwindConfig,
         baseGlobalCss: defaultGlobalCss,
-        dependencies: Object.values(registryDependencies ?? {}),
+        dependencies: Object.values(registryDependencies ?? {}).concat(shellCode),
         customTailwindConfig: tailwindConfig,
         customGlobalCss: globalCss,
       }),
@@ -54,7 +55,7 @@ export const useCompileCss = (
           await client.from("components").update({ compiled_css: url }).eq("id", component.id)
         }
       })
-  }, [code, demoCode, registryDependencies, tailwindConfig, globalCss, component])
+  }, [code, demoCode, registryDependencies, tailwindConfig, globalCss, component, shellCode])
 
   return css
 }

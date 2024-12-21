@@ -43,9 +43,11 @@ export const compileCSS = async ({
     ${customGlobalCss || ""}
   `
 
+  const mergedConfig = merge(baseConfig, configObject)
+
   const result = await postcss([
     tailwindcss({
-      ...merge(baseConfig, configObject),
+      ...mergedConfig,
       content: [{ raw: jsx, extension: "tsx" }],
     }),
   ]).process(globalCss, {
@@ -93,8 +95,16 @@ const server = serve({
           .filter((line: string) => !line.trim().startsWith("import"))
           .join("\n")
 
+        const filteredDependencies = dependencies.map((dep: string) => 
+          dep.split("\n")
+            .filter((line: string) => !line.trim().startsWith("import"))
+            .join("\n")
+        )
+
+        console.log("filteredDependencies.length", filteredDependencies.length)
+
         const css = await compileCSS({
-          jsx: `${filteredCode}\n${filteredDemoCode}\n${dependencies.join("\n")}`,
+          jsx: `${filteredCode}\n${filteredDemoCode}\n${filteredDependencies.join("\n")}`,
           baseTailwindConfig,
           customTailwindConfig,
           baseGlobalCss,

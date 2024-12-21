@@ -22,6 +22,9 @@ import { toast } from "sonner"
 import { useQuery } from "@tanstack/react-query"
 import { Tag as TagComponent } from "@/components/ui/tag"
 import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { CalendarDays } from "lucide-react"
+import { formatDate } from "@/lib/utils"
 
 export const ComponentPageInfo = ({
   component,
@@ -105,22 +108,54 @@ export const ComponentPageInfo = ({
       {component.user && (
         <div className="flex items-center">
           <span className="text-muted-foreground w-1/3">Created by:</span>
-          <div className="flex items-center justify-start hover:bg-accent rounded-md px-2 py-1 -mx-2 mr-auto">
-            <Link
-              href={`/${component.user.username}`}
-              className="flex items-center"
-            >
-              <UserAvatar
-                src={component.user.image_url || "/placeholder.svg"}
-                alt={component.user.name || component.user.username}
-                size={20}
-                isClickable={true}
-              />
-              <span className="ml-1 font-medium">
-                {component.user.name || component.user.username}
-              </span>
-            </Link>
-          </div>
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <div className="flex items-center justify-start hover:bg-accent rounded-md px-2 py-1 -mx-2 mr-auto">
+                <Link
+                  href={`/${component.user.username}`}
+                  className="flex items-center"
+                >
+                  <UserAvatar
+                    src={component.user.image_url || "/placeholder.svg"}
+                    alt={component.user.name || component.user.username}
+                    size={20}
+                  />
+                  <span className="ml-1 font-medium">
+                    {component.user.name || component.user.username}
+                  </span>
+                </Link>
+              </div>
+            </HoverCardTrigger>
+            <HoverCardContent align="start" className="w-[320px]">
+              <div className="flex gap-4">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage 
+                    src={component.user.image_url || "/placeholder.svg"} 
+                    alt={component.user.name || component.user.username} 
+                  />
+                  <AvatarFallback>
+                    {(component.user.name || component.user.username)?.[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-semibold">
+                    {component.user.name || component.user.username}
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    @{component.user.username}
+                  </p>
+                  {component.user.created_at && (
+                    <div className="flex items-center pt-1">
+                      <CalendarDays className="mr-2 h-4 w-4 opacity-70" />
+                      <span className="text-xs text-muted-foreground">
+                        Joined {formatDate(new Date(component.user.created_at))}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
         </div>
       )}
       {component.description && (

@@ -16,8 +16,8 @@ export function ComponentCard({
   const componentUrl = `/${component.user.username}/${component.component_slug}`
 
   return (
-    <Link href={componentUrl} className="block cursor-pointer">
-      <div className="overflow-hidden">
+    <div className="overflow-hidden">
+      <Link href={componentUrl} className="block cursor-pointer">
         <div className="relative aspect-[4/3] mb-3 group">
           <div className="relative w-full h-full">
             <ComponentPreviewImage
@@ -40,15 +40,20 @@ export function ComponentCard({
             </>
           )}
         </div>
-        <div className="flex items-center space-x-3">
-          <UserAvatar
-            src={component.user.image_url || "/placeholder.svg"}
-            alt={component.user.name}
-            size={24}
-          />
-          <h2 className="text-sm font-medium text-foreground truncate flex-grow">
-            {component.name}
-          </h2>
+      </Link>
+      <div className="flex items-center space-x-3">
+        <UserAvatar
+          src={component.user.image_url || "/placeholder.svg"}
+          alt={component.user.name}
+          size={24}
+          user={component.user}
+        />
+        <div className="flex items-center justify-between flex-grow">
+          <Link href={componentUrl} className="block cursor-pointer">
+            <h2 className="text-sm font-medium text-foreground truncate">
+              {component.name}
+            </h2>
+          </Link>
           <span className="text-xs text-muted-foreground whitespace-nowrap">
             {formatDistanceToNow(new Date(component.created_at), {
               addSuffix: false,
@@ -57,6 +62,6 @@ export function ComponentCard({
           </span>
         </div>
       </div>
-    </Link>
+    </div>
   )
 }

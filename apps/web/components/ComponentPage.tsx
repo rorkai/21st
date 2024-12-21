@@ -251,6 +251,7 @@ export default function ComponentPage({
               alt={component.user.name}
               size={20}
               isClickable={true}
+              user={component.user}
             />
           </Link>
           <ChevronRight size={12} className="text-muted-foreground" />

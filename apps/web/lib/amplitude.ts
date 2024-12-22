@@ -1,7 +1,15 @@
 import * as amplitude from '@amplitude/analytics-browser';
+import { sessionReplayPlugin } from '@amplitude/plugin-session-replay-browser';
 
 export const initAmplitude = () => {
   if (typeof window !== 'undefined') {
+    if (process.env.NODE_ENV === 'production') {
+      const sessionReplayTracking = sessionReplayPlugin({
+        sampleRate: 0.1,
+      });
+      amplitude.add(sessionReplayTracking);
+    }
+    
     amplitude.init(process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY || '', {
       defaultTracking: {
         sessions: true,

@@ -7,6 +7,7 @@ import { UserAvatar } from "@/components/UserAvatar"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import ErrorPage from "@/components/ErrorPage"
+import { UserProfileAnalytics } from "@/components/UserProfileAnalytics"
 
 export const generateMetadata = async ({
   params,
@@ -45,6 +46,10 @@ export default async function UserProfile({
   return (
     <>
       <Header page="profile" />
+      <UserProfileAnalytics 
+        username={user.username}
+        isManuallyAdded={user.manually_added}
+      />
       <div className="flex mx-auto px-4 py-8 mt-20">
         <div className="flex flex-col md:flex-row gap-8">
           <div className="flex md:w-[30%] md:min-w-[300px] flex-col items-center w-full ">

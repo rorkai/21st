@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Dock, Box, ChevronRight } from "lucide-react"
 import { usePathname } from "next/navigation"
+import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import {
   Collapsible,
   CollapsibleContent,
@@ -165,6 +166,13 @@ export function AppSidebar() {
                           <SidebarMenuSubButton
                             asChild
                             isActive={pathname === item.href}
+                            onClick={() => {
+                              trackEvent(AMPLITUDE_EVENTS.VIEW_SIDEBAR_SECTION, {
+                                sectionTitle: section.title,
+                                itemTitle: item.title,
+                                path: item.href
+                              });
+                            }}
                           >
                             <a href={item.href}>
                               <span>{item.title}</span>

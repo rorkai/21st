@@ -7,3 +7,5 @@ export type Component = Tables<"components">
 export type Tag = Tables<"tags">
 
 export type ComponentTag = Tables<"component_tags">
+
+export type SortOption = "installations" | "popular" | "newest"

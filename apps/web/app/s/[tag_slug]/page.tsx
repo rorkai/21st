@@ -1,10 +1,10 @@
-import { ComponentsList } from "@/components/ComponentsList"
 import { Header } from "@/components/Header"
 import { Database } from "@/types/supabase"
 import { getComponents } from "@/lib/queries"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { SupabaseClient } from "@supabase/supabase-js"
 import { notFound } from "next/navigation"
+import { TagPageContent } from "./page.client"
 
 interface TagPageProps {
   params: {
@@ -36,8 +36,7 @@ export default async function TagPage({ params }: TagPageProps) {
     getTagInfo(supabaseWithAdminAccess, tagSlug),
     getComponents(supabaseWithAdminAccess, tagSlug),
   ])
-  console.log(tagInfo)
-  console.log(components)
+
   if (!tagInfo) {
     notFound()
   }
@@ -45,7 +44,9 @@ export default async function TagPage({ params }: TagPageProps) {
   return (
     <div className="container mx-auto px-4">
       {tagInfo && <Header tagName={tagInfo?.name} page="components" />}
-      <ComponentsList components={components} className="mt-20" />
+      <div className="mt-20">
+        <TagPageContent components={components} />
+      </div>
     </div>
   )
 }

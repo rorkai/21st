@@ -109,8 +109,6 @@ const server = serve({
           customGlobalCss,
         })
 
-        console.log("css", css)
-
         return Response.json({ css }, { headers })
       } catch (error) {
         console.error("CSS compilation error:", error)

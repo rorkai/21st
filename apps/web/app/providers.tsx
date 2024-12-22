@@ -5,6 +5,8 @@ import { ClerkProvider } from "@clerk/nextjs"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/AppSidebar"
 import { usePathname } from "next/navigation"
+import { useEffect } from "react"
+import { initAmplitude } from "@/lib/amplitude"
 
 const queryClient = new QueryClient()
 
@@ -16,6 +18,10 @@ export function AppProviders({
   const pathname = usePathname()
   const isHomePage = pathname === "/"
   const isTagPage = pathname.startsWith("/s/")
+
+  useEffect(() => {
+    initAmplitude()
+  }, [])
 
   return (
     <QueryClientProvider client={queryClient}>

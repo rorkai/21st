@@ -12,6 +12,7 @@
     "combine-css": "node css/combinedCSS.js"
   },
   "dependencies": {
+    "@amplitude/analytics-browser": "^2.11.10",
     "@aws-sdk/client-s3": "^3.669.0",
     "@aws-sdk/credential-providers": "^3.670.0",
     "@babel/parser": "^7.25.6",

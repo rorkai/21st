@@ -25,6 +25,8 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { CalendarDays } from "lucide-react"
 import { formatDate } from "@/lib/utils"
+import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
+import { trackEvent } from "@/lib/amplitude"
 
 export const ComponentPageInfo = ({
   component,
@@ -85,6 +87,11 @@ export const ComponentPageInfo = ({
     navigator.clipboard.writeText(`{\n${dependenciesString}\n}`)
     setCopiedLibDependencies(true)
     toast("Dependencies copied to clipboard")
+    trackEvent(AMPLITUDE_EVENTS.COPY_ALL_DEPENDENCIES, {
+      componentId: component.id,
+      componentName: component.name,
+      dependenciesCount: Object.keys(npmDependencies).length
+    })
     setTimeout(() => setCopiedLibDependencies(false), 2000)
   }
 
@@ -92,10 +99,25 @@ export const ComponentPageInfo = ({
     navigator.clipboard.writeText(`"${dep}": "${version}"`)
     setCopiedDependency(dep)
     toast("Dependency copied to clipboard")
+    trackEvent(AMPLITUDE_EVENTS.COPY_DEPENDENCY, {
+      componentId: component.id,
+      componentName: component.name,
+      dependency: dep,
+      version
+    })
     setTimeout(() => setCopiedDependency(null), 2000)
   }
 
   const license = component.license ? getLicenseBySlug(component.license) : null
+
+  const handleNpmPackageClick = (packageName: string) => {
+    trackEvent(AMPLITUDE_EVENTS.VIEW_ON_NPM, {
+      componentId: component.id,
+      componentName: component.name,
+      packageName
+    });
+    window.open(`https://www.npmjs.com/package/${packageName}`, '_blank');
+  };
 
   return (
     <div className="p-3 space-y-3 text-sm overflow-y-auto max-h-[calc(100vh-100px)] bg-background text-foreground">
@@ -243,6 +265,7 @@ export const ComponentPageInfo = ({
                         href={`https://www.npmjs.com/package/${dep}`}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => handleNpmPackageClick(dep)}
                       >
                         <span className="pl-1">{dep}</span>
                       </a>

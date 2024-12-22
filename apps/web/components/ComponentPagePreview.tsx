@@ -21,6 +21,7 @@ import { CopyCodeButton } from "./CopyCodeButton"
 import { generateSandpackFiles } from "@/lib/sandpack"
 import { toast } from "sonner"
 import { getPackageRunner } from "@/lib/utils"
+import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -250,6 +251,12 @@ function CopyCommandSection({
     const command = `${getPackageRunner(packageManager)} shadcn@latest add "${installUrl}"`
     navigator.clipboard.writeText(command)
     setCopied(true)
+    trackEvent(AMPLITUDE_EVENTS.COPY_INSTALL_COMMAND, {
+      componentId: component.id,
+      componentName: component.name,
+      packageManager,
+      installUrl
+    })
     setTimeout(() => setCopied(false), 1000)
     toast("Command copied to clipboard")
     setIsDropdownOpen(false)

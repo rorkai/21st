@@ -10,7 +10,7 @@ export function GitHubStars() {
       const data = await res.json()
       return data.stargazers_count as number
     },
-    staleTime: 1000 * 60 * 5, // Кэшируем на 5 минут
+    staleTime: 1000 * 60 * 5,
     retry: 2
   })
 

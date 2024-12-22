@@ -57,6 +57,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { usePublishAs } from "./use-publish-as"
+import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -83,6 +84,10 @@ export default function PublishComponentForm() {
   const isDarkTheme = theme === "dark"
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false)
   const isDev = process.env.NEXT_PUBLIC_ENV === 'development'
+
+  const [formStartTime] = useState(() => Date.now())
+  const [publishAttemptCount, setPublishAttemptCount] = useState(0)
+  const [completedSteps, setCompletedSteps] = useState<string[]>([])
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -194,6 +199,7 @@ export default function PublishComponentForm() {
   }, [code, demoCode])
 
   const onSubmit = async (data: FormData) => {
+    setPublishAttemptCount(count => count + 1)
     setIsSubmitting(true)
     try {
       const codeFileName = `${data.component_slug}.tsx`
@@ -327,6 +333,26 @@ export default function PublishComponentForm() {
       if (insertedComponent) {
         setIsSuccessDialogOpen(true)
       }
+
+      trackEvent(AMPLITUDE_EVENTS.PUBLISH_COMPONENT, {
+        componentName: data.name,
+        componentSlug: data.component_slug,
+        userId: user?.id,
+        isPublic: data.is_public,
+        hasDemo: !!data.demo_code,
+        tagsCount: data.tags?.length || 0,
+        codeQualityMetrics: {
+          linesOfCode: data.code.split('\n').length,
+          demoLinesOfCode: data.demo_code?.split('\n').length || 0,
+          componentCount: parsedCode.componentNames.length,
+          demoComponentCount: parsedCode.demoComponentNames.length,
+          dependenciesCount: Object.keys(parsedCode.dependencies).length,
+          demoDependenciesCount: Object.keys(parsedCode.demoDependencies).length,
+        },
+        timeSpentEditing: Date.now() - formStartTime,
+        stepsCompleted: ['nameSlug', 'code', 'demo', 'details'].filter(step => completedSteps.includes(step)),
+        publishAttempts: publishAttemptCount
+      });
     } catch (error) {
       console.error("Error adding component:", error)
       const errorMessage = `An error occurred while adding the component${error instanceof Error ? `: ${error.message}` : ""}`

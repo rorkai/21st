@@ -9,6 +9,8 @@ import { useLikeMutation } from "@/lib/queries"
 import { useUser } from "@clerk/nextjs"
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import { toast } from "sonner"
+import { trackEvent } from "@/lib/amplitude"
+import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
 
 interface LikeButtonProps {
   componentId: number
@@ -32,11 +34,29 @@ export function LikeButton({
   const likeMutation = useLikeMutation(supabase, user?.id)
   const [isHovered, setIsHovered] = useState(false)
 
-  const handleLike = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+  const handleLike = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+
+    if (!user) {
+      trackEvent(AMPLITUDE_EVENTS.LIKE_COMPONENT, {
+        componentId,
+        status: 'unauthorized',
+        source: e ? 'click' : 'hotkey'
+      })
+      return
+    }
+    
     likeMutation.mutate({ componentId, liked })
     toast.success(liked ? "Unliked component" : "Liked component")
+    
+    trackEvent(liked ? AMPLITUDE_EVENTS.UNLIKE_COMPONENT : AMPLITUDE_EVENTS.LIKE_COMPONENT, {
+      componentId,
+      userId: user.id,
+      source: e ? 'click' : 'hotkey'
+    })
   }
 
   useEffect(() => {
@@ -51,7 +71,7 @@ export function LikeButton({
         !e.target.matches("input, textarea")
       ) {
         e.preventDefault()
-        handleLike(e as unknown as React.MouseEvent)
+        handleLike()
       }
     }
 

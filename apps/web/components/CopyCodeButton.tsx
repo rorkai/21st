@@ -2,6 +2,7 @@ import { useSandpack } from "@codesandbox/sandpack-react"
 import { CheckIcon, Clipboard } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
+import { trackEvent, AMPLITUDE_EVENTS } from "../lib/amplitude"
 
 export const CopyCodeButton = () => {
   const [codeCopied, setCodeCopied] = useState(false)
@@ -14,6 +15,11 @@ export const CopyCodeButton = () => {
       navigator.clipboard.writeText(fileContent)
       setCodeCopied(true)
       toast("Code copied to clipboard")
+      trackEvent(AMPLITUDE_EVENTS.COPY_CODE, {
+        fileName: activeFile,
+        fileExtension: activeFile.split('.').pop(),
+        copySource: 'button',
+      })
       setTimeout(() => setCodeCopied(false), 2000)
     }
   }

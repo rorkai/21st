@@ -32,6 +32,8 @@ import { EditComponentDialog } from "./EditComponentDialog"
 import { useUpdateComponentWithTags } from "@/lib/queries"
 import { toast } from "sonner"
 import { usePublishAs } from "./publish/use-publish-as"
+import { identifyUser, setPageProperties, trackEvent } from "@/lib/amplitude"
+import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
 
 export const isShowCodeAtom = atom(true)
 
@@ -94,6 +96,11 @@ export default function ComponentPage({
     try {
       await navigator.clipboard.writeText(url)
       setIsShared(true)
+      trackEvent(AMPLITUDE_EVENTS.SHARE_COMPONENT, {
+        componentId: component.id,
+        componentName: component.name,
+        url,
+      })
       setTimeout(() => {
         setIsShared(false)
       }, 2000)
@@ -108,14 +115,15 @@ export default function ComponentPage({
       if (e.code === "BracketRight") {
         e.preventDefault()
         setIsShowCode(false)
+        trackEvent(AMPLITUDE_EVENTS.TOGGLE_CODE_VIEW, {
+          componentId: component.id,
+          view: 'info'
+        })
       }
     }
 
     window.addEventListener("keydown", keyDownHandler)
-
-    return () => {
-      window.removeEventListener("keydown", keyDownHandler)
-    }
+    return () => window.removeEventListener("keydown", keyDownHandler)
   }, [])
 
   useEffect(() => {
@@ -123,14 +131,15 @@ export default function ComponentPage({
       if (e.code === "BracketLeft") {
         e.preventDefault()
         setIsShowCode(true)
+        trackEvent(AMPLITUDE_EVENTS.TOGGLE_CODE_VIEW, {
+          componentId: component.id,
+          view: 'code'
+        })
       }
     }
 
     window.addEventListener("keydown", keyDownHandler)
-
-    return () => {
-      window.removeEventListener("keydown", keyDownHandler)
-    }
+    return () => window.removeEventListener("keydown", keyDownHandler)
   }, [])
 
   useEffect(() => {
@@ -231,6 +240,40 @@ export default function ComponentPage({
     })
   }
 
+  const handleEditClick = () => {
+    setIsEditDialogOpen(true)
+    trackEvent(AMPLITUDE_EVENTS.EDIT_COMPONENT, {
+      componentId: component.id,
+      componentName: component.name,
+      userId: user?.id
+    })
+  }
+
+  useEffect(() => {
+    setPageProperties({
+      componentId: component.id,
+      componentName: component.name,
+      authorId: component.user.id,
+      isPublic: component.is_public,
+      tags: component.tags.map(tag => tag.name),
+      downloadsCount: component.downloads_count,
+      hasDemo: !!demoCode,
+      deviceType: window.innerWidth < 768 ? 'mobile' : 'desktop'
+    });
+  }, [component.id]);
+
+  useEffect(() => {
+    if (user) {
+      identifyUser(user.id, {
+        email: user.primaryEmailAddress?.emailAddress,
+        name: user.fullName,
+        username: user.username,
+        created_at: user.createdAt,
+        is_admin: user.publicMetadata?.isAdmin || false,
+      });
+    }
+  }, [user]);
+
   return (
     <div
       className={`flex flex-col gap-2 rounded-lg h-[98vh] w-full py-4 bg-background text-foreground`}
@@ -277,13 +320,13 @@ export default function ComponentPage({
               <LikeButton componentId={component.id} size={18} liked={false} />
             </SignInButton>
           </SignedOut>
-          
+
           <div className="hidden md:flex items-center gap-1">
             {canEdit && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
-                    onClick={() => setIsEditDialogOpen(true)}
+                    onClick={handleEditClick}
                     className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-md relative"
                   >
                     <div className="absolute inset-0 flex items-center justify-center">
@@ -356,7 +399,9 @@ export default function ComponentPage({
           demoDependencies={demoDependencies}
           demoComponentNames={demoComponentNames}
           registryDependencies={registryDependencies}
-          npmDependenciesOfRegistryDependencies={npmDependenciesOfRegistryDependencies}
+          npmDependenciesOfRegistryDependencies={
+            npmDependenciesOfRegistryDependencies
+          }
           tailwindConfig={tailwindConfig}
           globalCss={globalCss}
           compiledCss={compiledCss}

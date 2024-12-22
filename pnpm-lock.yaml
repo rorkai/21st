@@ -51,6 +51,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@amplitude/analytics-browser':
+        specifier: ^2.11.10
+        version: 2.11.10
       '@aws-sdk/client-s3':
         specifier: ^3.669.0
         version: 3.669.0
@@ -352,6 +355,76 @@ packages:
   /@alloc/quick-lru@5.2.0:
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
     engines: {node: '>=10'}
+    dev: false
+
+  /@amplitude/analytics-browser@2.11.10:
+    resolution: {integrity: sha512-+bc+KvAvrFTQefmq+iGDuzdtPdJm9HXHPI58yTnHJeXhXDhneH8cGmT6dfL1SvW/W2kGvBdFXiZMoPuHcR0xKg==}
+    dependencies:
+      '@amplitude/analytics-client-common': 2.3.6
+      '@amplitude/analytics-core': 2.5.5
+      '@amplitude/analytics-remote-config': 0.4.1
+      '@amplitude/analytics-types': 2.8.4
+      '@amplitude/plugin-autocapture-browser': 1.0.4
+      '@amplitude/plugin-page-view-tracking-browser': 2.3.6
+      tslib: 2.8.0
+    dev: false
+
+  /@amplitude/analytics-client-common@2.3.6:
+    resolution: {integrity: sha512-4KAaqevqzYJIUzgjBmH80QDmYgzUAE0JpKz2s7w6cjeoX9DrB1gBa+RqWySULiUeIDfx+DTlhsZPMzFn+og17w==}
+    dependencies:
+      '@amplitude/analytics-connector': 1.6.2
+      '@amplitude/analytics-core': 2.5.5
+      '@amplitude/analytics-types': 2.8.4
+      tslib: 2.8.0
+    dev: false
+
+  /@amplitude/analytics-connector@1.6.2:
+    resolution: {integrity: sha512-9bk2IjyV3VgUdbI3ounKUuP+4u4ABftDWGdOKxshEQrHg6WhgC8V4hdhSHv9wOHebGTvZntRKM5LlSXUyDYBpw==}
+    dependencies:
+      '@amplitude/experiment-core': 0.10.1
+    dev: false
+
+  /@amplitude/analytics-core@2.5.5:
+    resolution: {integrity: sha512-OSB1WSD6qYoHyHliZaSujyatik2SP+vtoy8Y0vgRdYIpbE24F2q+SwBF3X5A1IeUqZ5fdpz+BNMwwUVl0Z4Ykg==}
+    dependencies:
+      '@amplitude/analytics-types': 2.8.4
+      tslib: 2.8.0
+    dev: false
+
+  /@amplitude/analytics-remote-config@0.4.1:
+    resolution: {integrity: sha512-BYl6kQ9qjztrCACsugpxO+foLaQIC0aSEzoXEAb/gwOzInmqkyyI+Ub+aWTBih4xgB/lhWlOcidWHAmNiTJTNw==}
+    dependencies:
+      '@amplitude/analytics-client-common': 2.3.6
+      '@amplitude/analytics-core': 2.5.5
+      '@amplitude/analytics-types': 2.8.4
+      tslib: 2.8.0
+    dev: false
+
+  /@amplitude/analytics-types@2.8.4:
+    resolution: {integrity: sha512-jQ8WY1aPbpBshl0L/0YEeQn/wZlBr8Jlqc20qf8nbuDuimFy8RqAkE+BVaMI86FCkr3AJ7PjMXkGwCSbUx88CA==}
+    dev: false
+
+  /@amplitude/experiment-core@0.10.1:
+    resolution: {integrity: sha512-2h0vqOaHoACmNiliGT78hnu9K/tmb7pWU1xw1KitlTtxK6wQqsY/IZPLMwBMG5MLp/AOzNEA/uelODfhBC5+SQ==}
+    dependencies:
+      js-base64: 3.7.7
+    dev: false
+
+  /@amplitude/plugin-autocapture-browser@1.0.4:
+    resolution: {integrity: sha512-+aUSsH4hRX4bWtSL90S3Irb3JctvIM+6aQ/wRSo1bYtnpXp7JQjWKzTYVxKx41b92Cb5DCBvmYgcWyg75BKi9Q==}
+    dependencies:
+      '@amplitude/analytics-client-common': 2.3.6
+      '@amplitude/analytics-types': 2.8.4
+      rxjs: 7.8.1
+      tslib: 2.8.0
+    dev: false
+
+  /@amplitude/plugin-page-view-tracking-browser@2.3.6:
+    resolution: {integrity: sha512-3NsXskUxIA9m4GedGOCIKOkQ1uGUhuYnP/DpvSXXosJEMRSi82vFxBRX7FnYT1AmV32Du2Z2626CEAEy5W4yeQ==}
+    dependencies:
+      '@amplitude/analytics-client-common': 2.3.6
+      '@amplitude/analytics-types': 2.8.4
+      tslib: 2.8.0
     dev: false
 
   /@ampproject/remapping@2.3.0:
@@ -7577,6 +7650,10 @@ packages:
         optional: true
     dev: false
 
+  /js-base64@3.7.7:
+    resolution: {integrity: sha512-7rCnleh0z2CkXhH67J8K1Ytz0b2Y+yxTPL+/KOJoa20hfnVQ/3/T6W/KflYI4bRHRagNeXeU2bkNGI3v1oS/lw==}
+    dev: false
+
   /js-cookie@3.0.5:
     resolution: {integrity: sha512-cEiJEAEoIbWfCZYKWhVwFuvPX1gETRYPw6LlaTKoxD3s2AkXzkCjnp6h0V77ozyqj0jakteJ4YqDJT830+lVGw==}
     engines: {node: '>=14'}
@@ -8923,7 +9000,6 @@ packages:
     resolution: {integrity: sha512-AA3TVj+0A2iuIoQkWEK/tqFjBq2j+6PO6Y0zJcvzLAFhEFIO3HL0vls9hWLncZbAAbK0mar7oZ4V079I/qPMxg==}
     dependencies:
       tslib: 2.8.0
-    dev: true
 
   /safe-array-concat@1.1.2:
     resolution: {integrity: sha512-vj6RsCsWBCf19jIeHEfkRMw8DPiBb+DMXklQ/1SGDHOMlHdPUkZXFQ2YdplS23zESTijAcurb1aSgJA3AgMu1Q==}

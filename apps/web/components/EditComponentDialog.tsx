@@ -6,6 +6,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer"
 import { ComponentDetailsForm } from "./publish/ComponentDetailsForm"
 import { Component, User, Tag } from "@/types/global"
 import { useForm } from "react-hook-form"
@@ -13,6 +19,7 @@ import { FormData } from "./publish/utils"
 import { uploadToR2 } from "@/lib/r2"
 import { useMutation } from "@tanstack/react-query"
 import { toast } from "sonner"
+import { useIsMobile } from "@/hooks/use-media-query"
 
 export function EditComponentDialog({
   component,
@@ -29,6 +36,7 @@ export function EditComponentDialog({
     updatedData: Partial<Component & { tags?: Tag[] }>,
   ) => Promise<void>
 }) {
+  const isMobile = useIsMobile()
   const form = useForm<FormData>({
     defaultValues: {
       name: component.name,
@@ -48,18 +56,22 @@ export function EditComponentDialog({
 
   const uploadToR2Mutation = useMutation({
     mutationFn: async ({ file, fileKey }: { file: File; fileKey: string }) => {
+      const actualFileKey = `${component.user.id}/${fileKey}`
       const buffer = Buffer.from(await file.arrayBuffer())
       const base64Content = buffer.toString("base64")
       return uploadToR2({
         file: {
-          name: fileKey,
+          name: actualFileKey,
           type: file.type,
           encodedContent: base64Content,
         },
-        fileKey,
+        fileKey: actualFileKey,
         bucketName: "components-code",
         contentType: file.type,
       })
+    },
+    onError: (error) => {
+      console.error("Failed to upload to R2:", error)
     },
   })
 
@@ -69,6 +81,7 @@ export function EditComponentDialog({
     },
     onSuccess: () => {
       setIsOpen(false)
+      toast.success("Component updated successfully")
     },
     onError: (error) => {
       console.error("Failed to update component:", error)
@@ -104,7 +117,7 @@ export function EditComponentDialog({
 
     if (formData.preview_image_file instanceof File) {
       const fileExtension = formData.preview_image_file.name.split(".").pop()
-      const fileKey = `${component.user.id}/${component.component_slug}.${fileExtension}`
+      const fileKey = `${component.component_slug}.${fileExtension}`
 
       try {
         const previewImageUrl = await uploadToR2Mutation.mutateAsync({
@@ -122,8 +135,46 @@ export function EditComponentDialog({
     updateMutation.mutate(updatedData)
   }
 
+  if (isMobile) {
+    return (
+      <Drawer
+        open={isOpen}
+        onOpenChange={(open) => {
+          if (uploadToR2Mutation.isPending || updateMutation.isPending) {
+            return
+          }
+          setIsOpen(open)
+        }}
+      >
+        <DrawerContent>
+          <DrawerHeader className="mb-2 px-6">
+            <DrawerTitle>Edit component</DrawerTitle>
+          </DrawerHeader>
+          <div className="px-6 pb-6 overflow-y-auto max-h-[calc(100dvh-6rem)]">
+            <ComponentDetailsForm
+              isEditMode={true}
+              form={form}
+              handleSubmit={handleSubmit}
+              isSubmitting={
+                uploadToR2Mutation.isPending || updateMutation.isPending
+              }
+            />
+          </div>
+        </DrawerContent>
+      </Drawer>
+    )
+  }
+
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
+    <Sheet
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (uploadToR2Mutation.isPending || updateMutation.isPending) {
+          return
+        }
+        setIsOpen(open)
+      }}
+    >
       <SheetContent side="right" className="px-0 pb-0 sm:max-w-lg">
         <SheetHeader className="mb-2 px-6">
           <SheetTitle>Edit component</SheetTitle>

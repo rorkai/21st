@@ -10,3 +10,10 @@ export function getPackageRunner(packageManager: string) {
   if (packageManager === "bun") return "bunx"
   return "npx"
 }
+
+export function formatDate(date: Date) {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    year: 'numeric'
+  }).format(date)
+}

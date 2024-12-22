@@ -53,6 +53,7 @@ export default async function UserProfile({
                 src={user.image_url || "/placeholder.svg"}
                 alt={user.name}
                 size={184}
+                className="cursor-default"
               />
               <h1 className="mt-4 text-[44px] leading-1 font-bold">
                 {user.name}

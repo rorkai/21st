@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo } from "react"
+import React, { useMemo, useEffect, useRef } from "react"
 import { ComponentCard } from "@/components/ComponentCard"
 import { Component, User } from "@/types/global"
 import { useQuery } from "@tanstack/react-query"
@@ -9,15 +9,31 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useAtom } from "jotai"
 import { searchQueryAtom } from "@/components/Header"
 import { ComponentsHeader, sortByAtom } from "@/components/ComponentsHeader"
+import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
+import { trackEvent } from "@/lib/amplitude"
 
 export function HomePageClient({
   initialComponents,
 }: {
   initialComponents: (Component & { user: User })[]
 }) {
-  const [searchQuery] = useAtom(searchQueryAtom)
+  const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom)
   const supabase = useClerkSupabaseClient()
   const [sortBy] = useAtom(sortByAtom)
+  const lastTrackedQuery = useRef<string>('')
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchQuery && searchQuery !== lastTrackedQuery.current) {
+        trackEvent(AMPLITUDE_EVENTS.SEARCH_COMPONENTS, {
+          query: searchQuery
+        })
+        lastTrackedQuery.current = searchQuery
+      }
+    }, 1000)
+
+    return () => clearTimeout(timeoutId)
+  }, [searchQuery])
 
   const { data: components } = useQuery<(Component & { user: User })[]>({
     queryKey: ["components", searchQuery],

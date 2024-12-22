@@ -41,6 +41,7 @@ export const AMPLITUDE_EVENTS = {
   COMPONENT_INSTALL: 'component_installed',
   VIEW_USER_PROFILE: 'user_profile_viewed',
   VIEW_SIDEBAR_SECTION: 'sidebar_section_viewed',
+  SEARCH_COMPONENTS: 'components_searched',
 } as const;
 
 export const trackEvent = (

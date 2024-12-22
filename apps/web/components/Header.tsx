@@ -25,6 +25,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { LogOut, User, Settings, X } from "lucide-react"
 
@@ -101,24 +103,38 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
                       size={32}
                     />
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuItem
-                      onSelect={() =>
+                  <DropdownMenuContent className="max-w-64" align="start">
+                    <DropdownMenuLabel
+                      className="flex items-center gap-3 cursor-pointer rounded-md hover:bg-accent transition-colors"
+                      onClick={() =>
                         (window.location.href = `/${user?.externalAccounts?.[0]?.username}`)
                       }
                     >
-                      <User className="w-4 h-4 mr-2" />
-                      My profile
-                    </DropdownMenuItem>
+                      <UserAvatar
+                        src={user?.imageUrl}
+                        alt={user?.fullName}
+                        size={32}
+                        className="shrink-0"
+                      />
+                      <div className="flex min-w-0 flex-col justify-center">
+                        <span className="truncate text-sm font-medium text-foreground">
+                          {user?.fullName}
+                        </span>
+                        <span className="truncate text-xs font-normal text-muted-foreground">
+                          {user?.primaryEmailAddress?.emailAddress}
+                        </span>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onSelect={() => setShowUserProfile(true)}>
-                      <Settings className="w-4 h-4 mr-2" />
-                      Manage account
+                      <Settings className="w-4 h-4 mr-2 opacity-60" />
+                      <span>Manage account</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onSelect={() => signOut({ redirectUrl: "/" })}
                     >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Sign out
+                      <LogOut className="w-4 h-4 mr-2 opacity-60" />
+                      <span>Sign out</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

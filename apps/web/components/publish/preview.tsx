@@ -68,7 +68,30 @@ export function PublishComponentPreview({
     enabled: directRegistryDependencies?.length > 0,
   })
 
+  const demoComponentNames = useMemo(
+    () => extractDemoComponentNames(demoCode),
+    [demoCode],
+  )
+
+  const shellCode = useMemo(() => {
+    const dummyFiles = generateSandpackFiles({
+      demoComponentNames,
+      componentSlug: slugToPublish,
+      relativeImportPath: `/components/${registryToPublish}`,
+      code,
+      demoCode,
+      theme: isDarkTheme ? "dark" : "light",
+      css: "",
+    })
+    
+    return Object.entries(dummyFiles)
+      .filter(([key]) => /\.(tsx|jsx|ts|js)$/.test(key))
+      .map(([, file]) => file)
+  }, [demoComponentNames, slugToPublish, registryToPublish, code, demoCode, isDarkTheme])
+
   useEffect(() => {
+    if (!registryDependencies) return
+
     fetch(`${process.env.NEXT_PUBLIC_COMPILE_CSS_URL}/compile-css`, {
       method: "POST",
       body: JSON.stringify({
@@ -78,54 +101,55 @@ export function PublishComponentPreview({
         baseGlobalCss: defaultGlobalCss,
         customTailwindConfig,
         customGlobalCss,
-        dependencies: Object.values(
-          registryDependencies?.filesWithRegistry ?? {},
-        ).map((file) => file.code),
+        dependencies: [
+          ...Object.values(registryDependencies.filesWithRegistry).map(file => file.code),
+          ...shellCode
+        ],
       }),
     })
       .then((res) => res.json())
       .then((data) => {
         setCss(data.css)
       })
-  }, [])
+  }, [code, demoCode, customTailwindConfig, customGlobalCss, registryDependencies, shellCode])
 
-  const demoComponentNames = useMemo(
-    () => extractDemoComponentNames(demoCode),
-    [demoCode],
-  )
-
-  const sandpackDefaultFiles = useMemo(() => {
-    return generateSandpackFiles({
+  const sandpackDefaultFiles = useMemo(
+    () =>
+      generateSandpackFiles({
+        demoComponentNames,
+        componentSlug: slugToPublish,
+        relativeImportPath: `/components/${registryToPublish}`,
+        code,
+        demoCode,
+        theme: isDarkTheme ? "dark" : "light",
+        css: css ?? "",
+        customTailwindConfig,
+        customGlobalCss,
+      }),
+    [
       demoComponentNames,
-      componentSlug: slugToPublish,
-      relativeImportPath: `/components/${registryToPublish}`,
+      slugToPublish,
+      registryToPublish,
       code,
       demoCode,
-      theme: isDarkTheme ? "dark" : "light",
-      css: css ?? "",
+      isDarkTheme,
+      css,
       customTailwindConfig,
       customGlobalCss,
-    })
-  }, [
-    demoComponentNames,
-    slugToPublish,
-    code,
-    demoCode,
-    isDarkTheme,
-    registryToPublish,
-    css,
-    customTailwindConfig,
-    customGlobalCss,
-  ])
+    ]
+  )
 
-  const files = {
-    ...sandpackDefaultFiles,
-    ...Object.fromEntries(
-      Object.entries(registryDependencies?.filesWithRegistry ?? {}).map(
-        ([key, value]) => [key, value.code],
+  const files = useMemo(
+    () => ({
+      ...sandpackDefaultFiles,
+      ...Object.fromEntries(
+        Object.entries(registryDependencies?.filesWithRegistry ?? {}).map(
+          ([key, value]) => [key, value.code],
+        ),
       ),
-    ),
-  }
+    }),
+    [sandpackDefaultFiles, registryDependencies?.filesWithRegistry]
+  )
 
   const dependencies = useMemo(() => {
     return {
@@ -149,12 +173,9 @@ export function PublishComponentPreview({
         ...dependencies,
       },
     },
-    options: {
-      externalResources: ["https://cdn.tailwindcss.com"],
-    },
   }
 
-  if (css === undefined) return <LoadingSpinner />
+  if (css === undefined || !registryDependencies) return <LoadingSpinner />
 
   return (
     <div className="w-full h-full bg-[#FAFAFA] rounded-lg">

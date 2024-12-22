@@ -1,4 +1,4 @@
-import React, { useState, useRef, Suspense } from "react"
+import React, { useState, useRef, Suspense, useMemo } from "react"
 import {
   SandpackProvider,
   SandpackLayout,
@@ -81,12 +81,32 @@ export function ComponentPagePreview({
   const [isShowCode, setIsShowCode] = useAtom(isShowCodeAtom)
   const isDebug = useDebugMode()
 
+  const dumySandpackFiles = generateSandpackFiles({
+    demoComponentNames,
+    componentSlug: component.component_slug,
+    relativeImportPath: `/components/${component.registry}`,
+    code,
+    demoCode,
+    theme: isDarkTheme ? "dark" : "light",
+    css: "",
+  })
+
+  const shellCode = Object.entries(dumySandpackFiles)
+    .filter(
+      ([key]) =>
+        key.endsWith(".tsx") ||
+        key.endsWith(".jsx") ||
+        key.endsWith(".ts") ||
+        key.endsWith(".js"),
+    )
+    .map(([, file]) => file)
 
   const css = useCompileCss(
     code,
     demoCode,
     registryDependencies,
     component,
+    shellCode,
     tailwindConfig,
     globalCss,
     compiledCss,
@@ -150,10 +170,6 @@ export function ComponentPagePreview({
       },
     },
     options: {
-      externalResources: [
-        "https://cdn.tailwindcss.com",
-        "https://vucvdpamtrjkzmubwlts.supabase.co/storage/v1/object/public/css/combined-tailwind.css",
-      ],
       activeFile: demoComponentFile ?? mainComponentFile,
       visibleFiles,
     },

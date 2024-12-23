@@ -6,6 +6,7 @@ import { ThemeToggle } from "./ThemeToggle"
 import { GitHubStars } from "./GitHubStars"
 
 import { buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 
 const uiSystems = [
   {
@@ -91,39 +92,29 @@ export function HeaderServer({ tagName, isHomePage }: HeaderServerProps) {
   )
 }
 
-HeaderServer.SocialIcons = function SocialIcons({ isMobile }: { isMobile: boolean }) {
+HeaderServer.SocialIcons = function SocialIcons({
+  isMobile,
+}: {
+  isMobile: boolean
+}) {
   return (
-    <div className="flex items-center gap-[6px]">
+    <div className="flex items-center gap-2">
+      <Link href="https://twitter.com/rorkai" target="_blank" rel="noreferrer">
+        <Button variant="ghost" aria-label="Follow on Twitter" className="fill-foreground">
+          <Icons.twitter className="h-[14px] w-[14px]" aria-hidden="true" />
+        </Button>
+      </Link>
       <Link
         href="https://github.com/rorkai/21st"
         target="_blank"
         rel="noreferrer"
       >
-        <div
-          className={cn(
-            buttonVariants({
-              variant: "ghost",
-            }),
-            "h-8 md:px-3 px-2 flex items-center gap-2 bg-foreground text-background hover:border-foreground",
-          )}
-        >
-          <Icons.gitHub className="h-[18px] w-[18px]" />
-          {!isMobile && <GitHubStars />}
+        <Button className="h-8 py-0 pe-0" variant="outline">
+          <Icons.gitHub className="h-[18px] w-[18px] me-2" aria-hidden="true" />
+          Star
+          <GitHubStars />
           <span className="sr-only">GitHub</span>
-        </div>
-      </Link>
-      <Link href="https://x.com/serafimcloud" target="_blank" rel="noreferrer">
-        <div
-          className={cn(
-            buttonVariants({
-              variant: "ghost",
-            }),
-            "h-8 w-8 px-0",
-          )}
-        >
-          <Icons.twitter className="h-[14px] w-[14px] fill-current" />
-          <span className="sr-only">Twitter</span>
-        </div>
+        </Button>
       </Link>
     </div>
   )

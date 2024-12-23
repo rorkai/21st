@@ -346,6 +346,32 @@ export function useMediaQuery(query: string) {
   return value
 }
 `,
+    "/hooks/use-click-outside.tsx": `
+import * as React from "react"
+
+const useClickOutside = (ref: React.RefObject<HTMLElement>, handler: () => void) => {
+  React.useEffect(() => {
+    const listener = (event: MouseEvent | TouchEvent) => {
+      if (!ref.current || ref.current.contains(event.target as Node)) {
+        return
+      }
+      handler()
+    }
+
+    document.addEventListener("mousedown", listener)
+    document.addEventListener("touchstart", listener)
+
+    return () => {
+      document.removeEventListener("mousedown", listener)
+      document.removeEventListener("touchstart", listener)
+    }
+  }, [ref, handler])
+
+  return null
+}
+
+export default useClickOutside
+`,
     "/components/ui/select.tsx": `
 import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"

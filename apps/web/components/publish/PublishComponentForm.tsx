@@ -215,7 +215,7 @@ export default function PublishComponentForm() {
               type: "text/plain",
               textContent: data.code,
             },
-            fileKey: `${user?.id!}/${codeFileName}`,
+            fileKey: `${publishAsUser?.id!}/${codeFileName}`,
             bucketName: "components-code",
           }),
           uploadToR2({
@@ -224,7 +224,7 @@ export default function PublishComponentForm() {
               type: "text/plain",
               textContent: demoCode,
             },
-            fileKey: `${user?.id!}/${demoCodeFileName}`,
+            fileKey: `${publishAsUser?.id!}/${demoCodeFileName}`,
             bucketName: "components-code",
           }),
           customTailwindConfig
@@ -234,7 +234,7 @@ export default function PublishComponentForm() {
                   type: "text/plain",
                   textContent: customTailwindConfig,
                 },
-                fileKey: `${user?.id!}/${tailwindConfigFileName}`,
+                fileKey: `${publishAsUser?.id!}/${tailwindConfigFileName}`,
                 bucketName: "components-code",
               })
             : Promise.resolve(null),
@@ -245,7 +245,7 @@ export default function PublishComponentForm() {
                   type: "text/plain",
                   textContent: customGlobalCss,
                 },
-                fileKey: `${user?.id!}/${globalCssFileName}`,
+                fileKey: `${publishAsUser?.id!}/${globalCssFileName}`,
                 bucketName: "components-code",
               })
             : Promise.resolve(null),

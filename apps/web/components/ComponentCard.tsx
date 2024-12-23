@@ -20,7 +20,7 @@ export function ComponentCard({
       <Link href={componentUrl} className="block cursor-pointer">
         <div className="relative aspect-[4/3] mb-3 group">
           <div className="absolute inset-0 rounded-lg overflow-hidden">
-            <div className={`relative w-full h-full ${component.video_url ? 'group-hover:opacity-0 transition-opacity duration-300' : ''}`}>
+            <div className="relative w-full h-full">
               <div className="absolute inset-0" style={{ margin: "-1px" }}>
                 <ComponentPreviewImage
                   src={component.preview_url || "/placeholder.svg"}

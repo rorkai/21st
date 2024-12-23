@@ -92,18 +92,36 @@ export const compileCSS = async ({
         ${strippedAfterCode || ""}
       `
 
-      return await processCSS(jsx, finalConfig, globalCss)
+      const evaluatedFinalConfig = Function(
+        "require",
+        "module",
+        `
+        ${finalConfig};
+        return module.exports;
+      `,
+      )(require, { exports: {} })
+
+      return await processCSS(jsx, evaluatedFinalConfig, globalCss)
     }
   }
 
-  return await processCSS(jsx, baseTailwindConfig, globalCss)
+  const evaluatedBaseConfig = Function(
+    "require",
+    "module",
+    `
+    module.exports = ${baseTailwindConfig};
+    return module.exports;
+  `,
+  )(require, { exports: {} })
+
+  return await processCSS(jsx, evaluatedBaseConfig, globalCss)
 }
 
-const processCSS = async (jsx: string, config: string, globalCss: string) => {
+const processCSS = async (jsx: string, config: object, globalCss: string) => {
   const result = await postcss([
     tailwindcss({
+       ...config,
       content: [{ raw: jsx, extension: "tsx" }],
-      config,
     }),
   ]).process(globalCss, {
     from: undefined,

@@ -159,9 +159,6 @@ export function PublishComponentPreview({
     }
   }, [code, demoCode, registryDependencies?.npmDependencies])
 
-
-  console.log(dependencies)
-
   const providerProps = {
     template: "react-ts" as const,
     files,

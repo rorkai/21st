@@ -478,26 +478,26 @@ export default function PublishComponentForm() {
                                   "h-full w-full flex-grow resize-none scrollbar-hide",
                                 )}
                               />
+                              <div className="absolute bottom-2 right-2 z-2 h-[36px]">
+                                <Button
+                                  size="sm"
+                                  disabled={
+                                    !code?.length ||
+                                    !parsedCode.componentNames?.length
+                                  }
+                                  onClick={() => setFormStep("demoCode")}
+                                >
+                                  Continue
+                                </Button>
+                              </div>
                             </motion.div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <div className="absolute bottom-2 right-2 z-2 h-[36px]">
-                      <Button
-                        size="sm"
-                        disabled={
-                          !code?.length || !parsedCode.componentNames?.length
-                        }
-                        onClick={() => setFormStep("demoCode")}
-                      >
-                        Continue
-                      </Button>
-                    </div>
                   </motion.div>
                 )}
-
                 {formStep === "demoCode" && (
                   <>
                     <motion.div
@@ -534,24 +534,24 @@ export default function PublishComponentForm() {
                                     minHeight: "100%",
                                   }}
                                 />
+                                <div className="absolute bottom-2 right-2 z-2 h-[36px]">
+                                  <Button
+                                    size="sm"
+                                    disabled={
+                                      !demoCode?.length ||
+                                      !parsedCode.demoComponentNames?.length
+                                    }
+                                    onClick={() => setFormStep("customization")}
+                                  >
+                                    Continue
+                                  </Button>
+                                </div>
                               </motion.div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      <div className="absolute bottom-2 right-2 z-2 h-[36px]">
-                        <Button
-                          size="sm"
-                          disabled={
-                            !demoCode?.length ||
-                            !parsedCode.demoComponentNames?.length
-                          }
-                          onClick={() => setFormStep("customization")}
-                        >
-                          Continue
-                        </Button>
-                      </div>
                     </motion.div>
                   </>
                 )}

@@ -34,6 +34,7 @@ import { toast } from "sonner"
 import { usePublishAs } from "./publish/use-publish-as"
 import { identifyUser, setPageProperties, trackEvent } from "@/lib/amplitude"
 import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
+import { ComponentPageProPreview } from "./ComponentPageProPreview"
 
 export const isShowCodeAtom = atom(true)
 
@@ -274,6 +275,8 @@ export default function ComponentPage({
     }
   }, [user]);
 
+  const isPro = true
+
   return (
     <div
       className={`flex flex-col gap-2 rounded-lg h-[98vh] w-full py-4 bg-background text-foreground`}
@@ -389,26 +392,32 @@ export default function ComponentPage({
           </div>
         </div>
       </div>
-      <div className="flex w-full !flex-grow">
-        <ComponentPagePreview
-          key={theme}
-          component={component}
-          code={code}
-          demoCode={demoCode}
-          dependencies={dependencies}
-          demoDependencies={demoDependencies}
-          demoComponentNames={demoComponentNames}
-          registryDependencies={registryDependencies}
-          npmDependenciesOfRegistryDependencies={
-            npmDependenciesOfRegistryDependencies
-          }
-          tailwindConfig={tailwindConfig}
-          globalCss={globalCss}
-          compiledCss={compiledCss}
-          canEdit={canEdit}
-          setIsEditDialogOpen={setIsEditDialogOpen}
-        />
-      </div>
+
+      {isPro ? (
+        <ComponentPageProPreview component={component} />
+      ) : (
+        <div className="flex w-full !flex-grow">
+          <ComponentPagePreview
+            key={theme}
+            component={component}
+            code={code}
+            demoCode={demoCode}
+            dependencies={dependencies}
+            demoDependencies={demoDependencies}
+            demoComponentNames={demoComponentNames}
+            registryDependencies={registryDependencies}
+            npmDependenciesOfRegistryDependencies={
+              npmDependenciesOfRegistryDependencies
+            }
+            tailwindConfig={tailwindConfig}
+            globalCss={globalCss}
+            compiledCss={compiledCss}
+            canEdit={canEdit}
+            setIsEditDialogOpen={setIsEditDialogOpen}
+          />
+        </div>
+      )}
+
       <EditComponentDialog
         component={component}
         isOpen={isEditDialogOpen}

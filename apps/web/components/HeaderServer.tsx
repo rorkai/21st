@@ -99,7 +99,7 @@ HeaderServer.SocialIcons = function SocialIcons({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <Link href="https://twitter.com/rorkai" target="_blank" rel="noreferrer">
+      <Link href="https://twitter.com/serafimcloud" target="_blank" rel="noreferrer">
         <Button variant="ghost" aria-label="Follow on Twitter" className="fill-foreground">
           <Icons.twitter className="h-[14px] w-[14px]" aria-hidden="true" />
         </Button>

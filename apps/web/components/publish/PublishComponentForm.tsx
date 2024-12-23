@@ -83,7 +83,6 @@ export default function PublishComponentForm() {
   const { theme } = useTheme()
   const isDarkTheme = theme === "dark"
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false)
-  const isDev = process.env.NEXT_PUBLIC_ENV === 'development'
 
   const [formStartTime] = useState(() => Date.now())
   const [publishAttemptCount, setPublishAttemptCount] = useState(0)
@@ -274,7 +273,7 @@ export default function PublishComponentForm() {
       }
 
       let videoR2Url = undefined
-      if (isDev && data.preview_video_file) {
+      if (data.preview_video_file) {
         const processedVideo = data.preview_video_file
         const fileKey = `${publishAsUser?.id}/${componentSlug}.mp4`
         const buffer = Buffer.from(await processedVideo.arrayBuffer())

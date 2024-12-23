@@ -3,6 +3,10 @@ import endent from "endent"
 import tailwindcss from "tailwindcss"
 import postcss from "postcss"
 import { merge } from "lodash"
+import { exec } from "child_process"
+import fs from "fs/promises"
+import path from "path"
+import os from "os"
 
 export const compileCSS = async ({
   jsx,
@@ -56,14 +60,29 @@ export const compileCSS = async ({
   return result.css
 }
 
+function convertVideo(inputPath: string, outputPath: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const command = `ffmpeg -i "${inputPath}" -c:v libx264 -crf 23 -preset medium -an "${outputPath}"`
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        reject(error)
+        return
+      }
+      resolve()
+    })
+  })
+}
+
 const server = serve({
   port: 80,
   async fetch(req) {
     const origin = req.headers.get("origin")
     const allowedOrigins = ["http://localhost:3000", "https://21st.dev"]
     const headers = {
-      "Access-Control-Allow-Origin": allowedOrigins.includes(origin ?? "") ? origin ?? "" : "",
-      "Access-Control-Allow-Methods": "POST, OPTIONS", 
+      "Access-Control-Allow-Origin": allowedOrigins.includes(origin ?? "")
+        ? (origin ?? "")
+        : "",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     }
 
@@ -95,10 +114,11 @@ const server = serve({
           .filter((line: string) => !line.trim().startsWith("import"))
           .join("\n")
 
-        const filteredDependencies = dependencies.map((dep: string) => 
-          dep.split("\n")
+        const filteredDependencies = dependencies.map((dep: string) =>
+          dep
+            .split("\n")
             .filter((line: string) => !line.trim().startsWith("import"))
-            .join("\n")
+            .join("\n"),
         )
 
         const css = await compileCSS({
@@ -114,7 +134,54 @@ const server = serve({
         console.error("CSS compilation error:", error)
         return Response.json(
           { error: "Failed to compile CSS" },
-          { status: 500, headers }
+          { status: 500, headers },
+        )
+      }
+    }
+
+    if (url.pathname === "/convert" && req.method === "POST") {
+      try {
+        console.log("Converting video")
+        const formData = await req.formData()
+        const file = formData.get("video") as File
+
+        if (!file) {
+          return Response.json(
+            { error: "No video file provided" },
+            { status: 400, headers },
+          )
+        }
+
+        const tempDir = path.join(os.tmpdir(), "video-conversions")
+        await fs.mkdir(tempDir, { recursive: true })
+
+        const tempInputPath = path.join(tempDir, file.name)
+        const tempOutputPath = path.join(
+          tempDir,
+          file.name.replace(/\.[^/.]+$/, "") + ".mp4",
+        )
+
+        const bytes = await file.arrayBuffer()
+        await fs.writeFile(tempInputPath, Buffer.from(bytes))
+
+        await convertVideo(tempInputPath, tempOutputPath)
+
+        const processedVideo = await fs.readFile(tempOutputPath)
+
+        await Promise.all([fs.unlink(tempInputPath), fs.unlink(tempOutputPath)])
+
+        return new Response(processedVideo, {
+          headers: {
+            ...headers,
+            "Content-Type": "video/mp4",
+            "Content-Disposition": `attachment; filename="${path.basename(tempOutputPath)}"`,
+          },
+        })
+      } catch (error) {
+        console.error("Error processing video:", error)
+        return Response.json(
+          { error: "Error processing video" },
+          { status: 500, headers },
         )
       }
     }

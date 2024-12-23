@@ -20,14 +20,16 @@ export const useCompileCss = (
 
   useEffect(() => {
     if (css) return
-    fetch(`${process.env.NEXT_PUBLIC_COMPILE_CSS_URL}/compile-css`, {
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/compile-css`, {
       method: "POST",
       body: JSON.stringify({
         code,
         demoCode,
         baseTailwindConfig: defaultTailwindConfig,
         baseGlobalCss: defaultGlobalCss,
-        dependencies: Object.values(registryDependencies ?? {}).concat(shellCode),
+        dependencies: Object.values(registryDependencies ?? {}).concat(
+          shellCode,
+        ),
         customTailwindConfig: tailwindConfig,
         customGlobalCss: globalCss,
       }),
@@ -36,11 +38,12 @@ export const useCompileCss = (
       .then((data) => {
         if (data.error) {
           throw new Error(data.error)
-        } else {  
+        } else {
           setCss(data.css)
           return data.css
         }
-      }).then(async (compiledCss) => {
+      })
+      .then(async (compiledCss) => {
         if (component.id) {
           const fileName = `${component.component_slug}.compiled.css`
           const url = await uploadToR2({
@@ -52,7 +55,10 @@ export const useCompileCss = (
             fileKey: `${component.user_id}/${fileName}`,
             bucketName: "components-code",
           })
-          await client.from("components").update({ compiled_css: url }).eq("id", component.id)
+          await client
+            .from("components")
+            .update({ compiled_css: url })
+            .eq("id", component.id)
         }
       })
   }, [code, demoCode, registryDependencies, tailwindConfig, globalCss, component, shellCode])

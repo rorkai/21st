@@ -69,23 +69,6 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
         <div className="flex items-center gap-2">
           <HeaderServer.SocialIcons isMobile={isMobile} />
           {!isMobile && <HeaderServer.ThemeToggle />}
-          {page === "home" && (
-            <div className="relative flex items-center max-w-[400px]">
-              <Input
-                ref={inputRef}
-                type="text"
-                placeholder="Search components..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={isMobile ? "pr-0" : "pr-14"}
-              />
-              {isDesktop && (
-                <div className="absolute top-0 right-3 h-full flex items-center pointer-events-none">
-                  <Hotkey keys={["K"]} modifier={true} variant="outline" />
-                </div>
-              )}
-            </div>
-          )}
 
           {!isMobile && (
             <>

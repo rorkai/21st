@@ -60,7 +60,7 @@ export function ComponentVideoPreview({
       onMouseLeave={stopVideo}
       onTouchStart={playVideo}
       onTouchEnd={stopVideo}
-      className="block"
+      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 overflow-hidden"
     >
       <video
         ref={videoRef}
@@ -70,7 +70,15 @@ export function ComponentVideoPreview({
         loop
         playsInline
         preload="none"
-        className="absolute top-0 left-0 w-full h-full object-cover rounded-lg opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        className="absolute"
+        style={{
+          objectFit: "cover",
+          display: "block",
+          width: "calc(100% + 2px)",
+          height: "calc(100% + 2px)",
+          left: "-1px",
+          top: "-1px"
+        }}
       />
     </div>
   )

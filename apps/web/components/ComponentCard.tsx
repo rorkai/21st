@@ -19,25 +19,29 @@ export function ComponentCard({
     <div className="overflow-hidden">
       <Link href={componentUrl} className="block cursor-pointer">
         <div className="relative aspect-[4/3] mb-3 group">
-          <div className="relative w-full h-full">
-            <ComponentPreviewImage
-              src={component.preview_url || "/placeholder.svg"}
-              alt={component.name}
-              fallbackSrc="/placeholder.svg"
-              className="w-full h-full object-cover rounded-lg"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-foreground/0 to-foreground/5 rounded-lg" />
+          <div className="absolute inset-0 rounded-lg overflow-hidden">
+            <div className={`relative w-full h-full ${component.video_url ? 'group-hover:opacity-0 transition-opacity duration-300' : ''}`}>
+              <div className="absolute inset-0" style={{ margin: "-1px" }}>
+                <ComponentPreviewImage
+                  src={component.preview_url || "/placeholder.svg"}
+                  alt={component.name}
+                  fallbackSrc="/placeholder.svg"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-b from-foreground/0 to-foreground/5" />
+            </div>
+            {component.video_url && (
+              <ComponentVideoPreview component={component} />
+            )}
           </div>
           {component.video_url && (
-            <>
-              <div
-                className="absolute top-2 left-2 z-10 bg-background/90 backdrop-blur rounded-md px-2 py-1 pointer-events-none"
-                data-video-icon={`${component.id}`}
-              >
-                <Video size={16} className="text-foreground" />
-              </div>
-              <ComponentVideoPreview component={component} />
-            </>
+            <div
+              className="absolute top-2 left-2 z-20 bg-background/90 backdrop-blur rounded-md px-2 py-1 pointer-events-none"
+              data-video-icon={`${component.id}`}
+            >
+              <Video size={16} className="text-foreground" />
+            </div>
           )}
         </div>
       </Link>

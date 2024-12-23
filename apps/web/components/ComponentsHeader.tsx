@@ -21,8 +21,8 @@ const sortByAtom: Atom<SortOption> = atomWithStorage(
 )
 
 const sortOptions = {
-  installations: "Downloads",
-  popular: "Popular",
+  installations: "Most downloaded",
+  popular: "Most liked",
   newest: "Newest",
 } as const
 

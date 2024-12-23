@@ -83,7 +83,6 @@ export default function PublishComponentForm() {
   const { theme } = useTheme()
   const isDarkTheme = theme === "dark"
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false)
-  const isDev = process.env.NEXT_PUBLIC_ENV === 'development'
 
   const [formStartTime] = useState(() => Date.now())
   const [publishAttemptCount, setPublishAttemptCount] = useState(0)
@@ -274,7 +273,7 @@ export default function PublishComponentForm() {
       }
 
       let videoR2Url = undefined
-      if (isDev && data.preview_video_file) {
+      if (data.preview_video_file) {
         const processedVideo = data.preview_video_file
         const fileKey = `${publishAsUser?.id}/${componentSlug}.mp4`
         const buffer = Buffer.from(await processedVideo.arrayBuffer())
@@ -479,26 +478,26 @@ export default function PublishComponentForm() {
                                   "h-full w-full flex-grow resize-none scrollbar-hide",
                                 )}
                               />
+                              <div className="absolute bottom-2 right-2 z-2 h-[36px]">
+                                <Button
+                                  size="sm"
+                                  disabled={
+                                    !code?.length ||
+                                    !parsedCode.componentNames?.length
+                                  }
+                                  onClick={() => setFormStep("demoCode")}
+                                >
+                                  Continue
+                                </Button>
+                              </div>
                             </motion.div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <div className="absolute bottom-2 right-2 z-2 h-[36px]">
-                      <Button
-                        size="sm"
-                        disabled={
-                          !code?.length || !parsedCode.componentNames?.length
-                        }
-                        onClick={() => setFormStep("demoCode")}
-                      >
-                        Continue
-                      </Button>
-                    </div>
                   </motion.div>
                 )}
-
                 {formStep === "demoCode" && (
                   <>
                     <motion.div
@@ -535,24 +534,24 @@ export default function PublishComponentForm() {
                                     minHeight: "100%",
                                   }}
                                 />
+                                <div className="absolute bottom-2 right-2 z-2 h-[36px]">
+                                  <Button
+                                    size="sm"
+                                    disabled={
+                                      !demoCode?.length ||
+                                      !parsedCode.demoComponentNames?.length
+                                    }
+                                    onClick={() => setFormStep("customization")}
+                                  >
+                                    Continue
+                                  </Button>
+                                </div>
                               </motion.div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      <div className="absolute bottom-2 right-2 z-2 h-[36px]">
-                        <Button
-                          size="sm"
-                          disabled={
-                            !demoCode?.length ||
-                            !parsedCode.demoComponentNames?.length
-                          }
-                          onClick={() => setFormStep("customization")}
-                        >
-                          Continue
-                        </Button>
-                      </div>
                     </motion.div>
                   </>
                 )}

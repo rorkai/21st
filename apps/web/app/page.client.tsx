@@ -14,8 +14,10 @@ import { trackEvent } from "@/lib/amplitude"
 
 export function HomePageClient({
   initialComponents,
+  componentsTotalCount,
 }: {
   initialComponents: (Component & { user: User })[]
+  componentsTotalCount: number
 }) {
   const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom)
   const supabase = useClerkSupabaseClient()
@@ -91,7 +93,7 @@ export function HomePageClient({
 
   return (
     <div className="flex flex-col">
-      <ComponentsHeader totalCount={components?.length || 0} />
+      <ComponentsHeader totalCount={componentsTotalCount} />
       <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-9 list-none pb-10">
         {sortedComponents?.map((component) => (
           <ComponentCard key={component.id} component={component} />

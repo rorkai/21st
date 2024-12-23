@@ -12,7 +12,7 @@
     "R2_ACCESS_KEY_ID",
     "R2_SECRET_ACCESS_KEY",
     "NEXT_PUBLIC_R2_ENDPOINT",
-    "NEXT_PUBLIC_COMPILE_CSS_URL"
+    "NEXT_PUBLIC_BACKEND_URL"
   ],
   "tasks": {
     "build": {

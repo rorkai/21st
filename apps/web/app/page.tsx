@@ -12,10 +12,10 @@ export const metadata: Metadata = {
 }
 
 export default async function HomePage() {
-  const { data: initialComponents, error: componentsError } =
+  const { data: initialComponents, count: componentsCount, error: componentsError } =
     await supabaseWithAdminAccess
       .from("components")
-      .select("*, user:users!user_id (*)")
+      .select("*, user:users!user_id (*)", { count: "exact" })
       .limit(40)
       .eq("is_public", true)
       .order("downloads_count", { ascending: false })
@@ -32,7 +32,10 @@ export default async function HomePage() {
       </Head>
       <Header page="home" />
       <div className="container mx-auto mt-20">
-        <HomePageClient initialComponents={initialComponents} />
+        <HomePageClient
+          initialComponents={initialComponents}
+          componentsTotalCount={componentsCount ?? 0}
+        />
       </div>
     </>
   )

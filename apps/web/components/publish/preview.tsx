@@ -90,7 +90,7 @@ export function PublishComponentPreview({
   }, [demoComponentNames, slugToPublish, registryToPublish, code, demoCode, isDarkTheme])
 
   useEffect(() => {
-    if (!registryDependencies) return
+    if (isLoading) return
 
     fetch(`${process.env.NEXT_PUBLIC_COMPILE_CSS_URL}/compile-css`, {
       method: "POST",
@@ -102,7 +102,7 @@ export function PublishComponentPreview({
         customTailwindConfig,
         customGlobalCss,
         dependencies: [
-          ...Object.values(registryDependencies.filesWithRegistry).map(file => file.code),
+          ...Object.values(registryDependencies?.filesWithRegistry ?? {}).map(file => file.code),
           ...shellCode
         ],
       }),
@@ -159,6 +159,9 @@ export function PublishComponentPreview({
     }
   }, [code, demoCode, registryDependencies?.npmDependencies])
 
+
+  console.log(dependencies)
+
   const providerProps = {
     template: "react-ts" as const,
     files,
@@ -175,7 +178,7 @@ export function PublishComponentPreview({
     },
   }
 
-  if (css === undefined || !registryDependencies) return <LoadingSpinner />
+  if (css === undefined || isLoading) return <LoadingSpinner />
 
   return (
     <div className="w-full h-full bg-[#FAFAFA] rounded-lg">

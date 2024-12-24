@@ -51,6 +51,7 @@ export function ComponentCard({
           alt={component.user.name}
           size={24}
           user={component.user}
+          isClickable
         />
         <div className="flex items-center justify-between flex-grow">
           <Link href={componentUrl} className="block cursor-pointer">

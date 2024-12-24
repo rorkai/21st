@@ -13,6 +13,7 @@ export const UserAvatar = ({
   size = 40,
   user,
   className,
+  isClickable,
 }: {
   src?: string
   alt?: string | null
@@ -23,7 +24,7 @@ export const UserAvatar = ({
 }) => {
   const avatarContent = (
     <Avatar
-      className={cn("group cursor-pointer", className)}
+      className={cn("group", isClickable && "cursor-pointer", className)}
       style={{ width: size, height: size }}
     >
       <AvatarImage src={src} alt={alt ?? undefined} />
@@ -35,10 +36,21 @@ export const UserAvatar = ({
     return avatarContent
   }
 
+  const wrappedAvatar = isClickable ? (
+    <Link href={`/${user.username}`}>{avatarContent}</Link>
+  ) : (
+    avatarContent
+  )
+
   return (
-    <HoverCard>
-      <HoverCardTrigger asChild>{avatarContent}</HoverCardTrigger>
-      <HoverCardContent align="start" className="w-[320px]">
+    <HoverCard openDelay={300}>
+      <HoverCardTrigger asChild>{wrappedAvatar}</HoverCardTrigger>
+      <HoverCardContent
+        align="start"
+        className="w-[320px]"
+        side="bottom"
+        alignOffset={-10}
+      >
         <div className="flex gap-4">
           <Avatar className="h-12 w-12">
             <AvatarImage src={src} alt={alt ?? undefined} />

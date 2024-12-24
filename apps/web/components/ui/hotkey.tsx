@@ -20,7 +20,7 @@ export const Hotkey = ({
   const isContrast = variant === "outline"
 
   useEffect(() => {
-    const isMac = window.navigator.userAgent.includes("Macintosh")
+    const isMac = window?.navigator?.userAgent?.includes("Macintosh")
     setModifierText(isMac ? "⌘" : "⌃")
     setDisplayKeys(modifier ? [isMac ? "⌘" : "⌃", ...keys] : keys)
   }, [modifier, keys])

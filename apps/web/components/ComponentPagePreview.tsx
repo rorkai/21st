@@ -31,11 +31,6 @@ import {
 import { useCompileCss } from "@/hooks/use-compile-css"
 import { useIsMobile } from "@/hooks/use-media-query"
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import {
   Pencil,
   CodeXml,
   Info,
@@ -124,6 +119,8 @@ export function ComponentPagePreview({
       demoCode,
       theme: isDarkTheme ? "dark" : "light",
       css,
+      customTailwindConfig: tailwindConfig,
+      customGlobalCss: globalCss,
     }),
     ...registryDependencies,
   }
@@ -139,6 +136,8 @@ export function ComponentPagePreview({
   const visibleFiles = [
     demoComponentFile,
     mainComponentFile,
+    ...(tailwindConfig ? ['tailwind.config.js'] : []),
+    ...(globalCss ? ['globals.css'] : []),
     ...Object.keys(registryDependencies).filter(
       (file) => file !== mainComponentFile,
     ),
@@ -249,7 +248,7 @@ function CopyCommandSection({
 
   const copyCommand = (packageManager: string) => {
     const command = `${getPackageRunner(packageManager)} shadcn@latest add "${installUrl}"`
-    navigator.clipboard.writeText(command)
+    navigator?.clipboard?.writeText(command)
     setCopied(true)
     trackEvent(AMPLITUDE_EVENTS.COPY_INSTALL_COMMAND, {
       componentId: component.id,

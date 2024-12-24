@@ -10,6 +10,7 @@
   "dependencies": {
     "endent": "^2.1.0",
     "lodash": "^4.17.21",
+    "mini-svg-data-uri": "^1.4.4",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3"

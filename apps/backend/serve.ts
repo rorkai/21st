@@ -37,35 +37,32 @@ export const compileCSS = async ({
   )(require, { exports: {} })
 
   if (customTailwindConfig) {
-    const matches = customTailwindConfig.match(
+    const transpiledCustomTailwindConfig = ts.transpileModule(customTailwindConfig, {
+      compilerOptions: {
+        target: ts.ScriptTarget.ES2015,
+        module: ts.ModuleKind.CommonJS,
+        removeComments: true,
+      },
+    }).outputText
+
+    console.log("Transpiled Custom Tailwind Config:", transpiledCustomTailwindConfig)
+
+
+    const matches = transpiledCustomTailwindConfig.match(
       /([\s\S]*?)(module\.exports\s*=\s*({[\s\S]*?});)([\s\S]*)/,
     )
 
     if (matches) {
       const [_, beforeConfig, __, configObject, afterConfig] = matches
 
-      const strippedBeforeCode = ts.transpileModule(beforeConfig, {
-        compilerOptions: {
-          target: ts.ScriptTarget.ES2015,
-          module: ts.ModuleKind.CommonJS,
-          removeComments: true,
-        },
-      }).outputText
-      const strippedAfterCode = ts.transpileModule(afterConfig, {
-        compilerOptions: {
-          target: ts.ScriptTarget.ES2015,
-          module: ts.ModuleKind.CommonJS,
-          removeComments: true,
-        },
-      }).outputText
 
       const customConfigObj = Function(
         "require",
         "module",
         `
-        ${strippedBeforeCode || ""}
+        ${beforeConfig || ""}
         module.exports = ${configObject};
-        ${strippedAfterCode || ""}
+        ${afterConfig || ""}
         return module.exports;
       `,
       )(require, { exports: {} })
@@ -73,27 +70,46 @@ export const compileCSS = async ({
       const mergedConfig = merge(baseConfigObj, customConfigObj)
 
       // Custom serialization to handle functions
-      let serializedConfig = JSON.stringify(mergedConfig, (key, value) => {
-        if (typeof value === "function") {
-          // Strip out functions for now, we'll handle them later
-          return value.name || "anonymous" 
-        }
-        return value
-      }, 2)
+      let serializedConfig = JSON.stringify(
+        mergedConfig,
+        (key, value) => {
+          if (typeof value === "function") {
+            return value.name || value.toString()
+          }
+          return value
+        },
+        2,
+      )
 
-      // Remove quotes around function names
-      serializedConfig = serializedConfig.replace(/"([\w]+)"/g, (_, name) => {
-        if (typeof mergedConfig.plugins?.[0] === "function" && 
-            mergedConfig.plugins[0].name === name) {
-          return name // Return unquoted function name
+      // Match any string that looks like a function, including escaped ones
+      serializedConfig = serializedConfig.replace(
+        /"(function[\s\S]*?\{[\s\S]*?\}|[\w]+)"/g,
+        (match, functionContent) => {
+          // If it's a function definition (starts with 'function'), return it unquoted and unescaped
+          if (functionContent.startsWith('function')) {
+            // Unescape the function content
+            return functionContent
+              .replace(/\\"/g, '"')  // Replace \" with "
+              .replace(/\\n/g, '\n') // Replace \n with newline
+              .replace(/\\\\/g, '\\') // Replace \\ with \
+          }
+          // For named functions in plugins array
+          if (
+            mergedConfig.plugins?.some(
+              (plugin: Function) => plugin.name === functionContent
+            )
+          ) {
+            return functionContent
+          }
+          // Keep quotes for non-functions
+          return `"${functionContent}"`
         }
-        return `"${name}"` // Keep quotes for non-functions
-      })
+      )
 
       const finalConfig = endent`
-        ${strippedBeforeCode || ""}
+        ${beforeConfig || ""}
         module.exports = ${serializedConfig};
-        ${strippedAfterCode || ""}
+        ${afterConfig || ""}
       `
 
       const evaluatedFinalConfig = Function(
@@ -124,7 +140,7 @@ export const compileCSS = async ({
 const processCSS = async (jsx: string, config: object, globalCss: string) => {
   const result = await postcss([
     tailwindcss({
-       ...config,
+      ...config,
       content: [{ raw: jsx, extension: "tsx" }],
     }),
   ]).process(globalCss, {

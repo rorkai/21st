@@ -94,7 +94,7 @@ export default function ComponentPage({
   const handleShareClick = async () => {
     const url = `${window.location.origin}/${component.user.username}/${component.component_slug}`
     try {
-      await navigator.clipboard.writeText(url)
+      await navigator?.clipboard?.writeText(url)
       setIsShared(true)
       trackEvent(AMPLITUDE_EVENTS.SHARE_COMPONENT, {
         componentId: component.id,

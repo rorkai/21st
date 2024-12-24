@@ -285,7 +285,7 @@ function CopyCommandSection({
               {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent>
+          <DropdownMenuContent side="bottom" align="end">
             <DropdownMenuItem onClick={() => copyCommand("npm")}>
               npm
             </DropdownMenuItem>

@@ -12,7 +12,7 @@ export const CopyCodeButton = () => {
     const activeFile = sandpack.activeFile
     const fileContent = sandpack.files[activeFile]?.code
     if (fileContent) {
-      navigator.clipboard.writeText(fileContent)
+      navigator?.clipboard?.writeText(fileContent)
       setCodeCopied(true)
       toast("Code copied to clipboard")
       trackEvent(AMPLITUDE_EVENTS.COPY_CODE, {
@@ -51,7 +51,7 @@ export const CopyCodeButton = () => {
           <Clipboard size={14} className="text-muted-foreground/70" />
           Copy Code{" "}
           <kbd className="hidden md:inline-flex h-5 max-h-full items-center rounded border border-border px-1 ml-1 -mr-1 font-[inherit] text-[0.625rem] font-medium text-muted-foreground/70">
-            {navigator.platform.toLowerCase().includes("mac") ? "⌘C" : "Ctrl+C"}
+            {navigator?.platform?.toLowerCase()?.includes("mac") ? "⌘C" : "Ctrl+C"}
           </kbd>
         </>
       )}

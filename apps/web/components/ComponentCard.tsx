@@ -53,13 +53,13 @@ export function ComponentCard({
           user={component.user}
           isClickable
         />
-        <div className="flex items-center justify-between flex-grow">
-          <Link href={componentUrl} className="block cursor-pointer">
+        <div className="flex items-center justify-between flex-grow min-w-0">
+          <Link href={componentUrl} className="block cursor-pointer min-w-0 flex-1 mr-3">
             <h2 className="text-sm font-medium text-foreground truncate">
               {component.name}
             </h2>
           </Link>
-          <span className="text-xs text-muted-foreground whitespace-nowrap">
+          <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
             {formatDistanceToNow(new Date(component.created_at), {
               addSuffix: false,
               includeSeconds: false,

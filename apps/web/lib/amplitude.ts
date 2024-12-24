@@ -38,7 +38,6 @@ export const AMPLITUDE_EVENTS = {
   PUBLISH_COMPONENT: 'component_published',
   TOGGLE_CODE_VIEW: 'code_view_toggled',
   EDIT_COMPONENT: 'component_edit_started',
-  COMPONENT_INSTALL: 'component_installed',
   VIEW_USER_PROFILE: 'user_profile_viewed',
   VIEW_SIDEBAR_SECTION: 'sidebar_section_viewed',
   SEARCH_COMPONENTS: 'components_searched',

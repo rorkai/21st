@@ -65,7 +65,7 @@ export const UserAvatar = ({
               <p className="text-sm text-muted-foreground">@{user.username}</p>
             </Link>
             {user.bio && (
-              <p className="text-xs text-muted-foreground">{user.bio}</p>
+              <p className="text-xs text-muted-foreground whitespace-pre-wrap">{user.bio}</p>
             )}
             {user.created_at && (
               <div className="flex items-center pt-1">

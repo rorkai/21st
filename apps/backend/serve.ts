@@ -45,8 +45,6 @@ export const compileCSS = async ({
       },
     }).outputText
 
-    console.log("Transpiled Custom Tailwind Config:", transpiledCustomTailwindConfig)
-
 
     const matches = transpiledCustomTailwindConfig.match(
       /([\s\S]*?)(module\.exports\s*=\s*({[\s\S]*?});)([\s\S]*)/,

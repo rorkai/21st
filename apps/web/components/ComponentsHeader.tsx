@@ -17,7 +17,7 @@ import { ArrowUpDown, CircleX } from "lucide-react"
 
 const sortByAtom: Atom<SortOption> = atomWithStorage(
   "components-sort-by",
-  "installations",
+  "newest",
 )
 
 const sortOptions = {

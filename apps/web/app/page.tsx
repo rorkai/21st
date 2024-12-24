@@ -24,7 +24,7 @@ export default async function HomePage() {
     .select("*, user:users!user_id (*)", { count: "exact" })
     .limit(40)
     .eq("is_public", true)
-    .order("downloads_count", { ascending: false })
+    .order("created_at", { ascending: false })
     .returns<(Component & { user: User })[]>()
 
   if (componentsError) {

@@ -47,7 +47,7 @@ export function HomePageClient({
           .select("*, user:users!user_id (*)")
           .limit(1000)
           .eq("is_public", true)
-          .order("downloads_count", { ascending: false })
+          .order("created_at", { ascending: false })
           .returns<(Component & { user: User })[]>()
 
         if (error) {

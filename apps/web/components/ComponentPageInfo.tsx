@@ -3,7 +3,7 @@ import Link from "next/link"
 import { UserAvatar } from "@/components/UserAvatar"
 import { LoadingSpinner } from "./LoadingSpinner"
 import { Component, Tag, User } from "@/types/global"
-import { ArrowUpRight, Check, Copy, Scale } from "lucide-react"
+import { ArrowUpRight, Check, Copy, Scale, CalendarDays } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { ComponentsList } from "./ComponentsList"
 import { getLicenseBySlug } from "@/lib/licenses"
@@ -23,10 +23,10 @@ import { useQuery } from "@tanstack/react-query"
 import { Tag as TagComponent } from "@/components/ui/tag"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { CalendarDays } from "lucide-react"
 import { formatDate } from "@/lib/utils"
 import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { trackEvent } from "@/lib/amplitude"
+import { Icons } from "@/components/icons"
 
 export const ComponentPageInfo = ({
   component,
@@ -174,6 +174,26 @@ export const ComponentPageInfo = ({
                       </span>
                     </div>
                   )}
+                  {component.user.twitter_url && (
+                    <Link
+                      href={component.user.twitter_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors pt-1"
+                    >
+                      <Icons.twitter className="h-3 w-3" />
+                      <span>Twitter</span>
+                    </Link>
+                  )}
+                  <Link
+                    href={`https://github.com/${component.user.username}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors pt-1"
+                  >
+                    <Icons.gitHub className="h-3 w-3" />
+                    <span>GitHub</span>
+                  </Link>
                 </div>
               </div>
             </HoverCardContent>

@@ -288,6 +288,9 @@ export type Database = {
           name: string | null
           updated_at: string | null
           username: string
+          twitter_url: string | null
+          github_url: string | null
+          bio: string | null
         }
         Insert: {
           created_at?: string
@@ -299,6 +302,9 @@ export type Database = {
           name?: string | null
           updated_at?: string | null
           username: string
+          twitter_url?: string | null
+          github_url?: string | null
+          bio?: string | null
         }
         Update: {
           created_at?: string
@@ -310,6 +316,9 @@ export type Database = {
           name?: string | null
           updated_at?: string | null
           username?: string
+          twitter_url?: string | null
+          github_url?: string | null
+          bio?: string | null
         }
         Relationships: []
       }

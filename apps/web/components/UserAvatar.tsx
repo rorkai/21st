@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/utils"
 import { User } from "@/types/global"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { Icons } from "@/components/icons"
 
 export const UserAvatar = ({
   src,
@@ -63,6 +64,9 @@ export const UserAvatar = ({
             <Link href={`/${user.username}`} className="hover:underline">
               <p className="text-sm text-muted-foreground">@{user.username}</p>
             </Link>
+            {user.bio && (
+              <p className="text-xs text-muted-foreground">{user.bio}</p>
+            )}
             {user.created_at && (
               <div className="flex items-center pt-1">
                 {!user.manually_added ? (

@@ -8,6 +8,8 @@ import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import ErrorPage from "@/components/ErrorPage"
 import { UserProfileAnalytics } from "@/components/UserProfileAnalytics"
+import Link from "next/link"
+import { Icons } from "@/components/icons"
 
 export const generateMetadata = async ({
   params,
@@ -50,24 +52,53 @@ export default async function UserProfile({
         username={user.username}
         isManuallyAdded={user.manually_added}
       />
-      <div className="flex mx-auto px-4 py-8 mt-20">
-        <div className="flex flex-col md:flex-row gap-8 w-full">
-          <div className="flex md:w-[30%] md:min-w-[300px] flex-col items-center w-full ">
-            <div className="flex flex-col items-center md:items-start">
+      <div className="flex mx-auto px-2 sm:px-4 md:px-16 py-8 mt-20">
+        <div className="flex flex-col md:flex-row gap-6 md:gap-16 w-full">
+          <div className="flex md:w-[20%] md:min-w-[300px] flex-col items-center w-full">
+            <div className="flex flex-col items-center md:items-start space-y-6">
               <UserAvatar
                 src={user.image_url || "/placeholder.svg"}
                 alt={user.name}
-                size={184}
+                size={120}
                 className="cursor-default"
               />
-              <h1 className="mt-4 text-[44px] leading-1 font-bold">
-                {user.name}
-              </h1>
-              <p className="text-[20px] leading-none text-muted-foreground">
-                @{user.username}
-              </p>
+              <div className="space-y-2 text-center md:text-left">
+                <h1 className="text-3xl font-semibold tracking-tight">
+                  {user.name}
+                </h1>
+                <p className="text-lg text-muted-foreground">
+                  @{user.username}
+                </p>
+                {user.bio && (
+                  <p className="text-sm text-muted-foreground max-w-md leading-normal">
+                    {user.bio}
+                  </p>
+                )}
+                <div className="flex items-center gap-4 pt-2">
+                  {user.twitter_url && (
+                    <Link
+                      href={user.twitter_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label="Twitter Profile"
+                    >
+                      <Icons.twitter className="h-5 w-5" />
+                    </Link>
+                  )}
+                  <Link
+                    href={user.manually_added ? user.github_url || `https://github.com/${user.username}` : `https://github.com/${user.username}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label="GitHub Profile"
+                  >
+                    <Icons.gitHub className="h-5 w-5" />
+                  </Link>
+                </div>
+              </div>
               {user.manually_added === true && (
-                <div className="flex flex-col mt-7 -mx-4">
+                <div className="flex flex-col w-full">
                   <Alert>
                     <AlertTitle>
                       This profile was created by 21st.dev
@@ -88,7 +119,7 @@ export default async function UserProfile({
               )}
             </div>
           </div>
-          <div className="w-full md:w-[70%]">
+          <div className="w-full md:w-[80%]">
             <ComponentsList components={components} />
           </div>
         </div>

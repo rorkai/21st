@@ -7,18 +7,23 @@ import { Github } from "lucide-react"
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useIsMobile } from "@/hooks/use-media-query"
+import { setHasVisitedCookie } from "@/lib/cookies"
 
 export function HeroSection() {
   const router = useRouter()
   const isMobile = useIsMobile()
+
+  const onEnterWebsite = async () => {
+    await setHasVisitedCookie()
+    router.refresh()
+  }
 
   useEffect(() => {
     document.body.style.overflow = "hidden"
 
     const handleKeyPress = async (e: KeyboardEvent) => {
       if (e.key === "Enter") {
-        await fetch("/api/hero/close", { method: "POST" })
-        router.refresh()
+        await onEnterWebsite()
       }
     }
     window.addEventListener("keydown", handleKeyPress)
@@ -28,11 +33,6 @@ export function HeroSection() {
       window.removeEventListener("keydown", handleKeyPress)
     }
   }, [router])
-
-  async function onBrowse() {
-    await fetch("/api/hero/close", { method: "POST" })
-    router.refresh()
-  }
 
   return (
     <AuroraBackground className="fixed inset-0 z-50">
@@ -59,17 +59,19 @@ export function HeroSection() {
           </h1>
 
           <p className="text-base sm:text-lg md:text-xl leading-relaxed mb-8 md:mb-12 bg-gradient-to-b from-muted-foreground to-muted-foreground/70 bg-clip-text text-transparent">
-            Ship polished UI faster with ready-to-use Tailwind components.
+            Ship polished UI faster with React Tailwind components based on shadcn.
             <br />
-            Built by design engineers, for design engineers. One command to
+            Built by design engineers. One command to
             install.
+            <br />
+            Distribute your own components.
           </p>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6">
             <Button 
               size="lg" 
               variant="default" 
-              onClick={onBrowse}
+              onClick={onEnterWebsite}
             >
               Browse components
               {!isMobile && (

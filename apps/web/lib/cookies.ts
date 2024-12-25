@@ -17,3 +17,11 @@ export async function isReturningUser() {
 
   return true
 }
+
+export async function setHasVisitedCookie() {
+  cookies().set("has_visited", "1", {
+    expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+    httpOnly: true,
+    sameSite: "lax",
+  })
+}

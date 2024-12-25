@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: '21st.dev - The NPM for Design Engineers',
     short_name: '21st.dev',
-    description: 'Ship polished UI faster with ready-to-use Tailwind components. Built by design engineers, for design engineers.',
+    description: 'Ship polished UI faster with React Tailwind components based on shadcn. Built by design engineers, for design engineers.',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',

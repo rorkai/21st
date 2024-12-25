@@ -75,7 +75,6 @@ type FormStep =
   | "detailedForm"
 
 export default function PublishComponentForm() {
-  const registryToPublish = "ui"
   const { user } = useUser()
   const client = useClerkSupabaseClient()
   const router = useRouter()
@@ -116,6 +115,7 @@ export default function PublishComponentForm() {
   const demoDirectRegistryDependencies = form.watch(
     "demo_direct_registry_dependencies",
   )
+  const registryToPublish = form.watch("registry")
 
   const [formStep, setFormStep] = useState<FormStep>("nameSlugForm")
   const [parsedCode, setParsedCode] = useState<ParsedCodeData>({
@@ -745,6 +745,7 @@ export default function PublishComponentForm() {
                     parsedCode.componentNames[0] ?? "MyComponent"
                   }
                   componentSlug={componentSlug}
+                  registryToPublish={registryToPublish}
                 />
               )}
             </div>

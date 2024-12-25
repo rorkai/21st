@@ -609,6 +609,10 @@ export type Database = {
         global_css_extension: string | null
         tailwind_config_extension: string | null
         website_url: string | null
+        is_paid: boolean | null
+        payment_url: string | null
+        price: number | null
+        pro_preview_image_url: string | null
       }
     }
   }

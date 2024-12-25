@@ -139,7 +139,7 @@ export function NewsletterDialog() {
         </form>
 
         <p className="text-center text-xs text-muted-foreground">
-          By subscribing you agree to our <Link href="/privacy-policy">Privacy Policy</Link>.
+          By subscribing you agree to our <Link href="/privacy">Privacy Policy</Link>.
         </p>
       </DialogContent>
     </Dialog>

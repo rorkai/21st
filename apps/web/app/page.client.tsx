@@ -8,7 +8,7 @@ import { useClerkSupabaseClient } from "@/lib/clerk"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAtom } from "jotai"
 import { searchQueryAtom } from "@/components/Header"
-import { ComponentsHeader, sortByAtom } from "@/components/ComponentsHeader"
+import { ComponentsHeader, sortByAtom, quickFilterAtom } from "@/components/ComponentsHeader"
 import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { trackEvent } from "@/lib/amplitude"
 import { motion } from "framer-motion"
@@ -23,6 +23,7 @@ export function HomePageClient({
   const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom)
   const supabase = useClerkSupabaseClient()
   const [sortBy] = useAtom(sortByAtom)
+  const [quickFilter] = useAtom(quickFilterAtom)
   const lastTrackedQuery = useRef<string>("")
 
   useEffect(() => {
@@ -75,24 +76,40 @@ export function HomePageClient({
     retry: false,
   })
 
-  const sortedComponents = useMemo(() => {
+  const filteredAndSortedComponents = useMemo(() => {
     if (!components) return undefined
 
-    return [...components].sort((a, b) => {
+    let filtered = [...components]
+    
+    switch (quickFilter) {
+      case 'all':
+        break
+      case 'recent':
+        filtered = filtered.filter(c => {
+          const date = new Date(c.created_at)
+          const now = new Date()
+          const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
+          return diffDays < 7
+        })
+        break
+      case 'downloaded':
+        filtered = filtered.filter(c => (c.downloads_count || 0) > 10)
+        break
+    }
+
+    return filtered.sort((a, b) => {
       switch (sortBy) {
         case "installations":
           return (b.downloads_count || 0) - (a.downloads_count || 0)
         case "popular":
           return (b.likes_count || 0) - (a.likes_count || 0)
         case "newest":
-          return (
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          )
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         default:
           return 0
       }
     })
-  }, [components, sortBy])
+  }, [components, quickFilter, sortBy])
 
   return (
     <motion.div
@@ -101,9 +118,9 @@ export function HomePageClient({
       className="container mx-auto mt-20"
     >
       <div className="flex flex-col">
-        <ComponentsHeader totalCount={componentsTotalCount} />
+        <ComponentsHeader totalCount={filteredAndSortedComponents?.length ?? 0} />
         <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-9 list-none pb-10">
-          {sortedComponents?.map((component) => (
+          {filteredAndSortedComponents?.map((component) => (
             <ComponentCard key={component.id} component={component} />
           ))}
           {components === undefined && (

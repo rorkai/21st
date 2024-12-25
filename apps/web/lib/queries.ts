@@ -383,3 +383,17 @@ export function useUpdateComponentWithTags(
     },
   })
 }
+
+export async function incrementComponentViews(
+  supabase: SupabaseClient<Database>,
+  componentId: number
+) {
+  const { error } = await supabase.rpc('increment_component_views', {
+    component_id: componentId
+  })
+
+  if (error) {
+    console.error("Error incrementing component views:", error)
+    throw error
+  }
+}

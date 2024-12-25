@@ -192,6 +192,7 @@ export type Database = {
           user_id: string
           video_url: string | null
           website_url: string | null
+          views_count: number
         }
         Insert: {
           code?: string
@@ -220,6 +221,7 @@ export type Database = {
           user_id: string
           video_url?: string | null
           website_url?: string | null
+          views_count?: number
         }
         Update: {
           code?: string
@@ -248,6 +250,7 @@ export type Database = {
           user_id?: string
           video_url?: string | null
           website_url?: string | null
+          views_count?: number
         }
         Relationships: [
           {
@@ -552,6 +555,7 @@ export type Database = {
         global_css_extension: string | null
         tailwind_config_extension: string | null
         website_url: string | null
+        views_count: number | null
       }
     }
   }

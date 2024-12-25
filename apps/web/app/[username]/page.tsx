@@ -20,10 +20,37 @@ export const generateMetadata = async ({
     supabaseWithAdminAccess,
     params.username,
   )
+
+  if (!user) {
+    return {
+      title: "User Not Found",
+    }
+  }
+
+  const ogImageUrl = `${process.env.NEXT_PUBLIC_APP_URL}/${user.username}/opengraph-image`
+
   return {
-    title: user
-      ? `${user.name}'s Profile | Component Library`
-      : "User Not Found",
+    title: `${user.name || user.username} | 21st.dev`,
+    description: `Check out ${user.name || user.username}'s components. Free, open source React and Tailwind CSS components with shadcn/ui.`,
+    openGraph: {
+      title: `${user.name || user.username}'s Components`,
+      description: `Browse ${user.name || user.username}'s collection of React and Tailwind CSS components`,
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: `${user.name || user.username}'s profile`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${user.name || user.username}'s Components`,
+      description: `Browse ${user.name || user.username}'s collection of React and Tailwind CSS components`,
+      images: [ogImageUrl],
+    },
+    keywords: ['react components', 'tailwind css', 'ui components', 'shadcn/ui', 'shadcn', 'open source', `${user.username} components`],
   }
 }
 

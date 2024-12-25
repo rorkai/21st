@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /auth/
+Disallow: /admin/
+Disallow: /preview/
+
+Sitemap: https://21st.dev/sitemap.xml

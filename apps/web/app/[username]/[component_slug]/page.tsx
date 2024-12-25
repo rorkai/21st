@@ -30,12 +30,39 @@ export const generateMetadata = async ({
 
   const ogImageUrl = `${process.env.NEXT_PUBLIC_APP_URL}/${user.username}/${component.component_slug}/opengraph-image`
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    "name": component.name,
+    "description": component.description,
+    "programmingLanguage": {
+      "@type": "ComputerLanguage",
+      "name": "React"
+    },
+    "author": {
+      "@type": "Person",
+      "name": user.username
+    },
+    "dateCreated": component.created_at,
+    "license": component.license
+  }
+
   return {
-    title: `${component.name} | Component`,
-    description: component.description || `A component by ${user.username}`,
+    title: `${component.name} | The NPM for Design Engineers | 21st.dev`,
+    description: component.description || `A React component by ${user.username}. Built for design engineers using Tailwind CSS and shadcn/ui.`,
+    keywords: [
+      'react components', 
+      'design engineers',
+      'tailwind css', 
+      'ui components', 
+      'shadcn/ui', 
+      'component library',
+      `${component.name.toLowerCase()} component`,
+      `${component.name.toLowerCase()} shadcn/ui`
+    ],
     openGraph: {
-      title: `${component.name} by ${user.username}`,
-      description: component.description || `A component by ${user.username}`,
+      title: `${component.name} - The NPM for Design Engineers`,
+      description: component.description || `A React component by ${user.username}. Ship polished UI faster with ready-to-use components.`,
       images: [
         {
           url: ogImageUrl,
@@ -47,10 +74,13 @@ export const generateMetadata = async ({
     },
     twitter: {
       card: "summary_large_image",
-      title: `${component.name} by ${user.username}`,
-      description: component.description || `A component by ${user.username}`,
+      title: `${component.name} - The NPM for Design Engineers`,
+      description: component.description || `A React component by ${user.username}. Ship polished UI faster with ready-to-use components.`,
       images: [ogImageUrl],
     },
+    other: {
+      "script:ld+json": JSON.stringify(structuredData)
+    }
   }
 }
 

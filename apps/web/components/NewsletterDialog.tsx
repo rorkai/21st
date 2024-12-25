@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Mail } from "lucide-react"
 import { toast } from "sonner"
 import { useIsMobile } from "@/hooks/use-media-query"
+import Link from "next/link"
 
 export function NewsletterDialog() {
   const [isOpen, setIsOpen] = useState(false)
@@ -23,7 +24,7 @@ export function NewsletterDialog() {
   useEffect(() => {
     const hasSubscribed = localStorage.getItem("hasSubscribedToNewsletter")
     const hasDeclined = localStorage.getItem("hasDeclinedNewsletter")
-    
+
     const timer = setTimeout(() => {
       if (!hasSubscribed && !hasDeclined) {
         setIsOpen(true)
@@ -56,14 +57,17 @@ export function NewsletterDialog() {
 
     try {
       const formBody = `userGroup=&mailingLists=&email=${encodeURIComponent(email)}`
-      
-      const response = await fetch("https://app.loops.so/api/newsletter-form/cm53que9u00xu5nps0o5zq8wj", {
-        method: "POST",
-        body: formBody,
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+
+      const response = await fetch(
+        "https://app.loops.so/api/newsletter-form/cm53que9u00xu5nps0o5zq8wj",
+        {
+          method: "POST",
+          body: formBody,
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
         },
-      })
+      )
 
       const data = await response.json()
 
@@ -79,7 +83,11 @@ export function NewsletterDialog() {
         toast.error("Too many signups, please try again in a little while")
         return
       }
-      toast.error(error instanceof Error ? error.message : "Failed to subscribe. Please try again.")
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to subscribe. Please try again.",
+      )
       localStorage.setItem("loops-form-timestamp", "")
     } finally {
       setIsSubmitting(false)
@@ -95,9 +103,12 @@ export function NewsletterDialog() {
             aria-hidden="true"
           />
           <DialogHeader>
-            <DialogTitle className="sm:text-center">Weekly UI gems in your inbox</DialogTitle>
+            <DialogTitle className="sm:text-center">
+              Stay Updated with Latest UI Components
+            </DialogTitle>
             <DialogDescription className="sm:text-center">
-              Get notified about new polished components and UI patterns every week.
+              Join our weekly digest featuring carefully curated UI components
+              and design patterns from top design engineers.
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -128,7 +139,7 @@ export function NewsletterDialog() {
         </form>
 
         <p className="text-center text-xs text-muted-foreground">
-          By subscribing you agree to receive weekly updates and announcements.
+          By subscribing you agree to our <Link href="/privacy-policy">Privacy Policy</Link>.
         </p>
       </DialogContent>
     </Dialog>

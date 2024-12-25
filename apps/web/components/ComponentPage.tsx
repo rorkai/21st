@@ -4,10 +4,8 @@
 import React, { useEffect, useState } from "react"
 import {
   ChevronRight,
-  Check,
   CodeXml,
   Info,
-  Link as LinkIcon,
   Pencil,
 } from "lucide-react"
 import { Component, Tag, User } from "@/types/global"
@@ -34,7 +32,6 @@ import { toast } from "sonner"
 import { usePublishAs } from "./publish/use-publish-as"
 import { identifyUser, setPageProperties, trackEvent } from "@/lib/amplitude"
 import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
-import { incrementComponentViews } from "@/lib/queries"
 
 export const isShowCodeAtom = atom(true)
 
@@ -274,13 +271,6 @@ export default function ComponentPage({
       });
     }
   }, [user]);
-
-  useEffect(() => {
-    if (supabase && component.id) {
-      incrementComponentViews(supabase, component.id)
-        .catch(error => console.error("Failed to increment views:", error))
-    }
-  }, [supabase, component.id])
 
   return (
     <div

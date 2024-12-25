@@ -58,7 +58,8 @@ export const generateMetadata = async ({
       'shadcn/ui', 
       'component library',
       `${component.name.toLowerCase()} component`,
-      `${component.name.toLowerCase()} shadcn/ui`
+      `${component.name.toLowerCase()} shadcn/ui`,
+      ...(component.tags?.map(tag => tag.name.toLowerCase()) || [])
     ],
     openGraph: {
       title: `${component.name} - The NPM for Design Engineers`,

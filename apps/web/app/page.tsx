@@ -8,6 +8,7 @@ import { Metadata } from "next"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { Component, User } from "@/types/global"
 import { HeroSection } from "@/components/HeroSection"
+import { NewsletterDialog } from "@/components/NewsletterDialog"
 
 export const metadata: Metadata = {
   title: "Home | 21st.dev",
@@ -31,12 +32,16 @@ export default async function HomePage() {
     return null
   }
 
-  // Просто считываем cookie, сама установка была перенесена в middleware
   const cookieStore = cookies()
   const isReturning = cookieStore.has("has_visited")
 
   if (!isReturning) {
-    return <HeroSection />
+    return (
+      <>
+        <HeroSection />
+        <NewsletterDialog />
+      </>
+    )
   }
 
   return (
@@ -46,6 +51,7 @@ export default async function HomePage() {
         initialComponents={initialComponents}
         componentsTotalCount={componentsCount ?? 0}
       />
+      <NewsletterDialog />
     </>
   )
 }

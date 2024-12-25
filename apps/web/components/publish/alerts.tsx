@@ -212,9 +212,11 @@ export const CodeGuidelinesAlert = () => {
 export const DemoComponentGuidelinesAlert = ({
   mainComponentName,
   componentSlug,
+  registryToPublish,
 }: {
   mainComponentName: string
   componentSlug: string
+  registryToPublish: string
 }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
@@ -233,10 +235,10 @@ export const DemoComponentGuidelinesAlert = ({
             <ul className="list-disc pl-5 mt-1">
               <li>
                 Import your component with curly braces from{" "}
-                <Code code="@/components/ui" language="pseudo" /> path:
+                <Code code={`@/components/${registryToPublish}`} language="pseudo" /> path:
                 <Code
                   display="block"
-                  code={`import { ${mainComponentName ?? "MyComponent"} } from "@/components/ui/${componentSlug}"`}
+                  code={`import { ${mainComponentName ?? "MyComponent"} } from "@/components/${registryToPublish}/${componentSlug}"`}
                 />
               </li>
               <li>

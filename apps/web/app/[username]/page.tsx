@@ -12,7 +12,8 @@ import Link from "next/link"
 import { Icons } from "@/components/icons"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
-import { ExternalLink } from "lucide-react"
+import { ExternalLink, Globe } from "lucide-react"
+import { appendQueryParam } from "@/lib/utils"
 
 export const generateMetadata = async ({
   params,
@@ -138,6 +139,21 @@ export default async function UserProfile({
                   >
                     <Icons.gitHub className="h-5 w-5" />
                   </Link>
+                  {user.website_url && !user.profile_referral_url && (
+                    <Link
+                      href={appendQueryParam(
+                        user.website_url,
+                        "ref",
+                        "21st.dev",
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label="Website"
+                    >
+                      <Globe className="h-5 w-5" />
+                    </Link>
+                  )}
                   {user.profile_referral_url && (
                     <Link
                       href={user.profile_referral_url}

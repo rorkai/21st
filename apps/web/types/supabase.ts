@@ -181,11 +181,15 @@ export type Database = {
           fts: unknown | null
           global_css_extension: string | null
           id: number
+          is_paid: boolean
           is_public: boolean
           license: string
           likes_count: number
           name: string
+          payment_url: string | null
           preview_url: string
+          price: number
+          pro_preview_image_url: string | null
           registry: string
           tailwind_config_extension: string | null
           updated_at: string
@@ -209,11 +213,15 @@ export type Database = {
           fts?: unknown | null
           global_css_extension?: string | null
           id?: number
+          is_paid?: boolean
           is_public?: boolean
           license?: string
           likes_count?: number
           name: string
+          payment_url?: string | null
           preview_url: string
+          price?: number
+          pro_preview_image_url?: string | null
           registry?: string
           tailwind_config_extension?: string | null
           updated_at?: string
@@ -237,11 +245,15 @@ export type Database = {
           fts?: unknown | null
           global_css_extension?: string | null
           id?: number
+          is_paid?: boolean
           is_public?: boolean
           license?: string
           likes_count?: number
           name?: string
+          payment_url?: string | null
           preview_url?: string
+          price?: number
+          pro_preview_image_url?: string | null
           registry?: string
           tailwind_config_extension?: string | null
           updated_at?: string
@@ -292,6 +304,7 @@ export type Database = {
           twitter_url: string | null
           updated_at: string | null
           username: string
+          website_url: string | null
         }
         Insert: {
           bio?: string | null
@@ -307,6 +320,7 @@ export type Database = {
           twitter_url?: string | null
           updated_at?: string | null
           username: string
+          website_url?: string | null
         }
         Update: {
           bio?: string | null
@@ -322,6 +336,7 @@ export type Database = {
           twitter_url?: string | null
           updated_at?: string | null
           username?: string
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -503,11 +518,15 @@ export type Database = {
           fts: unknown | null
           global_css_extension: string | null
           id: number
+          is_paid: boolean
           is_public: boolean
           license: string
           likes_count: number
           name: string
+          payment_url: string | null
           preview_url: string
+          price: number
+          pro_preview_image_url: string | null
           registry: string
           tailwind_config_extension: string | null
           updated_at: string

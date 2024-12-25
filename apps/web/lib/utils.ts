@@ -12,8 +12,20 @@ export function getPackageRunner(packageManager: string) {
 }
 
 export function formatDate(date: Date) {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'long',
-    year: 'numeric'
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    year: "numeric",
   }).format(date)
+}
+
+export function appendQueryParam(url: string, param: string, value: string) {
+  try {
+    const urlObj = new URL(url)
+    if (!urlObj.searchParams.has(param)) {
+      urlObj.searchParams.append(param, value)
+    }
+    return urlObj.toString()
+  } catch (e) {
+    return url
+  }
 }

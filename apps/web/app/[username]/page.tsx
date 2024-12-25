@@ -10,6 +10,9 @@ import ErrorPage from "@/components/ErrorPage"
 import { UserProfileAnalytics } from "@/components/UserProfileAnalytics"
 import Link from "next/link"
 import { Icons } from "@/components/icons"
+import { cn } from "@/lib/utils"
+import { buttonVariants } from "@/components/ui/button"
+import { ExternalLink } from "lucide-react"
 
 export const generateMetadata = async ({
   params,
@@ -31,7 +34,7 @@ export const generateMetadata = async ({
 
   return {
     title: `${user.name || user.username} | 21st.dev`,
-    description: `Check out ${user.name || user.username}'s components. Free, open source React and Tailwind CSS components with shadcn/ui.`,
+    description: `Collection of free open source shadcn/ui React Tailwind CSS components by ${user.name || user.username}.`,
     openGraph: {
       title: `${user.name || user.username}'s Components`,
       description: `Browse ${user.name || user.username}'s collection of React and Tailwind CSS components`,
@@ -50,7 +53,15 @@ export const generateMetadata = async ({
       description: `Browse ${user.name || user.username}'s collection of React and Tailwind CSS components`,
       images: [ogImageUrl],
     },
-    keywords: ['react components', 'tailwind css', 'ui components', 'shadcn/ui', 'shadcn', 'open source', `${user.username} components`],
+    keywords: [
+      "react components",
+      "tailwind css",
+      "ui components",
+      "shadcn/ui",
+      "shadcn",
+      "open source",
+      `${user.username} components`,
+    ],
   }
 }
 
@@ -75,7 +86,7 @@ export default async function UserProfile({
   return (
     <>
       <Header page="profile" />
-      <UserProfileAnalytics 
+      <UserProfileAnalytics
         username={user.username}
         isManuallyAdded={user.manually_added}
       />
@@ -114,7 +125,12 @@ export default async function UserProfile({
                     </Link>
                   )}
                   <Link
-                    href={user.manually_added ? user.github_url || `https://github.com/${user.username}` : `https://github.com/${user.username}`}
+                    href={
+                      user.manually_added
+                        ? user.github_url ||
+                          `https://github.com/${user.username}`
+                        : `https://github.com/${user.username}`
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-muted-foreground hover:text-foreground transition-colors"
@@ -122,6 +138,20 @@ export default async function UserProfile({
                   >
                     <Icons.gitHub className="h-5 w-5" />
                   </Link>
+                  {user.profile_referral_url && (
+                    <Link
+                      href={user.profile_referral_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(
+                        buttonVariants({ variant: "default", size: "lg" }),
+                      )}
+                      aria-label="More Components"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      Pro components
+                    </Link>
+                  )}
                 </div>
               </div>
               {user.manually_added === true && (

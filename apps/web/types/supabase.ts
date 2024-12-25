@@ -192,7 +192,6 @@ export type Database = {
           user_id: string
           video_url: string | null
           website_url: string | null
-          views_count: number
         }
         Insert: {
           code?: string
@@ -221,7 +220,6 @@ export type Database = {
           user_id: string
           video_url?: string | null
           website_url?: string | null
-          views_count?: number
         }
         Update: {
           code?: string
@@ -250,7 +248,6 @@ export type Database = {
           user_id?: string
           video_url?: string | null
           website_url?: string | null
-          views_count?: number
         }
         Relationships: [
           {
@@ -282,46 +279,49 @@ export type Database = {
       }
       users: {
         Row: {
+          bio: string | null
           created_at: string
           email: string
+          github_url: string | null
           id: string
           image_url: string | null
           is_admin: boolean
           manually_added: boolean
           name: string | null
+          profile_referral_url: string | null
+          twitter_url: string | null
           updated_at: string | null
           username: string
-          twitter_url: string | null
-          github_url: string | null
-          bio: string | null
         }
         Insert: {
+          bio?: string | null
           created_at?: string
           email?: string
+          github_url?: string | null
           id: string
           image_url?: string | null
           is_admin?: boolean
           manually_added?: boolean
           name?: string | null
+          profile_referral_url?: string | null
+          twitter_url?: string | null
           updated_at?: string | null
           username: string
-          twitter_url?: string | null
-          github_url?: string | null
-          bio?: string | null
         }
         Update: {
+          bio?: string | null
           created_at?: string
           email?: string
+          github_url?: string | null
           id?: string
           image_url?: string | null
           is_admin?: boolean
           manually_added?: boolean
           name?: string | null
+          profile_referral_url?: string | null
+          twitter_url?: string | null
           updated_at?: string | null
           username?: string
-          twitter_url?: string | null
-          github_url?: string | null
-          bio?: string | null
         }
         Relationships: []
       }
@@ -485,6 +485,41 @@ export type Database = {
           tags: Json
         }[]
       }
+      get_random_components: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          code: string
+          compiled_css: string | null
+          component_names: Json
+          component_slug: string
+          created_at: string
+          demo_code: string
+          demo_dependencies: Json | null
+          demo_direct_registry_dependencies: Json
+          dependencies: Json | null
+          description: string | null
+          direct_registry_dependencies: Json
+          downloads_count: number
+          fts: unknown | null
+          global_css_extension: string | null
+          id: number
+          is_public: boolean
+          license: string
+          likes_count: number
+          name: string
+          preview_url: string
+          registry: string
+          tailwind_config_extension: string | null
+          updated_at: string
+          user_id: string
+          video_url: string | null
+          website_url: string | null
+        }[]
+      }
+      increment: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       is_trigger_operation: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -555,7 +590,6 @@ export type Database = {
         global_css_extension: string | null
         tailwind_config_extension: string | null
         website_url: string | null
-        views_count: number | null
       }
     }
   }

@@ -9,7 +9,7 @@ import {
   makeSlugFromName,
   generateUniqueSlug,
   useIsCheckSlugAvailable,
-} from "./useIsCheckSlugAvailable"
+} from "./use-is-check-slug-available"
 import { FormData, isFormValid } from "./utils"
 import { useDropzone } from "react-dropzone"
 import UploadIcon from "@/components/UploadIcon"

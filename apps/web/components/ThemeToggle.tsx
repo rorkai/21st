@@ -9,7 +9,7 @@ export function ThemeToggle() {
 
   return (
     <Toggle
-      className="group h-8 w-8 hover:bg-accent"
+      className="group h-8 w-8 bg-transparent data-[state=on]:!bg-transparent hover:bg-accent hover:!text-foreground"
       pressed={theme === "dark"}
       onPressedChange={() => setTheme(theme === "dark" ? "light" : "dark")}
       aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}

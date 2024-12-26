@@ -1,74 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link"
-import { cn } from "@/lib/utils"
 import { Icons } from "./icons"
 import { ThemeToggle } from "./ThemeToggle"
 import { GitHubStars } from "./GitHubStars"
-
-import { buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
-const uiSystems = [
-  {
-    title: "shadcn/ui",
-    href: "/s/shadcn",
-    description:
-      "Beautifully designed components that you can copy and paste into your apps.",
-  },
-  {
-    title: "MagicUI",
-    href: "/magicui",
-    description: "Enchanting UI components for modern web applications.",
-  },
-  {
-    title: "Aceternity UI",
-    href: "/aceternity",
-    description: "Aceternity UI components for building modern websites.",
-  },
-]
-
-const componentTypes = [
-  {
-    title: "Buttons",
-    href: "/s/button",
-    description: "Clickable things that do stuff when you press them.",
-  },
-  {
-    title: "Cards",
-    href: "/s/card",
-    description: "Boxes that group related stuff together neatly.",
-  },
-  {
-    title: "Hero Sections",
-    href: "/s/hero",
-    description: "Eye-catching header sections for your landing pages.",
-  },
-  {
-    title: "Backgrounds",
-    href: "/s/background",
-    description: "Beautiful background patterns and effects.",
-  },
-  {
-    title: "Features",
-    href: "/s/features",
-    description: "Showcase your product's key features and benefits.",
-  },
-  {
-    title: "Typography",
-    href: "/s/text",
-    description: "Typography components for effective content display.",
-  },
-  {
-    title: "Bento Grids",
-    href: "/s/bento",
-    description: "Cool grid layouts that look like Japanese lunch boxes.",
-  },
-  {
-    title: "Landing Pages",
-    href: "/s/landing-page",
-    description: "Complete landing page templates and sections.",
-  },
-]
 
 interface HeaderServerProps {
   tagName?: string
@@ -99,11 +36,7 @@ export function HeaderServer({
   )
 }
 
-HeaderServer.SocialIcons = function SocialIcons({
-  isMobile,
-}: {
-  isMobile: boolean
-}) {
+HeaderServer.SocialIcons = function SocialIcons() {
   return (
     <div className="flex items-center gap-2">
       <Link
@@ -131,10 +64,25 @@ HeaderServer.SocialIcons = function SocialIcons({
           <span className="sr-only">GitHub</span>
         </Button>
       </Link>
+      <Button
+        variant="outline"
+        className={cn(
+          "relative h-8 w-fit justify-start bg-muted/50 text-sm font-normal text-muted-foreground shadow-none sm:pr-12 hidden md:inline-flex"
+        )}
+        onClick={() =>
+          document.dispatchEvent(
+            new KeyboardEvent("keydown", { key: "k", metaKey: true }),
+          )
+        }
+      >
+        <span className="hidden lg:inline-flex mr-4">Global search...</span>
+        <span className="inline-flex lg:hidden mr-4">Search...</span>
+        <kbd className="pointer-events-none absolute right-[0.3rem] top-[0.3rem] hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+          <span className="text-xs">⌘</span>K
+        </kbd>
+      </Button>
     </div>
   )
 }
 
 HeaderServer.ThemeToggle = ThemeToggle
-
-export { uiSystems, componentTypes }

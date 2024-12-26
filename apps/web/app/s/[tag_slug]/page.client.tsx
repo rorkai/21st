@@ -14,8 +14,10 @@ import { sortComponents, filterComponents } from "@/lib/filters.client"
 
 export function TagPageContent({
   components,
+  tagName,
 }: {
   components: (Component & { user: User })[]
+  tagName: string
 }) {
   const [sortBy] = useAtom(sortByAtom)
   const [quickFilter] = useAtom(quickFilterAtom)
@@ -44,6 +46,7 @@ export function TagPageContent({
       <ComponentsHeader
         filtersDisabled={false}
         components={components}
+        currentSection={tagName}
       />
       <ComponentsList components={filteredSortedComponents} className="mt-6" />
     </>

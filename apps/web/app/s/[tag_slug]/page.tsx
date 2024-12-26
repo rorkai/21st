@@ -46,15 +46,17 @@ export default async function TagPage({ params }: TagPageProps) {
     <div className="container mx-auto px-4">
       {tagInfo && <Header tagName={tagInfo?.name} page="components" />}
       <div className="mt-20">
-        <TagPageContent components={components} />
+        <TagPageContent components={components} tagName={tagInfo.name} />
       </div>
     </div>
   )
 }
 
-export async function generateMetadata({ params }: TagPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: TagPageProps): Promise<Metadata> {
   const tagInfo = await getTagInfo(supabaseWithAdminAccess, params.tag_slug)
-  
+
   if (!tagInfo) {
     return {
       title: "Tag Not Found | 21st.dev",
@@ -69,8 +71,8 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
     url: `${process.env.NEXT_PUBLIC_APP_URL}/s/${params.tag_slug}`,
     mainEntity: {
       "@type": "ItemList",
-      itemListElement: `${tagInfo.name} React components`
-    }
+      itemListElement: `${tagInfo.name} React components`,
+    },
   }
 
   return {
@@ -78,7 +80,7 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
     description: `Discover and share ${tagInfo.name.toLowerCase()} components. Ready-to-use React Tailwind components inspired by shadcn/ui.`,
     openGraph: {
       title: `${tagInfo.name} Components | 21st.dev - The NPM for Design Engineers`,
-      description: `Ready-to-use ${tagInfo.name.toLowerCase()} React Tailwind components inspired by shadcn/ui.`, 
+      description: `Ready-to-use ${tagInfo.name.toLowerCase()} React Tailwind components inspired by shadcn/ui.`,
     },
     keywords: [
       `${tagInfo.name.toLowerCase()} components`,

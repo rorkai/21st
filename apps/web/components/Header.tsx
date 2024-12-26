@@ -67,7 +67,7 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
 
         <div className="flex items-center gap-2">
           {!isMobile && <HeaderServer.ThemeToggle />}
-          <HeaderServer.SocialIcons isMobile={isMobile} />
+          <HeaderServer.SocialIcons/>
           {!isMobile && (
             <>
               <SignedIn>

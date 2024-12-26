@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ClerkProvider } from "@clerk/nextjs"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/AppSidebar"
+import { CommandMenu } from "@/components/CommandMenu"
 import { usePathname } from "next/navigation"
 import { useEffect } from "react"
 import { initAmplitude } from "@/lib/amplitude"
@@ -28,12 +29,11 @@ export function AppProviders({
   return (
     <QueryClientProvider client={queryClient}>
       <ClerkProvider>
+        <CommandMenu />
         {showSidebar ? (
           <SidebarProvider>
             <AppSidebar />
-            <SidebarInset>
-              {children}
-            </SidebarInset>
+            <SidebarInset>{children}</SidebarInset>
           </SidebarProvider>
         ) : (
           children

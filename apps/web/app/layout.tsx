@@ -8,7 +8,6 @@ import { ThemeProvider } from "next-themes"
 import { GoogleAnalytics } from "@next/third-parties/google"
 import { cn } from "@/lib/utils"
 
-
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -22,8 +21,7 @@ export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
-  }) {
-
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn(geistSans.variable, geistMono.variable)}>

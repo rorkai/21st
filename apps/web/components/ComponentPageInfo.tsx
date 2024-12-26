@@ -9,6 +9,7 @@ import {
   Copy,
   Scale,
   CalendarDays,
+  Info,
 } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { ComponentsList } from "./ComponentsList"
@@ -136,7 +137,7 @@ export const ComponentPageInfo = ({
       {component.user && (
         <div className="flex items-center">
           <span className="text-muted-foreground w-1/4">Created by</span>
-          <HoverCard>
+          <HoverCard openDelay={300}>
             <HoverCardTrigger asChild>
               <div className="flex items-center justify-start hover:bg-accent rounded-md px-2 py-1 -mx-2 mr-auto">
                 <Link
@@ -154,7 +155,12 @@ export const ComponentPageInfo = ({
                 </Link>
               </div>
             </HoverCardTrigger>
-            <HoverCardContent align="start" className="w-[320px]">
+            <HoverCardContent
+              align="start"
+              className="w-[320px]"
+              side="bottom"
+              alignOffset={-10}
+            >
               <div className="flex gap-4">
                 <Avatar className="h-12 w-12">
                   <AvatarImage
@@ -162,45 +168,45 @@ export const ComponentPageInfo = ({
                     alt={component.user.name || component.user.username}
                   />
                   <AvatarFallback>
-                    {(component.user.name ||
-                      component.user.username)?.[0]?.toUpperCase()}
+                    {component.user.name?.[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="space-y-1">
-                  <h4 className="text-sm font-semibold">
-                    {component.user.name || component.user.username}
-                  </h4>
-                  <p className="text-sm text-muted-foreground">
-                    @{component.user.username}
-                  </p>
+                  <Link
+                    href={`/${component.user.username}`}
+                    className="hover:underline"
+                  >
+                    <h4 className="text-sm font-semibold">
+                      {component.user.name || component.user.username}
+                    </h4>
+                  </Link>
+                  <Link
+                    href={`/${component.user.username}`}
+                    className="hover:underline"
+                  >
+                    <p className="text-sm text-muted-foreground">
+                      @{component.user.username}
+                    </p>
+                  </Link>
+                  {component.user.bio && (
+                    <p className="text-xs text-muted-foreground whitespace-pre-wrap">
+                      {component.user.bio}
+                    </p>
+                  )}
                   {component.user.created_at && (
                     <div className="flex items-center pt-1">
-                      <CalendarDays className="mr-2 h-4 w-4 opacity-70" />
+                      {!component.user.manually_added ? (
+                        <CalendarDays className="mr-2 h-4 w-4 opacity-70" />
+                      ) : (
+                        <Info className="mr-2 h-4 w-4 opacity-70" />
+                      )}
                       <span className="text-xs text-muted-foreground">
-                        Joined {formatDate(new Date(component.user.created_at))}
+                        {component.user.manually_added
+                          ? `Created by 21st.dev`
+                          : `Joined ${formatDate(new Date(component.user.created_at))}`}
                       </span>
                     </div>
                   )}
-                  {component.user.twitter_url && (
-                    <Link
-                      href={component.user.twitter_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors pt-1"
-                    >
-                      <Icons.twitter className="h-3 w-3" />
-                      <span>Twitter</span>
-                    </Link>
-                  )}
-                  <Link
-                    href={`https://github.com/${component.user.username}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors pt-1"
-                  >
-                    <Icons.gitHub className="h-3 w-3" />
-                    <span>GitHub</span>
-                  </Link>
                 </div>
               </div>
             </HoverCardContent>
@@ -261,8 +267,7 @@ export const ComponentPageInfo = ({
                             {domain}
                             {formattedPath && (
                               <span className="text-muted-foreground">
-                                /
-                                {formattedPath}
+                                /{formattedPath}
                                 {segments.length > 2 ||
                                 (segments.length === 1 &&
                                   (segments[0]?.length ?? 0) > 12) ||

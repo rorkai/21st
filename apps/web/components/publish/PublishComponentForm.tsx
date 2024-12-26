@@ -53,12 +53,13 @@ import { Tables } from "@/types/supabase"
 import { LoadingSpinner } from "../LoadingSpinner"
 import { useSuccessDialogHotkeys } from "./hotkeys"
 import { toast } from "sonner"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { usePublishAs } from "./use-publish-as"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { HeroVideoDialog } from "@/components/ui/hero-video-dialog"
+import endent from "endent"
+import { ChevronLeftIcon } from "lucide-react"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -482,7 +483,14 @@ export default function PublishComponentForm() {
                                   "h-full w-full flex-grow resize-none scrollbar-hide",
                                 )}
                               />
-                              <div className="absolute bottom-2 right-2 z-2 h-[36px]">
+                              <div className="absolute flex gap-2 bottom-2 right-2 z-2 h-[36px]">
+                                <Button
+                                  size="icon"
+                                  variant="outline"
+                                  onClick={() => setFormStep("nameSlugForm")}
+                                >
+                                  <ChevronLeftIcon className="w-4 h-4" />
+                                </Button>
                                 <Button
                                   size="sm"
                                   disabled={
@@ -538,7 +546,14 @@ export default function PublishComponentForm() {
                                     minHeight: "100%",
                                   }}
                                 />
-                                <div className="absolute bottom-2 right-2 z-2 h-[36px]">
+                                <div className="absolute flex gap-2 bottom-2 right-2 z-2 h-[36px]">
+                                  <Button
+                                    size="icon"
+                                    variant="outline"
+                                    onClick={() => setFormStep("code")}
+                                  >
+                                    <ChevronLeftIcon className="w-4 h-4" />
+                                  </Button>
                                   <Button
                                     size="sm"
                                     disabled={
@@ -569,66 +584,106 @@ export default function PublishComponentForm() {
                     className="w-full"
                   >
                     <div className="flex flex-col gap-4">
-                      <h3 className="text-lg font-semibold">
-                        Customize Styling
-                      </h3>
+                      <h2 className="text-3xl font-bold">
+                        Tailwind styles (optional)
+                      </h2>
                       <p className="text-sm text-muted-foreground">
-                        Optionally customize the Tailwind configuration and CSS
-                        variables for your component.
+                        Optionally extend shadcn/ui Tailwind theme to customize your
+                        component.
                       </p>
 
                       <Tabs defaultValue="tailwind" className="w-full">
                         <TabsList>
                           <TabsTrigger value="tailwind">
-                            Tailwind Config
+                            tailwind.config.js
                           </TabsTrigger>
-                          <TabsTrigger value="css">Global CSS</TabsTrigger>
+                          <TabsTrigger value="css">globals.css</TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="tailwind">
-                          <div className="flex flex-col gap-2">
-                            <Label>Tailwind Configuration</Label>
-                            <ScrollArea className="h-[500px] w-full rounded-md border">
-                              <Textarea
-                                value={customTailwindConfig}
-                                onChange={(e) =>
-                                  setCustomTailwindConfig(e.target.value)
-                                }
-                                className="font-mono text-sm h-full w-full min-h-[500px]"
-                                placeholder="Customize your Tailwind config..."
-                              />
-                            </ScrollArea>
+                          <div className="relative flex flex-col gap-2">
+                            <Label className="mt-2">Extend tailwind.config.js</Label>
+                            <Textarea
+                              value={customTailwindConfig}
+                              onChange={(e) =>
+                                setCustomTailwindConfig(e.target.value)
+                              }
+                              className="font-mono text-sm h-full w-full min-h-[500px]"
+                              placeholder={endent`
+                                  Extend the default tailwind.config.js from shadcn/ui
+                                  \n
+                                  const exampleTailwindPlugin = require('tailwindcss/plugin')
+
+                                  module.exports = {
+                                    ...extend or override default shadcn/ui export here...,
+                                    theme: {
+                                      extend: {
+                                        ...extend or override default shadcn/ui theme here...,
+                                      },
+                                    },
+                                    plugins: [
+                                      exampleTailwindPlugin,
+                                    ],
+                                  }`}
+                            />
+                            <div className="absolute flex gap-2 bottom-2 right-2 z-2 h-[36px]">
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                className="px-2"
+                                onClick={() => setFormStep("demoCode")}
+                              >
+                                <ChevronLeftIcon className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => setFormStep("detailedForm")}
+                              >
+                                {(customTailwindConfig?.length ?? 0) > 0 ||
+                                (customGlobalCss?.length ?? 0) > 0
+                                  ? "Continue"
+                                  : "Skip"}
+                              </Button>
+                            </div>
                           </div>
                         </TabsContent>
 
                         <TabsContent value="css">
-                          <div className="flex flex-col gap-2">
-                            <Label>CSS Variables</Label>
-                            <ScrollArea className="h-[500px] w-full rounded-md border">
-                              <Textarea
-                                value={customGlobalCss}
-                                onChange={(e) =>
-                                  setCustomGlobalCss(e.target.value)
-                                }
-                                className="font-mono text-sm h-full w-full min-h-[500px]"
-                                placeholder=":root { /* Add your light mode CSS variables here */ } .dark { /* Add your dark mode CSS variables here */ }"
-                              />
-                            </ScrollArea>
+                          <div className="relative flex flex-col gap-2">
+                            <Label className="mt-2">Extend globals.css</Label>
+                            <Textarea
+                              value={customGlobalCss}
+                              onChange={(e) =>
+                                setCustomGlobalCss(e.target.value)
+                              }
+                              className="font-mono text-sm h-full w-full min-h-[500px]"
+                              placeholder={endent`Extend or override global.css variables from shadcn/ui
+                                  \n
+                                  :root {
+                                    /* Add your light mode CSS variables here */
+                                  }
+                                  .dark {
+                                    /* Add your dark mode CSS variables here */
+                                  }`}
+                            />
+                            <div className="absolute flex gap-2 bottom-2 right-2 z-2 h-[36px]">
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                onClick={() => setFormStep("demoCode")}
+                              >
+                                <ChevronLeftIcon className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => setFormStep("detailedForm")}
+                              >
+                                Continue
+                              </Button>
+                            </div>
                           </div>
                         </TabsContent>
                       </Tabs>
-
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          onClick={() => setFormStep("demoCode")}
-                        >
-                          Back
-                        </Button>
-                        <Button onClick={() => setFormStep("detailedForm")}>
-                          Continue
-                        </Button>
-                      </div>
                     </div>
                   </motion.div>
                 )}
@@ -687,7 +742,7 @@ export default function PublishComponentForm() {
                       />
                       <EditCodeFileCard
                         iconSrc={
-                          isDarkTheme ? "/css-file.svg" : "/css-file.svg"
+                          isDarkTheme ? "/demo-file-dark.svg" : "/demo-file.svg"
                         }
                         mainText="Demo code"
                         subText={`${parsedCode.demoComponentNames.slice(0, 2).join(", ")}${parsedCode.demoComponentNames.length > 2 ? ` +${parsedCode.demoComponentNames.length - 2}` : ""}`}
@@ -702,8 +757,8 @@ export default function PublishComponentForm() {
                         iconSrc={
                           isDarkTheme ? "/css-file-dark.svg" : "/css-file.svg"
                         }
-                        mainText="Styling"
-                        subText="Tailwind config and global CSS"
+                        mainText="Custom styles"
+                        subText="Tailwind config and globals.css"
                         onEditClick={() => setFormStep("customization")}
                       />
                       <ComponentDetailsForm

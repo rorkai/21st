@@ -59,6 +59,7 @@
     "cmdk": "1.0.0",
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.5",
+    "endent": "^2.1.0",
     "ffmpeg": "^0.0.4",
     "framer-motion": "^11.11.10",
     "fs": "0.0.1-security",

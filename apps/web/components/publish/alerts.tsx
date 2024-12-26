@@ -163,10 +163,13 @@ export const CodeGuidelinesAlert = () => {
                   display="block"
                   code={'"use client" \n\nimport * as React from "react"'}
                 />
-                <li>TypeScript is fully supported.</li>
+                <li>TypeScript is fully supported</li>
+                <li>Tailwind is fully supported</li>
                 <li>
-                  Tailwind is fully supported along with custom Tailwind styles
-                  from <Code code="shadcn/ui" language="pseudo" />.
+                  By default, we use default {" "}
+                  <Code code="tailwind.config.ts" language="pseudo" /> and{" "}
+                  <Code code="global.css" language="pseudo" /> from{" "}
+                  <Code code="shadcn/ui" language="pseudo" /> – you can extend them later
                 </li>
               </ul>
             </li>
@@ -187,18 +190,6 @@ export const CodeGuidelinesAlert = () => {
                     @serafimcloud
                   </Link>{" "}
                   on X
-                </li>
-              </ul>
-            </li>
-            <li>
-              Tailwind CSS:
-              <ul className="list-disc pl-5 mt-1">
-                <li>
-                  Custom Tailwind styles are not yet supported in the preview.
-                </li>
-                <li>
-                  If your component needs additional styles, specify them in the
-                  description so users can install them themselves.
                 </li>
               </ul>
             </li>

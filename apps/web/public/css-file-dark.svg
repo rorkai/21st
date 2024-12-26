@@ -1,0 +1,6 @@
+<svg width="117" height="117" viewBox="0 0 117 117" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="1.5" y="1.5" width="114" height="114" rx="15.5" fill="#1a1a1a" stroke="#333333" stroke-width="3"/>
+<rect x="9" y="9" width="99" height="99" rx="8" fill="#2a2a2a"/>
+<path d="M9 56H108V100C108 104.418 104.418 108 100 108H17C12.5817 108 9 104.418 9 100V56Z" fill="white"/>
+<text x="58.5" y="88" fill="#1a1a1a" font-family="Arial" font-size="24" font-weight="bold" text-anchor="middle">CSS</text>
+</svg>

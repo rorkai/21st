@@ -199,6 +199,9 @@ importers:
       dotenv:
         specifier: ^16.4.5
         version: 16.4.5
+      endent:
+        specifier: ^2.1.0
+        version: 2.1.0
       ffmpeg:
         specifier: ^0.0.4
         version: 0.0.4

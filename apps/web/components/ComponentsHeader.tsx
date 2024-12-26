@@ -67,10 +67,10 @@ const useSearchHotkeys = (inputRef: React.RefObject<HTMLInputElement>) => {
 
 export function ComponentsHeader({
   totalCount,
-  filtersEnabled,
+  filtersDisabled,
 }: {
   totalCount: number
-  filtersEnabled: boolean
+  filtersDisabled: boolean
 }) {
   const [quickFilter, setQuickFilter] = useAtom(quickFilterAtom)
   const [sortBy, setSortBy] = useAtom(sortByAtom)
@@ -103,7 +103,7 @@ export function ComponentsHeader({
             onValueChange={(value) =>
               setQuickFilter(value as QuickFilterOption)
             }
-            className={cn("w-full md:w-auto", filtersEnabled && "opacity-50")}
+            className={cn("w-full md:w-auto", filtersDisabled && "opacity-50")}
           >
             <TabsList className="w-full md:w-auto h-auto -space-x-px bg-background p-0 shadow-sm shadow-black/5 rtl:space-x-reverse">
               {Object.entries(QUICK_FILTER_OPTIONS).map(([value, label]) => (

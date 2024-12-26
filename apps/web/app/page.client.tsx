@@ -107,7 +107,7 @@ export function HomePageClient({
     >
       <div className="flex flex-col">
         <ComponentsHeader
-          filtersEnabled={!!searchQuery}
+          filtersDisabled={!!searchQuery}
           totalCount={
             quickFilter === "all"
               ? componentsTotalCount

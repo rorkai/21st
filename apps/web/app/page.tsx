@@ -31,7 +31,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
   }
 
   return {
-    title: "21st.dev - The NPM for Design Engineers",
+    title: "21st.dev – The NPM for Design Engineers",
     description:
       "Ship polished UI faster with ready-to-use React Tailwind components based on shadcn. Built by design engineers, for design engineers. Publish and share your components with the community.",
     keywords: [

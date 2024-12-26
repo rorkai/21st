@@ -300,7 +300,8 @@ export type Database = {
           is_admin: boolean
           manually_added: boolean
           name: string | null
-          profile_referral_url: string | null
+          pro_banner_url: string | null
+          pro_referral_url: string | null
           twitter_url: string | null
           updated_at: string | null
           username: string
@@ -316,7 +317,8 @@ export type Database = {
           is_admin?: boolean
           manually_added?: boolean
           name?: string | null
-          profile_referral_url?: string | null
+          pro_banner_url?: string | null
+          pro_referral_url?: string | null
           twitter_url?: string | null
           updated_at?: string | null
           username: string
@@ -332,7 +334,8 @@ export type Database = {
           is_admin?: boolean
           manually_added?: boolean
           name?: string | null
-          profile_referral_url?: string | null
+          pro_banner_url?: string | null
+          pro_referral_url?: string | null
           twitter_url?: string | null
           updated_at?: string | null
           username?: string

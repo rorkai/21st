@@ -139,7 +139,7 @@ export default async function UserProfile({
                   >
                     <Icons.gitHub className="h-5 w-5" />
                   </Link>
-                  {user.website_url && !user.profile_referral_url && (
+                  {user.website_url && !user.pro_referral_url && (
                     <Link
                       href={appendQueryParam(
                         user.website_url,
@@ -154,9 +154,9 @@ export default async function UserProfile({
                       <Globe className="h-5 w-5" />
                     </Link>
                   )}
-                  {user.profile_referral_url && (
+                  {user.pro_referral_url && (
                     <Link
-                      href={user.profile_referral_url}
+                      href={user.pro_referral_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={cn(

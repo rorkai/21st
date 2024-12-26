@@ -289,10 +289,10 @@ const ComponentDetailsForm = ({
         )}
       </div>
 
-      <div className="w-full mt-4">
-        <label htmlFor="license" className="block text-sm font-medium">
+      <div className="w-full">
+        <Label htmlFor="license" className="block text-sm font-medium">
           License
-        </label>
+        </Label>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -375,6 +375,18 @@ const ComponentDetailsForm = ({
               />
             )
           }}
+        />
+      </div>
+
+      <div className="w-full">
+        <Label htmlFor="website_url" className="block text-sm font-medium">
+          Website (optional)
+        </Label>
+        <Input
+          id="website_url"
+          placeholder="Component's website, docs or GitHub link..."
+          {...form.register("website_url")}
+          className="mt-1 w-full text-foreground"
         />
       </div>
 

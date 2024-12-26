@@ -3,7 +3,14 @@ import Link from "next/link"
 import { UserAvatar } from "@/components/UserAvatar"
 import { LoadingSpinner } from "./LoadingSpinner"
 import { Component, Tag, User } from "@/types/global"
-import { ArrowUpRight, Check, Copy, Scale, CalendarDays } from "lucide-react"
+import {
+  ArrowUpRight,
+  Check,
+  Copy,
+  Scale,
+  CalendarDays,
+  ExternalLink,
+} from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { ComponentsList } from "./ComponentsList"
 import { getLicenseBySlug } from "@/lib/licenses"
@@ -90,7 +97,7 @@ export const ComponentPageInfo = ({
     trackEvent(AMPLITUDE_EVENTS.COPY_ALL_DEPENDENCIES, {
       componentId: component.id,
       componentName: component.name,
-      dependenciesCount: Object.keys(npmDependencies).length
+      dependenciesCount: Object.keys(npmDependencies).length,
     })
     setTimeout(() => setCopiedLibDependencies(false), 2000)
   }
@@ -103,7 +110,7 @@ export const ComponentPageInfo = ({
       componentId: component.id,
       componentName: component.name,
       dependency: dep,
-      version
+      version,
     })
     setTimeout(() => setCopiedDependency(null), 2000)
   }
@@ -114,22 +121,22 @@ export const ComponentPageInfo = ({
     trackEvent(AMPLITUDE_EVENTS.VIEW_ON_NPM, {
       componentId: component.id,
       componentName: component.name,
-      packageName
-    });
-    window.open(`https://www.npmjs.com/package/${packageName}`, '_blank');
-  };
+      packageName,
+    })
+    window.open(`https://www.npmjs.com/package/${packageName}`, "_blank")
+  }
 
   return (
     <div className="p-3 space-y-3 text-sm overflow-y-auto max-h-[calc(100vh-100px)] bg-background text-foreground">
       {component.name && (
         <div className="flex items-center">
-          <span className="text-muted-foreground w-1/3">Name:</span>
+          <span className="text-muted-foreground w-1/4">Name</span>
           <span className="w-2/3">{component.name}</span>
         </div>
       )}
       {component.user && (
         <div className="flex items-center">
-          <span className="text-muted-foreground w-1/3">Created by:</span>
+          <span className="text-muted-foreground w-1/4">Created by</span>
           <HoverCard>
             <HoverCardTrigger asChild>
               <div className="flex items-center justify-start hover:bg-accent rounded-md px-2 py-1 -mx-2 mr-auto">
@@ -151,12 +158,13 @@ export const ComponentPageInfo = ({
             <HoverCardContent align="start" className="w-[320px]">
               <div className="flex gap-4">
                 <Avatar className="h-12 w-12">
-                  <AvatarImage 
-                    src={component.user.image_url || "/placeholder.svg"} 
-                    alt={component.user.name || component.user.username} 
+                  <AvatarImage
+                    src={component.user.image_url || "/placeholder.svg"}
+                    alt={component.user.name || component.user.username}
                   />
                   <AvatarFallback>
-                    {(component.user.name || component.user.username)?.[0]?.toUpperCase()}
+                    {(component.user.name ||
+                      component.user.username)?.[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="space-y-1">
@@ -202,21 +210,44 @@ export const ComponentPageInfo = ({
       )}
       {component.description && (
         <div className="flex items-start">
-          <span className="text-muted-foreground w-1/3">Description:</span>
-          <span className="w-2/3 whitespace-pre-wrap">{component.description}</span>
+          <span className="text-muted-foreground w-1/4">Description</span>
+          <span className="w-2/3 whitespace-pre-wrap">
+            {component.description}
+          </span>
         </div>
       )}
       {component.registry && (
         <div className="flex items-start">
-          <span className="text-muted-foreground w-1/3">Registry:</span>
+          <span className="text-muted-foreground w-1/4">Registry</span>
           <span className="w-2/3">
             <Badge variant="outline">{component.registry}</Badge>
           </span>
         </div>
       )}
+      {component.website_url && (
+        <div className="flex items-start">
+          <span className="text-muted-foreground w-1/4">Website</span>
+          <span className="w-2/3">
+            <Link
+              href={component.website_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex font-semibold items-center gap-1 text-foreground hover:underline"
+            >
+              {
+                component.website_url
+                  .replace("https://", "")
+                  .replace("http://", "")
+                  .split("?")[0]
+              }
+              <ExternalLink size={14} />
+            </Link>
+          </span>
+        </div>
+      )}
       {license && (
         <div className="flex items-center">
-          <span className="text-muted-foreground w-1/3">License:</span>
+          <span className="text-muted-foreground w-1/4">License</span>
           <span className="w-2/3 text-left">
             <HoverCard>
               <HoverCardTrigger className="cursor-help">
@@ -239,7 +270,7 @@ export const ComponentPageInfo = ({
       )}
       {component.tags && component.tags.length > 0 && (
         <div className="flex items-start">
-          <span className="text-muted-foreground w-1/3 mt-1">Tags:</span>
+          <span className="text-muted-foreground w-1/4 mt-1">Tags:</span>
           <div className="w-2/3 flex flex-wrap gap-2">
             {component.tags.map((tag) => (
               <TagComponent key={tag.slug} slug={tag.slug} name={tag.name} />
@@ -258,7 +289,7 @@ export const ComponentPageInfo = ({
           >
             <div className="flex items-center mb-2 justify-between">
               <span className="text-muted-foreground w-full font-medium">
-                npm dependencies:
+                npm dependencies
               </span>
               <div
                 className="relative group cursor-pointer"

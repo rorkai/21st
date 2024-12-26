@@ -43,6 +43,7 @@ export const formSchema = z.object({
   direct_registry_dependencies: z.array(z.string()),
   demo_direct_registry_dependencies: z.array(z.string()),
   slug_available: z.boolean().optional(),
+  website_url: z.string().optional(),
 })
 
 export type FormData = z.infer<typeof formSchema>

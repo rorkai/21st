@@ -104,6 +104,7 @@ export default function PublishComponentForm() {
       description: "",
       tags: [],
       license: "mit",
+      website_url: "",
     },
   })
   const {
@@ -311,6 +312,7 @@ export default function PublishComponentForm() {
         video_url: videoR2Url,
         registry: data.registry,
         license: data.license,
+        website_url: data.website_url,
       } as Tables<"components">
 
       const { data: insertedComponent, error } = await client
@@ -588,8 +590,8 @@ export default function PublishComponentForm() {
                         Tailwind styles (optional)
                       </h2>
                       <p className="text-sm text-muted-foreground">
-                        Optionally extend shadcn/ui Tailwind theme to customize your
-                        component.
+                        Optionally extend shadcn/ui Tailwind theme to customize
+                        your component.
                       </p>
 
                       <Tabs defaultValue="tailwind" className="w-full">
@@ -602,7 +604,9 @@ export default function PublishComponentForm() {
 
                         <TabsContent value="tailwind">
                           <div className="relative flex flex-col gap-2">
-                            <Label className="mt-2">Extend tailwind.config.js</Label>
+                            <Label className="mt-2">
+                              Extend tailwind.config.js
+                            </Label>
                             <Textarea
                               value={customTailwindConfig}
                               onChange={(e) =>

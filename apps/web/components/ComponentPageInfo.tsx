@@ -9,7 +9,6 @@ import {
   Copy,
   Scale,
   CalendarDays,
-  ExternalLink,
 } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { ComponentsList } from "./ComponentsList"
@@ -131,7 +130,7 @@ export const ComponentPageInfo = ({
       {component.name && (
         <div className="flex items-center">
           <span className="text-muted-foreground w-1/4">Name</span>
-          <span className="w-2/3">{component.name}</span>
+          <span className="w-3/4">{component.name}</span>
         </div>
       )}
       {component.user && (
@@ -211,7 +210,7 @@ export const ComponentPageInfo = ({
       {component.description && (
         <div className="flex items-start">
           <span className="text-muted-foreground w-1/4">Description</span>
-          <span className="w-2/3 whitespace-pre-wrap">
+          <span className="w-3/4 whitespace-pre-wrap">
             {component.description}
           </span>
         </div>
@@ -219,36 +218,99 @@ export const ComponentPageInfo = ({
       {component.registry && (
         <div className="flex items-start">
           <span className="text-muted-foreground w-1/4">Registry</span>
-          <span className="w-2/3">
+          <span className="w-3/4">
             <Badge variant="outline">{component.registry}</Badge>
           </span>
         </div>
       )}
       {component.website_url && (
-        <div className="flex items-start">
+        <div className="flex items-center">
           <span className="text-muted-foreground w-1/4">Website</span>
-          <span className="w-2/3">
-            <Link
-              href={component.website_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex font-semibold items-center gap-1 text-foreground hover:underline"
-            >
-              {
-                component.website_url
-                  .replace("https://", "")
-                  .replace("http://", "")
-                  .split("?")[0]
-              }
-              <ExternalLink size={14} />
-            </Link>
+          <span className="w-3/4">
+            <div className="flex items-center justify-between group hover:bg-accent rounded-md p-1 -mx-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <a
+                    href={component.website_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span className="pl-1">
+                      {(() => {
+                        const url = new URL(component.website_url)
+                        const domain = url.hostname.replace("www.", "")
+
+                        const cleanPath =
+                          url.pathname?.slice(1).split("?")[0] || ""
+
+                        const segments = cleanPath.split("/").filter(Boolean)
+
+                        const formattedPath =
+                          segments.length > 0
+                            ? segments.length === 1
+                              ? segments[0]?.slice(0, 12)
+                              : segments
+                                  .slice(0, 2)
+                                  .map((s) => s.slice(0, 6))
+                                  .join("/")
+                            : ""
+
+                        return (
+                          <>
+                            {domain}
+                            {formattedPath && (
+                              <span className="text-muted-foreground">
+                                /
+                                {formattedPath}
+                                {segments.length > 2 ||
+                                (segments.length === 1 &&
+                                  (segments[0]?.length ?? 0) > 12) ||
+                                (segments.length === 2 &&
+                                  ((segments[0]?.length ?? 0) > 6 ||
+                                    (segments[1]?.length ?? 0) > 6))
+                                  ? "..."
+                                  : ""}
+                              </span>
+                            )}
+                          </>
+                        )
+                      })()}
+                    </span>
+                  </a>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Visit website</p>
+                </TooltipContent>
+              </Tooltip>
+              <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a
+                      href={component.website_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:bg-accent-hover rounded relative overflow-hidden"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="relative p-1 transition-all duration-300 ease-in-out hover:translate-x-[2px] hover:-translate-y-[2px]">
+                        <ArrowUpRight size={16} />
+                      </div>
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Visit website</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
           </span>
         </div>
       )}
       {license && (
         <div className="flex items-center">
           <span className="text-muted-foreground w-1/4">License</span>
-          <span className="w-2/3 text-left">
+          <span className="w-3/4 text-left">
             <HoverCard>
               <HoverCardTrigger className="cursor-help">
                 {license.label}
@@ -271,7 +333,7 @@ export const ComponentPageInfo = ({
       {component.tags && component.tags.length > 0 && (
         <div className="flex items-start">
           <span className="text-muted-foreground w-1/4 mt-1">Tags:</span>
-          <div className="w-2/3 flex flex-wrap gap-2">
+          <div className="w-3/4 flex flex-wrap gap-2">
             {component.tags.map((tag) => (
               <TagComponent key={tag.slug} slug={tag.slug} name={tag.name} />
             ))}

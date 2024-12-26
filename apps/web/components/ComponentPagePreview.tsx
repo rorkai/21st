@@ -193,7 +193,7 @@ export function ComponentPagePreview({
           </Suspense>
         </motion.div>
       </SandpackProviderUnstyled>
-      <div className="h-full w-full md:max-w-[30%] min-h-90vh overflow-hidden rounded-lg border border-border">
+      <div className="h-full w-full md:max-w-[30%] min-h-90vh overflow-hidden rounded-lg border border-border min-w-[350px]">
         <SandpackProvider {...providerProps}>
           <div ref={sandpackRef} className="h-full w-full flex relative">
             <SandpackLayout className="flex w-full flex-row gap-4">

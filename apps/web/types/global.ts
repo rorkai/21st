@@ -10,11 +10,11 @@ export type ComponentTag = Tables<"component_tags">
 
 export type SortOption = "downloads" | "likes" | "date"
 
-export type QuickFilterOption = "all" | "last_week" | "most_downloaded"
+export type QuickFilterOption = "all" | "last_released" | "most_downloaded"
 
 export const QUICK_FILTER_OPTIONS = {
   all: "All Components",
-  last_week: "Last Week",
+  last_released: "Last Released",
   most_downloaded: "Popular",
 } as const
 

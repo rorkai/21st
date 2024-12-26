@@ -73,7 +73,7 @@ export default async function HomePage() {
   const shouldShowHero = !cookieStore.has("has_visited")
   const hasOnboarded = cookieStore.has("has_onboarded")
   // const defaultSortBy = hasOnboarded ? "likes" : "downloads"
-  const defaultQuickFilter = hasOnboarded ? "last_week" : "all"
+  const defaultQuickFilter = hasOnboarded ? "last_released" : "all"
   const defaultSortBy = "downloads"
 
   const sortByPreference: SortOption =

@@ -29,6 +29,7 @@ export function TagPageContent({
       <ComponentsHeader
         totalCount={components.length}
         filtersDisabled={false}
+        hideSearch={true}
       />
       <ComponentsList components={filteredSortedComponents} className="mt-6" />
     </>

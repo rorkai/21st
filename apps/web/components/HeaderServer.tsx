@@ -1,11 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link"
-import { cn } from "@/lib/utils"
 import { Icons } from "./icons"
 import { ThemeToggle } from "./ThemeToggle"
 import { GitHubStars } from "./GitHubStars"
-
-import { buttonVariants } from "@/components/ui/button"
 import { Button } from "@/components/ui/button"
 
 const uiSystems = [
@@ -70,12 +67,10 @@ const componentTypes = [
   },
 ]
 
-interface HeaderServerProps {
+export function HeaderServer({ tagName, isHomePage }: {
   tagName?: string
   isHomePage: boolean
-}
-
-export function HeaderServer({ tagName, isHomePage }: HeaderServerProps) {
+}) {
   return (
     <div className="flex items-center">
       <Link

@@ -36,19 +36,19 @@ async function getOGImage(url: string): Promise<string | null> {
 export const dynamic = "force-dynamic"
 
 export const generateMetadata = async (): Promise<Metadata> => {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: "Pro Components - The NPM for Design Engineers",
-    description:
-      "Discover premium React components from our trusted publishers. Built by design engineers, for design engineers.",
-    url: `${process.env.NEXT_PUBLIC_APP_URL}/pro`,
+    name: "Pro | 21st.dev | The NPM for Design Engineers",
+    description: "Discover premium React components from trusted developers",
+    url: `${baseUrl}/pro`,
   }
 
   return {
-    title: "Pro Templates & Components | 21st.dev",
-    description:
-      "Premium React components from trusted publishers. Built by design engineers, for design engineers.",
+    title: "Pro | 21st.dev | The NPM for Design Engineers",
+    description: "Premium React components from trusted developers",
     keywords: [
       "premium react components",
       "pro components",
@@ -59,16 +59,21 @@ export const generateMetadata = async (): Promise<Metadata> => {
       "shadcn ui",
     ],
     openGraph: {
-      title: "Pro Components - The NPM for Design Engineers",
-      description:
-        "Premium React components from trusted publishers. Built by design engineers, for design engineers.",
+      title: "Pro | 21st.dev | The NPM for Design Engineers",
+      description: "Premium React components from trusted developers",
       images: [
         {
-          url: `${process.env.NEXT_PUBLIC_APP_URL}/og-image.png`,
+          url: `${baseUrl}/og-image.png`,
           width: 1200,
           height: 630,
         },
       ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Pro | 21st.dev | The NPM for Design Engineers",
+      description: "Premium React components from trusted developers",
+      images: [`${baseUrl}/og-image.png`],
     },
     other: {
       "script:ld+json": JSON.stringify(jsonLd),

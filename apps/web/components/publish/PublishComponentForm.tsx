@@ -586,12 +586,12 @@ export default function PublishComponentForm() {
                     className="w-full"
                   >
                     <div className="flex flex-col gap-4">
-                      <h2 className="text-3xl font-bold">
+                      <h2 className="text-3xl font-bold mt-10">
                         Tailwind styles (optional)
                       </h2>
                       <p className="text-sm text-muted-foreground">
                         Optionally extend shadcn/ui Tailwind theme to customize
-                        your component.
+                        your component
                       </p>
 
                       <Tabs defaultValue="tailwind" className="w-full">
@@ -604,9 +604,6 @@ export default function PublishComponentForm() {
 
                         <TabsContent value="tailwind">
                           <div className="relative flex flex-col gap-2">
-                            <Label className="mt-2">
-                              Extend tailwind.config.js
-                            </Label>
                             <Textarea
                               value={customTailwindConfig}
                               onChange={(e) =>
@@ -654,7 +651,6 @@ export default function PublishComponentForm() {
 
                         <TabsContent value="css">
                           <div className="relative flex flex-col gap-2">
-                            <Label className="mt-2">Extend globals.css</Label>
                             <Textarea
                               value={customGlobalCss}
                               onChange={(e) =>

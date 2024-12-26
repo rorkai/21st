@@ -10,10 +10,9 @@ import ErrorPage from "@/components/ErrorPage"
 import { UserProfileAnalytics } from "@/components/UserProfileAnalytics"
 import Link from "next/link"
 import { Icons } from "@/components/icons"
-import { cn } from "@/lib/utils"
-import { buttonVariants } from "@/components/ui/button"
-import { ExternalLink, Globe } from "lucide-react"
+import { SquareArrowOutUpRight, Globe } from "lucide-react"
 import { appendQueryParam } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 export const generateMetadata = async ({
   params,
@@ -122,7 +121,7 @@ export default async function UserProfile({
                       className="text-muted-foreground hover:text-foreground transition-colors"
                       aria-label="Twitter Profile"
                     >
-                      <Icons.twitter className="h-5 w-5" />
+                      <Icons.twitter className="h-4 w-4" />
                     </Link>
                   )}
                   <Link
@@ -137,7 +136,7 @@ export default async function UserProfile({
                     className="text-muted-foreground hover:text-foreground transition-colors"
                     aria-label="GitHub Profile"
                   >
-                    <Icons.gitHub className="h-5 w-5" />
+                    <Icons.gitHub className="h-54 w-5" />
                   </Link>
                   {user.website_url && !user.pro_referral_url && (
                     <Link
@@ -159,13 +158,21 @@ export default async function UserProfile({
                       href={user.pro_referral_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={cn(
-                        buttonVariants({ variant: "default", size: "lg" }),
-                      )}
-                      aria-label="More Components"
                     >
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      Pro components
+                      <Button
+                        className="h-8 py-0 pe-0 bg-primary text-primary-foreground hover:bg-primary/90"
+                        variant="default"
+                      >
+                        <span className="mr-2">Pro components</span>
+                        <span className="relative ms-2 inline-flex h-full items-center justify-center px-3 before:absolute before:inset-0 before:left-0 before:w-px before:bg-primary-foreground/30">
+                          <SquareArrowOutUpRight
+                            size={16}
+                            strokeWidth={2}
+                            className="text-primary-foreground"
+                            aria-hidden="true"
+                          />
+                        </span>
+                      </Button>
                     </Link>
                   )}
                 </div>

@@ -1,43 +1,58 @@
 "use client"
 
-import React, { useMemo, useEffect, useRef } from "react"
+import React, { useEffect, useMemo } from "react"
 import { ComponentCard } from "@/components/ComponentCard"
-import { Component, User } from "@/types/global"
+import { Component, QuickFilterOption, SortOption, User } from "@/types/global"
 import { useQuery } from "@tanstack/react-query"
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAtom } from "jotai"
 import { searchQueryAtom } from "@/components/Header"
-import { ComponentsHeader, sortByAtom, quickFilterAtom } from "@/components/ComponentsHeader"
-import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
-import { trackEvent } from "@/lib/amplitude"
+import {
+  ComponentsHeader,
+  sortByAtom,
+  quickFilterAtom,
+} from "@/components/ComponentsHeader"
 import { motion } from "framer-motion"
+import { sortComponents, filterComponents } from "@/lib/filters.client"
+import { setCookie } from "@/lib/cookies"
+
+const useTrackHasOnboarded = () => {
+  useEffect(() => {
+    setCookie({
+      name: "has_onboarded",
+      value: "true",
+      expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+      sameSite: "lax",
+    })
+  }, [])
+}
 
 export function HomePageClient({
   initialComponents,
+  initialSortBy,
+  initialQuickFilter,
   componentsTotalCount,
 }: {
   initialComponents: (Component & { user: User })[]
+  initialSortBy: SortOption
+  initialQuickFilter: QuickFilterOption
   componentsTotalCount: number
 }) {
-  const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom)
+  const [searchQuery] = useAtom(searchQueryAtom)
   const supabase = useClerkSupabaseClient()
-  const [sortBy] = useAtom(sortByAtom)
-  const [quickFilter] = useAtom(quickFilterAtom)
-  const lastTrackedQuery = useRef<string>("")
+  const [sortBy, setSortBy] = useAtom(sortByAtom)
+  const [quickFilter, setQuickFilter] = useAtom(quickFilterAtom)
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (searchQuery && searchQuery !== lastTrackedQuery.current) {
-        trackEvent(AMPLITUDE_EVENTS.SEARCH_COMPONENTS, {
-          query: searchQuery,
-        })
-        lastTrackedQuery.current = searchQuery
-      }
-    }, 1000)
-
-    return () => clearTimeout(timeoutId)
-  }, [searchQuery])
+  if (sortBy === undefined) {
+    // @ts-ignore
+    setSortBy(initialSortBy)
+  }
+  if (quickFilter === undefined) {
+    // @ts-ignore
+    setQuickFilter(initialQuickFilter)
+  }
 
   const { data: components } = useQuery<(Component & { user: User })[]>({
     queryKey: ["components", searchQuery],
@@ -71,45 +86,17 @@ export function HomePageClient({
         fts: undefined,
       })) as (Component & { user: User })[]
     },
-    initialData: initialComponents,
+    initialData: sortBy === undefined ? initialComponents : [],
     refetchOnWindowFocus: false,
     retry: false,
   })
 
   const filteredAndSortedComponents = useMemo(() => {
-    if (!components) return undefined
-
-    let filtered = [...components]
-    
-    switch (quickFilter) {
-      case 'all':
-        break
-      case 'recent':
-        filtered = filtered.filter(c => {
-          const date = new Date(c.created_at)
-          const now = new Date()
-          const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
-          return diffDays < 7
-        })
-        break
-      case 'downloaded':
-        filtered = filtered.filter(c => (c.downloads_count || 0) > 10)
-        break
-    }
-
-    return filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "installations":
-          return (b.downloads_count || 0) - (a.downloads_count || 0)
-        case "popular":
-          return (b.likes_count || 0) - (a.likes_count || 0)
-        case "newest":
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        default:
-          return 0
-      }
-    })
+    if (!components || !quickFilter || !sortBy) return undefined
+    return sortComponents(filterComponents(components, quickFilter), sortBy)
   }, [components, quickFilter, sortBy])
+
+  useTrackHasOnboarded()
 
   return (
     <motion.div
@@ -118,7 +105,13 @@ export function HomePageClient({
       className="container mx-auto mt-20"
     >
       <div className="flex flex-col">
-        <ComponentsHeader totalCount={filteredAndSortedComponents?.length ?? 0} />
+        <ComponentsHeader
+          totalCount={
+            quickFilter === "all"
+              ? componentsTotalCount
+              : (filteredAndSortedComponents?.length ?? 0)
+          }
+        />
         <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-9 list-none pb-10">
           {filteredAndSortedComponents?.map((component) => (
             <ComponentCard key={component.id} component={component} />

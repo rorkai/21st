@@ -6,23 +6,14 @@ import { Component, User } from "@/types/global"
 import { useAtom } from "jotai"
 import { sortByAtom } from "@/components/ComponentsHeader"
 import { useMemo } from "react"
+import { sortComponents } from "@/lib/filters.client"
 
 export function TagPageContent({ components }: { components: (Component & { user: User })[] }) {
   const [sortBy] = useAtom(sortByAtom)
   
   const sortedComponents = useMemo(() => {
-    return [...components].sort((a, b) => {
-      switch (sortBy) {
-        case "installations":
-          return (b.downloads_count || 0) - (a.downloads_count || 0)
-        case "popular":
-          return (b.likes_count || 0) - (a.likes_count || 0)
-        case "newest":
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        default:
-          return 0
-      }
-    })
+    if (!components || !sortBy) return undefined
+    return sortComponents(components, sortBy)
   }, [components, sortBy])
 
   return (

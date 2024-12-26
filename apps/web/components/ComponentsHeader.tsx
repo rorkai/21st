@@ -1,3 +1,5 @@
+"use client"
+
 import { useAtom, Atom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import {
@@ -16,29 +18,37 @@ import { searchQueryAtom } from "@/components/Header"
 import { useEffect, useRef } from "react"
 import { ArrowUpDown, CircleX } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { AMPLITUDE_EVENTS, trackEvent } from "@/lib/amplitude"
 
-export const quickFilterAtom = atomWithStorage<QuickFilterOption>(
+export const quickFilterAtom = atomWithStorage<QuickFilterOption | undefined>(
   "quick-filter",
-  "recent",
+  undefined,
 )
 
-const sortByAtom: Atom<SortOption> = atomWithStorage(
+export const sortByAtom: Atom<SortOption | undefined> = atomWithStorage(
   "components-sort-by",
-  "newest",
+  undefined,
 )
 
-interface ComponentsHeaderProps {
-  totalCount: number
+const useTrackSearchQueries = () => {
+  const lastTrackedQuery = useRef<string | null>(null)
+  const [searchQuery] = useAtom(searchQueryAtom)
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchQuery && searchQuery !== lastTrackedQuery.current) {
+        trackEvent(AMPLITUDE_EVENTS.SEARCH_COMPONENTS, {
+          query: searchQuery,
+        })
+        lastTrackedQuery.current = searchQuery
+      }
+    }, 1000)
+
+    return () => clearTimeout(timeoutId)
+  }, [searchQuery])
 }
 
-export function ComponentsHeader({ totalCount }: ComponentsHeaderProps) {
-  const [quickFilter, setQuickFilter] = useAtom(quickFilterAtom)
-  const [sortBy, setSortBy] = useAtom(sortByAtom)
-  const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const isDesktop = useMediaQuery("(min-width: 768px)")
-  const isWide = useMediaQuery("(min-width: 1200px)")
-
+const useSearchHotkeys = (inputRef: React.RefObject<HTMLInputElement>) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {
@@ -52,6 +62,18 @@ export function ComponentsHeader({ totalCount }: ComponentsHeaderProps) {
     document.addEventListener("keydown", handleKeyDown)
     return () => document.removeEventListener("keydown", handleKeyDown)
   }, [])
+}
+
+export function ComponentsHeader({ totalCount }: { totalCount: number }) {
+  const [quickFilter, setQuickFilter] = useAtom(quickFilterAtom)
+  const [sortBy, setSortBy] = useAtom(sortByAtom)
+  const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const isDesktop = useMediaQuery("(min-width: 768px)")
+  const isWide = useMediaQuery("(min-width: 1200px)")
+
+  useTrackSearchQueries()
+  useSearchHotkeys(inputRef)
 
   const handleClearInput = () => {
     setSearchQuery("")
@@ -83,9 +105,7 @@ export function ComponentsHeader({ totalCount }: ComponentsHeaderProps) {
                   value={value}
                   className="flex-1 md:flex-initial relative overflow-hidden rounded-none border border-border py-2 px-4 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 first:rounded-s last:rounded-e data-[state=active]:bg-muted data-[state=active]:after:bg-primary"
                 >
-                  <span className="truncate">
-                    {getFilterLabel(label)}
-                  </span>
+                  <span className="truncate">{getFilterLabel(label)}</span>
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -126,7 +146,9 @@ export function ComponentsHeader({ totalCount }: ComponentsHeaderProps) {
           </div>
 
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className={`${isDesktop ? 'w-[180px]' : 'w-auto min-w-[40px] px-2'}`}>
+            <SelectTrigger
+              className={`${isDesktop ? "w-[180px]" : "w-auto min-w-[40px] px-2"}`}
+            >
               {isDesktop ? (
                 <SelectValue placeholder="Sort by" />
               ) : (
@@ -146,5 +168,3 @@ export function ComponentsHeader({ totalCount }: ComponentsHeaderProps) {
     </div>
   )
 }
-
-export { sortByAtom }

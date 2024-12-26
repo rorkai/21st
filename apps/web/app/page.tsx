@@ -1,30 +1,33 @@
-export const dynamic = "force-dynamic"
-
 import { cookies } from "next/headers"
 import { Header } from "../components/Header"
 import React from "react"
 import { HomePageClient } from "./page.client"
 import { Metadata } from "next"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
-import { Component, User } from "@/types/global"
+import { Component, SortOption, User } from "@/types/global"
 import { HeroSection } from "@/components/HeroSection"
 import { NewsletterDialog } from "@/components/NewsletterDialog"
+import { Tables } from "@/types/supabase"
+import { filterComponents, sortComponents } from "@/lib/filters.client"
+
+export const dynamic = "force-dynamic"
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "21st.dev - The NPM for Design Engineers",
-    description: "Ship polished UI faster with ready-to-use React Tailwind components based on shadcn. Share your own components with the community.",
+    description:
+      "Ship polished UI faster with ready-to-use React Tailwind components based on shadcn. Share your own components with the community.",
     url: process.env.NEXT_PUBLIC_APP_URL,
     potentialAction: {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: `${process.env.NEXT_PUBLIC_APP_URL}/s/{search_term_string}`
+        urlTemplate: `${process.env.NEXT_PUBLIC_APP_URL}/s/{search_term_string}`,
       },
-      "query-input": "required name=search_term_string"
-    }
+      "query-input": "required name=search_term_string",
+    },
   }
 
   return {
@@ -66,8 +69,29 @@ export const generateMetadata = async (): Promise<Metadata> => {
 }
 
 export default async function HomePage() {
+  const cookieStore = cookies()
+  const shouldShowHero = !cookieStore.has("has_visited")
+  const hasOnboarded = cookieStore.has("has_onboarded")
+  // const defaultSortBy = hasOnboarded ? "likes" : "downloads"
+  const defaultQuickFilter = hasOnboarded ? "last_week" : "all"
+  const defaultSortBy = "downloads"
+
+  const sortByPreference: SortOption =
+    (cookieStore.get("sort_by")?.value as SortOption) ?? defaultSortBy
+  const orderByFields: [keyof Tables<"components">, { ascending: boolean }] =
+    (() => {
+      switch (sortByPreference) {
+        case "downloads":
+          return ["downloads_count", { ascending: false }]
+        case "likes":
+          return ["likes_count", { ascending: false }]
+        case "date":
+          return ["created_at", { ascending: false }]
+      }
+    })()
+
   const {
-    data: initialComponents,
+    data: allComponents,
     count: componentsCount,
     error: componentsError,
   } = await supabaseWithAdminAccess
@@ -75,17 +99,14 @@ export default async function HomePage() {
     .select("*, user:users!user_id (*)", { count: "exact" })
     .limit(40)
     .eq("is_public", true)
-    .order("created_at", { ascending: false })
+    .order(...orderByFields)
     .returns<(Component & { user: User })[]>()
 
   if (componentsError) {
     return null
   }
 
-  const cookieStore = cookies()
-  const isReturning = cookieStore.has("has_visited")
-
-  if (!isReturning) {
+  if (shouldShowHero) {
     return (
       <>
         <HeroSection />
@@ -94,11 +115,18 @@ export default async function HomePage() {
     )
   }
 
+  const initialComponents = sortComponents(
+    filterComponents(allComponents, defaultQuickFilter),
+    sortByPreference,
+  )
+
   return (
     <>
       <Header page="home" />
       <HomePageClient
         initialComponents={initialComponents}
+        initialSortBy={sortByPreference}
+        initialQuickFilter={defaultQuickFilter}
         componentsTotalCount={componentsCount ?? 0}
       />
       <NewsletterDialog />

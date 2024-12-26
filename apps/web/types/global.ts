@@ -8,18 +8,18 @@ export type Tag = Tables<"tags">
 
 export type ComponentTag = Tables<"component_tags">
 
-export type SortOption = "installations" | "popular" | "newest"
+export type SortOption = "downloads" | "likes" | "date"
 
-export type QuickFilterOption = "all" | "recent" | "downloaded"
+export type QuickFilterOption = "all" | "last_week" | "most_downloaded"
 
 export const QUICK_FILTER_OPTIONS = {
   all: "All Components",
-  recent: "Last Released",
-  downloaded: "Most Used",
+  last_week: "Last Week",
+  most_downloaded: "Popular",
 } as const
 
 export const SORT_OPTIONS = {
-  installations: "Most downloaded",
-  popular: "Most liked",
-  newest: "Newest",
+  downloads: "Most downloaded",
+  likes: "Most liked",
+  date: "Newest",
 } as const

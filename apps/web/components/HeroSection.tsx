@@ -7,14 +7,20 @@ import { Github } from "lucide-react"
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useIsMobile } from "@/hooks/use-media-query"
-import { setHasVisitedCookie } from "@/lib/cookies"
+import { setCookie } from "@/lib/cookies"
 
 export function HeroSection() {
   const router = useRouter()
   const isMobile = useIsMobile()
 
   const onEnterWebsite = async () => {
-    await setHasVisitedCookie()
+    setCookie({
+      name: "has_visited",
+      value: "true",
+      expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+      sameSite: "lax",
+    })
     router.refresh()
   }
 

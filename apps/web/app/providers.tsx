@@ -18,6 +18,8 @@ export function AppProviders({
   const pathname = usePathname()
   const isHomePage = pathname === "/"
   const isTagPage = pathname.startsWith("/s/")
+  const isProPage = pathname.startsWith("/pro")
+  const showSidebar = isHomePage || isTagPage || isProPage
 
   useEffect(() => {
     initAmplitude()
@@ -26,7 +28,7 @@ export function AppProviders({
   return (
     <QueryClientProvider client={queryClient}>
       <ClerkProvider>
-        {isHomePage || isTagPage ? (
+        {showSidebar ? (
           <SidebarProvider>
             <AppSidebar />
             <SidebarInset>

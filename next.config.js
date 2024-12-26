@@ -1,45 +1,47 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['jotai'],
+  transpilePackages: ["jotai"],
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: '**',
-        port: '',
-        pathname: '**',
+        protocol: "https",
+        hostname: "**",
+      },
+      {
+        protocol: "http",
+        hostname: "**",
       },
     ],
   },
   experimental: {
     turbo: {
-      resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
-      moduleIdStrategy: 'deterministic',
+      resolveExtensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
+      moduleIdStrategy: "deterministic",
     },
   },
   trailingSlash: false,
   async redirects() {
-    return [];
+    return []
   },
   async headers() {
     return [
       {
-        source: '/api/webhooks/clerk',
+        source: "/api/webhooks/clerk",
         headers: [
           {
-            key: 'Cache-Control',
-            value: 'no-store, max-age=0',
+            key: "Cache-Control",
+            value: "no-store, max-age=0",
           },
         ],
       },
-    ];
+    ]
   },
   env: {
     R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID,
     R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY,
   },
-};
+}
 
 module.exports = {
   experimental: {

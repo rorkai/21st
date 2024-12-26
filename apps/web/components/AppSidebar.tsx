@@ -11,7 +11,7 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar"
-import { Dock, Box, ChevronRight } from "lucide-react"
+import { Dock, Box, ChevronRight, Library } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import {
@@ -35,7 +35,7 @@ const landingPageSections = [
   { title: "Hero", href: "/s/hero" },
   { title: "Images", href: "/s/image" },
   { title: "Maps", href: "/s/map" },
-  { title: "Navigation Menu", href: "/s/navbar-navigation" },
+  { title: "Navigation Menus", href: "/s/navbar-navigation" },
   { title: "Pricing", href: "/s/pricing-section" },
   { title: "Scroll Area", href: "/s/scroll-area" },
   { title: "Team", href: "/s/team" },
@@ -78,12 +78,21 @@ const uiComponents = [
 
 const sections = [
   {
+    title: "Collections",
+    icon: Library,
+    items: [
+      { title: "Home", href: "/" },
+      { title: "Landing pages", href: "/s/landing-page" },
+      { title: "Pro Templates", href: "/pro" },
+    ],
+  },
+  {
     title: "Landing Pages",
     icon: Dock,
     items: landingPageSections,
   },
   {
-    title: "UI Components",
+    title: "UI elements",
     icon: Box,
     items: uiComponents,
   },

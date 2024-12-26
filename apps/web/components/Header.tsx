@@ -67,7 +67,7 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
 
         <div className="flex items-center gap-2">
           {!isMobile && <HeaderServer.ThemeToggle />}
-          <HeaderServer.SocialIcons/>
+          <HeaderServer.SocialIcons />
           {!isMobile && (
             <>
               <SignedIn>
@@ -117,6 +117,7 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
                       <FileText className="w-4 h-4 mr-2 opacity-60" />
                       <span>Terms of Service</span>
                     </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onSelect={() => signOut({ redirectUrl: "/" })}
                     >

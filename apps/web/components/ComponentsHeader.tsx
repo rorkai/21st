@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/select"
 import type { SortOption, QuickFilterOption } from "@/types/global"
 import { QUICK_FILTER_OPTIONS, SORT_OPTIONS } from "@/types/global"
-import NumberFlow from "@number-flow/react"
 import { Input } from "@/components/ui/input"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { searchQueryAtom } from "@/components/Header"
@@ -20,6 +19,8 @@ import { ArrowUpDown, CircleX } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AMPLITUDE_EVENTS, trackEvent } from "@/lib/amplitude"
 import { cn } from "@/lib/utils"
+import { Component, User } from "@/types/global"
+import { filterComponents } from "@/lib/filters.client"
 
 export const quickFilterAtom = atomWithStorage<QuickFilterOption | undefined>(
   "quick-filter",
@@ -65,21 +66,29 @@ const useSearchHotkeys = (inputRef: React.RefObject<HTMLInputElement>) => {
   }, [])
 }
 
+const getFilteredCount = (
+  components: (Component & { user: User })[],
+  filter: QuickFilterOption,
+) => {
+  if (!components) return 0
+  return filterComponents(components, filter).length
+}
+
 export function ComponentsHeader({
-  totalCount,
   filtersDisabled,
   hideSearch = false,
+  components,
 }: {
-  totalCount: number
   filtersDisabled: boolean
   hideSearch?: boolean
+  components?: (Component & { user: User })[]
 }) {
   const [quickFilter, setQuickFilter] = useAtom(quickFilterAtom)
   const [sortBy, setSortBy] = useAtom(sortByAtom)
   const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom)
   const inputRef = useRef<HTMLInputElement>(null)
   const isDesktop = useMediaQuery("(min-width: 768px)")
-  const isWide = useMediaQuery("(min-width: 1200px)")
+  const isMobile = useMediaQuery("(max-width: 768px)")
 
   useTrackSearchQueries()
   useSearchHotkeys(inputRef)
@@ -90,11 +99,20 @@ export function ComponentsHeader({
   }
 
   const getFilterLabel = (label: string) => {
-    if (!isWide && label === "All Components") {
+    if (isMobile && label === "All Components") {
       return "All"
     }
     return label
   }
+
+  useEffect(() => {
+    if (components && quickFilter) {
+      const currentFilterCount = getFilteredCount(components, quickFilter)
+      if (currentFilterCount === 0) {
+        setQuickFilter("all")
+      }
+    }
+  }, [components, quickFilter, setQuickFilter])
 
   return (
     <div className="flex flex-col gap-4 mb-6">
@@ -112,19 +130,31 @@ export function ComponentsHeader({
                 <TabsTrigger
                   key={value}
                   value={value}
-                  className="flex-1 md:flex-initial relative overflow-hidden rounded-none border border-border py-2 px-4 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 first:rounded-s last:rounded-e data-[state=active]:bg-muted data-[state=active]:after:bg-primary"
+                  disabled={
+                    components
+                      ? getFilteredCount(
+                          components,
+                          value as QuickFilterOption,
+                        ) === 0
+                      : false
+                  }
+                  className="flex-1 md:flex-initial relative overflow-hidden rounded-none border border-border py-2 px-4 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 first:rounded-s last:rounded-e data-[state=active]:bg-muted data-[state=active]:after:bg-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <span className="truncate">{getFilterLabel(label)}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="truncate">{getFilterLabel(label)}</span>
+                    {components && (
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {getFilteredCount(
+                          components,
+                          value as QuickFilterOption,
+                        )}
+                      </span>
+                    )}
+                  </div>
                 </TabsTrigger>
               ))}
             </TabsList>
           </Tabs>
-          {isWide && (
-            <div className="hidden md:flex text-sm text-muted-foreground items-center gap-1">
-              <NumberFlow value={totalCount} className="tabular-nums" />
-              <span>{totalCount === 1 ? "component" : "components"}</span>
-            </div>
-          )}
         </div>
 
         <div

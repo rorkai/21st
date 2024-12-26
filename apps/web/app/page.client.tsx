@@ -108,11 +108,7 @@ export function HomePageClient({
       <div className="flex flex-col">
         <ComponentsHeader
           filtersDisabled={!!searchQuery}
-          totalCount={
-            quickFilter === "all"
-              ? componentsTotalCount
-              : (filteredAndSortedComponents?.length ?? 0)
-          }
+          components={components}
         />
         <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-9 list-none pb-10">
           {filteredAndSortedComponents?.map((component) => (

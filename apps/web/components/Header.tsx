@@ -24,7 +24,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { LogOut, User, Settings, X, FileText } from "lucide-react"
+import { LogOut, Settings, X, FileText } from "lucide-react"
+import { ShimmerButton } from "./ui/shimmer-button"
 
 export const searchQueryAtom = atom("")
 
@@ -63,6 +64,19 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
         </div>
 
         <div className="flex items-center gap-2">
+          <ShimmerButton
+            className="min-w-24 py-2 px-4"
+            onClick={() => {
+              window.open(
+                "https://www.producthunt.com/posts/21st-dev",
+                "_blank",
+              )
+            }}
+          >
+            <span className="text-sm font-medium text-white">
+              Support us on Product Hunt
+            </span>
+          </ShimmerButton>
           {!isMobile && <HeaderServer.ThemeToggle />}
           <HeaderServer.SocialIcons isMobile={isMobile} />
           {!isMobile && (

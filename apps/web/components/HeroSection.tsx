@@ -8,6 +8,7 @@ import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useIsMobile } from "@/hooks/use-media-query"
 import { setCookie } from "@/lib/cookies"
+import { ProductHuntAnnouncement } from "@/components/product-hunt"
 
 export function HeroSection() {
   const router = useRouter()
@@ -53,6 +54,7 @@ export function HeroSection() {
 
   return (
     <AuroraBackground className="fixed inset-0 z-50">
+      <ProductHuntAnnouncement className="absolute top-0 right-0" />
       <div className="container relative z-10 pointer-events-auto px-6 md:px-8">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
@@ -76,20 +78,16 @@ export function HeroSection() {
           </h1>
 
           <p className="text-base sm:text-lg md:text-xl leading-relaxed mb-8 md:mb-12 bg-gradient-to-b from-muted-foreground to-muted-foreground/70 bg-clip-text text-transparent">
-            Ship polished UI faster with React Tailwind components based on shadcn.
+            Ship polished UI faster with React Tailwind components based on
+            shadcn.
             <br />
-            Built by design engineers. One command to
-            install.
+            Built by design engineers. One command to install.
             <br />
             Publish your own components.
           </p>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6">
-            <Button 
-              size="lg" 
-              variant="default" 
-              onClick={onEnterWebsite}
-            >
+            <Button size="lg" variant="default" onClick={onEnterWebsite}>
               Browse components
               {!isMobile && (
                 <kbd className="-me-1 ms-3 inline-flex h-5 max-h-full items-center rounded border border-muted-foreground/70 bg-muted-foreground/10 px-1.5 font-[inherit] text-[0.625rem] font-medium text-background/70">
@@ -101,6 +99,7 @@ export function HeroSection() {
             <Button
               size="lg"
               variant="outline"
+              className="h-11"
               onClick={onEnterPublish}
             >
               Publish a component

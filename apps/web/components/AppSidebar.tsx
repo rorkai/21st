@@ -11,7 +11,7 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar"
-import { Dock, Box, ChevronRight, Library } from "lucide-react"
+import { Dock, Box, ChevronRight, Sparkles } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import {
@@ -22,6 +22,7 @@ import {
 import { useAtom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import { useEffect, useRef } from "react"
+import { Badge } from "@/components/ui/badge"
 
 const landingPageSections = [
   { title: "Announcements", href: "/s/announcement" },
@@ -78,15 +79,6 @@ const uiComponents = [
 
 const sections = [
   {
-    title: "Collections",
-    icon: Library,
-    items: [
-      { title: "Home", href: "/" },
-      { title: "Landing pages", href: "/s/landing-page" },
-      { title: "Pro Templates", href: "/pro" },
-    ],
-  },
-  {
     title: "Landing Pages",
     icon: Dock,
     items: landingPageSections,
@@ -104,7 +96,7 @@ type SidebarState = {
 }
 
 const sidebarStateAtom = atomWithStorage<SidebarState>("sidebarState", {
-  openSections: { "Landing Pages": true, "UI Components": true },
+  openSections: { "Landing Pages": true, "UI elements": true },
   scrollPosition: 0,
 })
 
@@ -144,6 +136,26 @@ export function AppSidebar() {
       >
         <SidebarGroup>
           <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                onClick={() => {
+                  trackEvent(AMPLITUDE_EVENTS.VIEW_SIDEBAR_SECTION, {
+                    sectionTitle: "Pro Components",
+                    path: "/pro",
+                  })
+                }}
+              >
+                <a href="/pro" className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  <span>Pro Components</span>
+                  <Badge className="ml-1.5 text-xs bg-[#adfa1d] text-black px-1.5 rounded-md pointer-events-none select-none">
+                    New
+                  </Badge>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+
             {sections.map((section) => (
               <Collapsible
                 key={section.title}
@@ -176,11 +188,14 @@ export function AppSidebar() {
                             asChild
                             isActive={pathname === item.href}
                             onClick={() => {
-                              trackEvent(AMPLITUDE_EVENTS.VIEW_SIDEBAR_SECTION, {
-                                sectionTitle: section.title,
-                                itemTitle: item.title,
-                                path: item.href
-                              });
+                              trackEvent(
+                                AMPLITUDE_EVENTS.VIEW_SIDEBAR_SECTION,
+                                {
+                                  sectionTitle: section.title,
+                                  itemTitle: item.title,
+                                  path: item.href,
+                                },
+                              )
                             }}
                           >
                             <a href={item.href}>

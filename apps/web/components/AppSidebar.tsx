@@ -64,7 +64,7 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarContent
-        className="pt-14"
+        className="mt-14 pb-20"
         ref={sidebarRef}
         onScroll={handleScroll}
         suppressHydrationWarning
@@ -145,6 +145,26 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               </Collapsible>
             ))}
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === "/s/hook"}
+                onClick={() => {
+                  trackEvent(AMPLITUDE_EVENTS.VIEW_SIDEBAR_SECTION, {
+                    sectionTitle: "Hooks",
+                    path: "/s/hook",
+                  })
+                }}
+              >
+                <a href="/s/hook" className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  <span>Hooks</span>
+                  <Badge className="ml-1.5 text-xs bg-[#adfa1d] text-black px-1.5 rounded-md pointer-events-none select-none">
+                    New
+                  </Badge>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>

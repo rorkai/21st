@@ -58,6 +58,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { usePublishAs } from "./use-publish-as"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
+import { HeroVideoDialog } from "@/components/ui/hero-video-dialog"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -126,7 +127,7 @@ export default function PublishComponentForm() {
     demoComponentNames: [],
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  
+
   const [customTailwindConfig, setCustomTailwindConfig] = useState<
     string | undefined
   >(undefined)
@@ -198,7 +199,7 @@ export default function PublishComponentForm() {
   }, [code, demoCode])
 
   const onSubmit = async (data: FormData) => {
-    setPublishAttemptCount(count => count + 1)
+    setPublishAttemptCount((count) => count + 1)
     setIsSubmitting(true)
     try {
       const codeFileName = `${data.component_slug}.tsx`
@@ -341,17 +342,20 @@ export default function PublishComponentForm() {
         hasDemo: !!data.demo_code,
         tagsCount: data.tags?.length || 0,
         codeQualityMetrics: {
-          linesOfCode: data.code.split('\n').length,
-          demoLinesOfCode: data.demo_code?.split('\n').length || 0,
+          linesOfCode: data.code.split("\n").length,
+          demoLinesOfCode: data.demo_code?.split("\n").length || 0,
           componentCount: parsedCode.componentNames.length,
           demoComponentCount: parsedCode.demoComponentNames.length,
           dependenciesCount: Object.keys(parsedCode.dependencies).length,
-          demoDependenciesCount: Object.keys(parsedCode.demoDependencies).length,
+          demoDependenciesCount: Object.keys(parsedCode.demoDependencies)
+            .length,
         },
         timeSpentEditing: Date.now() - formStartTime,
-        stepsCompleted: ['nameSlug', 'code', 'demo', 'details'].filter(step => completedSteps.includes(step)),
-        publishAttempts: publishAttemptCount
-      });
+        stepsCompleted: ["nameSlug", "code", "demo", "details"].filter((step) =>
+          completedSteps.includes(step),
+        ),
+        publishAttempts: publishAttemptCount,
+      })
     } catch (error) {
       console.error("Error adding component:", error)
       const errorMessage = `An error occurred while adding the component${error instanceof Error ? `: ${error.message}` : ""}`
@@ -712,6 +716,24 @@ export default function PublishComponentForm() {
                     </motion.div>
                   )}
               </div>
+
+              {formStep === "nameSlugForm" && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3, delay: 0.2 }}
+                  className="w-2/3 h-full px-10 py-20"
+                >
+                  <HeroVideoDialog
+                    videoSrc="https://www.youtube.com/embed/NXpSAnmleyE"
+                    thumbnailSrc="/tutorial-thumbnail.png"
+                    thumbnailAlt="Tutorial: How to publish components"
+                    animationStyle="from-right"
+                    className="w-full"
+                  />
+                </motion.div>
+              )}
 
               {formStep === "detailedForm" && isPreviewReady && (
                 <motion.div

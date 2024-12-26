@@ -203,7 +203,7 @@ importers:
         specifier: ^0.0.4
         version: 0.0.4
       framer-motion:
-        specifier: ^11.9.0
+        specifier: ^11.11.10
         version: 11.11.10(react-dom@18.3.1)(react@18.3.1)
       fs:
         specifier: 0.0.1-security

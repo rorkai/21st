@@ -60,7 +60,7 @@
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.5",
     "ffmpeg": "^0.0.4",
-    "framer-motion": "^11.9.0",
+    "framer-motion": "^11.11.10",
     "fs": "0.0.1-security",
     "lodash": "^4.17.21",
     "lucide-react": "^0.446.0",

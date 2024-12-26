@@ -14,7 +14,7 @@ export function HeroSection() {
   const isMobile = useIsMobile()
 
   const onEnterWebsite = async () => {
-    setCookie({
+    await setCookie({
       name: "has_visited",
       value: "true",
       expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
@@ -22,6 +22,17 @@ export function HeroSection() {
       sameSite: "lax",
     })
     router.refresh()
+  }
+
+  const onEnterPublish = async () => {
+    await setCookie({
+      name: "has_visited",
+      value: "true",
+      expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+      sameSite: "lax",
+    })
+    router.push("/publish")
   }
 
   useEffect(() => {
@@ -70,7 +81,7 @@ export function HeroSection() {
             Built by design engineers. One command to
             install.
             <br />
-            Distribute your own components.
+            Publish your own components.
           </p>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6">
@@ -85,6 +96,14 @@ export function HeroSection() {
                   ⏎
                 </kbd>
               )}
+            </Button>
+
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={onEnterPublish}
+            >
+              Publish a component
             </Button>
 
             <Button

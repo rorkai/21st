@@ -48,22 +48,26 @@ export const generateMetadata = async ({
   }
 
   return {
-    title: `${component.name} | The NPM for Design Engineers | 21st.dev`,
-    description: component.description || `A React component by ${user.username}. Built for design engineers using Tailwind CSS and shadcn/ui.`,
+    title: `${component.name} | 21st.dev - The NPM for Design Engineers`,
+    description:
+      component.description ||
+      `A React component by ${user.username}. Ship polished UIs faster with ready-to-use Tailwind components inspired by shadcn/ui.`,
     keywords: [
-      'react components', 
-      'design engineers',
-      'tailwind css', 
-      'ui components', 
-      'shadcn/ui', 
-      'component library',
+      "react components",
+      "design engineers",
+      "tailwind css",
+      "ui components",
+      "shadcn/ui",
+      "component library",
       `${component.name.toLowerCase()} component`,
       `${component.name.toLowerCase()} shadcn/ui`,
-      ...(component.tags?.map(tag => tag.name.toLowerCase()) || [])
+      ...(component.tags?.map((tag) => tag.name.toLowerCase()) || []),
     ],
     openGraph: {
-      title: `${component.name} - The NPM for Design Engineers`,
-      description: component.description || `A React component by ${user.username}. Ship polished UI faster with ready-to-use components.`,
+      title: `${component.name} | 21st.dev - The NPM for Design Engineers`,
+      description:
+        component.description ||
+        `A React component by ${user.username}. Ship polished UIs faster with ready-to-use Tailwind components inspired by shadcn/ui.`,
       images: [
         {
           url: ogImageUrl,
@@ -75,13 +79,15 @@ export const generateMetadata = async ({
     },
     twitter: {
       card: "summary_large_image",
-      title: `${component.name} - The NPM for Design Engineers`,
-      description: component.description || `A React component by ${user.username}. Ship polished UI faster with ready-to-use components.`,
+      title: `${component.name} | 21st.dev - The NPM for Design Engineers`,
+      description:
+        component.description ||
+        `A React component by ${user.username}. Ship polished UIs faster with ready-to-use Tailwind components inspired by shadcn/ui.`,
       images: [ogImageUrl],
     },
     other: {
-      "script:ld+json": JSON.stringify(structuredData)
-    }
+      "script:ld+json": JSON.stringify(structuredData),
+    },
   }
 }
 

@@ -18,7 +18,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
     "@type": "WebSite",
     name: "21st.dev - The NPM for Design Engineers",
     description:
-      "Ship polished UI faster with ready-to-use React Tailwind components based on shadcn. Share your own components with the community.",
+      "Ship polished UIs faster with ready-to-use React Tailwind components inspired by shadcn/ui. Built by design engineers, for design engineers.",
     url: process.env.NEXT_PUBLIC_APP_URL,
     potentialAction: {
       "@type": "SearchAction",
@@ -33,7 +33,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
   return {
     title: "21st.dev – The NPM for Design Engineers",
     description:
-      "Ship polished UI faster with ready-to-use React Tailwind components based on shadcn. Built by design engineers, for design engineers. Publish and share your components with the community.",
+      "Ship polished UIs faster with ready-to-use React Tailwind components inspired by shadcn/ui. Built by design engineers, for design engineers.",
     keywords: [
       "react components",
       "tailwind css",
@@ -46,7 +46,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
     openGraph: {
       title: "21st.dev - The NPM for Design Engineers",
       description:
-        "Ship polished UI faster. Built by design engineers, for design engineers. Share your components with the community.",
+        "Ship polished UIs faster with ready-to-use React Tailwind components inspired by shadcn/ui. Built by design engineers, for design engineers.",
       images: [
         {
           url: `${process.env.NEXT_PUBLIC_APP_URL}/og-image.png`,
@@ -59,7 +59,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
       card: "summary_large_image",
       title: "21st.dev - The NPM for Design Engineers",
       description:
-        "Ship polished UI faster. Built by design engineers, for design engineers. Share your components with the community.",
+        "Ship polished UIs faster with ready-to-use React Tailwind components inspired by shadcn/ui. Built by design engineers, for design engineers.",
       images: [`${process.env.NEXT_PUBLIC_APP_URL}/og-image.png`],
     },
     other: {

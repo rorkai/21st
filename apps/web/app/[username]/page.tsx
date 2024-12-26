@@ -34,11 +34,11 @@ export const generateMetadata = async ({
   const ogImageUrl = `${process.env.NEXT_PUBLIC_APP_URL}/${user.username}/opengraph-image`
 
   return {
-    title: `${user.name || user.username} | 21st.dev`,
-    description: `Collection of free open source shadcn/ui React Tailwind CSS components by ${user.name || user.username}.`,
+    title: `${user.name || user.username} | 21st.dev - The NPM for Design Engineers`,
+    description: `Collection of free open source shadcn/ui React Tailwind components by ${user.name || user.username}.`,
     openGraph: {
-      title: `${user.name || user.username}'s Components`,
-      description: `Browse ${user.name || user.username}'s collection of React and Tailwind CSS components`,
+      title: `${user.name || user.username}'s Components | 21st.dev - The NPM for Design Engineers`,
+      description: `Browse ${user.name || user.username}'s collection of React Tailwind components inspired by shadcn/ui.`,
       images: [
         {
           url: ogImageUrl,
@@ -50,8 +50,8 @@ export const generateMetadata = async ({
     },
     twitter: {
       card: "summary_large_image",
-      title: `${user.name || user.username}'s Components`,
-      description: `Browse ${user.name || user.username}'s collection of React and Tailwind CSS components`,
+      title: `${user.name || user.username}'s Components | 21st.dev - The NPM for Design Engineers`,
+      description: `Browse ${user.name || user.username}'s collection of React Tailwind components inspired by shadcn/ui.`,
       images: [ogImageUrl],
     },
     keywords: [

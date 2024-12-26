@@ -83,16 +83,15 @@ export default async function ProPage() {
     .not("pro_referral_url", "is", null)
     .not("pro_referral_url", "eq", "")
     .order("created_at", { ascending: true })
-  
+
   const publishersWithImages = await Promise.all(
     publishers?.map(async (publisher) => {
       if (!publisher.pro_banner_url) {
+        const ogImage = publisher.pro_referral_url
+          ? await getOGImage(publisher.pro_referral_url)
+          : null
 
-      const ogImage = publisher.pro_referral_url
-        ? await getOGImage(publisher.pro_referral_url)
-        : null
-
-      return {
+        return {
           ...publisher,
           image: ogImage,
         }
@@ -110,11 +109,9 @@ export default async function ProPage() {
       <Header page="pro" />
 
       <div className="container mx-auto mt-20">
-        <h1 className="text-xl font-bold mb-4">Pro templates & components</h1>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
           {publishersWithImages.map((publisher) => (
-            <div className="flex flex-col" key={publisher.id}>
+            <div className="flex flex-col group" key={publisher.id}>
               <Link
                 href={publisher.pro_referral_url!!}
                 target="_blank"
@@ -168,9 +165,12 @@ export default async function ProPage() {
                   <Link
                     target="_blank"
                     href={publisher.pro_referral_url!!}
-                    className="text-xs text-muted-foreground whitespace-nowrap shrink-0"
+                    className="text-xs text-muted-foreground whitespace-nowrap shrink-0 group/arrow"
                   >
-                    Open →
+                    Open{" "}
+                    <span className="inline-block transition-transform duration-200 group-hover:translate-x-[2px]">
+                      →
+                    </span>
                   </Link>
                 </div>
               </div>

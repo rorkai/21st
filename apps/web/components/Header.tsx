@@ -11,8 +11,8 @@ import {
   UserProfile,
 } from "@clerk/nextjs"
 import { UserAvatar } from "./UserAvatar"
-import { atom, useAtom } from "jotai"
-import { useIsMobile, useMediaQuery } from "@/hooks/use-media-query"
+import { atom } from "jotai"
+import { useIsMobile } from "@/hooks/use-media-query"
 import { HeaderServer } from "./HeaderServer"
 import { NavigationMenuLink } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils"
@@ -24,17 +24,16 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { LogOut, User, Settings, X, FileText } from "lucide-react"
+import { LogOut, Settings, X, FileText } from "lucide-react"
 
 export const searchQueryAtom = atom("")
 
 export function Header({ tagName, page }: { tagName?: string; page?: string }) {
   const isHomePage = page === "home"
   const isPublishPage = page === "publish"
-  const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom)
+  const isProPage = page === "pro"
   const inputRef = React.useRef<HTMLInputElement>(null)
   const isMobile = useIsMobile()
-  const isDesktop = useMediaQuery("(min-width: 1024px)")
   const { user, signOut } = useClerk()
   const [showUserProfile, setShowUserProfile] = useState(false)
 
@@ -59,7 +58,11 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
     <>
       <header className="flex fixed top-0 left-0 right-0 h-14 z-50 items-center justify-between border-b border-border/40 px-4 py-3 bg-background text-foreground">
         <div className="flex items-center gap-4">
-          <HeaderServer tagName={tagName} isHomePage={isHomePage} />
+          <HeaderServer
+            tagName={tagName}
+            isHomePage={isHomePage}
+            isProPage={isProPage}
+          />
         </div>
 
         <div className="flex items-center gap-2">

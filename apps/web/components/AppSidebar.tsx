@@ -139,6 +139,7 @@ export function AppSidebar() {
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
+                isActive={pathname === "/pro"}
                 onClick={() => {
                   trackEvent(AMPLITUDE_EVENTS.VIEW_SIDEBAR_SECTION, {
                     sectionTitle: "Pro Components",

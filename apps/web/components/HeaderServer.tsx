@@ -73,19 +73,26 @@ const componentTypes = [
 interface HeaderServerProps {
   tagName?: string
   isHomePage: boolean
+  isProPage?: boolean
 }
 
-export function HeaderServer({ tagName, isHomePage }: HeaderServerProps) {
+export function HeaderServer({
+  tagName,
+  isHomePage,
+  isProPage,
+}: HeaderServerProps) {
   return (
     <div className="flex items-center">
       <Link
         href="/"
         className="flex items-center justify-center w-7 h-7 rounded-full cursor-pointer bg-foreground"
       />
-      {!isHomePage && tagName && (
+      {!isHomePage && (tagName || isProPage) && (
         <>
           <span className="mx-2 text-muted-foreground">/</span>
-          <span className="text-[14px] font-medium">{tagName}</span>
+          <span className="text-[14px] font-medium">
+            {isProPage ? "Pro templates & components" : tagName}
+          </span>
         </>
       )}
     </div>

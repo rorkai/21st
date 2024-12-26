@@ -87,7 +87,7 @@ export default function PublishComponentForm() {
 
   const [formStartTime] = useState(() => Date.now())
   const [publishAttemptCount, setPublishAttemptCount] = useState(0)
-  const [completedSteps, setCompletedSteps] = useState<string[]>([])
+  const [completedSteps] = useState<string[]>([])
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),

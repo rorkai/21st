@@ -12,13 +12,9 @@ import {
 } from "@clerk/nextjs"
 import { UserAvatar } from "./UserAvatar"
 import { atom, useAtom } from "jotai"
-import { Input } from "@/components/ui/input"
-import { Hotkey } from "./ui/hotkey"
 import { useIsMobile, useMediaQuery } from "@/hooks/use-media-query"
 import { HeaderServer } from "./HeaderServer"
-import {
-  NavigationMenuLink,
-} from "@/components/ui/navigation-menu"
+import { NavigationMenuLink } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils"
 import {
   DropdownMenu,
@@ -28,7 +24,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { LogOut, User, Settings, X } from "lucide-react"
+import { LogOut, User, Settings, X, FileText } from "lucide-react"
 
 export const searchQueryAtom = atom("")
 
@@ -111,6 +107,12 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
                     <DropdownMenuItem onSelect={() => setShowUserProfile(true)}>
                       <Settings className="w-4 h-4 mr-2 opacity-60" />
                       <span>Manage account</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onSelect={() => window.open("/terms", "_blank")}
+                    >
+                      <FileText className="w-4 h-4 mr-2 opacity-60" />
+                      <span>Terms of Service</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onSelect={() => signOut({ redirectUrl: "/" })}

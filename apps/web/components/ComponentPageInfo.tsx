@@ -33,7 +33,6 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { formatDate } from "@/lib/utils"
 import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { trackEvent } from "@/lib/amplitude"
-import { Icons } from "@/components/icons"
 
 export const ComponentPageInfo = ({
   component,

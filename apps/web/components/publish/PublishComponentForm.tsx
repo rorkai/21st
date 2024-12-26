@@ -778,7 +778,7 @@ export default function PublishComponentForm() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3, delay: 0.2 }}
-                  className="w-2/3 h-full px-10 py-20"
+                  className="w-2/3 h-full px-10 flex items-center"
                 >
                   <HeroVideoDialog
                     videoSrc="https://www.youtube.com/embed/NXpSAnmleyE"

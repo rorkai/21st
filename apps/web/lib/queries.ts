@@ -334,7 +334,8 @@ export async function updateComponentWithTags(
   componentId: number,
   updatedData: Partial<Component & { tags?: Tag[] }>,
 ) {
-  const { name, description, license, preview_url, tags } = updatedData
+  const { name, description, license, preview_url, website_url, tags } =
+    updatedData
 
   const tagsJson = tags
     ? tags.map((tag) => ({
@@ -349,6 +350,7 @@ export async function updateComponentWithTags(
     p_description: description !== undefined ? description : null,
     p_license: license !== undefined ? license : null,
     p_preview_url: preview_url !== undefined ? preview_url : null,
+    p_website_url: website_url !== undefined ? website_url : null,
     p_tags: tagsJson,
   })
 

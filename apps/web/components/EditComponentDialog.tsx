@@ -50,6 +50,7 @@ export function EditComponentDialog({
       preview_image_data_url: component.preview_url,
       description: component.description ?? "",
       license: component.license,
+      website_url: component.website_url ?? "",
       tags: component.tags,
     },
   })
@@ -105,6 +106,10 @@ export function EditComponentDialog({
 
     if (formData.license !== component.license) {
       updatedData.license = formData.license
+    }
+
+    if (formData.website_url !== component.website_url) {
+      updatedData.website_url = formData.website_url
     }
 
     if (formData.tags !== component.tags) {

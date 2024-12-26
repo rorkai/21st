@@ -224,9 +224,12 @@ const ComponentDetailsForm = ({
       </div>
 
       <div className="w-full">
-        <Label htmlFor="preview_video" className="block text-sm font-medium">
-          Video Preview (optional)
-        </Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="preview_video" className="text-sm font-medium">
+            Video Preview
+          </Label>
+          <span className="text-sm text-muted-foreground">Optional</span>
+        </div>
         {!previewVideoDataUrl ? (
           <div
             {...getVideoRootProps()}
@@ -343,9 +346,12 @@ const ComponentDetailsForm = ({
       </div>
 
       <div className="w-full">
-        <label htmlFor="tags" className="block text-sm font-medium">
-          Tags (optional)
-        </label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="tags" className="text-sm font-medium">
+            Tags
+          </Label>
+          <span className="text-sm text-muted-foreground">Optional</span>
+        </div>
         <Controller
           name="tags"
           control={form.control}
@@ -379,15 +385,39 @@ const ComponentDetailsForm = ({
       </div>
 
       <div className="w-full">
-        <Label htmlFor="website_url" className="block text-sm font-medium">
-          Website (optional)
-        </Label>
-        <Input
-          id="website_url"
-          placeholder="Component's website, docs or GitHub link..."
-          {...form.register("website_url")}
-          className="mt-1 w-full text-foreground"
-        />
+        <div className="flex items-center justify-between">
+          <Label htmlFor="website_url" className="text-sm font-medium">
+            Website
+          </Label>
+          <span className="text-sm text-muted-foreground">Optional</span>
+        </div>
+        <div className="relative mt-1">
+          <Controller
+            name="website_url"
+            control={form.control}
+            render={({ field }) => (
+              <Input
+                id="website_url"
+                placeholder="google.com"
+                className="ps-16 text-foreground w-full"
+                value={field.value?.replace(/^https?:\/\//, "") || ""}
+                onChange={(e) => {
+                  const displayValue = e.target.value.replace(
+                    /^https?:\/\//,
+                    "",
+                  )
+                  const fullValue = displayValue
+                    ? `https://${displayValue}`
+                    : ""
+                  field.onChange(fullValue)
+                }}
+              />
+            )}
+          />
+          <span className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-sm text-muted-foreground">
+            https://
+          </span>
+        </div>
       </div>
 
       <Button

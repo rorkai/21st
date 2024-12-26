@@ -80,8 +80,10 @@ export function CommandMenu() {
 
   const selectedComponent = React.useMemo(() => {
     if (!value.startsWith("component-")) return null
-    const componentName = value.replace("component-", "")
-    return components?.find((c) => c.name === componentName)
+    const [userId, componentSlug] = value.replace("component-", "").split("/")
+    return components?.find(
+      (c) => c.user_id === userId && c.component_slug === componentSlug,
+    )
   }, [components, value])
 
   const handleOpenChange = (open: boolean) => {
@@ -142,7 +144,7 @@ export function CommandMenu() {
                     {components.map((component) => (
                       <CommandItem
                         key={component.id}
-                        value={`component-${component.name}`}
+                        value={`component-${component.user_id}/${component.component_slug}`}
                         onSelect={() => {
                           router.push(
                             `/${component.user.username}/${component.component_slug}`,

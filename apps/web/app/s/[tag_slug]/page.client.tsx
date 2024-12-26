@@ -8,9 +8,13 @@ import { sortByAtom } from "@/components/ComponentsHeader"
 import { useMemo } from "react"
 import { sortComponents } from "@/lib/filters.client"
 
-export function TagPageContent({ components }: { components: (Component & { user: User })[] }) {
+export function TagPageContent({
+  components,
+}: {
+  components: (Component & { user: User })[]
+}) {
   const [sortBy] = useAtom(sortByAtom)
-  
+
   const sortedComponents = useMemo(() => {
     if (!components || !sortBy) return undefined
     return sortComponents(components, sortBy)
@@ -18,8 +22,8 @@ export function TagPageContent({ components }: { components: (Component & { user
 
   return (
     <>
-      <ComponentsHeader totalCount={components.length} />
+      <ComponentsHeader totalCount={components.length} filtersEnabled={true} />
       <ComponentsList components={sortedComponents} className="mt-6" />
     </>
   )
-} 
+}

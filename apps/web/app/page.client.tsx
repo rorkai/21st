@@ -92,9 +92,10 @@ export function HomePageClient({
   })
 
   const filteredAndSortedComponents = useMemo(() => {
+    if (searchQuery) return components
     if (!components || !quickFilter || !sortBy) return undefined
     return sortComponents(filterComponents(components, quickFilter), sortBy)
-  }, [components, quickFilter, sortBy])
+  }, [components, searchQuery, quickFilter, sortBy])
 
   useTrackHasOnboarded()
 
@@ -106,6 +107,7 @@ export function HomePageClient({
     >
       <div className="flex flex-col">
         <ComponentsHeader
+          filtersEnabled={!!searchQuery}
           totalCount={
             quickFilter === "all"
               ? componentsTotalCount

@@ -19,6 +19,7 @@ import { useEffect, useRef } from "react"
 import { ArrowUpDown, CircleX } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AMPLITUDE_EVENTS, trackEvent } from "@/lib/amplitude"
+import { cn } from "@/lib/utils"
 
 export const quickFilterAtom = atomWithStorage<QuickFilterOption | undefined>(
   "quick-filter",
@@ -64,7 +65,13 @@ const useSearchHotkeys = (inputRef: React.RefObject<HTMLInputElement>) => {
   }, [])
 }
 
-export function ComponentsHeader({ totalCount }: { totalCount: number }) {
+export function ComponentsHeader({
+  totalCount,
+  filtersEnabled,
+}: {
+  totalCount: number
+  filtersEnabled: boolean
+}) {
   const [quickFilter, setQuickFilter] = useAtom(quickFilterAtom)
   const [sortBy, setSortBy] = useAtom(sortByAtom)
   const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom)
@@ -96,7 +103,7 @@ export function ComponentsHeader({ totalCount }: { totalCount: number }) {
             onValueChange={(value) =>
               setQuickFilter(value as QuickFilterOption)
             }
-            className="w-full md:w-auto"
+            className={cn("w-full md:w-auto", filtersEnabled && "opacity-50")}
           >
             <TabsList className="w-full md:w-auto h-auto -space-x-px bg-background p-0 shadow-sm shadow-black/5 rtl:space-x-reverse">
               {Object.entries(QUICK_FILTER_OPTIONS).map(([value, label]) => (

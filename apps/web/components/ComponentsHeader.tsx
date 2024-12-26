@@ -76,11 +76,9 @@ const getFilteredCount = (
 
 export function ComponentsHeader({
   filtersDisabled,
-  hideSearch = false,
   components,
 }: {
   filtersDisabled: boolean
-  hideSearch?: boolean
   components?: (Component & { user: User })[]
 }) {
   const [quickFilter, setQuickFilter] = useAtom(quickFilterAtom)
@@ -157,39 +155,32 @@ export function ComponentsHeader({
           </Tabs>
         </div>
 
-        <div
-          className={cn(
-            "flex items-center gap-2",
-            hideSearch ? "md:w-auto ml-auto" : "md:w-[450px]",
-          )}
-        >
-          {!hideSearch && (
-            <div className="relative flex-1">
-              <Input
-                ref={inputRef}
-                type="text"
-                placeholder="Search components..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full"
-              />
-              {searchQuery ? (
-                <button
-                  className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-lg text-muted-foreground/80 outline-offset-2 transition-colors hover:text-foreground focus:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring/70"
-                  onClick={handleClearInput}
-                  aria-label="Clear search"
-                >
-                  <CircleX size={16} strokeWidth={2} aria-hidden="true" />
-                </button>
-              ) : (
-                <div className="pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-2 text-muted-foreground">
-                  <kbd className="hidden md:inline-flex h-5 max-h-full items-center rounded border border-border px-1 font-[inherit] text-[0.625rem] font-medium text-muted-foreground/70">
-                    ⌘K
-                  </kbd>
-                </div>
-              )}
-            </div>
-          )}
+        <div className="flex items-center gap-2 md:w-[450px]">
+          <div className="relative flex-1">
+            <Input
+              ref={inputRef}
+              type="text"
+              placeholder="Search components..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full"
+            />
+            {searchQuery ? (
+              <button
+                className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-lg text-muted-foreground/80 outline-offset-2 transition-colors hover:text-foreground focus:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring/70"
+                onClick={handleClearInput}
+                aria-label="Clear search"
+              >
+                <CircleX size={16} strokeWidth={2} aria-hidden="true" />
+              </button>
+            ) : (
+              <div className="pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-2 text-muted-foreground">
+                <kbd className="hidden md:inline-flex h-5 max-h-full items-center rounded border border-border px-1 font-[inherit] text-[0.625rem] font-medium text-muted-foreground/70">
+                  ⌘K
+                </kbd>
+              </div>
+            )}
+          </div>
 
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger

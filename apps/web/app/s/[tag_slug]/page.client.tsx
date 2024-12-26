@@ -8,6 +8,7 @@ import {
 import { Component, User } from "@/types/global"
 import { useAtom } from "jotai"
 import { sortByAtom } from "@/components/ComponentsHeader"
+import { searchQueryAtom } from "@/components/Header"
 import { useMemo } from "react"
 import { sortComponents, filterComponents } from "@/lib/filters.client"
 
@@ -18,17 +19,30 @@ export function TagPageContent({
 }) {
   const [sortBy] = useAtom(sortByAtom)
   const [quickFilter] = useAtom(quickFilterAtom)
+  const [searchQuery] = useAtom(searchQueryAtom)
 
   const filteredSortedComponents = useMemo(() => {
     if (!components || !sortBy || !quickFilter) return undefined
-    return sortComponents(filterComponents(components, quickFilter), sortBy)
-  }, [components, sortBy, quickFilter])
+
+    let filtered = components
+
+    if (searchQuery) {
+      filtered = filtered.filter(
+        (component) =>
+          component.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          component.description
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase()),
+      )
+    }
+
+    return sortComponents(filterComponents(filtered, quickFilter), sortBy)
+  }, [components, sortBy, quickFilter, searchQuery])
 
   return (
     <>
       <ComponentsHeader
         filtersDisabled={false}
-        hideSearch={true}
         components={components}
       />
       <ComponentsList components={filteredSortedComponents} className="mt-6" />

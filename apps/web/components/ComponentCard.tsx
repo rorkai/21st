@@ -6,6 +6,7 @@ import { Component, User } from "../types/global"
 import { UserAvatar } from "./UserAvatar"
 import { Video } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
+import { CopyComponentButton } from "./CopyComponentButton"
 
 export function ComponentCard({
   component,
@@ -19,6 +20,7 @@ export function ComponentCard({
     <div className="overflow-hidden">
       <Link href={componentUrl} className="block cursor-pointer">
         <div className="relative aspect-[4/3] mb-3 group">
+          <CopyComponentButton codeUrl={component.code} />
           <div className="absolute inset-0 rounded-lg overflow-hidden">
             <div className="relative w-full h-full">
               <div className="absolute inset-0" style={{ margin: "-1px" }}>
@@ -43,6 +45,7 @@ export function ComponentCard({
               <Video size={16} className="text-foreground" />
             </div>
           )}
+          <CopyComponentButton codeUrl={component.code} />
         </div>
       </Link>
       <div className="flex items-center space-x-3">
@@ -54,7 +57,10 @@ export function ComponentCard({
           isClickable
         />
         <div className="flex items-center justify-between flex-grow min-w-0">
-          <Link href={componentUrl} className="block cursor-pointer min-w-0 flex-1 mr-3">
+          <Link
+            href={componentUrl}
+            className="block cursor-pointer min-w-0 flex-1 mr-3"
+          >
             <h2 className="text-sm font-medium text-foreground truncate">
               {component.name}
             </h2>

@@ -30,11 +30,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useCompileCss } from "@/hooks/use-compile-css"
 import { useIsMobile } from "@/hooks/use-media-query"
-import {
-  Pencil,
-  CodeXml,
-  Info,
-} from "lucide-react"
+import { Pencil, CodeXml, Info } from "lucide-react"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 const SandpackPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react/unstyled").then((module) => ({
@@ -136,8 +133,8 @@ export function ComponentPagePreview({
   const visibleFiles = [
     demoComponentFile,
     mainComponentFile,
-    ...(tailwindConfig ? ['tailwind.config.js'] : []),
-    ...(globalCss ? ['globals.css'] : []),
+    ...(tailwindConfig ? ["tailwind.config.js"] : []),
+    ...(globalCss ? ["globals.css"] : []),
     ...Object.keys(registryDependencies).filter(
       (file) => file !== mainComponentFile,
     ),
@@ -151,12 +148,15 @@ export function ComponentPagePreview({
     }),
   )
 
+  const [activeFile, setActiveFile] = useState<string>(
+    demoComponentFile ?? mainComponentFile ?? "",
+  )
+
   const providerProps: SandpackProviderProps = {
     theme: isDarkTheme ? "dark" : "light",
     template: "react-ts" as const,
     files: files,
     customSetup: {
-      entry: "/index.tsx",
       dependencies: {
         react: "^18.0.0",
         "react-dom": "^18.0.0",
@@ -170,7 +170,7 @@ export function ComponentPagePreview({
       },
     },
     options: {
-      activeFile: demoComponentFile ?? mainComponentFile,
+      activeFile,
       visibleFiles,
     },
     ...({ fileLabels: customFileLabels } as any),
@@ -204,7 +204,7 @@ export function ComponentPagePreview({
                   canEdit={canEdit}
                   setIsEditDialogOpen={setIsEditDialogOpen}
                 />
-                <div className="flex w-full flex-col">
+                <div className="flex w-full flex-col bg-muted">
                   {isShowCode ? (
                     <>
                       <CopyCommandSection component={component} />
@@ -213,10 +213,25 @@ export function ComponentPagePreview({
                         className={`overflow-auto ${styles.codeViewerWrapper} relative`}
                       >
                         <CopyCodeButton />
-                        <SandpackCodeViewer
-                          showLineNumbers={true}
-                          wrapContent={true}
-                        />
+                        <Tabs value={activeFile} onValueChange={setActiveFile}>
+                          <TabsList className="relative justify-start w-full gap-0.5 bg-transparent p-0 before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-border pl-4">
+                            {visibleFiles.map((file) => (
+                              <TabsTrigger
+                                key={file}
+                                value={file}
+                                className="overflow-hidden data-[state=active]:rounded-b-none data-[state=active]:border-x data-[state=active]:border-t data-[state=active]:border-border bg-muted py-2 data-[state=active]:z-10 data-[state=active]:shadow-none"
+                              >
+                                {file.split("/").pop()}
+                              </TabsTrigger>
+                            ))}
+                          </TabsList>
+                          <div className="">
+                            <SandpackCodeViewer
+                              wrapContent={true}
+                              showTabs={false}
+                            />
+                          </div>
+                        </Tabs>
                       </div>
                     </>
                   ) : (
@@ -254,7 +269,7 @@ function CopyCommandSection({
       componentId: component.id,
       componentName: component.name,
       packageManager,
-      installUrl
+      installUrl,
     })
     setTimeout(() => setCopied(false), 1000)
     toast("Command copied to clipboard")
@@ -316,7 +331,7 @@ const MobileControls = ({
   setIsEditDialogOpen: (value: boolean) => void
 }) => {
   const isMobile = useIsMobile()
-  
+
   if (!isMobile) return null
 
   return (

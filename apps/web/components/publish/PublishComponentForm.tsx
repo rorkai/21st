@@ -58,7 +58,6 @@ import { Input } from "@/components/ui/input"
 import { usePublishAs } from "./use-publish-as"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { HeroVideoDialog } from "@/components/ui/hero-video-dialog"
-import endent from "endent"
 import { ChevronLeftIcon } from "lucide-react"
 import { Editor } from "@monaco-editor/react"
 
@@ -750,7 +749,7 @@ export default function PublishComponentForm() {
                       </p>
 
                       <Tabs defaultValue="tailwind" className="w-full">
-                        <TabsList>
+                        <TabsList className="rounded-lg h-9">
                           <TabsTrigger value="tailwind">
                             tailwind.config.js
                           </TabsTrigger>

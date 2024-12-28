@@ -504,8 +504,8 @@ export default function PublishComponentForm() {
                                   overviewRulerBorder: false,
                                   renderLineHighlight: "none",
                                   contextmenu: false,
-                                  formatOnPaste: true,
-                                  formatOnType: true,
+                                  formatOnPaste: false,
+                                  formatOnType: false,
                                   quickSuggestions: false,
                                   suggest: {
                                     showKeywords: false,
@@ -523,7 +523,7 @@ export default function PublishComponentForm() {
                                     inherit: true,
                                     rules: [],
                                     colors: {
-                                      "editor.background": "#0d1117",
+                                      "editor.background": "#00000000",
                                       "editor.foreground": "#c9d1d9",
                                       "editor.lineHighlightBackground":
                                         "#161b22",
@@ -542,7 +542,7 @@ export default function PublishComponentForm() {
                                     inherit: true,
                                     rules: [],
                                     colors: {
-                                      "editor.background": "#ffffff",
+                                      "editor.background": "#00000000",
                                       "editor.foreground": "#24292f",
                                       "editor.lineHighlightBackground":
                                         "#f6f8fa",
@@ -641,8 +641,8 @@ export default function PublishComponentForm() {
                                     overviewRulerBorder: false,
                                     renderLineHighlight: "none",
                                     contextmenu: false,
-                                    formatOnPaste: true,
-                                    formatOnType: true,
+                                    formatOnPaste: false,
+                                    formatOnType: false,
                                     quickSuggestions: false,
                                     suggest: {
                                       showKeywords: false,
@@ -660,7 +660,7 @@ export default function PublishComponentForm() {
                                       inherit: true,
                                       rules: [],
                                       colors: {
-                                        "editor.background": "#0d1117",
+                                        "editor.background": "#00000000",
                                         "editor.foreground": "#c9d1d9",
                                         "editor.lineHighlightBackground":
                                           "#161b22",
@@ -681,7 +681,7 @@ export default function PublishComponentForm() {
                                       inherit: true,
                                       rules: [],
                                       colors: {
-                                        "editor.background": "#ffffff",
+                                        "editor.background": "#00000000",
                                         "editor.foreground": "#24292f",
                                         "editor.lineHighlightBackground":
                                           "#f6f8fa",
@@ -788,8 +788,8 @@ export default function PublishComponentForm() {
                                 overviewRulerBorder: false,
                                 renderLineHighlight: "none",
                                 contextmenu: false,
-                                formatOnPaste: true,
-                                formatOnType: true,
+                                formatOnPaste: false,
+                                formatOnType: false,
                                 quickSuggestions: false,
                                 suggest: {
                                   showKeywords: false,
@@ -859,8 +859,8 @@ export default function PublishComponentForm() {
                                 overviewRulerBorder: false,
                                 renderLineHighlight: "none",
                                 contextmenu: false,
-                                formatOnPaste: true,
-                                formatOnType: true,
+                                formatOnPaste: false,
+                                formatOnType: false,
                                 quickSuggestions: false,
                                 suggest: {
                                   showKeywords: false,

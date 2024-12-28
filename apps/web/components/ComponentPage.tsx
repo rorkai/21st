@@ -404,6 +404,54 @@ export default function ComponentPage({
                 </TooltipContent>
               </Tooltip>
             )}
+
+            <div className="relative bg-muted rounded-lg h-8 p-0.5 flex">
+              <div
+                className="absolute inset-y-0.5 rounded-md bg-background shadow transition-all duration-200 ease-in-out"
+                style={{
+                  width: "calc(50% - 2px)",
+                  left: isShowCode ? "2px" : "calc(50%)",
+                }}
+              />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setIsShowCode(true)}
+                    className={`relative z-2 px-2 flex items-center justify-center transition-colors duration-200 ${
+                      isShowCode ? "text-foreground" : "text-muted-foreground"
+                    }`}
+                  >
+                    <CodeXml size={18} />
+                    <span className="text-[14px] pl-1 pr-2">Code</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
+                  <p className="flex items-center">
+                    Component code
+                    <Hotkey keys={["["]} variant="outline" />
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setIsShowCode(false)}
+                    className={`relative z-2 px-2 flex items-center justify-center transition-colors duration-200 ${
+                      !isShowCode ? "text-foreground" : "text-muted-foreground"
+                    }`}
+                  >
+                    <Info size={18} />
+                    <span className="pl-1 pr-2 text-[14px]">Info</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
+                  <p className="flex items-center">
+                    Component info
+                    <Hotkey keys={["]"]} variant="outline" />
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
             <div className="inline-flex -space-x-px divide-x divide-primary-foreground/30 rounded-lg shadow-sm">
               <Button
                 onClick={async () => {
@@ -513,53 +561,6 @@ export default function ComponentPage({
                   </DropdownMenuRadioGroup>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
-            <div className="relative bg-muted rounded-lg h-8 p-0.5 flex">
-              <div
-                className="absolute inset-y-0.5 rounded-md bg-background shadow transition-all duration-200 ease-in-out"
-                style={{
-                  width: "calc(50% - 2px)",
-                  left: isShowCode ? "2px" : "calc(50%)",
-                }}
-              />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => setIsShowCode(true)}
-                    className={`relative z-2 px-2 flex items-center justify-center transition-colors duration-200 ${
-                      isShowCode ? "text-foreground" : "text-muted-foreground"
-                    }`}
-                  >
-                    <CodeXml size={18} />
-                    <span className="text-[14px] pl-1 pr-2">Code</span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
-                  <p className="flex items-center">
-                    Component code
-                    <Hotkey keys={["["]} variant="outline" />
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => setIsShowCode(false)}
-                    className={`relative z-2 px-2 flex items-center justify-center transition-colors duration-200 ${
-                      !isShowCode ? "text-foreground" : "text-muted-foreground"
-                    }`}
-                  >
-                    <Info size={18} />
-                    <span className="pl-1 pr-2 text-[14px]">Info</span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
-                  <p className="flex items-center">
-                    Component info
-                    <Hotkey keys={["]"]} variant="outline" />
-                  </p>
-                </TooltipContent>
-              </Tooltip>
             </div>
           </div>
         </div>

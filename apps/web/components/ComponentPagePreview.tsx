@@ -207,7 +207,7 @@ export function ComponentPagePreview({
           </Suspense>
         </motion.div>
       </SandpackProviderUnstyled>
-      <div className="h-full w-full md:max-w-[30%] min-h-90vh overflow-hidden rounded-lg border border-border min-w-[350px]">
+      <div className="h-full w-full md:max-w-[30%] min-h-90vh overflow-hidden rounded-lg border border-border min-w-[350px] dark:bg-[#151515]">
         <SandpackProvider {...providerProps}>
           <div ref={sandpackRef} className="h-full w-full flex relative">
             <SandpackLayout className="flex w-full flex-row gap-4">
@@ -228,12 +228,12 @@ export function ComponentPagePreview({
                       >
                         <CopyCodeButton />
                         <Tabs value={activeFile} onValueChange={setActiveFile}>
-                          <TabsList className="relative bg-muted justify-start w-full gap-0.5 py-0 before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-border px-4 overflow-x-auto flex-nowrap hide-scrollbar">
+                          <TabsList className="relative bg-muted dark:bg-background justify-start w-full gap-0.5 py-0 before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-border px-4 overflow-x-auto flex-nowrap hide-scrollbar">
                             {visibleFiles.map((file) => (
                               <TabsTrigger
                                 key={file}
                                 value={file}
-                                className="overflow-hidden data-[state=active]:rounded-b-none data-[state=active]:border-x data-[state=active]:border-t data-[state=active]:border-border bg-muted py-2 data-[state=active]:z-10 data-[state=active]:shadow-none flex-shrink-0 whitespace-nowrap"
+                                className="overflow-hidden data-[state=active]:rounded-b-none dark:data-[state=active]:bg-muted data-[state=active]:border-x data-[state=active]:border-t data-[state=active]:border-border bg-muted dark:bg-background py-2 data-[state=active]:z-10 data-[state=active]:shadow-none flex-shrink-0 whitespace-nowrap"
                               >
                                 {file.split("/").pop()}
                               </TabsTrigger>
@@ -302,7 +302,7 @@ function CopyCommandSection({
   }
 
   return (
-    <div className="p-4 bg-muted">
+    <div className="p-4 bg-muted dark:bg-background">
       <div className="flex items-center justify-between mb-2">
         <p className="text-[14px] font-medium text-foreground whitespace-nowrap overflow-hidden text-ellipsis">
           Install component

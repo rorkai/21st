@@ -60,6 +60,7 @@ import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { HeroVideoDialog } from "@/components/ui/hero-video-dialog"
 import endent from "endent"
 import { ChevronLeftIcon } from "lucide-react"
+import { Editor } from "@monaco-editor/react"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -402,7 +403,7 @@ export default function PublishComponentForm() {
             <div className={`flex gap-4 items-center h-full w-full mt-2`}>
               <div
                 className={cn(
-                  "flex flex-col scrollbar-hide items-start gap-2 py-6 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[450px]",
+                  "flex flex-col scrollbar-hide items-start gap-2 py-8 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[450px]",
                 )}
               >
                 {formStep === "nameSlugForm" && (
@@ -474,18 +475,94 @@ export default function PublishComponentForm() {
                               }}
                               transition={{ duration: 0.3 }}
                             >
-                              <Textarea
-                                ref={codeInputRef}
-                                placeholder="Paste code of your component here"
-                                value={field.value}
-                                onChange={(e) => {
-                                  field.onChange(e.target.value)
+                              <Editor
+                                defaultLanguage="typescript"
+                                defaultValue={field.value}
+                                onChange={(value) =>
+                                  field.onChange(value || "")
+                                }
+                                theme={
+                                  isDarkTheme ? "github-dark" : "github-light"
+                                }
+                                options={{
+                                  minimap: { enabled: false },
+                                  scrollBeyondLastLine: false,
+                                  fontSize: 14,
+                                  lineNumbers: "off",
+                                  folding: true,
+                                  wordWrap: "on",
+                                  automaticLayout: true,
+                                  padding: { top: 16, bottom: 16 },
+                                  scrollbar: {
+                                    vertical: "visible",
+                                    horizontal: "visible",
+                                    verticalScrollbarSize: 8,
+                                    horizontalScrollbarSize: 8,
+                                    useShadows: false,
+                                  },
+                                  overviewRulerLanes: 0,
+                                  hideCursorInOverviewRuler: true,
+                                  overviewRulerBorder: false,
+                                  renderLineHighlight: "none",
+                                  contextmenu: false,
+                                  formatOnPaste: true,
+                                  formatOnType: true,
+                                  quickSuggestions: false,
+                                  suggest: {
+                                    showKeywords: false,
+                                    showSnippets: false,
+                                  },
+                                  renderValidationDecorations: "off",
+                                  hover: { enabled: false },
+                                  inlayHints: { enabled: "off" },
+                                  occurrencesHighlight: "off",
+                                  selectionHighlight: false,
+                                }}
+                                beforeMount={(monaco) => {
+                                  monaco.editor.defineTheme("github-dark", {
+                                    base: "vs-dark",
+                                    inherit: true,
+                                    rules: [],
+                                    colors: {
+                                      "editor.background": "#0d1117",
+                                      "editor.foreground": "#c9d1d9",
+                                      "editor.lineHighlightBackground":
+                                        "#161b22",
+                                      "editorLineNumber.foreground": "#6e7681",
+                                      "editor.selectionBackground": "#163356",
+                                      "scrollbarSlider.background": "#24292f40",
+                                      "scrollbarSlider.hoverBackground":
+                                        "#32383f60",
+                                      "scrollbarSlider.activeBackground":
+                                        "#424a5380",
+                                    },
+                                  })
+
+                                  monaco.editor.defineTheme("github-light", {
+                                    base: "vs",
+                                    inherit: true,
+                                    rules: [],
+                                    colors: {
+                                      "editor.background": "#ffffff",
+                                      "editor.foreground": "#24292f",
+                                      "editor.lineHighlightBackground":
+                                        "#f6f8fa",
+                                      "editorLineNumber.foreground": "#8c959f",
+                                      "editor.selectionBackground": "#b6e3ff",
+                                      "scrollbarSlider.background": "#24292f20",
+                                      "scrollbarSlider.hoverBackground":
+                                        "#32383f30",
+                                      "scrollbarSlider.activeBackground":
+                                        "#424a5340",
+                                    },
+                                  })
                                 }}
                                 className={cn(
-                                  "h-full w-full flex-grow resize-none scrollbar-hide",
+                                  "h-full w-full flex-grow rounded-md overflow-hidden",
+                                  "border border-input focus-within:ring-1 focus-within:ring-ring",
                                 )}
                               />
-                              <div className="absolute flex gap-2 bottom-2 right-2 z-2 h-[36px]">
+                              <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
                                 <Button
                                   size="icon"
                                   variant="outline"
@@ -535,20 +612,98 @@ export default function PublishComponentForm() {
                                 }}
                                 transition={{ duration: 0.3 }}
                               >
-                                <Textarea
-                                  placeholder="Paste code that demonstrates usage of the component with all variants"
-                                  ref={demoCodeTextAreaRef}
-                                  value={field.value}
-                                  onChange={(e) => {
-                                    field.onChange(e.target.value)
+                                <Editor
+                                  defaultLanguage="typescript"
+                                  defaultValue={field.value}
+                                  onChange={(value) =>
+                                    field.onChange(value || "")
+                                  }
+                                  theme={
+                                    isDarkTheme ? "github-dark" : "github-light"
+                                  }
+                                  options={{
+                                    minimap: { enabled: false },
+                                    scrollBeyondLastLine: false,
+                                    fontSize: 14,
+                                    lineNumbers: "off",
+                                    folding: true,
+                                    wordWrap: "on",
+                                    automaticLayout: true,
+                                    padding: { top: 16, bottom: 16 },
+                                    scrollbar: {
+                                      vertical: "visible",
+                                      horizontal: "visible",
+                                      verticalScrollbarSize: 8,
+                                      horizontalScrollbarSize: 8,
+                                      useShadows: false,
+                                    },
+                                    overviewRulerLanes: 0,
+                                    hideCursorInOverviewRuler: true,
+                                    overviewRulerBorder: false,
+                                    renderLineHighlight: "none",
+                                    contextmenu: false,
+                                    formatOnPaste: true,
+                                    formatOnType: true,
+                                    quickSuggestions: false,
+                                    suggest: {
+                                      showKeywords: false,
+                                      showSnippets: false,
+                                    },
+                                    renderValidationDecorations: "off",
+                                    hover: { enabled: false },
+                                    inlayHints: { enabled: "off" },
+                                    occurrencesHighlight: "off",
+                                    selectionHighlight: false,
                                   }}
-                                  className="w-full h-full resize-none"
-                                  style={{
-                                    height: "100%",
-                                    minHeight: "100%",
+                                  beforeMount={(monaco) => {
+                                    monaco.editor.defineTheme("github-dark", {
+                                      base: "vs-dark",
+                                      inherit: true,
+                                      rules: [],
+                                      colors: {
+                                        "editor.background": "#0d1117",
+                                        "editor.foreground": "#c9d1d9",
+                                        "editor.lineHighlightBackground":
+                                          "#161b22",
+                                        "editorLineNumber.foreground":
+                                          "#6e7681",
+                                        "editor.selectionBackground": "#163356",
+                                        "scrollbarSlider.background":
+                                          "#24292f40",
+                                        "scrollbarSlider.hoverBackground":
+                                          "#32383f60",
+                                        "scrollbarSlider.activeBackground":
+                                          "#424a5380",
+                                      },
+                                    })
+
+                                    monaco.editor.defineTheme("github-light", {
+                                      base: "vs",
+                                      inherit: true,
+                                      rules: [],
+                                      colors: {
+                                        "editor.background": "#ffffff",
+                                        "editor.foreground": "#24292f",
+                                        "editor.lineHighlightBackground":
+                                          "#f6f8fa",
+                                        "editorLineNumber.foreground":
+                                          "#8c959f",
+                                        "editor.selectionBackground": "#b6e3ff",
+                                        "scrollbarSlider.background":
+                                          "#24292f20",
+                                        "scrollbarSlider.hoverBackground":
+                                          "#32383f30",
+                                        "scrollbarSlider.activeBackground":
+                                          "#424a5340",
+                                      },
+                                    })
                                   }}
+                                  className={cn(
+                                    "h-full w-full flex-grow rounded-md overflow-hidden",
+                                    "border border-input focus-within:ring-1 focus-within:ring-ring",
+                                  )}
                                 />
-                                <div className="absolute flex gap-2 bottom-2 right-2 z-2 h-[36px]">
+                                <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
                                   <Button
                                     size="icon"
                                     variant="outline"
@@ -604,34 +759,58 @@ export default function PublishComponentForm() {
 
                         <TabsContent value="tailwind">
                           <div className="relative flex flex-col gap-2">
-                            <Textarea
+                            <Editor
+                              defaultLanguage="javascript"
                               value={customTailwindConfig}
-                              onChange={(e) =>
-                                setCustomTailwindConfig(e.target.value)
+                              onChange={(value) =>
+                                setCustomTailwindConfig(value || "")
                               }
-                              className="font-mono text-sm h-full w-full min-h-[500px]"
-                              placeholder={endent`
-                                  Extend the default tailwind.config.js from shadcn/ui
-                                  \n
-                                  const exampleTailwindPlugin = require('tailwindcss/plugin')
-
-                                  module.exports = {
-                                    ...extend or override default shadcn/ui export here...,
-                                    theme: {
-                                      extend: {
-                                        ...extend or override default shadcn/ui theme here...,
-                                      },
-                                    },
-                                    plugins: [
-                                      exampleTailwindPlugin,
-                                    ],
-                                  }`}
+                              theme={
+                                isDarkTheme ? "github-dark" : "github-light"
+                              }
+                              options={{
+                                minimap: { enabled: false },
+                                scrollBeyondLastLine: false,
+                                fontSize: 14,
+                                lineNumbers: "off",
+                                folding: true,
+                                wordWrap: "on",
+                                automaticLayout: true,
+                                padding: { top: 16, bottom: 16 },
+                                scrollbar: {
+                                  vertical: "visible",
+                                  horizontal: "visible",
+                                  verticalScrollbarSize: 8,
+                                  horizontalScrollbarSize: 8,
+                                  useShadows: false,
+                                },
+                                overviewRulerLanes: 0,
+                                hideCursorInOverviewRuler: true,
+                                overviewRulerBorder: false,
+                                renderLineHighlight: "none",
+                                contextmenu: false,
+                                formatOnPaste: true,
+                                formatOnType: true,
+                                quickSuggestions: false,
+                                suggest: {
+                                  showKeywords: false,
+                                  showSnippets: false,
+                                },
+                                renderValidationDecorations: "off",
+                                hover: { enabled: false },
+                                inlayHints: { enabled: "off" },
+                                occurrencesHighlight: "off",
+                                selectionHighlight: false,
+                              }}
+                              className={cn(
+                                "h-[500px] w-full rounded-md overflow-hidden",
+                                "border border-input focus-within:ring-1 focus-within:ring-ring",
+                              )}
                             />
-                            <div className="absolute flex gap-2 bottom-2 right-2 z-2 h-[36px]">
+                            <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
                               <Button
                                 size="icon"
                                 variant="outline"
-                                className="px-2"
                                 onClick={() => setFormStep("demoCode")}
                               >
                                 <ChevronLeftIcon className="w-4 h-4" />
@@ -651,22 +830,55 @@ export default function PublishComponentForm() {
 
                         <TabsContent value="css">
                           <div className="relative flex flex-col gap-2">
-                            <Textarea
+                            <Editor
+                              defaultLanguage="css"
                               value={customGlobalCss}
-                              onChange={(e) =>
-                                setCustomGlobalCss(e.target.value)
+                              onChange={(value) =>
+                                setCustomGlobalCss(value || "")
                               }
-                              className="font-mono text-sm h-full w-full min-h-[500px]"
-                              placeholder={endent`Extend or override global.css variables from shadcn/ui
-                                  \n
-                                  :root {
-                                    /* Add your light mode CSS variables here */
-                                  }
-                                  .dark {
-                                    /* Add your dark mode CSS variables here */
-                                  }`}
+                              theme={
+                                isDarkTheme ? "github-dark" : "github-light"
+                              }
+                              options={{
+                                minimap: { enabled: false },
+                                scrollBeyondLastLine: false,
+                                fontSize: 14,
+                                lineNumbers: "off",
+                                folding: true,
+                                wordWrap: "on",
+                                automaticLayout: true,
+                                padding: { top: 16, bottom: 16 },
+                                scrollbar: {
+                                  vertical: "visible",
+                                  horizontal: "visible",
+                                  verticalScrollbarSize: 8,
+                                  horizontalScrollbarSize: 8,
+                                  useShadows: false,
+                                },
+                                overviewRulerLanes: 0,
+                                hideCursorInOverviewRuler: true,
+                                overviewRulerBorder: false,
+                                renderLineHighlight: "none",
+                                contextmenu: false,
+                                formatOnPaste: true,
+                                formatOnType: true,
+                                quickSuggestions: false,
+                                suggest: {
+                                  showKeywords: false,
+                                  showSnippets: false,
+                                },
+                                renderValidationDecorations: "off",
+                                hover: { enabled: false },
+                                inlayHints: { enabled: "off" },
+                                occurrencesHighlight: "off",
+                                selectionHighlight: false,
+                              }}
+                              className={cn(
+                                "h-[500px] w-full rounded-md overflow-hidden",
+                                "border border-input focus-within:ring-1 focus-within:ring-ring",
+                              )}
                             />
-                            <div className="absolute flex gap-2 bottom-2 right-2 z-2 h-[36px]">
+                            <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
                               <Button
                                 size="icon"
                                 variant="outline"

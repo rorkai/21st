@@ -1,5 +1,4 @@
-export const defaultTailwindConfig = 
-`module.exports = {
+export const defaultTailwindConfig = `module.exports = {
   darkMode: ["class"],
   content: ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}"],
   theme: {

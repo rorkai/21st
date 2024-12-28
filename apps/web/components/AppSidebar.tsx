@@ -1,5 +1,19 @@
 "use client"
 
+import { useEffect, useRef } from "react"
+import { usePathname } from "next/navigation"
+
+import { useAtom } from "jotai"
+import { atomWithStorage } from "jotai/utils"
+
+import { ChevronRight, Sparkles } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import {
   Sidebar,
   SidebarContent,
@@ -11,18 +25,8 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar"
-import { Dock, Box, ChevronRight, Sparkles } from "lucide-react"
-import { usePathname } from "next/navigation"
+
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
-import { useAtom } from "jotai"
-import { atomWithStorage } from "jotai/utils"
-import { useEffect, useRef } from "react"
-import { Badge } from "@/components/ui/badge"
 import { sections } from "@/config/navigation"
 
 type SidebarState = {

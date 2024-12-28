@@ -1,11 +1,12 @@
+import { Metadata } from "next"
+import { notFound } from "next/navigation"
+import { SupabaseClient } from "@supabase/supabase-js"
+
 import { Header } from "@/components/Header"
-import { Database } from "@/types/supabase"
 import { getComponents } from "@/lib/queries"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
-import { SupabaseClient } from "@supabase/supabase-js"
-import { notFound } from "next/navigation"
+import { Database } from "@/types/supabase"
 import { TagPageContent } from "./page.client"
-import { Metadata } from "next"
 
 interface TagPageProps {
   params: {

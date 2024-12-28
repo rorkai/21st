@@ -1,10 +1,13 @@
 import { Metadata } from "next"
-import { supabaseWithAdminAccess } from "@/lib/supabase"
-import { Header } from "@/components/Header"
 import Image from "next/image"
 import Link from "next/link"
+
 import { load } from "cheerio"
+
+import { Header } from "@/components/Header"
 import { UserAvatar } from "@/components/UserAvatar"
+
+import { supabaseWithAdminAccess } from "@/lib/supabase"
 
 async function getOGImage(url: string): Promise<string | null> {
   try {

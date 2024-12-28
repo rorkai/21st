@@ -166,10 +166,11 @@ export const CodeGuidelinesAlert = () => {
                 <li>TypeScript is fully supported</li>
                 <li>Tailwind is fully supported</li>
                 <li>
-                  By default, we use default {" "}
+                  By default, we use default{" "}
                   <Code code="tailwind.config.ts" language="pseudo" /> and{" "}
                   <Code code="global.css" language="pseudo" /> from{" "}
-                  <Code code="shadcn/ui" language="pseudo" /> – you can extend them later
+                  <Code code="shadcn/ui" language="pseudo" /> – you can extend
+                  them later
                 </li>
               </ul>
             </li>
@@ -226,7 +227,11 @@ export const DemoComponentGuidelinesAlert = ({
             <ul className="list-disc pl-5 mt-1">
               <li>
                 Import your component with curly braces from{" "}
-                <Code code={`@/components/${registryToPublish}`} language="pseudo" /> path:
+                <Code
+                  code={`@/components/${registryToPublish}`}
+                  language="pseudo"
+                />{" "}
+                path:
                 <Code
                   display="block"
                   code={`import { ${mainComponentName ?? "MyComponent"} } from "@/components/${registryToPublish}/${componentSlug}"`}

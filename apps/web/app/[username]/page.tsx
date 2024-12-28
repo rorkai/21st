@@ -1,18 +1,20 @@
-/* eslint-disable @next/next/no-img-element */
 import React from "react"
-import { ComponentsList } from "@/components/ComponentsList"
-import { Header } from "@/components/Header"
-import { getUserData, getUserComponents } from "@/lib/queries"
-import { UserAvatar } from "@/components/UserAvatar"
-import { supabaseWithAdminAccess } from "@/lib/supabase"
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
-import ErrorPage from "@/components/ErrorPage"
-import { UserProfileAnalytics } from "@/components/UserProfileAnalytics"
 import Link from "next/link"
-import { Icons } from "@/components/icons"
-import { SquareArrowOutUpRight, Globe } from "lucide-react"
-import { appendQueryParam } from "@/lib/utils"
+
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { ComponentsList } from "@/components/ComponentsList"
+import { ErrorPage } from "@/components/ErrorPage"
+import { Header } from "@/components/Header"
+import { Icons } from "@/components/icons"
+import { UserAvatar } from "@/components/UserAvatar"
+import { UserProfileAnalytics } from "@/components/UserProfileAnalytics"
+
+import { getUserData, getUserComponents } from "@/lib/queries"
+import { supabaseWithAdminAccess } from "@/lib/supabase"
+import { appendQueryParam } from "@/lib/utils"
+
+import { Globe, SquareArrowOutUpRight } from "lucide-react"
 
 export const generateMetadata = async ({
   params,

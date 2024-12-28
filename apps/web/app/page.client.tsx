@@ -1,21 +1,23 @@
 "use client"
 
-import React, { useEffect, useMemo } from "react"
-import { ComponentCard } from "@/components/ComponentCard"
-import { Component, QuickFilterOption, SortOption, User } from "@/types/global"
-import { useQuery } from "@tanstack/react-query"
-import { useClerkSupabaseClient } from "@/lib/clerk"
-import { Skeleton } from "@/components/ui/skeleton"
 import { useAtom } from "jotai"
+import { motion } from "framer-motion"
+import { useQuery } from "@tanstack/react-query"
+import React, { useEffect, useMemo } from "react"
+
+import { Component, QuickFilterOption, SortOption, User } from "@/types/global"
+import { useClerkSupabaseClient } from "@/lib/clerk"
+import { sortComponents, filterComponents } from "@/lib/filters.client"
+import { setCookie } from "@/lib/cookies"
+
+import { ComponentCard } from "@/components/ComponentCard"
+import { Skeleton } from "@/components/ui/skeleton"
 import { searchQueryAtom } from "@/components/Header"
 import {
   ComponentsHeader,
   sortByAtom,
   quickFilterAtom,
 } from "@/components/ComponentsHeader"
-import { motion } from "framer-motion"
-import { sortComponents, filterComponents } from "@/lib/filters.client"
-import { setCookie } from "@/lib/cookies"
 
 const useTrackHasOnboarded = () => {
   useEffect(() => {

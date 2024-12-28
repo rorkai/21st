@@ -62,7 +62,15 @@ export const useCompileCss = (
             .eq("id", component.id)
         }
       })
-  }, [code, demoCode, registryDependencies, tailwindConfig, globalCss, component, shellCode])
+  }, [
+    code,
+    demoCode,
+    registryDependencies,
+    tailwindConfig,
+    globalCss,
+    component,
+    shellCode,
+  ])
 
   return css
 }

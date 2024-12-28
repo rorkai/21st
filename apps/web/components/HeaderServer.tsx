@@ -1,11 +1,11 @@
-/* eslint-disable @next/next/no-img-element */
 import Link from "next/link"
+
+import { cn } from "@/lib/utils"
+
+import { Button } from "@/components/ui/button"
+import { GitHubStars } from "./GitHubStars"
 import { Icons } from "./icons"
 import { ThemeToggle } from "./ThemeToggle"
-import { GitHubStars } from "./GitHubStars"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-
 
 interface HeaderServerProps {
   tagName?: string
@@ -67,7 +67,7 @@ HeaderServer.SocialIcons = function SocialIcons() {
       <Button
         variant="outline"
         className={cn(
-          "relative h-8 w-fit justify-start bg-muted/50 text-sm font-normal text-muted-foreground shadow-none sm:pr-12 hidden md:inline-flex"
+          "relative h-8 w-fit justify-start bg-muted/50 text-sm font-normal text-muted-foreground shadow-none sm:pr-12 hidden md:inline-flex",
         )}
         onClick={() =>
           document.dispatchEvent(

@@ -1,13 +1,14 @@
 "use client"
 
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
+
+import { useIsMobile } from "@/hooks/use-media-query"
+import { setCookie } from "@/lib/cookies"
 import { AuroraBackground } from "./ui/aurora-background"
 import { Button } from "./ui/button"
 import { Icons } from "./icons"
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { useIsMobile } from "@/hooks/use-media-query"
-import { setCookie } from "@/lib/cookies"
 
 export function HeroSection() {
   const router = useRouter()

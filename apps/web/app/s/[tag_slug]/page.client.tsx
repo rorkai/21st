@@ -1,16 +1,17 @@
 "use client"
 
+import { useMemo } from "react"
+import { useAtom } from "jotai"
+
 import { ComponentsList } from "@/components/ComponentsList"
 import {
   ComponentsHeader,
   quickFilterAtom,
+  sortByAtom,
 } from "@/components/ComponentsHeader"
-import { Component, User } from "@/types/global"
-import { useAtom } from "jotai"
-import { sortByAtom } from "@/components/ComponentsHeader"
 import { searchQueryAtom } from "@/components/Header"
-import { useMemo } from "react"
 import { sortComponents, filterComponents } from "@/lib/filters.client"
+import { Component, User } from "@/types/global"
 
 export function TagPageContent({
   components,

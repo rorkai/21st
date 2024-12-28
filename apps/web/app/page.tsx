@@ -1,14 +1,17 @@
-import { cookies } from "next/headers"
-import { Header } from "../components/Header"
 import React from "react"
-import { HomePageClient } from "./page.client"
 import { Metadata } from "next"
+import { cookies } from "next/headers"
+
 import { supabaseWithAdminAccess } from "@/lib/supabase"
-import { Component, SortOption, User } from "@/types/global"
+import { filterComponents, sortComponents } from "@/lib/filters.client"
+
+import { Header } from "../components/Header"
 import { HeroSection } from "@/components/HeroSection"
 import { NewsletterDialog } from "@/components/NewsletterDialog"
+import { HomePageClient } from "./page.client"
+
+import { Component, SortOption, User } from "@/types/global"
 import { Tables } from "@/types/supabase"
-import { filterComponents, sortComponents } from "@/lib/filters.client"
 
 export const dynamic = "force-dynamic"
 

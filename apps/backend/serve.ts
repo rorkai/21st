@@ -37,14 +37,16 @@ export const compileCSS = async ({
   )(require, { exports: {} })
 
   if (customTailwindConfig) {
-    const transpiledCustomTailwindConfig = ts.transpileModule(customTailwindConfig, {
-      compilerOptions: {
-        target: ts.ScriptTarget.ES2015,
-        module: ts.ModuleKind.CommonJS,
-        removeComments: true,
+    const transpiledCustomTailwindConfig = ts.transpileModule(
+      customTailwindConfig,
+      {
+        compilerOptions: {
+          target: ts.ScriptTarget.ES2015,
+          module: ts.ModuleKind.CommonJS,
+          removeComments: true,
+        },
       },
-    }).outputText
-
+    ).outputText
 
     const matches = transpiledCustomTailwindConfig.match(
       /([\s\S]*?)(module\.exports\s*=\s*({[\s\S]*?});)([\s\S]*)/,
@@ -52,7 +54,6 @@ export const compileCSS = async ({
 
     if (matches) {
       const [_, beforeConfig, __, configObject, afterConfig] = matches
-
 
       const customConfigObj = Function(
         "require",
@@ -84,24 +85,24 @@ export const compileCSS = async ({
         /"(function[\s\S]*?\{[\s\S]*?\}|[\w]+)"/g,
         (match, functionContent) => {
           // If it's a function definition (starts with 'function'), return it unquoted and unescaped
-          if (functionContent.startsWith('function')) {
+          if (functionContent.startsWith("function")) {
             // Unescape the function content
             return functionContent
-              .replace(/\\"/g, '"')  // Replace \" with "
-              .replace(/\\n/g, '\n') // Replace \n with newline
-              .replace(/\\\\/g, '\\') // Replace \\ with \
+              .replace(/\\"/g, '"') // Replace \" with "
+              .replace(/\\n/g, "\n") // Replace \n with newline
+              .replace(/\\\\/g, "\\") // Replace \\ with \
           }
           // For named functions in plugins array
           if (
             mergedConfig.plugins?.some(
-              (plugin: Function) => plugin.name === functionContent
+              (plugin: Function) => plugin.name === functionContent,
             )
           ) {
             return functionContent
           }
           // Keep quotes for non-functions
           return `"${functionContent}"`
-        }
+        },
       )
 
       const finalConfig = endent`

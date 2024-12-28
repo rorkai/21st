@@ -1,8 +1,8 @@
 import { useState } from "react"
 import Link from "next/link"
-import { UserAvatar } from "@/components/UserAvatar"
-import { LoadingSpinner } from "./LoadingSpinner"
-import { Component, Tag, User } from "@/types/global"
+
+import { useQuery } from "@tanstack/react-query"
+import { toast } from "sonner"
 import {
   ArrowUpRight,
   Check,
@@ -11,9 +11,16 @@ import {
   CalendarDays,
   Info,
 } from "lucide-react"
-import { Separator } from "@/components/ui/separator"
+
+import { Component, Tag, User } from "@/types/global"
+
+import { UserAvatar } from "@/components/UserAvatar"
+import { LoadingSpinner } from "./LoadingSpinner"
 import { ComponentsList } from "./ComponentsList"
-import { getLicenseBySlug } from "@/lib/licenses"
+import { Separator } from "@/components/ui/separator"
+import { Badge } from "@/components/ui/badge"
+import { Tag as TagComponent } from "@/components/ui/tag"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import {
   HoverCard,
   HoverCardContent,
@@ -24,12 +31,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+
 import { useClerkSupabaseClient } from "@/lib/clerk"
-import { toast } from "sonner"
-import { useQuery } from "@tanstack/react-query"
-import { Tag as TagComponent } from "@/components/ui/tag"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { getLicenseBySlug } from "@/lib/licenses"
 import { formatDate } from "@/lib/utils"
 import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { trackEvent } from "@/lib/amplitude"

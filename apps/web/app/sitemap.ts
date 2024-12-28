@@ -17,16 +17,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .from("users")
     .select("username, updated_at")
 
-  const componentUrls = (components || []).map((component: { 
-    component_slug: string; 
-    user: { username: string }; 
-    updated_at: string; 
-  }) => ({
-    url: `${baseUrl}/${component.user.username}/${component.component_slug}`,
-    lastModified: component.updated_at,
-    changeFrequency: "weekly" as const,
-    priority: 0.8,
-  }))
+  const componentUrls = (components || []).map(
+    (component: {
+      component_slug: string
+      user: { username: string }
+      updated_at: string
+    }) => ({
+      url: `${baseUrl}/${component.user.username}/${component.component_slug}`,
+      lastModified: component.updated_at,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    }),
+  )
 
   const tagUrls = (tags || []).map((tag) => ({
     url: `${baseUrl}/s/${tag.slug}`,

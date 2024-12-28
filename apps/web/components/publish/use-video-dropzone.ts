@@ -30,9 +30,7 @@ async function convertVideoToMP4(file: File): Promise<File> {
   )
 }
 
-export function useVideoDropzone({ form }: {
-  form: UseFormReturn<FormData>
-}) {
+export function useVideoDropzone({ form }: { form: UseFormReturn<FormData> }) {
   const [isProcessingVideo, setIsProcessingVideo] = useState(false)
   const previewVideoDataUrl = form.watch("preview_video_data_url")
 
@@ -108,4 +106,4 @@ export function useVideoDropzone({ form }: {
     removeVideo,
     openFileDialog,
   }
-} 
+}

@@ -83,11 +83,18 @@ export function PublishComponentPreview({
       theme: isDarkTheme ? "dark" : "light",
       css: "",
     })
-    
+
     return Object.entries(dummyFiles)
       .filter(([key]) => /\.(tsx|jsx|ts|js)$/.test(key))
       .map(([, file]) => file)
-  }, [demoComponentNames, slugToPublish, registryToPublish, code, demoCode, isDarkTheme])
+  }, [
+    demoComponentNames,
+    slugToPublish,
+    registryToPublish,
+    code,
+    demoCode,
+    isDarkTheme,
+  ])
 
   useEffect(() => {
     if (isLoading) return
@@ -102,8 +109,10 @@ export function PublishComponentPreview({
         customTailwindConfig,
         customGlobalCss,
         dependencies: [
-          ...Object.values(registryDependencies?.filesWithRegistry ?? {}).map(file => file.code),
-          ...shellCode
+          ...Object.values(registryDependencies?.filesWithRegistry ?? {}).map(
+            (file) => file.code,
+          ),
+          ...shellCode,
         ],
       }),
     })
@@ -111,7 +120,14 @@ export function PublishComponentPreview({
       .then((data) => {
         setCss(data.css)
       })
-  }, [code, demoCode, customTailwindConfig, customGlobalCss, registryDependencies, shellCode])
+  }, [
+    code,
+    demoCode,
+    customTailwindConfig,
+    customGlobalCss,
+    registryDependencies,
+    shellCode,
+  ])
 
   const sandpackDefaultFiles = useMemo(
     () =>
@@ -136,7 +152,7 @@ export function PublishComponentPreview({
       css,
       customTailwindConfig,
       customGlobalCss,
-    ]
+    ],
   )
 
   const files = useMemo(
@@ -148,7 +164,7 @@ export function PublishComponentPreview({
         ),
       ),
     }),
-    [sandpackDefaultFiles, registryDependencies?.filesWithRegistry]
+    [sandpackDefaultFiles, registryDependencies?.filesWithRegistry],
   )
 
   const dependencies = useMemo(() => {

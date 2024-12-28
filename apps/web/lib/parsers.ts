@@ -306,7 +306,10 @@ export function wrapExportInBraces(code: string): string {
   )
 }
 
-export function extractCssVars(css: string): { light: Record<string, string>; dark: Record<string, string> } {
+export function extractCssVars(css: string): {
+  light: Record<string, string>
+  dark: Record<string, string>
+} {
   const light: Record<string, string> = {}
   const dark: Record<string, string> = {}
 

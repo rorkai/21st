@@ -1,12 +1,14 @@
 import React from "react"
+import Link from "next/link"
+
 import { CalendarDays, Info } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card"
+
+import { cn } from "@/lib/utils"
 import { formatDate } from "@/lib/utils"
 import { User } from "@/types/global"
-import Link from "next/link"
-import { cn } from "@/lib/utils"
-import { Icons } from "@/components/icons"
+
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card"
 
 export const UserAvatar = ({
   src,
@@ -65,7 +67,9 @@ export const UserAvatar = ({
               <p className="text-sm text-muted-foreground">@{user.username}</p>
             </Link>
             {user.bio && (
-              <p className="text-xs text-muted-foreground whitespace-pre-wrap">{user.bio}</p>
+              <p className="text-xs text-muted-foreground whitespace-pre-wrap">
+                {user.bio}
+              </p>
             )}
             {user.created_at && (
               <div className="flex items-center pt-1">

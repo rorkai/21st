@@ -1,7 +1,7 @@
 import React from "react"
-import { ComponentCard } from "./ComponentCard"
-import { Component, User } from "../types/global"
 import { cn } from "@/lib/utils"
+import { Component, User } from "../types/global"
+import { ComponentCard } from "./ComponentCard"
 
 export function ComponentsList({
   components,

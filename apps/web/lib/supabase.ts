@@ -8,13 +8,10 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error("Missing Supabase environment variables")
 }
 
-export const supabaseWithAdminAccess: SupabaseClient<Database> = createClient<Database>(
-  supabaseUrl,
-  supabaseKey,
-  {
+export const supabaseWithAdminAccess: SupabaseClient<Database> =
+  createClient<Database>(supabaseUrl, supabaseKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
     },
-  },
-)
+  })

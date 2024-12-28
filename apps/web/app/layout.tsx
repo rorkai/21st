@@ -1,12 +1,13 @@
-// app/layout.tsx
+import { GoogleAnalytics } from "@next/third-parties/google"
 import localFont from "next/font/local"
-import "./globals.css"
-import { AppProviders } from "./providers"
+
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { ThemeProvider } from "next-themes"
-import { GoogleAnalytics } from "@next/third-parties/google"
 import { cn } from "@/lib/utils"
+import { AppProviders } from "./providers"
+
+import "./globals.css"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",

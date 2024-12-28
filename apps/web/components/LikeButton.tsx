@@ -1,16 +1,18 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { Heart } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
-import { Hotkey } from "./ui/hotkey"
-import { cn } from "@/lib/utils"
-import { useLikeMutation } from "@/lib/queries"
 import { useUser } from "@clerk/nextjs"
-import { useClerkSupabaseClient } from "@/lib/clerk"
+import { Heart } from "lucide-react"
 import { toast } from "sonner"
-import { trackEvent } from "@/lib/amplitude"
+
 import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
+import { trackEvent } from "@/lib/amplitude"
+import { useClerkSupabaseClient } from "@/lib/clerk"
+import { useLikeMutation } from "@/lib/queries"
+import { cn } from "@/lib/utils"
+
+import { Hotkey } from "./ui/hotkey"
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
 
 interface LikeButtonProps {
   componentId: number
@@ -43,20 +45,25 @@ export function LikeButton({
     if (!user) {
       trackEvent(AMPLITUDE_EVENTS.LIKE_COMPONENT, {
         componentId,
-        status: 'unauthorized',
-        source: e ? 'click' : 'hotkey'
+        status: "unauthorized",
+        source: e ? "click" : "hotkey",
       })
       return
     }
-    
+
     likeMutation.mutate({ componentId, liked })
     toast.success(liked ? "Unliked component" : "Liked component")
-    
-    trackEvent(liked ? AMPLITUDE_EVENTS.UNLIKE_COMPONENT : AMPLITUDE_EVENTS.LIKE_COMPONENT, {
-      componentId,
-      userId: user.id,
-      source: e ? 'click' : 'hotkey'
-    })
+
+    trackEvent(
+      liked
+        ? AMPLITUDE_EVENTS.UNLIKE_COMPONENT
+        : AMPLITUDE_EVENTS.LIKE_COMPONENT,
+      {
+        componentId,
+        userId: user.id,
+        source: e ? "click" : "hotkey",
+      },
+    )
   }
 
   useEffect(() => {

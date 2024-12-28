@@ -1,16 +1,14 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
+import { useRouter } from "next/navigation"
+
 import { useAtom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { sections } from "@/config/navigation"
-import { Component, User } from "@/types/global"
-import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
-import { useClerkSupabaseClient } from "@/lib/clerk"
 import { useQuery } from "@tanstack/react-query"
-import { useRouter } from "next/navigation"
-import Image from "next/image"
+
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 import {
   Command,
   CommandEmpty,
@@ -20,6 +18,11 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command"
+
+import { sections } from "@/config/navigation"
+import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
+import { useClerkSupabaseClient } from "@/lib/clerk"
+import { Component, User } from "@/types/global"
 
 const commandSearchQueryAtom = atomWithStorage("commandMenuSearch", "")
 

@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from "react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+
+import { atom } from "jotai"
 import {
   SignInButton,
   SignedIn,
@@ -10,12 +11,9 @@ import {
   useClerk,
   UserProfile,
 } from "@clerk/nextjs"
-import { UserAvatar } from "./UserAvatar"
-import { atom } from "jotai"
-import { useIsMobile } from "@/hooks/use-media-query"
-import { HeaderServer } from "./HeaderServer"
-import { NavigationMenuLink } from "@/components/ui/navigation-menu"
-import { cn } from "@/lib/utils"
+import { LogOut, Settings, X, FileText } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,7 +22,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { LogOut, Settings, X, FileText } from "lucide-react"
+import { NavigationMenuLink } from "@/components/ui/navigation-menu"
+
+import { useIsMobile } from "@/hooks/use-media-query"
+import { cn } from "@/lib/utils"
+
+import { HeaderServer } from "./HeaderServer"
+import { UserAvatar } from "./UserAvatar"
 
 export const searchQueryAtom = atom("")
 

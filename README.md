@@ -1,4 +1,5 @@
 # 21st.dev
+
 [21st.dev](https://21st.dev) is an open source community registry of React UI components where anyone can publish minimal Tailwind & Radix UI components and install any component via `npx shadcn`.
 
 Inspired by [shadcn/ui](https://ui.shadcn.com/).
@@ -6,10 +7,12 @@ Inspired by [shadcn/ui](https://ui.shadcn.com/).
 Built by RorkAI team and Claude 3.5 Sonnet.
 
 ## Publish your component
+
 It takes 1 min to publish via our [publish page](https://21st.dev). To publish, you just need two files: `component.tsx` and `component.demo.tsx`.
 
 We support:
-- Pure React components 
+
+- Pure React components
 - Next.js client components (currently, we polyfill Next-specific libraries in CodeSandbox, but will switch to server-side rendering)
 - TypeScript
 - Tailwind themes
@@ -20,9 +23,11 @@ We support:
 We encourage everyone to post TypeScript components, JS support is currently untested.
 
 ## Install a component
+
 Pick a component from [21st.dev](https://21st.dev), copy the `npx shadcn` command, and run in your project's root folder.
 
 For instance, for `shadcn/ui/accordion` you'll run:
+
 ```bash
 npx shadcn@latest add "https://21st.dev/r/shadcn/accordion"
 ```
@@ -54,7 +59,7 @@ You can also copy the code directly from the website, but note that you’ll nee
 
 4. Create a [Supabase](https://supabase.com) project and open Project Settings -> Configuration -> API.
 
-Copy "Project URL" and "Project API Keys variables to your `.env.local`: 
+Copy "Project URL" and "Project API Keys variables to your `.env.local`:
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://*****
@@ -81,10 +86,10 @@ Add these variables to `.env.local`:
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=*****
 CLERK_SECRET_KEY=***
 ```
-    
+
 In Clerk dashboard add the [Supabase JWT integration](https://clerk.com/docs/integrations/databases/supabase).
 
-Launch ngrok and add it's URL `https://${your_ngrok_url}/api/webhooks/clerk` to Clerk dashboard. 
+Launch ngrok and add it's URL `https://${your_ngrok_url}/api/webhooks/clerk` to Clerk dashboard.
 Copy the webhook secret from Clerk to `.env.local`
 
 ```
@@ -104,13 +109,13 @@ NEXT_PUBLIC_R2_ENDPOINT=https://*****
 
 8. Run the development server:
 
-    ```bash
-    pnpm dev
-    ```
+   ```bash
+   pnpm dev
+   ```
 
-    This will start the development server for all apps and packages in the monorepo.
+   This will start the development server for all apps and packages in the monorepo.
 
-    This project uses Vercel turborepo. For more information on working with Turborepo, refer to the [Turborepo documentation](https://turbo.build/repo/docs).
+   This project uses Vercel turborepo. For more information on working with Turborepo, refer to the [Turborepo documentation](https://turbo.build/repo/docs).
 
 9. Open a PR to `main` branch
 
@@ -122,10 +127,12 @@ You can also contribute by:
 - DM us on X (Twitter) with your feedback or ideas
 
 **Our team on X**
+
 - AI design engineer [@serafimcloud](https://x.com/serafimcloud)
 - fullstack engineer [@daniel_dhawan](https://x.com/daniel_dhawan)
 
 ## Acknowledgments
+
 This project wouldn't be possible without
 
 - [shadcn/ui](https://ui.shadcn.com/)
@@ -139,4 +146,4 @@ This project wouldn't be possible without
 - [Claude 3.5 Sonnet by Anthropic](https://anthropic.com/)
 - [MagicUI](https://magicui.com)
 
-And, of course, our open source contributors ❤️ 
+And, of course, our open source contributors ❤️

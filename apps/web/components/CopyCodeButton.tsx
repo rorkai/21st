@@ -1,7 +1,7 @@
-import { useSandpack } from "@codesandbox/sandpack-react"
-import { CheckIcon, Clipboard } from "lucide-react"
 import { useState, useEffect } from "react"
+import { useSandpack } from "@codesandbox/sandpack-react"
 import { toast } from "sonner"
+import { CheckIcon, Clipboard } from "lucide-react"
 import { trackEvent, AMPLITUDE_EVENTS } from "../lib/amplitude"
 
 export const CopyCodeButton = () => {

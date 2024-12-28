@@ -1,37 +1,33 @@
-/* eslint-disable @next/next/no-img-element */
 "use client"
 
 import React, { useEffect, useState } from "react"
-import {
-  ChevronRight,
-  CodeXml,
-  Info,
-  Pencil,
-} from "lucide-react"
-import { Component, Tag, User } from "@/types/global"
-import { UserAvatar } from "./UserAvatar"
 import Link from "next/link"
+import { useTheme } from "next-themes"
 import { atom, useAtom } from "jotai"
+import { useQuery } from "@tanstack/react-query"
+import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs"
+import { ChevronRight, CodeXml, Info, Pencil } from "lucide-react"
+import { toast } from "sonner"
+
+import { Component, Tag, User } from "@/types/global"
+import { useIsMobile } from "@/hooks/use-media-query"
+import { useClerkSupabaseClient } from "@/lib/clerk"
+import { useUpdateComponentWithTags } from "@/lib/queries"
+import { identifyUser, setPageProperties, trackEvent } from "@/lib/amplitude"
+import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
+
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Hotkey } from "./ui/hotkey"
+import { UserAvatar } from "./UserAvatar"
 import { LikeButton } from "./LikeButton"
-import { useIsMobile } from "@/hooks/use-media-query"
 import { ThemeToggle } from "./ThemeToggle"
-import { useQuery } from "@tanstack/react-query"
-import { useClerkSupabaseClient } from "@/lib/clerk"
-import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs"
-import { useTheme } from "next-themes"
 import { ComponentPagePreview } from "./ComponentPagePreview"
 import { EditComponentDialog } from "./EditComponentDialog"
-import { useUpdateComponentWithTags } from "@/lib/queries"
-import { toast } from "sonner"
 import { usePublishAs } from "./publish/use-publish-as"
-import { identifyUser, setPageProperties, trackEvent } from "@/lib/amplitude"
-import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
 
 export const isShowCodeAtom = atom(true)
 
@@ -115,7 +111,7 @@ export default function ComponentPage({
         setIsShowCode(false)
         trackEvent(AMPLITUDE_EVENTS.TOGGLE_CODE_VIEW, {
           componentId: component.id,
-          view: 'info'
+          view: "info",
         })
       }
     }
@@ -131,7 +127,7 @@ export default function ComponentPage({
         setIsShowCode(true)
         trackEvent(AMPLITUDE_EVENTS.TOGGLE_CODE_VIEW, {
           componentId: component.id,
-          view: 'code'
+          view: "code",
         })
       }
     }
@@ -243,7 +239,7 @@ export default function ComponentPage({
     trackEvent(AMPLITUDE_EVENTS.EDIT_COMPONENT, {
       componentId: component.id,
       componentName: component.name,
-      userId: user?.id
+      userId: user?.id,
     })
   }
 
@@ -253,12 +249,12 @@ export default function ComponentPage({
       componentName: component.name,
       authorId: component.user.id,
       isPublic: component.is_public,
-      tags: component.tags.map(tag => tag.name),
+      tags: component.tags.map((tag) => tag.name),
       downloadsCount: component.downloads_count,
       hasDemo: !!demoCode,
-      deviceType: window.innerWidth < 768 ? 'mobile' : 'desktop'
-    });
-  }, [component.id]);
+      deviceType: window.innerWidth < 768 ? "mobile" : "desktop",
+    })
+  }, [component.id])
 
   useEffect(() => {
     if (user) {
@@ -268,9 +264,9 @@ export default function ComponentPage({
         username: user.username,
         created_at: user.createdAt,
         is_admin: user.publicMetadata?.isAdmin || false,
-      });
+      })
     }
-  }, [user]);
+  }, [user])
 
   return (
     <div

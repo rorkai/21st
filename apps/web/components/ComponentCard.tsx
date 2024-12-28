@@ -1,12 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
+import { formatDistanceToNow } from "date-fns"
+import { Video } from "lucide-react"
 import Link from "next/link"
+
+import { Component, User } from "../types/global"
 import ComponentPreviewImage from "./ComponentPreviewImage"
 import { ComponentVideoPreview } from "./ComponentVideoPreview"
-import { Component, User } from "../types/global"
-import { UserAvatar } from "./UserAvatar"
-import { Video } from "lucide-react"
-import { formatDistanceToNow } from "date-fns"
 import { CopyComponentButton } from "./CopyComponentButton"
+import { UserAvatar } from "./UserAvatar"
 
 export function ComponentCard({
   component,

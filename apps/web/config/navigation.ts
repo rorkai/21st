@@ -60,7 +60,7 @@ export const sections = [
     items: landingPageSections,
   },
   {
-    title: "UI elements", 
+    title: "UI elements",
     icon: Box,
     items: uiComponents,
   },

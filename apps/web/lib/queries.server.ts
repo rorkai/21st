@@ -4,7 +4,7 @@ import { SupabaseClient } from "@supabase/supabase-js"
 export async function resolveRegistryDependencyTree({
   supabase,
   sourceDependencySlugs,
-  withDemoDependencies
+  withDemoDependencies,
 }: {
   supabase: SupabaseClient<Database>
   sourceDependencySlugs: string[]

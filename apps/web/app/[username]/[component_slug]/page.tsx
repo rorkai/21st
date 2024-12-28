@@ -1,11 +1,13 @@
-import ComponentPage from "@/components/ComponentPage"
 import React from "react"
 import { notFound } from "next/navigation"
+
+import ComponentPage from "@/components/ComponentPage"
+import ErrorPage from "@/components/ErrorPage"
+
 import { getComponent, getUserData } from "@/lib/queries"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
-import { supabaseWithAdminAccess } from "@/lib/supabase"
-import ErrorPage from "@/components/ErrorPage"
 import { extractDemoComponentNames } from "@/lib/parsers"
+import { supabaseWithAdminAccess } from "@/lib/supabase"
 
 export const generateMetadata = async ({
   params,
@@ -33,18 +35,18 @@ export const generateMetadata = async ({
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "SoftwareSourceCode",
-    "name": component.name,
-    "description": component.description,
-    "programmingLanguage": {
+    name: component.name,
+    description: component.description,
+    programmingLanguage: {
       "@type": "ComputerLanguage",
-      "name": "React"
+      name: "React",
     },
-    "author": {
+    author: {
       "@type": "Person",
-      "name": user.username
+      name: user.username,
     },
-    "dateCreated": component.created_at,
-    "license": component.license
+    dateCreated: component.created_at,
+    license: component.license,
   }
 
   return {
@@ -144,56 +146,91 @@ export default async function ComponentPageServer({
       const demoCode = await response.text()
       return { data: demoCode, error: null }
     }),
-    component.tailwind_config_extension ? fetch(component.tailwind_config_extension).then(async (response) => {
-      if (!response.ok) {
-        console.error(`Error fetching component tailwind config:`, response.statusText)
-        return {
-          data: null,
-          error: new Error(`Error fetching component tailwind config: ${response.statusText}`),
-        }
-      }
-      const tailwindConfig = await response.text()
-      return { data: tailwindConfig, error: null }
-    }) : Promise.resolve({ data: null, error: null }),
-    component.global_css_extension ? fetch(component.global_css_extension).then(async (response) => {
-      if (!response.ok) {
-        console.error(`Error fetching component global css:`, response.statusText)
-        return {
-          data: null,
-          error: new Error(`Error fetching component global css: ${response.statusText}`),
-        }
-      }
-      const globalCss = await response.text()
-      return { data: globalCss, error: null }
-    }) : Promise.resolve({ data: null, error: null }),
-    component.compiled_css ? fetch(component.compiled_css).then(async (response) => {
-      if (!response.ok) {
-        console.error(`Error fetching component css:`, response.statusText)
-        return {
-          data: null,
-          error: new Error(`Error fetching component css: ${response.statusText}`),
-        }
-      }
-      const componentCss = await response.text()
-      return { data: componentCss, error: null }
-    }) : Promise.resolve({ data: null, error: null }),
+    component.tailwind_config_extension
+      ? fetch(component.tailwind_config_extension).then(async (response) => {
+          if (!response.ok) {
+            console.error(
+              `Error fetching component tailwind config:`,
+              response.statusText,
+            )
+            return {
+              data: null,
+              error: new Error(
+                `Error fetching component tailwind config: ${response.statusText}`,
+              ),
+            }
+          }
+          const tailwindConfig = await response.text()
+          return { data: tailwindConfig, error: null }
+        })
+      : Promise.resolve({ data: null, error: null }),
+    component.global_css_extension
+      ? fetch(component.global_css_extension).then(async (response) => {
+          if (!response.ok) {
+            console.error(
+              `Error fetching component global css:`,
+              response.statusText,
+            )
+            return {
+              data: null,
+              error: new Error(
+                `Error fetching component global css: ${response.statusText}`,
+              ),
+            }
+          }
+          const globalCss = await response.text()
+          return { data: globalCss, error: null }
+        })
+      : Promise.resolve({ data: null, error: null }),
+    component.compiled_css
+      ? fetch(component.compiled_css).then(async (response) => {
+          if (!response.ok) {
+            console.error(`Error fetching component css:`, response.statusText)
+            return {
+              data: null,
+              error: new Error(
+                `Error fetching component css: ${response.statusText}`,
+              ),
+            }
+          }
+          const componentCss = await response.text()
+          return { data: componentCss, error: null }
+        })
+      : Promise.resolve({ data: null, error: null }),
   ]
 
-  const [codeResult, demoResult, tailwindConfigResult, globalCssResult, compiledCssResult, registryDependenciesResult] =
-    await Promise.all([
-      ...componentAndDemoCodePromises,
-      resolveRegistryDependencyTree({
-        supabase: supabaseWithAdminAccess,
-        sourceDependencySlugs: [`${username}/${component_slug}`],
-        withDemoDependencies: true,
-      }),
-    ])
+  const [
+    codeResult,
+    demoResult,
+    tailwindConfigResult,
+    globalCssResult,
+    compiledCssResult,
+    registryDependenciesResult,
+  ] = await Promise.all([
+    ...componentAndDemoCodePromises,
+    resolveRegistryDependencyTree({
+      supabase: supabaseWithAdminAccess,
+      sourceDependencySlugs: [`${username}/${component_slug}`],
+      withDemoDependencies: true,
+    }),
+  ])
 
-  if (codeResult?.error || demoResult?.error || tailwindConfigResult?.error || globalCssResult?.error || compiledCssResult?.error) {
+  if (
+    codeResult?.error ||
+    demoResult?.error ||
+    tailwindConfigResult?.error ||
+    globalCssResult?.error ||
+    compiledCssResult?.error
+  ) {
     return (
       <ErrorPage
         error={
-          codeResult?.error ?? demoResult?.error ?? tailwindConfigResult?.error ?? globalCssResult?.error ?? compiledCssResult?.error ?? new Error("Unknown error")
+          codeResult?.error ??
+          demoResult?.error ??
+          tailwindConfigResult?.error ??
+          globalCssResult?.error ??
+          compiledCssResult?.error ??
+          new Error("Unknown error")
         }
       />
     )

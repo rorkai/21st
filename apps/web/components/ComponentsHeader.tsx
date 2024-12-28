@@ -1,7 +1,18 @@
 "use client"
 
+import { useEffect, useRef } from "react"
+
 import { useAtom, Atom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
+import { useMediaQuery } from "@/hooks/use-media-query"
+
+import { ArrowUpDown, CircleX } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { AMPLITUDE_EVENTS, trackEvent } from "@/lib/amplitude"
+import { filterComponents } from "@/lib/filters.client"
+
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -9,18 +20,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import type { SortOption, QuickFilterOption } from "@/types/global"
-import { QUICK_FILTER_OPTIONS, SORT_OPTIONS } from "@/types/global"
-import { Input } from "@/components/ui/input"
-import { useMediaQuery } from "@/hooks/use-media-query"
-import { searchQueryAtom } from "@/components/Header"
-import { useEffect, useRef } from "react"
-import { ArrowUpDown, CircleX } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { AMPLITUDE_EVENTS, trackEvent } from "@/lib/amplitude"
-import { cn } from "@/lib/utils"
-import { Component, User } from "@/types/global"
-import { filterComponents } from "@/lib/filters.client"
+import { searchQueryAtom } from "@/components/Header"
+
+import type {
+  SortOption,
+  QuickFilterOption,
+  Component,
+  User,
+} from "@/types/global"
+import { QUICK_FILTER_OPTIONS, SORT_OPTIONS } from "@/types/global"
 
 export const quickFilterAtom = atomWithStorage<QuickFilterOption | undefined>(
   "quick-filter",

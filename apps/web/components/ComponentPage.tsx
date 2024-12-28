@@ -6,21 +6,33 @@ import { useTheme } from "next-themes"
 import { atom, useAtom } from "jotai"
 import { useQuery } from "@tanstack/react-query"
 import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs"
-import { ChevronRight, CodeXml, Info, Pencil } from "lucide-react"
-import { toast } from "sonner"
 
 import { Component, Tag, User } from "@/types/global"
+import { PromptType, PROMPT_TYPES } from "@/lib/constants"
 import { useIsMobile } from "@/hooks/use-media-query"
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import { useUpdateComponentWithTags } from "@/lib/queries"
-import { identifyUser, setPageProperties, trackEvent } from "@/lib/amplitude"
-import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
+import {
+  identifyUser,
+  setPageProperties,
+  trackEvent,
+  AMPLITUDE_EVENTS,
+} from "@/lib/amplitude"
+import { generateAIPrompt } from "@/lib/generate-ai-prompt"
 
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Hotkey } from "./ui/hotkey"
 import { UserAvatar } from "./UserAvatar"
 import { LikeButton } from "./LikeButton"
@@ -28,8 +40,49 @@ import { ThemeToggle } from "./ThemeToggle"
 import { ComponentPagePreview } from "./ComponentPagePreview"
 import { EditComponentDialog } from "./EditComponentDialog"
 import { usePublishAs } from "./publish/use-publish-as"
+import { BoltLogo } from "./icons/BoltLogo"
+import { LovableLogo } from "./icons/LovableLogo"
+import { V0Logo } from "./icons/V0Logo"
+
+import {
+  ChevronRight,
+  CodeXml,
+  Info,
+  Pencil,
+  Sparkles,
+  Loader2,
+  ChevronDown,
+} from "lucide-react"
+import { toast } from "sonner"
 
 export const isShowCodeAtom = atom(true)
+
+const promptOptions = [
+  {
+    id: "basic",
+    label: "Basic",
+    description: "Standard prompt for any AI assistant",
+    icon: <Sparkles size={16} className="mr-2" />,
+  },
+  {
+    id: "v0",
+    label: "v0 by Vercel",
+    description: "Optimized for v0.dev",
+    icon: <V0Logo className="mr-2 h-4 w-4" />,
+  },
+  {
+    id: "lovable",
+    label: "Lovable",
+    description: "Optimized for Lovable.dev",
+    icon: <LovableLogo className="mr-2 h-4 w-4" />,
+  },
+  {
+    id: "bolt",
+    label: "Bolt.new",
+    description: "Optimized for Bolt.new",
+    icon: <BoltLogo className="mr-2 h-4 w-4" />,
+  },
+]
 
 export default function ComponentPage({
   component: initialComponent,
@@ -175,6 +228,24 @@ export default function ComponentPage({
       window.removeEventListener("keydown", keyDownHandler)
     }
   }, [])
+
+  const [selectedPromptType, setSelectedPromptType] = useState<PromptType>(
+    () => {
+      if (typeof window !== "undefined") {
+        return (
+          (localStorage.getItem("selectedPromptType") as PromptType) ||
+          PROMPT_TYPES.BASIC
+        )
+      }
+      return PROMPT_TYPES.BASIC
+    },
+  )
+
+  useEffect(() => {
+    localStorage.setItem("selectedPromptType", selectedPromptType)
+  }, [selectedPromptType])
+
+  const [isGenerating, setIsGenerating] = useState(false)
 
   const { mutate: updateComponent } = useUpdateComponentWithTags(supabase)
 
@@ -333,6 +404,116 @@ export default function ComponentPage({
                 </TooltipContent>
               </Tooltip>
             )}
+            <div className="inline-flex -space-x-px divide-x divide-primary-foreground/30 rounded-lg shadow-sm">
+              <Button
+                onClick={async () => {
+                  setIsGenerating(true)
+                  try {
+                    const result = await generateAIPrompt(
+                      component,
+                      selectedPromptType,
+                      (status) => {
+                        switch (status.status) {
+                          case "downloading":
+                            toast.loading("Downloading component files...", {
+                              id: "ai-prompt",
+                            })
+                            break
+                          case "completed":
+                            toast.dismiss("ai-prompt")
+                            toast.success("AI prompt copied to clipboard")
+                            if (status.prompt) {
+                              navigator?.clipboard?.writeText(status.prompt)
+                            }
+                            break
+                          case "error":
+                            toast.dismiss("ai-prompt")
+                            toast.error("Failed to generate AI prompt")
+                            break
+                        }
+                      },
+                    )
+
+                    if (result.status === "completed" && result.prompt) {
+                      trackEvent(AMPLITUDE_EVENTS.COPY_AI_PROMPT, {
+                        componentId: component.id,
+                        componentName: component.name,
+                        promptType: selectedPromptType,
+                      })
+                    }
+                  } catch (err) {
+                    console.error("Failed to copy AI prompt:", err)
+                    toast.dismiss("ai-prompt")
+                    toast.error("Failed to generate AI prompt")
+                  } finally {
+                    setIsGenerating(false)
+                  }
+                }}
+                disabled={isGenerating}
+                className="rounded-none shadow-none first:rounded-s-lg focus-visible:z-10"
+              >
+                {isGenerating ? (
+                  <div className="animate-spin mr-2">
+                    <Loader2 size={16} />
+                  </div>
+                ) : (
+                  promptOptions.find((opt) => opt.id === selectedPromptType)
+                    ?.icon
+                )}
+                Copy prompt
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    className="rounded-none shadow-none last:rounded-e-lg focus-visible:z-10"
+                    size="icon"
+                    disabled={isGenerating}
+                  >
+                    <ChevronDown size={16} strokeWidth={2} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-64"
+                  side="bottom"
+                  sideOffset={4}
+                  align="end"
+                >
+                  <DropdownMenuRadioGroup
+                    value={selectedPromptType}
+                    onValueChange={(value) =>
+                      setSelectedPromptType(value as PromptType)
+                    }
+                  >
+                    {promptOptions.map((option) => (
+                      <DropdownMenuRadioItem
+                        key={option.id}
+                        value={option.id}
+                        className="items-start [&>span]:pt-1"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="h-5 w-5 flex items-center justify-center">
+                            {React.cloneElement(
+                              option.icon as React.ReactElement,
+                              {
+                                className: "h-[18px] w-[18px]",
+                              },
+                            )}
+                          </div>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-sm font-medium">
+                              {option.label}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {option.description}
+                            </span>
+                          </div>
+                        </div>
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             <div className="relative bg-muted rounded-lg h-8 p-0.5 flex">
               <div
                 className="absolute inset-y-0.5 rounded-md bg-background shadow transition-all duration-200 ease-in-out"

@@ -41,6 +41,7 @@ export const AMPLITUDE_EVENTS = {
   VIEW_USER_PROFILE: "user_profile_viewed",
   VIEW_SIDEBAR_SECTION: "sidebar_section_viewed",
   SEARCH_COMPONENTS: "components_searched",
+  COPY_AI_PROMPT: "ai_prompt_copied",
 } as const
 
 export const trackEvent = (

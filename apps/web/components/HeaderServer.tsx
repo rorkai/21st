@@ -28,7 +28,7 @@ export function HeaderServer({
         <>
           <span className="mx-2 text-muted-foreground">/</span>
           <span className="text-[14px] font-medium">
-            {isProPage ? "Pro templates & components" : tagName}
+            {isProPage ? "Pro templates" : tagName}
           </span>
         </>
       )}

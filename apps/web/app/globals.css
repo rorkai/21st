@@ -43,14 +43,13 @@ iframe {
 }
 
 .css-1p3m7a8-multiValue {
-  background-color: #F4F4F4 !important;
+  background-color: #f4f4f4 !important;
   border-radius: 4px !important;
 }
 
 .css-v7duua:hover {
   background-color: #ffe4dd !important;
 }
-
 
 .css-t3ipsp-control {
   border-color: transparent !important;
@@ -69,7 +68,6 @@ iframe {
   border-radius: 6px !important;
   min-height: 36px !important;
   height: 36px !important;
-
 }
 
 .sp-preview-container {
@@ -255,5 +253,14 @@ iframe {
 @layer utilities {
   .bg-gradient-radial {
     background-image: radial-gradient(var(--tw-gradient-stops));
+  }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }

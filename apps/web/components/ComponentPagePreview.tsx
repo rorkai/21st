@@ -214,12 +214,12 @@ export function ComponentPagePreview({
                       >
                         <CopyCodeButton />
                         <Tabs value={activeFile} onValueChange={setActiveFile}>
-                          <TabsList className="relative justify-start w-full gap-0.5 bg-transparent p-0 before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-border pl-4">
+                          <TabsList className="relative justify-start w-full gap-0.5 bg-transparent py-0 before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-border px-4 overflow-x-auto flex-nowrap hide-scrollbar">
                             {visibleFiles.map((file) => (
                               <TabsTrigger
                                 key={file}
                                 value={file}
-                                className="overflow-hidden data-[state=active]:rounded-b-none data-[state=active]:border-x data-[state=active]:border-t data-[state=active]:border-border bg-muted py-2 data-[state=active]:z-10 data-[state=active]:shadow-none"
+                                className="overflow-hidden data-[state=active]:rounded-b-none data-[state=active]:border-x data-[state=active]:border-t data-[state=active]:border-border bg-muted py-2 data-[state=active]:z-10 data-[state=active]:shadow-none flex-shrink-0 whitespace-nowrap"
                               >
                                 {file.split("/").pop()}
                               </TabsTrigger>

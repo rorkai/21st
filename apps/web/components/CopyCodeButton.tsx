@@ -6,9 +6,10 @@ import { trackEvent, AMPLITUDE_EVENTS } from "../lib/amplitude"
 
 export const CopyCodeButton = () => {
   const [codeCopied, setCodeCopied] = useState(false)
+  const [hasSelection, setHasSelection] = useState(false)
   const { sandpack } = useSandpack()
 
-  const copyCode = (source: 'button' | 'shortcut') => {
+  const copyCode = (source: "button" | "shortcut") => {
     const activeFile = sandpack.activeFile
     const fileContent = sandpack.files[activeFile]?.code
     if (fileContent) {
@@ -17,7 +18,7 @@ export const CopyCodeButton = () => {
       toast("Code copied to clipboard")
       trackEvent(AMPLITUDE_EVENTS.COPY_CODE, {
         fileName: activeFile,
-        fileExtension: activeFile.split('.').pop(),
+        fileExtension: activeFile.split(".").pop(),
         copySource: source,
       })
       setTimeout(() => setCodeCopied(false), 2000)
@@ -27,14 +28,29 @@ export const CopyCodeButton = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.keyCode === 67) {
-        e.preventDefault()
-        copyCode('shortcut')
+        const selectedText = window.getSelection()?.toString()
+
+        if (!selectedText) {
+          e.preventDefault()
+          copyCode("shortcut")
+        }
       }
     }
 
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
   }, [sandpack])
+
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      const selectedText = window.getSelection()?.toString()
+      setHasSelection(!!selectedText)
+    }
+
+    document.addEventListener("selectionchange", handleSelectionChange)
+    return () =>
+      document.removeEventListener("selectionchange", handleSelectionChange)
+  }, [])
 
   return (
     <button
@@ -50,8 +66,16 @@ export const CopyCodeButton = () => {
         <>
           <Clipboard size={14} className="text-muted-foreground/70" />
           Copy Code{" "}
-          <kbd className="hidden md:inline-flex h-5 max-h-full items-center rounded border border-border px-1 ml-1 -mr-1 font-[inherit] text-[0.625rem] font-medium text-muted-foreground/70">
-            {navigator?.platform?.toLowerCase()?.includes("mac") ? "⌘C" : "Ctrl+C"}
+          <kbd
+            className={`hidden md:inline-flex h-5 max-h-full items-center rounded border border-border px-1 ml-1 -mr-1 font-[inherit] text-[0.625rem] font-medium ${
+              hasSelection
+                ? "text-muted-foreground/40"
+                : "text-muted-foreground/70"
+            }`}
+          >
+            {navigator?.platform?.toLowerCase()?.includes("mac")
+              ? "⌘C"
+              : "Ctrl+C"}
           </kbd>
         </>
       )}

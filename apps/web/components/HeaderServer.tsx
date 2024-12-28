@@ -77,8 +77,8 @@ HeaderServer.SocialIcons = function SocialIcons() {
       >
         <span className="hidden lg:inline-flex mr-4">Global search...</span>
         <span className="inline-flex lg:hidden mr-4">Search...</span>
-        <kbd className="pointer-events-none absolute right-[0.3rem] top-[0.3rem] hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
-          <span className="text-xs">⌘</span>K
+        <kbd className="pointer-events-none absolute right-[0.3rem] top-[0.3rem] hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-sans text-[11px] opacity-100 sm:flex">
+          <span className="text-[11px] font-sans">⌘</span>K
         </kbd>
       </Button>
     </div>

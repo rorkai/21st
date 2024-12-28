@@ -3,6 +3,7 @@
 import * as React from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 import { useAtom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
@@ -23,8 +24,11 @@ import { toast } from "sonner"
 import { sections } from "@/config/navigation"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { useClerkSupabaseClient } from "@/lib/clerk"
-import { Component, User } from "@/types/global"
+import { Component, Tag, User } from "@/types/global"
 import { cn } from "@/lib/utils"
+import { generateAIPrompt } from "@/lib/generate-ai-prompt"
+import { Loader2 } from "lucide-react"
+import { PROMPT_TYPES } from "@/lib/constants"
 
 const commandSearchQueryAtom = atomWithStorage("commandMenuSearch", "")
 
@@ -132,6 +136,88 @@ export function CommandMenu() {
   }, [selectedComponent])
 
   const [isCopying, setIsCopying] = React.useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+
+  const handleGeneratePrompt = async () => {
+    if (!selectedComponent) return
+
+    setIsGenerating(true)
+    try {
+      const result = await generateAIPrompt(
+        selectedComponent as Component & { user: User } & { tags: Tag[] },
+        PROMPT_TYPES.BASIC,
+        (status) => {
+          switch (status.status) {
+            case "downloading":
+              toast.loading("Downloading component files...", {
+                id: "ai-prompt",
+              })
+              break
+            case "completed":
+              toast.dismiss("ai-prompt")
+              toast.success("AI prompt copied to clipboard")
+              if (status.prompt) {
+                navigator?.clipboard?.writeText(status.prompt)
+              }
+              break
+            case "error":
+              toast.dismiss("ai-prompt")
+              toast.error("Failed to generate AI prompt")
+              break
+          }
+        },
+      )
+
+      if (result.status === "completed" && result.prompt) {
+        trackEvent(AMPLITUDE_EVENTS.COPY_AI_PROMPT, {
+          componentId: selectedComponent.id,
+          componentName: selectedComponent.name,
+          promptType: PROMPT_TYPES.BASIC,
+        })
+      }
+    } catch (err) {
+      console.error("Failed to copy AI prompt:", err)
+      toast.dismiss("ai-prompt")
+      toast.error("Failed to generate AI prompt")
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  React.useEffect(() => {
+    const keyDownHandler = (e: KeyboardEvent) => {
+      if (e.key === "x" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        handleGeneratePrompt()
+      }
+    }
+
+    document.addEventListener("keydown", keyDownHandler)
+    return () => document.removeEventListener("keydown", keyDownHandler)
+  }, [selectedComponent])
+
+  const handleOpen = () => {
+    if (value.startsWith("component-") && selectedComponent) {
+      router.push(
+        `/${selectedComponent.user.username}/${selectedComponent.component_slug}`,
+      )
+    } else if (value.startsWith("section-")) {
+      const section = filteredSections
+        .flatMap((section) => section.items)
+        .find((item) => `section-${item.title}` === value)
+
+      if (section) {
+        router.push(section.href)
+        trackEvent(AMPLITUDE_EVENTS.VIEW_SIDEBAR_SECTION, {
+          itemTitle: section.title,
+          path: section.href,
+        })
+      }
+    }
+    setSearchQuery("")
+    setValue("")
+    setOpen(false)
+  }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -229,7 +315,7 @@ export function CommandMenu() {
             </div>
           </div>
 
-          <div className="absolute bottom-0 left-0 right-0 border-t border-border h-10 px-4 flex items-center justify-between bg-background text-sm text-muted-foreground">
+          <div className="absolute bottom-0 left-0 right-0 border-t border-border h-10 pl-4 pr-3 flex items-center justify-between bg-background text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-foreground/80" />
               <span className="text-sm font-medium">21st.dev</span>
@@ -242,36 +328,104 @@ export function CommandMenu() {
                     <div
                       className={cn(
                         "flex items-center gap-2",
+                        isGenerating && "text-muted-foreground/70",
+                      )}
+                    >
+                      {isGenerating && (
+                        <div className="h-[6px] w-[6px] rounded-full bg-emerald-400 animate-pulse" />
+                      )}
+                      <button
+                        onClick={handleGeneratePrompt}
+                        disabled={isGenerating}
+                        className="hover:bg-accent px-2 py-1 rounded-md flex items-center gap-2"
+                      >
+                        <span>
+                          {isGenerating ? "Generating..." : "Copy Prompt"}
+                        </span>
+                        {!isGenerating && (
+                          <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-sans text-[11px] leading-none opacity-100 flex">
+                            <span className="text-[11px] leading-none font-sans">
+                              {navigator?.platform
+                                ?.toLowerCase()
+                                ?.includes("mac")
+                                ? "⌘"
+                                : "Ctrl"}
+                            </span>
+                            <span className="text-[11px] leading-none font-sans">
+                              X
+                            </span>
+                          </kbd>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mx-2 h-4 w-[1px] bg-border" />
+
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={cn(
+                        "flex items-center gap-2",
                         isCopying && "text-muted-foreground/70",
                       )}
                     >
                       {isCopying && (
                         <div className="h-[6px] w-[6px] rounded-full bg-emerald-400 animate-pulse" />
                       )}
-                      <span>{isCopying ? "Copying..." : "Copy Code"}</span>
+                      <button
+                        onClick={async () => {
+                          try {
+                            setIsCopying(true)
+                            const response = await fetch(selectedComponent.code)
+                            const code = await response.text()
+                            await navigator.clipboard.writeText(code)
+                            trackEvent(AMPLITUDE_EVENTS.COPY_CODE, {
+                              componentId: selectedComponent.id,
+                              componentName: selectedComponent.name,
+                              copySource: "command-menu",
+                            })
+                          } catch (err) {
+                            console.error("Failed to copy code:", err)
+                            toast.error("Failed to copy code")
+                          } finally {
+                            setTimeout(() => {
+                              setIsCopying(false)
+                              toast("Copied to clipboard")
+                            }, 1000)
+                          }
+                        }}
+                        className="hover:bg-accent px-2 py-1 rounded-md flex items-center gap-2"
+                      >
+                        <span>{isCopying ? "Copying..." : "Copy Code"}</span>
+                        {!isCopying && (
+                          <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-sans  text-[11px] leading-none  opacity-100 flex">
+                            <span className="text-[11px] leading-none font-sans">
+                              {navigator?.platform
+                                ?.toLowerCase()
+                                ?.includes("mac")
+                                ? "⌘"
+                                : "Ctrl"}
+                            </span>
+                            C
+                          </kbd>
+                        )}
+                      </button>
                     </div>
-                    {!isCopying && (
-                      <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] leading-none font-medium opacity-100 flex">
-                        <span className="text-[12px] leading-none">
-                          {navigator?.platform?.toLowerCase()?.includes("mac")
-                            ? "⌘"
-                            : "Ctrl"}
-                        </span>
-                        C
-                      </kbd>
-                    )}
                   </div>
 
                   <div className="mx-2 h-4 w-[1px] bg-border" />
                 </>
               )}
 
-              <div className="flex items-center gap-2">
+              <button
+                onClick={handleOpen}
+                className="flex items-center gap-2 hover:bg-accent px-2 py-1 rounded-md"
+              >
                 <span>Open</span>
-                <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[14px] leading-none font-medium opacity-100 flex">
-                  ↵
+                <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 text-[11px] leading-none font-sans opacity-100 flex">
+                  ⏎
                 </kbd>
-              </div>
+              </button>
             </div>
           </div>
         </Command>

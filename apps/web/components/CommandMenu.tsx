@@ -18,11 +18,13 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command"
+import { toast } from "sonner"
 
 import { sections } from "@/config/navigation"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import { Component, User } from "@/types/global"
+import { cn } from "@/lib/utils"
 
 const commandSearchQueryAtom = atomWithStorage("commandMenuSearch", "")
 
@@ -96,6 +98,40 @@ export function CommandMenu() {
       setValue("")
     }
   }
+
+  const handleKeyDown = async (e: KeyboardEvent) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "c" && selectedComponent) {
+      e.preventDefault()
+
+      try {
+        setIsCopying(true)
+        const response = await fetch(selectedComponent.code)
+        const code = await response.text()
+
+        await navigator.clipboard.writeText(code)
+        trackEvent(AMPLITUDE_EVENTS.COPY_CODE, {
+          componentId: selectedComponent.id,
+          componentName: selectedComponent.name,
+          copySource: "command-menu",
+        })
+      } catch (err) {
+        console.error("Failed to copy code:", err)
+        toast.error("Failed to copy code")
+      } finally {
+        setTimeout(() => {
+          setIsCopying(false)
+          toast("Copied to clipboard")
+        }, 1000)
+      }
+    }
+  }
+
+  React.useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [selectedComponent])
+
+  const [isCopying, setIsCopying] = React.useState(false)
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -190,6 +226,52 @@ export function CommandMenu() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+
+          <div className="absolute bottom-0 left-0 right-0 border-t border-border h-10 px-4 flex items-center justify-between bg-background text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-foreground/80" />
+              <span className="text-sm font-medium">21st.dev</span>
+            </div>
+
+            <div className="flex items-center">
+              {selectedComponent?.code && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={cn(
+                        "flex items-center gap-2",
+                        isCopying && "text-muted-foreground/70",
+                      )}
+                    >
+                      {isCopying && (
+                        <div className="h-[6px] w-[6px] rounded-full bg-emerald-400 animate-pulse" />
+                      )}
+                      <span>{isCopying ? "Copying..." : "Copy Code"}</span>
+                    </div>
+                    {!isCopying && (
+                      <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] leading-none font-medium opacity-100 flex">
+                        <span className="text-[12px] leading-none">
+                          {navigator?.platform?.toLowerCase()?.includes("mac")
+                            ? "⌘"
+                            : "Ctrl"}
+                        </span>
+                        C
+                      </kbd>
+                    )}
+                  </div>
+
+                  <div className="mx-2 h-4 w-[1px] bg-border" />
+                </>
+              )}
+
+              <div className="flex items-center gap-2">
+                <span>Open</span>
+                <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[14px] leading-none font-medium opacity-100 flex">
+                  ↵
+                </kbd>
+              </div>
             </div>
           </div>
         </Command>

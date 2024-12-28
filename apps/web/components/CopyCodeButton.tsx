@@ -28,8 +28,10 @@ export const CopyCodeButton = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.keyCode === 67) {
-        const selectedText = window.getSelection()?.toString()
+        const commandMenu = document.querySelector("[cmdk-root]")
+        if (commandMenu) return
 
+        const selectedText = window.getSelection()?.toString()
         if (!selectedText) {
           e.preventDefault()
           copyCode("shortcut")

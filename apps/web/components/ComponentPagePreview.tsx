@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { TextMorph } from "@/components/ui/text-morph"
 
 import {
   SandpackProvider,
@@ -308,7 +309,7 @@ function CopyCommandSection({
         </p>
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors focus:outline-none">
-            {selectedPackageManager}
+            <TextMorph className="text-sm">{selectedPackageManager}</TextMorph>
             <ChevronDown
               className="ml-1.5 -mr-1 opacity-70"
               size={16}

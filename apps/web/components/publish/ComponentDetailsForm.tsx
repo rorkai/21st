@@ -114,6 +114,17 @@ const ComponentDetailsForm = ({
     multiple: false,
   })
 
+  const handleTextareaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const textarea = e.target
+    textarea.style.height = "auto"
+
+    const style = window.getComputedStyle(textarea)
+    const borderHeight =
+      parseInt(style.borderTopWidth) + parseInt(style.borderBottomWidth)
+
+    textarea.style.height = `${textarea.scrollHeight + borderHeight}px`
+  }
+
   return (
     <div
       className={`flex flex-col gap-4 w-full ${isDarkTheme ? "text-foreground" : "text-muted-foreground"}`}
@@ -131,7 +142,9 @@ const ComponentDetailsForm = ({
           id="description"
           placeholder="Add some description to help others discover your component"
           {...form.register("description")}
-          className="mt-1 w-full text-foreground"
+          className="mt-1 w-full text-foreground min-h-[none] resize-none"
+          onInput={handleTextareaInput}
+          rows={2}
         />
       </div>
 

@@ -14,7 +14,7 @@ export type QuickFilterOption = "all" | "last_released" | "most_downloaded"
 
 export const QUICK_FILTER_OPTIONS = {
   all: "All Components",
-  last_released: "Last Released",
+  last_released: "Latest",
   most_downloaded: "Popular",
 } as const
 

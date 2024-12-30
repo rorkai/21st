@@ -31,14 +31,14 @@ import type {
 } from "@/types/global"
 import { QUICK_FILTER_OPTIONS, SORT_OPTIONS } from "@/types/global"
 
-export const quickFilterAtom = atomWithStorage<QuickFilterOption | undefined>(
+export const quickFilterAtom = atomWithStorage<QuickFilterOption>(
   "quick-filter",
-  undefined,
+  "all",
 )
 
-export const sortByAtom: Atom<SortOption | undefined> = atomWithStorage(
+export const sortByAtom = atomWithStorage<SortOption>(
   "components-sort-by",
-  undefined,
+  "downloads",
 )
 
 const useTrackSearchQueries = () => {
@@ -214,7 +214,10 @@ export function ComponentsHeader({
             )}
           </div>
 
-          <Select value={sortBy} onValueChange={setSortBy}>
+          <Select
+            value={sortBy}
+            onValueChange={(value) => setSortBy(value as SortOption)}
+          >
             <SelectTrigger
               className={`h-8 ${isDesktop ? "w-[180px]" : "w-auto min-w-[40px] px-2"}`}
             >

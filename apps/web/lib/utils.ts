@@ -12,7 +12,7 @@ export function getPackageRunner(packageManager: string) {
     case "yarn":
       return "npx"
     case "bun":
-      return "bunx"
+      return "bunx --bun"
     case "npm":
     default:
       return "npx"

@@ -47,9 +47,9 @@ HeaderServer.SocialIcons = function SocialIcons() {
         <Button
           variant="ghost"
           aria-label="Follow on Twitter"
-          className="fill-foreground"
+          className="fill-foreground size-8 -mr-1"
         >
-          <Icons.twitter className="h-[14px] w-[14px]" aria-hidden="true" />
+          <Icons.twitter className="min-h-[14px] min-w-[14px]" aria-hidden="true" />
         </Button>
       </Link>
       <Link

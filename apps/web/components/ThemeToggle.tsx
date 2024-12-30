@@ -9,10 +9,11 @@ export function ThemeToggle() {
 
   return (
     <Toggle
-      className="group h-8 w-8 bg-transparent data-[state=on]:!bg-transparent hover:bg-accent hover:!text-foreground"
+      className="group bg-transparent data-[state=on]:!bg-transparent hover:bg-accent hover:!text-foreground mr-0.5"
       pressed={resolvedTheme === "dark"}
       onPressedChange={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
       aria-label={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
+      size="sm"
     >
       <Moon
         size={16}

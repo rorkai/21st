@@ -69,14 +69,14 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center">
           {!isMobile && <HeaderServer.ThemeToggle />}
           <HeaderServer.SocialIcons />
           {!isMobile && (
             <>
               <SignedIn>
                 {!isPublishPage && (
-                  <Button asChild>
+                  <Button asChild className="mx-2">
                     <Link href="/publish">Publish</Link>
                   </Button>
                 )}

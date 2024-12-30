@@ -64,31 +64,47 @@ const promptOptions = [
     id: PROMPT_TYPES.BASIC,
     label: "Basic",
     description: "Standard prompt for AI code editors",
-    icon: <Sparkles size={16} className="mr-2" />,
+    icon: (
+      <Sparkles
+        size={16}
+        className="mr-2 min-h-[16px] min-w-[16px] max-h-[16px] max-w-[16px]"
+      />
+    ),
   },
   {
     id: PROMPT_TYPES.V0,
     label: "v0 by Vercel",
     description: "Optimized for v0.dev",
-    icon: <Icons.v0Logo className="mr-2 h-4 w-4" />,
+    icon: (
+      <Icons.v0Logo className="mr-2 min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
+    ),
   },
   {
     id: PROMPT_TYPES.LOVABLE,
     label: "Lovable",
     description: "Optimized for Lovable.dev",
-    icon: <Icons.lovableLogo className="mr-2 h-4 w-4" />,
+    icon: (
+      <Icons.lovableLogo className="mr-2 min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
+    ),
   },
   {
     id: PROMPT_TYPES.BOLT,
     label: "Bolt.new",
     description: "Optimized for Bolt.new",
-    icon: <Icons.boltLogo className="mr-2 h-4 w-4" />,
+    icon: (
+      <Icons.boltLogo className="mr-2 min-h-[22px] min-w-[22px] max-h-[22px] max-w-[22px]" />
+    ),
   },
   {
     id: PROMPT_TYPES.EXTENDED,
     label: "Extended",
     description: "Extended prompt for complex components",
-    icon: <Brain size={16} className="mr-2" />,
+    icon: (
+      <Brain
+        size={16}
+        className="mr-2 min-h-[16px] min-w-[16px] max-h-[16px] max-w-[16px]"
+      />
+    ),
   },
 ]
 
@@ -216,6 +232,38 @@ const useKeyboardShortcuts = ({
       window.removeEventListener("keydown", keyDownHandler)
     }
   }, [])
+}
+
+const copyToClipboard = async (text: string) => {
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text)
+      return
+    }
+
+    // Fallback for Safari
+    const type = "text/plain"
+    const blob = new Blob([text], { type })
+    const data = [new ClipboardItem({ [type]: blob })]
+
+    if (navigator?.clipboard?.write) {
+      await navigator.clipboard.write(data)
+      return
+    }
+
+    const textarea = document.createElement("textarea")
+    textarea.value = text
+    textarea.style.position = "fixed"
+    textarea.style.opacity = "0"
+    textarea.style.whiteSpace = "pre"
+    document.body.appendChild(textarea)
+    textarea.focus()
+    textarea.select()
+    document.execCommand("copy")
+    document.body.removeChild(textarea)
+  } catch (err) {
+    throw new Error("Failed to copy text")
+  }
 }
 
 export default function ComponentPage({
@@ -486,7 +534,8 @@ export default function ComponentPage({
                       tailwindConfig,
                       globalCss,
                     })
-                    navigator?.clipboard?.writeText(prompt)
+
+                    await copyToClipboard(prompt)
                     toast.success("AI prompt copied to clipboard")
                   } catch (err) {
                     console.error("Failed to copy AI prompt:", err)
@@ -538,9 +587,6 @@ export default function ComponentPage({
                           <div className="h-5 w-5 flex items-center justify-center">
                             {React.cloneElement(
                               option.icon as React.ReactElement,
-                              {
-                                className: "h-[18px] w-[18px]",
-                              },
                             )}
                           </div>
                           <div className="flex flex-col gap-0.5">

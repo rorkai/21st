@@ -27,7 +27,7 @@ import { useClerkSupabaseClient } from "@/lib/clerk"
 import { Component, Tag, User } from "@/types/global"
 import { cn } from "@/lib/utils"
 import { generateAIPrompt } from "@/lib/generate-ai-prompt"
-import { PROMPT_TYPES } from "@/lib/constants"
+import { PROMPT_TYPES } from "@/types/global"
 
 const commandSearchQueryAtom = atomWithStorage("commandMenuSearch", "")
 

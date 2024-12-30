@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query"
 import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs"
 
 import { Component, Tag, User } from "@/types/global"
-import { PromptType, PROMPT_TYPES } from "@/lib/constants"
+import { PromptType, PROMPT_TYPES } from "@/types/global"
 import { useIsMobile } from "@/hooks/use-media-query"
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import { useUpdateComponentWithTags } from "@/lib/queries"

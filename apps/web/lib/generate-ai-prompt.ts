@@ -1,5 +1,5 @@
 import { Component, User, Tag } from "@/types/global"
-import { PromptType, PROMPT_TYPES } from "@/lib/constants"
+import { PromptType } from "@/types/global"
 
 type PromptGenerationStatus = {
   status: "downloading" | "completed" | "error"

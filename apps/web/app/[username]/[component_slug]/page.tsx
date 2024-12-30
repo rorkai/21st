@@ -93,6 +93,21 @@ export const generateMetadata = async ({
   }
 }
 
+const fetchFileTextContent = async (url: string) => {
+  const filename = url.split("/").slice(-1)[0]
+  try {
+    const response = await fetch(url)
+    if (!response.ok) {
+      console.error(`Error response in fetching file ${filename}`, response)
+      throw new Error(`Error response in fetching file ${filename}: ${response.statusText}`)
+    }
+    return { data: await response.text(), error: null }
+  } catch (err) {
+    console.error(`Failed to fetch file ${filename}`, err)
+    return { error: new Error(`Failed to fetch file ${filename}: ${err}`), data: null }
+  }
+}
+
 export default async function ComponentPageServer({
   params,
 }: {
@@ -120,82 +135,16 @@ export default async function ComponentPageServer({
   >
 
   const componentAndDemoCodePromises = [
-    fetch(component.code).then(async (response) => {
-      if (!response.ok) {
-        console.error(`Error fetching component code:`, response.statusText)
-        return {
-          data: null,
-          error: new Error(
-            `Error fetching component code: ${response.statusText}`,
-          ),
-        }
-      }
-      const code = await response.text()
-      return { data: code, error: null }
-    }),
-    fetch(component.demo_code).then(async (response) => {
-      if (!response.ok) {
-        console.error(`Error loading component demo code:`, response.statusText)
-        return {
-          data: null,
-          error: new Error(
-            `Error loading component demo code: ${response.statusText}`,
-          ),
-        }
-      }
-      const demoCode = await response.text()
-      return { data: demoCode, error: null }
-    }),
+    fetchFileTextContent(component.code),
+    fetchFileTextContent(component.demo_code),
     component.tailwind_config_extension
-      ? fetch(component.tailwind_config_extension).then(async (response) => {
-          if (!response.ok) {
-            console.error(
-              `Error fetching component tailwind config:`,
-              response.statusText,
-            )
-            return {
-              data: null,
-              error: new Error(
-                `Error fetching component tailwind config: ${response.statusText}`,
-              ),
-            }
-          }
-          const tailwindConfig = await response.text()
-          return { data: tailwindConfig, error: null }
-        })
+      ? fetchFileTextContent(component.tailwind_config_extension)
       : Promise.resolve({ data: null, error: null }),
     component.global_css_extension
-      ? fetch(component.global_css_extension).then(async (response) => {
-          if (!response.ok) {
-            console.error(
-              `Error fetching component global css:`,
-              response.statusText,
-            )
-            return {
-              data: null,
-              error: new Error(
-                `Error fetching component global css: ${response.statusText}`,
-              ),
-            }
-          }
-          const globalCss = await response.text()
-          return { data: globalCss, error: null }
-        })
+      ? fetchFileTextContent(component.global_css_extension)
       : Promise.resolve({ data: null, error: null }),
     component.compiled_css
-      ? fetch(component.compiled_css).then(async (response) => {
-          if (!response.ok) {
-            console.error(`Error fetching component css:`, response.statusText)
-            return {
-              data: null,
-              error: new Error(
-                `Error fetching component css: ${response.statusText}`,
-              ),
-            }
-          }
-          const componentCss = await response.text()
-          return { data: componentCss, error: null }
-        })
+      ? fetchFileTextContent(component.compiled_css)
       : Promise.resolve({ data: null, error: null }),
   ]
 
@@ -258,7 +207,7 @@ export default async function ComponentPageServer({
   )
 
   return (
-    <div className="w-full ">
+    <div className="w-full">
       <ComponentPage
         component={component}
         code={codeResult?.data as string}

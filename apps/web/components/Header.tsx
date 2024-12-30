@@ -134,7 +134,7 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
 
               <SignedOut>
                 <SignInButton>
-                  <Button>Publish</Button>
+                  <Button className="ml-2">Publish</Button>
                 </SignInButton>
               </SignedOut>
             </>

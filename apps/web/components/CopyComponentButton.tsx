@@ -16,9 +16,13 @@ import { cn } from "@/lib/utils"
 
 interface CopyComponentButtonProps {
   codeUrl: string
+  variant?: "default" | "minimal"
 }
 
-export function CopyComponentButton({ codeUrl }: CopyComponentButtonProps) {
+export function CopyComponentButton({
+  codeUrl,
+  variant = "default",
+}: CopyComponentButtonProps) {
   const [copied, setCopied] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -40,6 +44,43 @@ export function CopyComponentButton({ codeUrl }: CopyComponentButtonProps) {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (variant === "minimal") {
+    return (
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={handleCopy}
+              disabled={copied || isLoading}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors h-6 w-6 flex items-center justify-center relative"
+            >
+              <div
+                className={cn(
+                  "absolute inset-0 flex items-center justify-center transition-all",
+                  copied ? "scale-100 opacity-100" : "scale-0 opacity-0",
+                )}
+              >
+                <Check size={16} className="stroke-emerald-500" />
+              </div>
+              <div
+                className={cn(
+                  "absolute inset-0 flex items-center justify-center transition-all",
+                  copied ? "scale-0 opacity-0" : "scale-100 opacity-100",
+                  isLoading && "animate-spin",
+                )}
+              >
+                <Copy size={16} />
+              </div>
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Copy code</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )
   }
 
   return (

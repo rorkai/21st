@@ -54,12 +54,12 @@ import { toast } from "sonner"
 import { atomWithStorage } from "jotai/utils"
 
 export const isShowCodeAtom = atom(true)
-const selectedPromptTypeAtom = atomWithStorage<PromptType>(
+export const selectedPromptTypeAtom = atomWithStorage<PromptType>(
   "selectedPromptType",
   PROMPT_TYPES.BASIC,
 )
 
-const promptOptions = [
+export const promptOptions = [
   {
     id: PROMPT_TYPES.BASIC,
     label: "Basic",
@@ -67,7 +67,7 @@ const promptOptions = [
     icon: (
       <Sparkles
         size={16}
-        className="mr-2 min-h-[16px] min-w-[16px] max-h-[16px] max-w-[16px]"
+        className="min-h-[16px] min-w-[16px] max-h-[16px] max-w-[16px]"
       />
     ),
   },
@@ -76,7 +76,7 @@ const promptOptions = [
     label: "v0 by Vercel",
     description: "Optimized for v0.dev",
     icon: (
-      <Icons.v0Logo className="mr-2 min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
+      <Icons.v0Logo className="min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
     ),
   },
   {
@@ -84,7 +84,7 @@ const promptOptions = [
     label: "Lovable",
     description: "Optimized for Lovable.dev",
     icon: (
-      <Icons.lovableLogo className="mr-2 min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
+      <Icons.lovableLogo className="min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
     ),
   },
   {
@@ -92,7 +92,7 @@ const promptOptions = [
     label: "Bolt.new",
     description: "Optimized for Bolt.new",
     icon: (
-      <Icons.boltLogo className="mr-2 min-h-[22px] min-w-[22px] max-h-[22px] max-w-[22px]" />
+      <Icons.boltLogo className="min-h-[22px] min-w-[22px] max-h-[22px] max-w-[22px]" />
     ),
   },
   {
@@ -102,7 +102,7 @@ const promptOptions = [
     icon: (
       <Brain
         size={16}
-        className="mr-2 min-h-[16px] min-w-[16px] max-h-[16px] max-w-[16px]"
+        className="min-h-[16px] min-w-[16px] max-h-[16px] max-w-[16px]"
       />
     ),
   },
@@ -548,7 +548,7 @@ export default function ComponentPage({
                     })
                   }
                 }}
-                className="rounded-none shadow-none first:rounded-s-lg focus-visible:z-10"
+                className="rounded-none shadow-none first:rounded-s-lg focus-visible:z-10 gap-2"
               >
                 {
                   promptOptions.find((opt) => opt.id === selectedPromptType)
@@ -566,7 +566,7 @@ export default function ComponentPage({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
-                  className="w-64"
+                  className="w-60"
                   side="bottom"
                   sideOffset={4}
                   align="end"
@@ -581,22 +581,20 @@ export default function ComponentPage({
                       <DropdownMenuRadioItem
                         key={option.id}
                         value={option.id}
-                        className="items-start [&>span]:pt-1"
+                        className="flex gap-2 items-start"
                       >
-                        <div className="flex items-start gap-3">
-                          <div className="h-5 w-5 flex items-center justify-center">
-                            {React.cloneElement(
-                              option.icon as React.ReactElement,
-                            )}
-                          </div>
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-sm font-medium">
-                              {option.label}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {option.description}
-                            </span>
-                          </div>
+                        <div className="w-4 h-4 flex items-center justify-center flex-shrink-0 mr-2 pt-1">
+                          {React.cloneElement(
+                            option.icon as React.ReactElement,
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-sm font-medium">
+                            {option.label}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {option.description}
+                          </span>
                         </div>
                       </DropdownMenuRadioItem>
                     ))}

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import Link from "next/link"
 import { useTheme } from "next-themes"
 import { atom, useAtom } from "jotai"
@@ -9,16 +9,15 @@ import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs"
 
 import { Component, Tag, User } from "@/types/global"
 import { PromptType, PROMPT_TYPES } from "@/types/global"
-import { useIsMobile } from "@/hooks/use-media-query"
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import { useUpdateComponentWithTags } from "@/lib/queries"
 import {
   identifyUser,
-  setPageProperties,
+  trackPageProperties,
   trackEvent,
   AMPLITUDE_EVENTS,
 } from "@/lib/amplitude"
-import { generateAIPrompt } from "@/lib/generate-ai-prompt"
+import { getComponentInstallPrompt } from "@/lib/prompts"
 
 import {
   Tooltip,
@@ -48,107 +47,106 @@ import {
   Info,
   Pencil,
   Sparkles,
-  Loader2,
   ChevronDown,
+  Brain,
 } from "lucide-react"
 import { toast } from "sonner"
+import { atomWithStorage } from "jotai/utils"
 
 export const isShowCodeAtom = atom(true)
+const selectedPromptTypeAtom = atomWithStorage<PromptType>(
+  "selectedPromptType",
+  PROMPT_TYPES.BASIC,
+)
 
 const promptOptions = [
   {
-    id: "basic",
+    id: PROMPT_TYPES.BASIC,
     label: "Basic",
-    description: "Standard prompt for any AI assistant",
+    description: "Standard prompt for AI code editors",
     icon: <Sparkles size={16} className="mr-2" />,
   },
   {
-    id: "v0",
+    id: PROMPT_TYPES.V0,
     label: "v0 by Vercel",
     description: "Optimized for v0.dev",
     icon: <Icons.v0Logo className="mr-2 h-4 w-4" />,
   },
   {
-    id: "lovable",
+    id: PROMPT_TYPES.LOVABLE,
     label: "Lovable",
     description: "Optimized for Lovable.dev",
     icon: <Icons.lovableLogo className="mr-2 h-4 w-4" />,
   },
   {
-    id: "bolt",
+    id: PROMPT_TYPES.BOLT,
     label: "Bolt.new",
     description: "Optimized for Bolt.new",
     icon: <Icons.boltLogo className="mr-2 h-4 w-4" />,
   },
+  {
+    id: PROMPT_TYPES.EXTENDED,
+    label: "Extended",
+    description: "Extended prompt for complex components",
+    icon: <Brain size={16} className="mr-2" />,
+  },
 ]
 
-export default function ComponentPage({
-  component: initialComponent,
-  code,
-  demoCode,
-  dependencies,
-  demoDependencies,
-  demoComponentNames,
-  registryDependencies,
-  npmDependenciesOfRegistryDependencies,
-  tailwindConfig,
-  globalCss,
-  compiledCss,
+const useAnalytics = ({
+  component,
+  user,
 }: {
-  component: Component & { user: User } & { tags: Tag[] }
-  code: string
-  demoCode: string
-  dependencies: Record<string, string>
-  demoDependencies: Record<string, string>
-  demoComponentNames: string[]
-  registryDependencies: Record<string, string>
-  npmDependenciesOfRegistryDependencies: Record<string, string>
-  tailwindConfig?: string
-  globalCss?: string
-  compiledCss?: string
-}) {
-  const [component, setComponent] = useState(initialComponent)
-  const { user } = useUser()
-  const supabase = useClerkSupabaseClient()
-  const { theme } = useTheme()
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const { isAdmin } = usePublishAs({ username: user?.username ?? "" })
+  component: Component & { user: User; tags: Tag[] }
+  user: ReturnType<typeof useUser>["user"]
+}) => {
+  useEffect(() => {
+    trackPageProperties({
+      componentId: component.id,
+      componentName: component.name,
+      authorId: component.user.id,
+      isPublic: component.is_public,
+      tags: component.tags.map((tag) => tag.name),
+      downloadsCount: component.downloads_count,
+      hasDemo: !!component.demo_code,
+      deviceType: window.innerWidth < 768 ? "mobile" : "desktop",
+    })
+  }, [component.id])
 
-  const canEdit = user?.id === component.user_id || isAdmin
+  useEffect(() => {
+    if (user) {
+      identifyUser(user.id, {
+        email: user.primaryEmailAddress?.emailAddress,
+        name: user.fullName,
+        username: user.username,
+        created_at: user.createdAt,
+        is_admin: user.publicMetadata?.isAdmin || false,
+      })
+    }
+  }, [user])
+}
 
-  const { data: liked } = useQuery({
-    queryKey: ["hasUserLikedComponent", component.id, user?.id],
-    queryFn: async () => {
-      if (!user || !supabase) return null
-      const { data, error } = await supabase
-        .from("component_likes")
-        .select("*")
-        .eq("component_id", component.id)
-        .eq("user_id", user?.id)
-      if (error) {
-        console.error("Error checking if user liked component:", error)
-        throw error
-      }
-      return data.length > 0
-    },
-  })
-
-  const [isShared, setIsShared] = useState(false)
-  const [isShowCode, setIsShowCode] = useAtom(isShowCodeAtom)
-  const isMobile = useIsMobile()
+const useKeyboardShortcuts = ({
+  component,
+  setIsShowCode,
+  canEdit,
+  isEditDialogOpen,
+  setIsEditDialogOpen,
+}: {
+  component: Component & { user: User }
+  setIsShowCode: Dispatch<SetStateAction<boolean>>
+  canEdit: boolean
+  isEditDialogOpen: boolean
+  setIsEditDialogOpen: Dispatch<SetStateAction<boolean>>
+}) => {
   const handleShareClick = async () => {
     const url = `${window.location.origin}/${component.user.username}/${component.component_slug}`
     try {
       await navigator?.clipboard?.writeText(url)
-      setIsShared(true)
       trackEvent(AMPLITUDE_EVENTS.SHARE_COMPONENT, {
         componentId: component.id,
         componentName: component.name,
         url,
       })
-      setTimeout(() => {
-        setIsShared(false)
-      }, 2000)
       toast("Link copied to clipboard")
     } catch (err) {
       console.error("Error copying link: ", err)
@@ -165,14 +163,6 @@ export default function ComponentPage({
           view: "info",
         })
       }
-    }
-
-    window.addEventListener("keydown", keyDownHandler)
-    return () => window.removeEventListener("keydown", keyDownHandler)
-  }, [])
-
-  useEffect(() => {
-    const keyDownHandler = (e: KeyboardEvent) => {
       if (e.code === "BracketLeft") {
         e.preventDefault()
         setIsShowCode(true)
@@ -226,24 +216,64 @@ export default function ComponentPage({
       window.removeEventListener("keydown", keyDownHandler)
     }
   }, [])
+}
 
-  const [selectedPromptType, setSelectedPromptType] = useState<PromptType>(
-    () => {
-      if (typeof window !== "undefined") {
-        return (
-          (localStorage.getItem("selectedPromptType") as PromptType) ||
-          PROMPT_TYPES.BASIC
-        )
+export default function ComponentPage({
+  component: initialComponent,
+  code,
+  demoCode,
+  dependencies,
+  demoDependencies,
+  demoComponentNames,
+  registryDependencies,
+  npmDependenciesOfRegistryDependencies,
+  tailwindConfig,
+  globalCss,
+  compiledCss,
+}: {
+  component: Component & { user: User } & { tags: Tag[] }
+  code: string
+  demoCode: string
+  dependencies: Record<string, string>
+  demoDependencies: Record<string, string>
+  demoComponentNames: string[]
+  registryDependencies: Record<string, string>
+  npmDependenciesOfRegistryDependencies: Record<string, string>
+  tailwindConfig?: string
+  globalCss?: string
+  compiledCss?: string
+}) {
+  const [component, setComponent] = useState(initialComponent)
+  const { user } = useUser()
+  const supabase = useClerkSupabaseClient()
+  const { theme } = useTheme()
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const { isAdmin } = usePublishAs({ username: user?.username ?? "" })
+
+  const canEdit = user?.id === component.user_id || isAdmin
+
+  const { data: liked } = useQuery({
+    queryKey: ["hasUserLikedComponent", component.id, user?.id],
+    queryFn: async () => {
+      if (!user || !supabase) return null
+      const { data, error } = await supabase
+        .from("component_likes")
+        .select("*")
+        .eq("component_id", component.id)
+        .eq("user_id", user?.id)
+      if (error) {
+        console.error("Error checking if user liked component:", error)
+        throw error
       }
-      return PROMPT_TYPES.BASIC
+      return data.length > 0
     },
+  })
+
+  const [isShowCode, setIsShowCode] = useAtom(isShowCodeAtom)
+
+  const [selectedPromptType, setSelectedPromptType] = useAtom(
+    selectedPromptTypeAtom,
   )
-
-  useEffect(() => {
-    localStorage.setItem("selectedPromptType", selectedPromptType)
-  }, [selectedPromptType])
-
-  const [isGenerating, setIsGenerating] = useState(false)
 
   const { mutate: updateComponent } = useUpdateComponentWithTags(supabase)
 
@@ -312,30 +342,18 @@ export default function ComponentPage({
     })
   }
 
-  useEffect(() => {
-    setPageProperties({
-      componentId: component.id,
-      componentName: component.name,
-      authorId: component.user.id,
-      isPublic: component.is_public,
-      tags: component.tags.map((tag) => tag.name),
-      downloadsCount: component.downloads_count,
-      hasDemo: !!demoCode,
-      deviceType: window.innerWidth < 768 ? "mobile" : "desktop",
-    })
-  }, [component.id])
+  useAnalytics({
+    component,
+    user,
+  })
 
-  useEffect(() => {
-    if (user) {
-      identifyUser(user.id, {
-        email: user.primaryEmailAddress?.emailAddress,
-        name: user.fullName,
-        username: user.username,
-        created_at: user.createdAt,
-        is_admin: user.publicMetadata?.isAdmin || false,
-      })
-    }
-  }, [user])
+  useKeyboardShortcuts({
+    component,
+    canEdit,
+    setIsShowCode,
+    isEditDialogOpen,
+    setIsEditDialogOpen,
+  })
 
   return (
     <div
@@ -453,59 +471,40 @@ export default function ComponentPage({
             <div className="inline-flex -space-x-px divide-x divide-primary-foreground/30 rounded-lg shadow-sm">
               <Button
                 onClick={async () => {
-                  setIsGenerating(true)
                   try {
-                    const result = await generateAIPrompt(
-                      component,
-                      selectedPromptType,
-                      (status) => {
-                        switch (status.status) {
-                          case "downloading":
-                            toast.loading("Downloading component files...", {
-                              id: "ai-prompt",
-                            })
-                            break
-                          case "completed":
-                            toast.dismiss("ai-prompt")
-                            toast.success("AI prompt copied to clipboard")
-                            if (status.prompt) {
-                              navigator?.clipboard?.writeText(status.prompt)
-                            }
-                            break
-                          case "error":
-                            toast.dismiss("ai-prompt")
-                            toast.error("Failed to generate AI prompt")
-                            break
-                        }
-                      },
-                    )
-
-                    if (result.status === "completed" && result.prompt) {
-                      trackEvent(AMPLITUDE_EVENTS.COPY_AI_PROMPT, {
-                        componentId: component.id,
-                        componentName: component.name,
-                        promptType: selectedPromptType,
-                      })
-                    }
+                    const prompt = getComponentInstallPrompt({
+                      promptType: selectedPromptType,
+                      codeFileName: component.code.split("/").slice(-1)[0]!,
+                      demoCodeFileName: component.demo_code
+                        .split("/")
+                        .slice(-1)[0]!,
+                      code,
+                      demoCode,
+                      registryDependencies,
+                      npmDependencies: dependencies,
+                      npmDependenciesOfRegistryDependencies,
+                      tailwindConfig,
+                      globalCss,
+                    })
+                    navigator?.clipboard?.writeText(prompt)
+                    toast.success("AI prompt copied to clipboard")
                   } catch (err) {
                     console.error("Failed to copy AI prompt:", err)
-                    toast.dismiss("ai-prompt")
                     toast.error("Failed to generate AI prompt")
                   } finally {
-                    setIsGenerating(false)
+                    trackEvent(AMPLITUDE_EVENTS.COPY_AI_PROMPT, {
+                      componentId: component.id,
+                      componentName: component.name,
+                      promptType: selectedPromptType,
+                    })
                   }
                 }}
-                disabled={isGenerating}
                 className="rounded-none shadow-none first:rounded-s-lg focus-visible:z-10"
               >
-                {isGenerating ? (
-                  <div className="animate-spin mr-2">
-                    <Loader2 size={16} />
-                  </div>
-                ) : (
+                {
                   promptOptions.find((opt) => opt.id === selectedPromptType)
                     ?.icon
-                )}
+                }
                 Copy prompt
               </Button>
               <DropdownMenu>
@@ -513,7 +512,6 @@ export default function ComponentPage({
                   <Button
                     className="rounded-none shadow-none last:rounded-e-lg focus-visible:z-10"
                     size="icon"
-                    disabled={isGenerating}
                   >
                     <ChevronDown size={16} strokeWidth={2} />
                   </Button>

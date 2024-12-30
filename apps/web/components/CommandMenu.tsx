@@ -1,14 +1,11 @@
 "use client"
 
-import * as React from "react"
+import { useState, useMemo, useEffect, Dispatch, SetStateAction } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
-
 import { useAtom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import { useQuery } from "@tanstack/react-query"
-
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import {
   Command,
@@ -20,62 +17,49 @@ import {
   CommandSeparator,
 } from "@/components/ui/command"
 import { toast } from "sonner"
-
 import { sections } from "@/lib/navigation"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { useClerkSupabaseClient } from "@/lib/clerk"
-import { Component, Tag, User } from "@/types/global"
+import { Component, User } from "@/types/global"
 import { cn } from "@/lib/utils"
-import { generateAIPrompt } from "@/lib/generate-ai-prompt"
+import { getComponentInstallPrompt } from "@/lib/prompts"
 import { PROMPT_TYPES } from "@/types/global"
+import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 
 const commandSearchQueryAtom = atomWithStorage("commandMenuSearch", "")
 
-export function CommandMenu() {
-  const [open, setOpen] = React.useState(false)
-  const [searchQuery, setSearchQuery] = useAtom(commandSearchQueryAtom)
-  const [value, setValue] = React.useState("")
-  const router = useRouter()
-
-  const supabase = useClerkSupabaseClient()
-
-  const { data: components } = useQuery<(Component & { user: User })[]>({
-    queryKey: ["command-menu-components", searchQuery],
-    queryFn: async () => {
-      if (!searchQuery) return []
-
-      const { data: searchResults, error } = await supabase.rpc(
-        "search_components",
-        {
-          search_query: searchQuery,
-        },
+const fetchFileTextContent = async (url: string) => {
+  const filename = url.split("/").slice(-1)[0]
+  try {
+    const response = await fetch(url)
+    if (!response.ok) {
+      console.error(`Error response in fetching file ${filename}`, response)
+      throw new Error(
+        `Error response in fetching file ${filename}: ${response.statusText}`,
       )
+    }
+    return { data: await response.text(), error: null }
+  } catch (err) {
+    console.error(`Failed to fetch file ${filename}`, err)
+    return {
+      error: new Error(`Failed to fetch file ${filename}: ${err}`),
+      data: null,
+    }
+  }
+}
 
-      if (error) throw new Error(error.message)
-
-      return searchResults.map((result) => ({
-        ...result,
-        user: result.user_data as User,
-        fts: undefined,
-      })) as (Component & { user: User })[]
-    },
-    refetchOnWindowFocus: false,
-    retry: false,
-  })
-
-  const filteredSections = React.useMemo(() => {
-    if (!searchQuery) return sections
-    return sections
-      .map((section) => ({
-        ...section,
-        items: section.items.filter((item) =>
-          item.title.toLowerCase().includes(searchQuery.toLowerCase()),
-        ),
-      }))
-      .filter((section) => section.items.length > 0)
-  }, [sections, searchQuery])
-
-  React.useEffect(() => {
+const useKeyboardShortcuts = ({
+  selectedComponent,
+  setIsCopying,
+  setOpen,
+  handleGeneratePrompt,
+}: {
+  selectedComponent: (Component & { user: User }) | undefined | null
+  setIsCopying: Dispatch<SetStateAction<boolean>>
+  setOpen: Dispatch<SetStateAction<boolean>>
+  handleGeneratePrompt: () => void
+}) => {
+  useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
@@ -86,21 +70,17 @@ export function CommandMenu() {
     return () => document.removeEventListener("keydown", down)
   }, [])
 
-  const selectedComponent = React.useMemo(() => {
-    if (!value.startsWith("component-")) return null
-    const [userId, componentSlug] = value.replace("component-", "").split("/")
-    return components?.find(
-      (c) => c.user_id === userId && c.component_slug === componentSlug,
-    )
-  }, [components, value])
-
-  const handleOpenChange = (open: boolean) => {
-    setOpen(open)
-    if (!open) {
-      setSearchQuery("")
-      setValue("")
+  useEffect(() => {
+    const keyDownHandler = (e: KeyboardEvent) => {
+      if (e.key === "x" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        handleGeneratePrompt()
+      }
     }
-  }
+
+    document.addEventListener("keydown", keyDownHandler)
+    return () => document.removeEventListener("keydown", keyDownHandler)
+  }, [selectedComponent])
 
   const handleKeyDown = async (e: KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "c" && selectedComponent) {
@@ -129,12 +109,73 @@ export function CommandMenu() {
     }
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     document.addEventListener("keydown", handleKeyDown)
     return () => document.removeEventListener("keydown", handleKeyDown)
   }, [selectedComponent])
+}
 
-  const [isCopying, setIsCopying] = React.useState(false)
+export function CommandMenu() {
+  const [open, setOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useAtom(commandSearchQueryAtom)
+  const [value, setValue] = useState("")
+  const router = useRouter()
+
+  const supabase = useClerkSupabaseClient()
+
+  const { data: components } = useQuery<(Component & { user: User })[]>({
+    queryKey: ["command-menu-components", searchQuery],
+    queryFn: async () => {
+      if (!searchQuery) return []
+
+      const { data: searchResults, error } = await supabase.rpc(
+        "search_components",
+        {
+          search_query: searchQuery,
+        },
+      )
+
+      if (error) throw new Error(error.message)
+
+      return searchResults.map((result) => ({
+        ...result,
+        user: result.user_data as User,
+        fts: undefined,
+      })) as (Component & { user: User })[]
+    },
+    refetchOnWindowFocus: false,
+    retry: false,
+  })
+
+  const filteredSections = useMemo(() => {
+    if (!searchQuery) return sections
+    return sections
+      .map((section) => ({
+        ...section,
+        items: section.items.filter((item) =>
+          item.title.toLowerCase().includes(searchQuery.toLowerCase()),
+        ),
+      }))
+      .filter((section) => section.items.length > 0)
+  }, [sections, searchQuery])
+
+  const selectedComponent = useMemo(() => {
+    if (!value.startsWith("component-")) return null
+    const [userId, componentSlug] = value.replace("component-", "").split("/")
+    return components?.find(
+      (c) => c.user_id === userId && c.component_slug === componentSlug,
+    )
+  }, [components, value])
+
+  const handleOpenChange = (open: boolean) => {
+    setOpen(open)
+    if (!open) {
+      setSearchQuery("")
+      setValue("")
+    }
+  }
+
+  const [isCopying, setIsCopying] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
 
   const handleGeneratePrompt = async () => {
@@ -142,38 +183,77 @@ export function CommandMenu() {
 
     setIsGenerating(true)
     try {
-      const result = await generateAIPrompt(
-        selectedComponent as Component & { user: User } & { tags: Tag[] },
-        PROMPT_TYPES.BASIC,
-        (status) => {
-          switch (status.status) {
-            case "downloading":
-              toast.loading("Downloading component files...", {
-                id: "ai-prompt",
-              })
-              break
-            case "completed":
-              toast.dismiss("ai-prompt")
-              toast.success("AI prompt copied to clipboard")
-              if (status.prompt) {
-                navigator?.clipboard?.writeText(status.prompt)
-              }
-              break
-            case "error":
-              toast.dismiss("ai-prompt")
-              toast.error("Failed to generate AI prompt")
-              break
-          }
-        },
+      const componentAndDemoCodePromises = [
+        fetchFileTextContent(selectedComponent.code),
+        fetchFileTextContent(selectedComponent.demo_code),
+        selectedComponent.tailwind_config_extension
+          ? fetchFileTextContent(selectedComponent.tailwind_config_extension)
+          : Promise.resolve({ data: null, error: null }),
+        selectedComponent.global_css_extension
+          ? fetchFileTextContent(selectedComponent.global_css_extension)
+          : Promise.resolve({ data: null, error: null }),
+      ]
+
+      const [
+        codeResult,
+        demoResult,
+        tailwindConfigResult,
+        globalCssResult,
+        registryDependenciesResult,
+      ] = await Promise.all([
+        ...componentAndDemoCodePromises,
+        resolveRegistryDependencyTree({
+          supabase: supabase,
+          sourceDependencySlugs: [
+            `${selectedComponent.user.username}/${selectedComponent.component_slug}`,
+          ],
+          withDemoDependencies: false,
+        }),
+      ])
+
+      if (
+        codeResult?.error ||
+        demoResult?.error ||
+        tailwindConfigResult?.error ||
+        globalCssResult?.error
+      ) {
+        throw new Error("Failed to fetch component files")
+      }
+
+      const registryDependenciesData = registryDependenciesResult?.data as {
+        filesWithRegistry: Record<string, { code: string; registry: string }>
+        npmDependencies: Record<string, string>
+      }
+
+      const registryDependenciesFiles = Object.fromEntries(
+        Object.entries(registryDependenciesData.filesWithRegistry).map(
+          ([key, value]) => [key, value.code!],
+        ),
       )
 
-      if (result.status === "completed" && result.prompt) {
-        trackEvent(AMPLITUDE_EVENTS.COPY_AI_PROMPT, {
-          componentId: selectedComponent.id,
-          componentName: selectedComponent.name,
-          promptType: PROMPT_TYPES.BASIC,
-        })
-      }
+      const prompt = getComponentInstallPrompt({
+        promptType: PROMPT_TYPES.BASIC,
+        codeFileName: selectedComponent.code.split("/").slice(-1)[0]!,
+        demoCodeFileName: selectedComponent.demo_code.split("/").slice(-1)[0]!,
+        code: codeResult.data as string,
+        demoCode: demoResult!.data as string,
+        registryDependencies: registryDependenciesFiles,
+        npmDependencies: (selectedComponent.dependencies ?? {}) as Record<string, string>,
+        npmDependenciesOfRegistryDependencies:
+          registryDependenciesData.npmDependencies,
+        tailwindConfig: tailwindConfigResult!.data as string,
+        globalCss: globalCssResult!.data as string,
+      })
+
+      await navigator.clipboard.writeText(prompt)
+      toast.dismiss("ai-prompt")
+      toast.success("AI prompt copied to clipboard")
+
+      trackEvent(AMPLITUDE_EVENTS.COPY_AI_PROMPT, {
+        componentId: selectedComponent.id,
+        componentName: selectedComponent.name,
+        promptType: PROMPT_TYPES.BASIC,
+      })
     } catch (err) {
       console.error("Failed to copy AI prompt:", err)
       toast.dismiss("ai-prompt")
@@ -182,18 +262,6 @@ export function CommandMenu() {
       setIsGenerating(false)
     }
   }
-
-  React.useEffect(() => {
-    const keyDownHandler = (e: KeyboardEvent) => {
-      if (e.key === "x" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        handleGeneratePrompt()
-      }
-    }
-
-    document.addEventListener("keydown", keyDownHandler)
-    return () => document.removeEventListener("keydown", keyDownHandler)
-  }, [selectedComponent])
 
   const handleOpen = () => {
     if (value.startsWith("component-") && selectedComponent) {
@@ -217,6 +285,13 @@ export function CommandMenu() {
     setValue("")
     setOpen(false)
   }
+
+  useKeyboardShortcuts({
+    selectedComponent,
+    setIsCopying,
+    setOpen,
+    handleGeneratePrompt,
+  })
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>

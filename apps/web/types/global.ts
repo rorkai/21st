@@ -29,6 +29,7 @@ export const PROMPT_TYPES = {
   V0: "v0",
   LOVABLE: "lovable",
   BOLT: "bolt",
+  EXTENDED: "extended",
 } as const
 
 export type PromptType = (typeof PROMPT_TYPES)[keyof typeof PROMPT_TYPES]

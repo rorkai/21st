@@ -21,7 +21,7 @@ export const initAmplitude = () => {
   }
 }
 
-export const setPageProperties = (properties: Record<string, any>) => {
+export const trackPageProperties = (properties: Record<string, any>) => {
   amplitude.track("", { ...properties })
 }
 

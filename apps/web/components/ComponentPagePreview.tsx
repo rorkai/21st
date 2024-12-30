@@ -228,7 +228,7 @@ export function ComponentPagePreview({
                       >
                         <CopyCodeButton />
                         <Tabs value={activeFile} onValueChange={setActiveFile}>
-                          <TabsList className="relative bg-muted dark:bg-background justify-start w-full gap-0.5 py-0 before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-border px-4 overflow-x-auto flex-nowrap hide-scrollbar">
+                          <TabsList className="h-9 relative bg-muted dark:bg-background justify-start w-full gap-0.5 pb-0 before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-border px-4 overflow-x-auto flex-nowrap hide-scrollbar">
                             {visibleFiles.map((file) => (
                               <TabsTrigger
                                 key={file}

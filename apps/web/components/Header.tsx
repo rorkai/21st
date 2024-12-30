@@ -78,12 +78,12 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
             <>
               <SignedIn>
                 {!isPublishPage && (
-                  <Button asChild className="mx-2">
+                  <Button asChild className="ml-2">
                     <Link href="/publish">Publish</Link>
                   </Button>
                 )}
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="cursor-pointer rounded-full">
+                  <DropdownMenuTrigger className="cursor-pointer rounded-full ml-2">
                     <UserAvatar
                       src={user?.imageUrl}
                       alt={user?.fullName}

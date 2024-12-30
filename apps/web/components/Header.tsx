@@ -60,7 +60,9 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
 
   return (
     <>
-      <header className="flex fixed top-0 left-0 right-0 h-14 z-50 items-center justify-between border-b border-border/40 px-4 py-3 bg-background text-foreground">
+      <header className={cn("flex fixed top-0 left-0 right-0 h-14 z-50 items-center justify-between px-4 py-3 text-foreground", {
+        "border-b border-border/40 bg-background": !isPublishPage
+      })}>
         <div className="flex items-center gap-4">
           <HeaderServer
             tagName={tagName}

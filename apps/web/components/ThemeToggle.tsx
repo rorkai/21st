@@ -5,6 +5,8 @@ import { Moon, Sun } from "lucide-react"
 import { Toggle } from "@/components/ui/toggle"
 
 export function ThemeToggle() {
+  // we are not using { resolvedTheme } here
+  // to display pressed state when the theme is different from the system theme
   const { theme, setTheme } = useTheme()
 
   return (

@@ -81,8 +81,8 @@ export default function PublishComponentForm() {
   const client = useClerkSupabaseClient()
   const router = useRouter()
   const isDebug = useDebugMode()
-  const { theme } = useTheme()
-  const isDarkTheme = theme === "dark"
+  const { resolvedTheme } = useTheme()
+  const isDarkTheme = resolvedTheme === "dark"
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false)
 
   const [formStartTime] = useState(() => Date.now())

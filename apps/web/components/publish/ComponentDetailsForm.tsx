@@ -65,8 +65,8 @@ const ComponentDetailsForm = ({
 }) => {
   useSubmitFormHotkeys(form, handleSubmit, hotkeysEnabled)
   const { data: availableTags = [] } = useAvailableTags()
-  const { theme } = useTheme()
-  const isDarkTheme = theme === "dark"
+  const { resolvedTheme } = useTheme()
+  const isDarkTheme = resolvedTheme === "dark"
   const [open, setOpen] = useState(false)
   const previewImageDataUrl = form.watch("preview_image_data_url")
 

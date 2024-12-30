@@ -16,7 +16,7 @@ export const Hotkey = ({
 }) => {
   const [, setModifierText] = useState("⌃")
   const [displayKeys, setDisplayKeys] = useState(keys)
-  const { theme } = useTheme()
+  const { resolvedTheme } = useTheme()
   const isContrast = variant === "outline"
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export const Hotkey = ({
     setDisplayKeys(modifier ? [isMac ? "⌘" : "⌃", ...keys] : keys)
   }, [modifier, keys])
 
-  const isDarkTheme = theme === "dark"
+  const isDarkTheme = resolvedTheme === "dark"
 
   const bgGradient = isDarkTheme
     ? "bg-gradient-to-bl from-transparent via-transparent to-background/20"

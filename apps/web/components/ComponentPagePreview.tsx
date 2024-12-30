@@ -83,8 +83,8 @@ export function ComponentPagePreview({
   setIsEditDialogOpen: (value: boolean) => void
 }) {
   const sandpackRef = useRef<HTMLDivElement>(null)
-  const { theme } = useTheme()
-  const isDarkTheme = theme === "dark"
+  const { resolvedTheme } = useTheme()
+  const isDarkTheme = resolvedTheme === "dark"
   const [isShowCode, setIsShowCode] = useAtom(isShowCodeAtom)
   const isDebug = useDebugMode()
 

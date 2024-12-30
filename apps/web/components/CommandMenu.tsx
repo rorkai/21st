@@ -220,7 +220,10 @@ export function CommandMenu() {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="p-0 max-w-3xl h-[470px] overflow-hidden">
+      <DialogContent
+        className="p-0 max-w-3xl h-[470px] overflow-hidden"
+        hideCloseButton
+      >
         <Command value={value} onValueChange={setValue} className="h-full">
           <CommandInput
             value={searchQuery}

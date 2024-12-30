@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 
 import { Button } from "@/components/ui/button"
 import { GitHubStars } from "./GitHubStars"
-import { Icons } from "./icons"
+import { Icons } from "@/components/icons"
 import { ThemeToggle } from "./ThemeToggle"
 
 interface HeaderServerProps {

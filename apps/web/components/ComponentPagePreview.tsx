@@ -12,7 +12,7 @@ import {
 } from "lucide-react"
 
 import { ComponentPageInfo } from "./ComponentPageInfo"
-import { TerminalIcon } from "./icons/terminal"
+import { Icons } from "@/components/icons"
 import { LoadingSpinner } from "./LoadingSpinner"
 import { CopyCodeButton } from "./CopyCodeButton"
 import { isShowCodeAtom } from "./ComponentPage"
@@ -346,7 +346,7 @@ function CopyCommandSection({
         onMouseLeave={() => controls.start("normal")}
       >
         <div className="flex items-center justify-center text-white w-5 h-5 mr-3">
-          <TerminalIcon size={20} controls={controls} />
+          <Icons.terminal size={20} controls={controls} />
         </div>
         <div className="flex-grow overflow-scroll scrollbar-hide">
           <code className="flex items-center whitespace-nowrap font-mono text-sm">

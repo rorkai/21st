@@ -21,13 +21,12 @@ import {
 } from "@/components/ui/command"
 import { toast } from "sonner"
 
-import { sections } from "@/config/navigation"
+import { sections } from "@/lib/navigation"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import { Component, Tag, User } from "@/types/global"
 import { cn } from "@/lib/utils"
 import { generateAIPrompt } from "@/lib/generate-ai-prompt"
-import { Loader2 } from "lucide-react"
 import { PROMPT_TYPES } from "@/lib/constants"
 
 const commandSearchQueryAtom = atomWithStorage("commandMenuSearch", "")

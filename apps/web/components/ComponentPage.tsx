@@ -40,9 +40,7 @@ import { ThemeToggle } from "./ThemeToggle"
 import { ComponentPagePreview } from "./ComponentPagePreview"
 import { EditComponentDialog } from "./EditComponentDialog"
 import { usePublishAs } from "./publish/use-publish-as"
-import { BoltLogo } from "./icons/BoltLogo"
-import { LovableLogo } from "./icons/LovableLogo"
-import { V0Logo } from "./icons/V0Logo"
+import { Icons } from "@/components/icons"
 
 import {
   ChevronRight,
@@ -68,19 +66,19 @@ const promptOptions = [
     id: "v0",
     label: "v0 by Vercel",
     description: "Optimized for v0.dev",
-    icon: <V0Logo className="mr-2 h-4 w-4" />,
+    icon: <Icons.v0Logo className="mr-2 h-4 w-4" />,
   },
   {
     id: "lovable",
     label: "Lovable",
     description: "Optimized for Lovable.dev",
-    icon: <LovableLogo className="mr-2 h-4 w-4" />,
+    icon: <Icons.lovableLogo className="mr-2 h-4 w-4" />,
   },
   {
     id: "bolt",
     label: "Bolt.new",
     description: "Optimized for Bolt.new",
-    icon: <BoltLogo className="mr-2 h-4 w-4" />,
+    icon: <Icons.boltLogo className="mr-2 h-4 w-4" />,
   },
 ]
 

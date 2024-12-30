@@ -1,6 +1,6 @@
 import { Dock, Box } from "lucide-react"
 
-export const landingPageSections = [
+const landingPageSections = [
   { title: "Announcements", href: "/s/announcement" },
   { title: "Backgrounds", href: "/s/background" },
   { title: "Borders", href: "/s/border" },
@@ -21,7 +21,7 @@ export const landingPageSections = [
   { title: "Video", href: "/s/video" },
 ].sort((a, b) => a.title.localeCompare(b.title))
 
-export const uiComponents = [
+const uiComponents = [
   { title: "Accordion", href: "/s/accordion" },
   { title: "Alert", href: "/s/alert" },
   { title: "Avatar", href: "/s/avatar" },

@@ -7,7 +7,6 @@ import { useAtom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 
 import { ChevronRight, Sparkles } from "lucide-react"
-
 import { Badge } from "@/components/ui/badge"
 import {
   Collapsible,
@@ -25,9 +24,8 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar"
-
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
-import { sections } from "@/config/navigation"
+import { sections } from "@/lib/navigation"
 
 type SidebarState = {
   openSections: Record<string, boolean>

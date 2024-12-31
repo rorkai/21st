@@ -49,7 +49,26 @@ HeaderServer.SocialIcons = function SocialIcons() {
           aria-label="Follow on Twitter"
           className="fill-foreground size-8 -mr-1"
         >
-          <Icons.twitter className="min-h-[14px] min-w-[14px]" aria-hidden="true" />
+          <Icons.twitter
+            className="min-h-[14px] min-w-[14px]"
+            aria-hidden="true"
+          />
+        </Button>
+      </Link>
+      <Link
+        href="https://discord.gg/Qx4rFunHfm"
+        target="_blank"
+        rel="noreferrer"
+      >
+        <Button
+          variant="ghost"
+          aria-label="Join Discord"
+          className="fill-foreground size-8 -mr-1"
+        >
+          <Icons.discord
+            className="min-h-[18px] min-w-[18px]"
+            aria-hidden="true"
+          />
         </Button>
       </Link>
       <Link

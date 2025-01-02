@@ -417,7 +417,7 @@ export function CommandMenu() {
                         className="hover:bg-accent px-2 py-1 rounded-md flex items-center gap-2"
                       >
                         <span>
-                          {isGenerating ? "Generating..." : "Copy Prompt"}
+                          {isGenerating ? "Generating..." : "Copy prompt"}
                         </span>
                         {!isGenerating && (
                           <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-sans text-[11px] leading-none opacity-100 flex">

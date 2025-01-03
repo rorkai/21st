@@ -17,7 +17,7 @@ import {
   trackEvent,
   AMPLITUDE_EVENTS,
 } from "@/lib/amplitude"
-import { getComponentInstallPrompt } from "@/lib/prompts"
+import { getComponentInstallPrompt, formatV0Prompt } from "@/lib/prompts"
 
 import {
   Tooltip,
@@ -31,6 +31,7 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { Hotkey } from "./ui/hotkey"
 import { UserAvatar } from "./UserAvatar"
@@ -49,12 +50,14 @@ import {
   Sparkles,
   ChevronDown,
   Brain,
+  Heart,
+  Zap,
 } from "lucide-react"
 import { toast } from "sonner"
 import { atomWithStorage } from "jotai/utils"
 
 export const isShowCodeAtom = atom(true)
-const selectedPromptTypeAtom = atomWithStorage<PromptType>(
+const selectedPromptTypeAtom = atomWithStorage<PromptType | "v0-open">(
   "selectedPromptType",
   PROMPT_TYPES.BASIC,
 )
@@ -64,6 +67,7 @@ const promptOptions = [
     id: PROMPT_TYPES.BASIC,
     label: "Basic",
     description: "Standard prompt for AI code editors",
+    action: "copy",
     icon: (
       <Sparkles
         size={16}
@@ -72,9 +76,26 @@ const promptOptions = [
     ),
   },
   {
+    id: PROMPT_TYPES.EXTENDED,
+    label: "Extended",
+    description: "Extended prompt for complex components",
+    action: "copy",
+    icon: (
+      <Brain
+        size={16}
+        className="mr-2 min-h-[16px] min-w-[16px] max-h-[16px] max-w-[16px]"
+      />
+    ),
+  },
+  {
+    id: "separator1",
+    type: "separator",
+  },
+  {
     id: PROMPT_TYPES.V0,
     label: "v0 by Vercel",
     description: "Optimized for v0.dev",
+    action: "copy",
     icon: (
       <Icons.v0Logo className="mr-2 min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
     ),
@@ -83,6 +104,7 @@ const promptOptions = [
     id: PROMPT_TYPES.LOVABLE,
     label: "Lovable",
     description: "Optimized for Lovable.dev",
+    action: "copy",
     icon: (
       <Icons.lovableLogo className="mr-2 min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
     ),
@@ -91,19 +113,22 @@ const promptOptions = [
     id: PROMPT_TYPES.BOLT,
     label: "Bolt.new",
     description: "Optimized for Bolt.new",
+    action: "copy",
     icon: (
       <Icons.boltLogo className="mr-2 min-h-[22px] min-w-[22px] max-h-[22px] max-w-[22px]" />
     ),
   },
   {
-    id: PROMPT_TYPES.EXTENDED,
-    label: "Extended",
-    description: "Extended prompt for complex components",
+    id: "separator2",
+    type: "separator",
+  },
+  {
+    id: "v0-open",
+    label: "Open in v0.dev",
+    description: "Open component in v0.dev",
+    action: "open",
     icon: (
-      <Brain
-        size={16}
-        className="mr-2 min-h-[16px] min-w-[16px] max-h-[16px] max-w-[16px]"
-      />
+      <Icons.v0Logo className="min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
     ),
   },
 ]
@@ -390,6 +415,66 @@ export default function ComponentPage({
     })
   }
 
+  const handlePromptAction = async () => {
+    const selectedOption = promptOptions.find(
+      (opt) => opt.id === selectedPromptType || opt.id === "v0-open",
+    )
+
+    if (selectedOption?.id === "v0-open") {
+      const formattedPrompt = formatV0Prompt(component.name, code)
+      const encodedPrompt = encodeURIComponent(formattedPrompt)
+      window.open(`https://v0.dev/?q=${encodedPrompt}`, "_blank")
+
+      trackEvent(AMPLITUDE_EVENTS.COPY_AI_PROMPT, {
+        componentId: component.id,
+        componentName: component.name,
+        promptType: selectedOption.id,
+        action: "open",
+        destination: "v0.dev",
+      })
+      return
+    }
+
+    try {
+      const prompt =
+        selectedOption?.id === PROMPT_TYPES.V0
+          ? formatV0Prompt(component.name, code)
+          : getComponentInstallPrompt({
+              promptType: selectedPromptType as PromptType,
+              codeFileName: component.code.split("/").slice(-1)[0]!,
+              demoCodeFileName: component.demo_code.split("/").slice(-1)[0]!,
+              code,
+              demoCode,
+              registryDependencies,
+              npmDependencies: dependencies,
+              npmDependenciesOfRegistryDependencies,
+              tailwindConfig,
+              globalCss,
+            })
+
+      await copyToClipboard(prompt)
+      toast.success("AI prompt copied to clipboard")
+
+      trackEvent(AMPLITUDE_EVENTS.COPY_AI_PROMPT, {
+        componentId: component.id,
+        componentName: component.name,
+        promptType: selectedPromptType as PromptType,
+        action: "copy",
+        destination:
+          selectedOption?.id === PROMPT_TYPES.V0
+            ? "v0"
+            : selectedOption?.id === PROMPT_TYPES.LOVABLE
+              ? "lovable"
+              : selectedOption?.id === PROMPT_TYPES.BOLT
+                ? "bolt"
+                : "other",
+      })
+    } catch (err) {
+      console.error("Failed to copy AI prompt:", err)
+      toast.error("Failed to generate AI prompt")
+    }
+  }
+
   useAnalytics({
     component,
     user,
@@ -518,43 +603,23 @@ export default function ComponentPage({
             </div>
             <div className="inline-flex -space-x-px divide-x divide-primary-foreground/30 rounded-lg shadow-sm">
               <Button
-                onClick={async () => {
-                  try {
-                    const prompt = getComponentInstallPrompt({
-                      promptType: selectedPromptType,
-                      codeFileName: component.code.split("/").slice(-1)[0]!,
-                      demoCodeFileName: component.demo_code
-                        .split("/")
-                        .slice(-1)[0]!,
-                      code,
-                      demoCode,
-                      registryDependencies,
-                      npmDependencies: dependencies,
-                      npmDependenciesOfRegistryDependencies,
-                      tailwindConfig,
-                      globalCss,
-                    })
-
-                    await copyToClipboard(prompt)
-                    toast.success("AI prompt copied to clipboard")
-                  } catch (err) {
-                    console.error("Failed to copy AI prompt:", err)
-                    toast.error("Failed to generate AI prompt")
-                  } finally {
-                    trackEvent(AMPLITUDE_EVENTS.COPY_AI_PROMPT, {
-                      componentId: component.id,
-                      componentName: component.name,
-                      promptType: selectedPromptType,
-                    })
-                  }
-                }}
+                onClick={handlePromptAction}
                 className="rounded-none shadow-none first:rounded-s-lg focus-visible:z-10"
               >
-                {
-                  promptOptions.find((opt) => opt.id === selectedPromptType)
-                    ?.icon
-                }
-                Copy prompt
+                {selectedPromptType === "v0-open" ? (
+                  <>
+                    <span className="mr-2">Open in</span>
+                    <Icons.v0Logo className="mr-2 min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
+                  </>
+                ) : (
+                  <>
+                    {
+                      promptOptions.find((opt) => opt.id === selectedPromptType)
+                        ?.icon
+                    }
+                    Copy prompt
+                  </>
+                )}
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -574,32 +639,36 @@ export default function ComponentPage({
                   <DropdownMenuRadioGroup
                     value={selectedPromptType}
                     onValueChange={(value) =>
-                      setSelectedPromptType(value as PromptType)
+                      setSelectedPromptType(value as PromptType | "v0-open")
                     }
                   >
-                    {promptOptions.map((option) => (
-                      <DropdownMenuRadioItem
-                        key={option.id}
-                        value={option.id}
-                        className="items-start [&>span]:pt-1"
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="h-5 w-5 flex items-center justify-center">
-                            {React.cloneElement(
-                              option.icon as React.ReactElement,
-                            )}
+                    {promptOptions.map((option) =>
+                      option.type === "separator" ? (
+                        <DropdownMenuSeparator key={option.id} />
+                      ) : (
+                        <DropdownMenuRadioItem
+                          key={option.id}
+                          value={option.id}
+                          className="items-start [&>span]:pt-1"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="h-5 w-5 flex items-center justify-center">
+                              {React.cloneElement(
+                                option.icon as React.ReactElement,
+                              )}
+                            </div>
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-sm font-medium">
+                                {option.label}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {option.description}
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-sm font-medium">
-                              {option.label}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {option.description}
-                            </span>
-                          </div>
-                        </div>
-                      </DropdownMenuRadioItem>
-                    ))}
+                        </DropdownMenuRadioItem>
+                      ),
+                    )}
                   </DropdownMenuRadioGroup>
                 </DropdownMenuContent>
               </DropdownMenu>

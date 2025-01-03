@@ -31,7 +31,8 @@ export const getComponentInstallPrompt = ({
 
   let prompt = ""
   if (promptType === PROMPT_TYPES.EXTENDED) {
-    prompt += endent`
+    prompt +=
+      endent`
         You are given a task to integrate an existing React component in the codebase
 
         The codebase should support:
@@ -45,7 +46,7 @@ export const getComponentInstallPrompt = ({
         If default path for components is not /components/ui, provide instructions on why it's important to create this folder
       ` + "\n"
   }
-  
+
   prompt +=
     "Copy-paste this component to /components/ui folder:\n" +
     endent`
@@ -54,7 +55,8 @@ export const getComponentInstallPrompt = ({
 
       ${componentDemoFileName}
       ${demoCode}
-    ` + "\n"
+    ` +
+    "\n"
 
   if (Object.keys(registryDependencies || {}).length > 0) {
     prompt +=
@@ -83,7 +85,8 @@ export const getComponentInstallPrompt = ({
       endent`
         Install NPM dependencies:
         ${allDependencies.join(", ")}
-      ` + "\n"
+      ` +
+      "\n"
   }
 
   if (tailwindConfig) {
@@ -92,7 +95,8 @@ export const getComponentInstallPrompt = ({
       endent`
         Extend existing tailwind.config.js with this code:
         ${tailwindConfig}
-      ` + "\n"
+      ` +
+      "\n"
   }
 
   if (globalCss) {
@@ -101,7 +105,8 @@ export const getComponentInstallPrompt = ({
       endent`
         Extend existing globals.css with this code:
         ${globalCss}
-      ` + "\n"
+      ` +
+      "\n"
   }
 
   // Comment out Bolt-specific logic for now
@@ -130,12 +135,28 @@ export const getComponentInstallPrompt = ({
         1. Install external dependencies
         2. Fill image assets with Unsplash stock images you know exist
         3. Use lucide-react icons for svgs or logos if component requires them
-      ` + "\n"
+      ` +
+      "\n"
   }
 
-  prompt += "\n" + endent`
+  prompt +=
+    "\n" +
+    endent`
       Remember: Do not change the component's code unless it's required to integrate or the user asks you to.
     `
 
   return prompt
+}
+
+export const formatV0Prompt = (componentName: string, code: string) => {
+  // Экранируем все обратные кавычки в коде
+  const escapedCode = code.replace(/`/g, "\\`")
+
+  return `This new chat was started by template of component ${componentName}.
+
+\`\`\`tsx
+${escapedCode}
+\`\`\`
+
+Please wait instruction how to integrate it in next message`
 }

@@ -1,13 +1,20 @@
 "use client"
 
+import React, { useEffect, useMemo, useState, useCallback } from "react"
+
 import { useAtom } from "jotai"
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { motion } from "framer-motion"
-import { useQuery } from "@tanstack/react-query"
-import React, { useEffect, useMemo } from "react"
+import debounce from "lodash/debounce"
 
 import { Component, QuickFilterOption, SortOption, User } from "@/types/global"
+import type {
+  GetFilteredComponentsResponse,
+  SearchComponentsResponse,
+  Database,
+} from "@/types/supabase"
+
 import { useClerkSupabaseClient } from "@/lib/clerk"
-import { sortComponents, filterComponents } from "@/lib/filters.client"
 import { setCookie } from "@/lib/cookies"
 
 import {
@@ -20,6 +27,7 @@ import {
   sortByAtom,
   quickFilterAtom,
 } from "@/components/ComponentsHeader"
+import { Loader2 } from "lucide-react"
 
 const useTrackHasOnboarded = () => {
   useEffect(() => {
@@ -37,72 +45,313 @@ export function HomePageClient({
   initialComponents,
   initialSortBy,
   initialQuickFilter,
+  componentsTotalCount,
 }: {
   initialComponents: (Component & { user: User })[]
   initialSortBy: SortOption
   initialQuickFilter: QuickFilterOption
+  componentsTotalCount: number
 }) {
   const [searchQuery] = useAtom(searchQueryAtom)
   const supabase = useClerkSupabaseClient()
   const [sortBy, setSortBy] = useAtom(sortByAtom)
   const [quickFilter, setQuickFilter] = useAtom(quickFilterAtom)
+  const [isStorageLoaded, setIsStorageLoaded] = useState(false)
+  const [totalCount, setTotalCount] = useState<number>(0)
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery)
+  const [debouncedQuickFilter, setDebouncedQuickFilter] = useState(quickFilter)
+  const [tabCounts, setTabCounts] = useState<Record<QuickFilterOption, number>>(
+    {
+      all: initialComponents.length,
+      last_released: 0,
+      most_downloaded: 0,
+    },
+  )
 
-  if (sortBy === undefined) {
-    // @ts-ignore
-    setSortBy(initialSortBy)
-  }
-  if (quickFilter === undefined) {
-    // @ts-ignore
-    setQuickFilter(initialQuickFilter)
+  // Initialize atoms from localStorage or use initial values
+  useEffect(() => {
+    const storedSortBy = localStorage.getItem("components-sort-by")
+    const storedQuickFilter = localStorage.getItem("quick-filter")
+
+    if (!storedSortBy) {
+      setSortBy(initialSortBy)
+    }
+    if (!storedQuickFilter) {
+      setQuickFilter(initialQuickFilter)
+    }
+    setIsStorageLoaded(true)
+  }, [])
+
+  const debouncedSetSearchQuery = useCallback(
+    debounce((value: string) => {
+      setDebouncedSearchQuery(value)
+    }, 300),
+    [],
+  )
+
+  const debouncedSetQuickFilter = useCallback(
+    debounce((value: QuickFilterOption) => {
+      setDebouncedQuickFilter(value)
+    }, 100),
+    [],
+  )
+
+  useEffect(() => {
+    if (isStorageLoaded) {
+      debouncedSetSearchQuery(searchQuery)
+    }
+    return () => {
+      debouncedSetSearchQuery.cancel()
+    }
+  }, [searchQuery, debouncedSetSearchQuery, isStorageLoaded])
+
+  useEffect(() => {
+    if (isStorageLoaded) {
+      debouncedSetQuickFilter(quickFilter)
+    }
+    return () => {
+      debouncedSetQuickFilter.cancel()
+    }
+  }, [quickFilter, debouncedSetQuickFilter, isStorageLoaded])
+
+  type ComponentWithUser = Component & { user: User }
+  type FilteredComponent =
+    Database["public"]["Functions"]["get_filtered_components"]["Returns"][number]
+  type SearchComponent =
+    Database["public"]["Functions"]["search_components"]["Returns"][number]
+
+  interface QueryResult {
+    data: ComponentWithUser[]
+    total_count: number
   }
 
-  const { data: components, isLoading } = useQuery<
-    (Component & { user: User })[]
-  >({
-    queryKey: ["components", searchQuery],
-    queryFn: async () => {
-      if (!searchQuery) {
-        const { data, error } = await supabase
-          .from("components")
-          .select("*, user:users!user_id (*)")
-          .limit(1000)
-          .eq("is_public", true)
-          .order("created_at", { ascending: false })
-          .returns<(Component & { user: User })[]>()
+  const { data, isLoading, isFetching, fetchNextPage, hasNextPage } =
+    useInfiniteQuery<QueryResult, Error>({
+      queryKey: [
+        "filtered-components",
+        debouncedQuickFilter,
+        sortBy,
+        debouncedSearchQuery,
+      ],
+      queryFn: async ({ pageParam = 0 }) => {
+        if (!debouncedSearchQuery) {
+          const { data: filteredData, error } = await supabase.rpc(
+            "get_filtered_components",
+            {
+              p_quick_filter: debouncedQuickFilter,
+              p_sort_by: sortBy,
+              p_offset: Number(pageParam) * 24,
+              p_limit: 24,
+            },
+          )
+
+          if (error) {
+            throw new Error(error.message || `HTTP error: ${status}`)
+          }
+
+          const data = (filteredData || []) as GetFilteredComponentsResponse
+          if (data.length === 0) {
+            return {
+              data: [],
+              total_count: 0,
+            }
+          }
+
+          const components = data.map(
+            (item: GetFilteredComponentsResponse[number]) => {
+              const userData = item.user_data as Record<string, unknown>
+              return {
+                id: item.id,
+                component_names: item.component_names,
+                description: item.description,
+                code: item.code,
+                demo_code: item.demo_code,
+                created_at: item.created_at,
+                updated_at: item.updated_at,
+                user_id: item.user_id,
+                dependencies: item.dependencies,
+                is_public: item.is_public,
+                downloads_count: item.downloads_count,
+                likes_count: item.likes_count,
+                component_slug: item.component_slug,
+                name: item.name,
+                demo_dependencies: item.demo_dependencies,
+                registry: item.registry,
+                direct_registry_dependencies: item.direct_registry_dependencies,
+                demo_direct_registry_dependencies:
+                  item.demo_direct_registry_dependencies,
+                preview_url: item.preview_url,
+                license: item.license,
+                compiled_css: null,
+                global_css_extension: null,
+                hunter_username: null,
+                is_paid: false,
+                payment_url: null,
+                price: 0,
+                pro_preview_image_url: null,
+                video_url: null,
+                website_url: null,
+                user: userData as User,
+              }
+            },
+          ) as ComponentWithUser[]
+
+          return {
+            data: components,
+            total_count: data[0]?.total_count ?? 0,
+          }
+        }
+
+        const { data: searchData, error } = await supabase.rpc(
+          "search_components",
+          {
+            search_query: debouncedSearchQuery,
+          },
+        )
 
         if (error) {
-          throw new Error(error.message || `HTTP error: ${status}`)
+          throw new Error(error.message)
         }
-        return data
+
+        const searchResults = (searchData || []) as SearchComponentsResponse
+        if (searchResults.length === 0) {
+          return {
+            data: [],
+            total_count: 0,
+          }
+        }
+
+        const components = searchResults.map(
+          (result: SearchComponentsResponse[number]) => {
+            const userData = result.user_data as Record<string, unknown>
+            return {
+              id: result.id,
+              component_names: result.component_names,
+              description: result.description,
+              code: result.code,
+              demo_code: result.demo_code,
+              created_at: result.created_at,
+              updated_at: result.updated_at,
+              user_id: result.user_id,
+              dependencies: result.dependencies,
+              is_public: result.is_public,
+              downloads_count: result.downloads_count || 0,
+              likes_count: result.likes_count,
+              component_slug: result.component_slug,
+              name: result.name,
+              demo_dependencies: result.demo_dependencies,
+              registry: result.registry,
+              direct_registry_dependencies: result.direct_registry_dependencies,
+              demo_direct_registry_dependencies:
+                result.demo_direct_registry_dependencies,
+              preview_url: result.preview_url,
+              license: result.license,
+              compiled_css: null,
+              global_css_extension: null,
+              hunter_username: null,
+              is_paid: false,
+              payment_url: null,
+              price: 0,
+              pro_preview_image_url: null,
+              video_url: null,
+              website_url: null,
+              user: userData as User,
+              fts: null,
+            }
+          },
+        ) as ComponentWithUser[]
+
+        return {
+          data: components,
+          total_count: components.length,
+        }
+      },
+      enabled: isStorageLoaded,
+      staleTime: 1000 * 60 * 5,
+      gcTime: 1000 * 60 * 30,
+      refetchOnWindowFocus: false,
+      retry: false,
+      initialPageParam: 0,
+      getNextPageParam: (lastPage, allPages) => {
+        if (!lastPage?.data || lastPage.data.length === 0) return undefined
+        const loadedCount = allPages.reduce(
+          (sum, page) => sum + page.data.length,
+          0,
+        )
+        return loadedCount < lastPage.total_count ? allPages.length : undefined
+      },
+    })
+
+  const allComponents = useMemo(() => {
+    return data?.pages.flatMap((page) => page.data) || []
+  }, [data?.pages]) as ComponentWithUser[]
+
+  const showSkeleton = isLoading || !data?.pages?.[0]?.data?.length
+  const showSpinner = isFetching && !showSkeleton
+
+  const { data: tabCountsData } = useQuery({
+    queryKey: ["tab-counts", debouncedSearchQuery],
+    queryFn: async () => {
+      const counts: Record<QuickFilterOption, number> = {
+        all: 0,
+        last_released: 0,
+        most_downloaded: 0,
       }
-      const { data: searchResults, error } = await supabase.rpc(
-        "search_components",
-        {
-          search_query: searchQuery,
-        },
-      )
-      if (error) {
-        throw new Error(error.message)
+
+      if (debouncedSearchQuery) {
+        // For search, we'll use the total count from the search results
+        return counts
       }
-      return searchResults.map((result) => ({
-        ...result,
-        user: result.user_data as User,
-        downloads_count: result.downloads_count || 0,
-        fts: null,
-      })) as unknown as (Component & { user: User })[]
+
+      // @ts-ignore - Temporary ignore until Supabase types are updated
+      const { data, error } = await supabase.rpc("get_components_counts")
+
+      if (!error && Array.isArray(data)) {
+        data.forEach((item: any) => {
+          if (
+            typeof item.filter_type === "string" &&
+            typeof item.count === "number" &&
+            item.filter_type in counts
+          ) {
+            counts[item.filter_type as QuickFilterOption] = item.count
+          }
+        })
+      }
+
+      return counts
     },
-    initialData: undefined,
+    enabled: isStorageLoaded,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
     refetchOnWindowFocus: false,
-    retry: false,
   })
 
-  const filteredAndSortedComponents = useMemo(() => {
-    if (searchQuery) return components
-    if (!components || !quickFilter || !sortBy) return undefined
-    return sortComponents(filterComponents(components, quickFilter), sortBy)
-  }, [components, searchQuery, quickFilter, sortBy])
+  useEffect(() => {
+    if (data?.pages[0]) {
+      setTotalCount(data.pages[0].total_count)
+    }
+    if (tabCountsData) {
+      setTabCounts(tabCountsData)
+    }
+  }, [data?.pages, tabCountsData])
 
   useTrackHasOnboarded()
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >=
+          document.documentElement.scrollHeight - 1000 &&
+        !isLoading &&
+        hasNextPage
+      ) {
+        fetchNextPage()
+      }
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [isLoading, hasNextPage, fetchNextPage])
 
   return (
     <motion.div
@@ -113,20 +362,32 @@ export function HomePageClient({
       <div className="flex flex-col">
         <ComponentsHeader
           filtersDisabled={!!searchQuery}
-          components={isLoading ? initialComponents : components}
+          components={allComponents}
+          totalCount={tabCounts[quickFilter]}
+          tabCounts={tabCounts}
         />
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-9 list-none pb-10">
-          {filteredAndSortedComponents?.map((component) => (
-            <ComponentCard key={component.id} component={component} />
-          ))}
-          {isLoading && (
-            <>
-              {Array.from({ length: 12 }).map((_, i) => (
-                <ComponentCardSkeleton key={i} />
-              ))}
-            </>
-          )}
-        </div>
+        {showSkeleton ? (
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-9 list-none pb-10">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <ComponentCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-9 list-none pb-10">
+            {allComponents.map((component) => (
+              <ComponentCard
+                key={component.id}
+                component={component}
+                isLoading={false}
+              />
+            ))}
+          </div>
+        )}
+        {showSpinner && (
+          <div className="col-span-full flex justify-center py-4">
+            <Loader2 className="h-8 w-8 animate-spin text-foreground/20" />
+          </div>
+        )}
       </div>
     </motion.div>
   )

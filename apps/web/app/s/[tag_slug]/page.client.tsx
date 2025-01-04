@@ -13,6 +13,7 @@ import {
 import { searchQueryAtom } from "@/components/Header"
 import { sortComponents, filterComponents } from "@/lib/filters.client"
 import { Component, User } from "@/types/global"
+import { TagComponentsHeader } from "@/components/TagComponentsHeader"
 
 export function TagPageContent({
   components,
@@ -51,11 +52,13 @@ export function TagPageContent({
 
   return (
     <>
-      <ComponentsHeader
-        filtersDisabled={false}
-        components={components}
-        currentSection={tagName}
-      />
+      <div className="flex flex-col">
+        <TagComponentsHeader
+          filtersDisabled={!!searchQuery}
+          components={components}
+          currentSection={`${tagName} components`}
+        />
+      </div>
       <ComponentsList
         components={filteredComponents}
         isLoading={isLoading}

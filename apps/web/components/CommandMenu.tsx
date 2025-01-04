@@ -1,11 +1,13 @@
 "use client"
 
 import { useState, useMemo, useEffect, Dispatch, SetStateAction } from "react"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
+
 import { useAtom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import { useQuery } from "@tanstack/react-query"
+
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import {
   Command,
@@ -17,14 +19,16 @@ import {
   CommandSeparator,
 } from "@/components/ui/command"
 import { toast } from "sonner"
+
 import { sections } from "@/lib/navigation"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { useClerkSupabaseClient } from "@/lib/clerk"
-import { Component, User } from "@/types/global"
 import { cn } from "@/lib/utils"
 import { getComponentInstallPrompt } from "@/lib/prompts"
-import { PROMPT_TYPES } from "@/types/global"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
+
+import { Component, User } from "@/types/global"
+import { PROMPT_TYPES } from "@/types/global"
 
 const commandSearchQueryAtom = atomWithStorage("commandMenuSearch", "")
 
@@ -137,11 +141,14 @@ export function CommandMenu() {
 
       if (error) throw new Error(error.message)
 
-      return searchResults.map((result) => ({
-        ...result,
-        user: result.user_data as User,
-        fts: undefined,
-      })) as (Component & { user: User })[]
+      return searchResults.map((result) => {
+        const component = result as unknown as Component
+        return {
+          ...component,
+          user: result.user_data as User,
+          fts: undefined,
+        }
+      })
     },
     refetchOnWindowFocus: false,
     retry: false,
@@ -238,7 +245,10 @@ export function CommandMenu() {
         code: codeResult.data as string,
         demoCode: demoResult!.data as string,
         registryDependencies: registryDependenciesFiles,
-        npmDependencies: (selectedComponent.dependencies ?? {}) as Record<string, string>,
+        npmDependencies: (selectedComponent.dependencies ?? {}) as Record<
+          string,
+          string
+        >,
         npmDependenciesOfRegistryDependencies:
           registryDependenciesData.npmDependencies,
         tailwindConfig: tailwindConfigResult!.data as string,

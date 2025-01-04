@@ -611,7 +611,29 @@ export type Database = {
         Args: {
           search_query: string
         }
-        Returns: Database["public"]["CompositeTypes"]["component_with_user"][]
+        Returns: Array<{
+          id: number
+          component_names: Json
+          description: string | null
+          code: string
+          demo_code: string
+          created_at: string
+          updated_at: string
+          user_id: string
+          dependencies: Json | null
+          is_public: boolean
+          downloads_count: number
+          likes_count: number
+          component_slug: string
+          name: string
+          demo_dependencies: Json | null
+          registry: string
+          direct_registry_dependencies: Json
+          demo_direct_registry_dependencies: Json
+          preview_url: string
+          license: string
+          user_data: Json
+        }>
       }
       update_component_dependencies_closure:
         | {
@@ -650,6 +672,38 @@ export type Database = {
             }
             Returns: undefined
           }
+      get_filtered_components: {
+        Args: {
+          p_quick_filter: string
+          p_sort_by: string
+          p_offset: number
+          p_limit: number
+        }
+        Returns: Array<{
+          id: number
+          component_names: Json
+          description: string | null
+          code: string
+          demo_code: string
+          created_at: string
+          updated_at: string
+          user_id: string
+          dependencies: Json | null
+          is_public: boolean
+          downloads_count: number
+          likes_count: number
+          component_slug: string
+          name: string
+          demo_dependencies: Json | null
+          registry: string
+          direct_registry_dependencies: Json
+          demo_direct_registry_dependencies: Json
+          preview_url: string
+          license: string
+          user_data: Json
+          total_count: number
+        }>
+      }
     }
     Enums: {
       [_ in never]: never
@@ -787,3 +841,18 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
     ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+
+export type GetFilteredComponentsResponse = Database["public"]["Functions"]["get_filtered_components"]["Returns"]
+export type GetFilteredComponentsArgs = Database["public"]["Functions"]["get_filtered_components"]["Args"]
+export type SearchComponentsResponse = Database["public"]["Functions"]["search_components"]["Returns"]
+export type SearchComponentsArgs = Database["public"]["Functions"]["search_components"]["Args"]
+
+export interface ComponentCount {
+  filter_type: string
+  count: number
+}
+
+export type GetComponentsCountsResponse = ComponentCount[]
+export type GetComponentsCountsArgs = {
+  p_sort_by: string
+}

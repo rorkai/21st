@@ -3,15 +3,6 @@ import Link from "next/link"
 
 import { useQuery } from "@tanstack/react-query"
 import { toast } from "sonner"
-import {
-  ArrowUpRight,
-  Check,
-  Copy,
-  Scale,
-  CalendarDays,
-  Info,
-  Binoculars,
-} from "lucide-react"
 
 import { Component, Tag, User } from "@/types/global"
 
@@ -33,11 +24,20 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
+import {
+  ArrowUpRight,
+  Check,
+  Copy,
+  Scale,
+  CalendarDays,
+  Info,
+  Binoculars,
+} from "lucide-react"
+
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import { getLicenseBySlug } from "@/lib/licenses"
 import { formatDate } from "@/lib/utils"
-import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
-import { trackEvent } from "@/lib/amplitude"
+import { AMPLITUDE_EVENTS, trackEvent } from "@/lib/amplitude"
 import { useHunterUser } from "@/lib/queries"
 
 export const ComponentPageInfo = ({
@@ -87,7 +87,9 @@ export const ComponentPageInfo = ({
         return data
       },
       enabled: directRegistryDependencies.length > 0,
-      staleTime: Infinity,
+      staleTime: 1000 * 60 * 15, // Consider data fresh for 15 minutes
+      gcTime: 1000 * 60 * 60, // Keep unused data in cache for 1 hour
+      refetchOnWindowFocus: false,
     })
 
   const { data: hunterUser } = useHunterUser(component.hunter_username)
@@ -179,7 +181,7 @@ export const ComponentPageInfo = ({
                   <Avatar className="h-12 w-12">
                     <AvatarImage
                       src={component.user.image_url || "/placeholder.svg"}
-                      alt={component.user.name || component.user.username}
+                      alt={component.user.name || component.user.username || ""}
                     />
                     <AvatarFallback>
                       {component.user.name?.[0]?.toUpperCase()}
@@ -258,7 +260,7 @@ export const ComponentPageInfo = ({
                   <Avatar className="h-12 w-12">
                     <AvatarImage
                       src={hunterUser.image_url || "/placeholder.svg"}
-                      alt={hunterUser.name || hunterUser.username}
+                      alt={hunterUser.name || hunterUser.username || ""}
                     />
                     <AvatarFallback>
                       {hunterUser.name?.[0]?.toUpperCase()}

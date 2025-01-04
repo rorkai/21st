@@ -5,6 +5,13 @@ import { uniq } from "lodash"
 import { Brain, Sparkles } from "lucide-react"
 import { Icons } from "@/components/icons"
 
+interface V0TemplateFile {
+  path: string
+  type: string
+  target?: string
+  content: string
+}
+
 interface PromptOptionBase {
   type: "option"
   id: string
@@ -245,15 +252,115 @@ export const getComponentInstallPrompt = ({
   return prompt
 }
 
-export const formatV0Prompt = (componentName: string, code: string) => {
-  // Экранируем все обратные кавычки в коде
-  const escapedCode = code.replace(/`/g, "\\`")
+export const createV0Template = ({
+  componentName,
+  code,
+  demoCode,
+  registryDependencies,
+  npmDependencies,
+  npmDependenciesOfRegistryDependencies,
+  tailwindConfig,
+  globalCss,
+}: {
+  componentName: string
+  code: string
+  demoCode: string
+  registryDependencies: Record<string, string>
+  npmDependencies: Record<string, string>
+  npmDependenciesOfRegistryDependencies: Record<string, string>
+  tailwindConfig?: string
+  globalCss?: string
+}) => {
+  const normalizedName = componentName.toLowerCase().replace(/\s+/g, "-")
 
-  return `This new chat was started by template of component ${componentName}.
+  const template = {
+    name: normalizedName,
+    type: "registry:block",
+    title: componentName,
+    description: "A component from 21st.dev registry",
+    meta: {
+      env: [] as { name: string; url: string }[],
+    },
+    files: [
+      {
+        path: "app/page.tsx",
+        type: "registry:page",
+        target: "app/page.tsx",
+        content: `
+import { ${componentName} } from "@/components/ui/${normalizedName}"
 
-\`\`\`tsx
-${escapedCode}
-\`\`\`
+export default function Page() {
+  return <${componentName} />
+}
+`,
+      },
+      {
+        path: "app/layout.tsx",
+        type: "registry:page",
+        target: "app/layout.tsx",
+        content: `
+import "@/app/globals.css"
+import * as React from "react"
 
-Please wait instruction how to integrate it in next message`
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  )
+}`,
+      },
+      {
+        path: `components/ui/${normalizedName}.tsx`,
+        type: "registry:component",
+        content: code,
+      },
+      {
+        path: `components/ui/${normalizedName}.demo.tsx`,
+        type: "registry:component",
+        content: demoCode,
+      },
+    ] as V0TemplateFile[],
+    dependencies: {
+      ...npmDependencies,
+      ...npmDependenciesOfRegistryDependencies,
+    },
+  }
+
+  if (Object.keys(registryDependencies).length > 0) {
+    Object.entries(registryDependencies).forEach(([path, content]) => {
+      const fileName = path.split("/").pop()
+      if (fileName && !fileName.startsWith(normalizedName)) {
+        template.files.push({
+          path: `components/ui/${fileName}`,
+          type: "registry:component",
+          content,
+        })
+      }
+    })
+  }
+
+  if (tailwindConfig) {
+    template.files.push({
+      path: "tailwind.config.js",
+      type: "registry:config",
+      target: "tailwind.config.js",
+      content: tailwindConfig,
+    })
+  }
+
+  if (globalCss) {
+    template.files.push({
+      path: "app/globals.css",
+      type: "registry:page",
+      target: "app/globals.css",
+      content: globalCss,
+    })
+  }
+
+  return template
 }

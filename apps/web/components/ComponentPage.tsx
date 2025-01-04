@@ -19,9 +19,9 @@ import {
 } from "@/lib/amplitude"
 import {
   getComponentInstallPrompt,
-  formatV0Prompt,
   promptOptions,
   type PromptOptionBase,
+  createV0Template,
 } from "@/lib/prompts"
 
 import {
@@ -51,6 +51,7 @@ import { Icons } from "@/components/icons"
 import { ChevronRight, CodeXml, Info, Pencil, ChevronDown } from "lucide-react"
 import { toast } from "sonner"
 import { atomWithStorage } from "jotai/utils"
+import { openInV0Action } from "@/lib/actions/open-in-v0"
 
 export const isShowCodeAtom = atom(true)
 const selectedPromptTypeAtom = atomWithStorage<PromptType | "v0-open">(
@@ -346,36 +347,68 @@ export default function ComponentPage({
     )
 
     if (selectedOption?.id === "v0-open") {
-      const formattedPrompt = formatV0Prompt(component.name, code)
-      const encodedPrompt = encodeURIComponent(formattedPrompt)
-      window.open(`https://v0.dev/?q=${encodedPrompt}`, "_blank")
+      try {
+        const template = createV0Template({
+          componentName: component.name,
+          code,
+          demoCode,
+          registryDependencies,
+          npmDependencies: dependencies,
+          npmDependenciesOfRegistryDependencies,
+          tailwindConfig,
+          globalCss,
+        })
 
-      trackEvent(AMPLITUDE_EVENTS.COPY_AI_PROMPT, {
-        componentId: component.id,
-        componentName: component.name,
-        promptType: selectedOption.id,
-        action: "open",
-        destination: "v0.dev",
-      })
+        console.log("Sending template to v0:", template)
+        const result = await openInV0Action(template)
+        console.log("Got result from v0:", result)
+
+        if (result.error) {
+          toast.error(result.error)
+          return
+        }
+
+        if (result.url) {
+          const popupOpened = window.open(result.url, "_blank")
+          if (!popupOpened) {
+            toast.warning("Pop-up window blocked.", {
+              description: "Click Open to continue in new tab.",
+              duration: 5000,
+              action: {
+                label: "Open",
+                onClick: () => window.open(result.url, "_blank"),
+              },
+            })
+          }
+        }
+
+        trackEvent(AMPLITUDE_EVENTS.COPY_AI_PROMPT, {
+          componentId: component.id,
+          componentName: component.name,
+          promptType: selectedOption.id,
+          action: "open",
+          destination: "v0.dev",
+        })
+      } catch (err) {
+        console.error("Failed to open in v0:", err)
+        toast.error("Failed to open in v0.dev")
+      }
       return
     }
 
     try {
-      const prompt =
-        selectedOption?.id === PROMPT_TYPES.V0
-          ? formatV0Prompt(component.name, code)
-          : getComponentInstallPrompt({
-              promptType: selectedPromptType as PromptType,
-              codeFileName: component.code.split("/").slice(-1)[0]!,
-              demoCodeFileName: component.demo_code.split("/").slice(-1)[0]!,
-              code,
-              demoCode,
-              registryDependencies,
-              npmDependencies: dependencies,
-              npmDependenciesOfRegistryDependencies,
-              tailwindConfig,
-              globalCss,
-            })
+      const prompt = getComponentInstallPrompt({
+        promptType: selectedPromptType as PromptType,
+        codeFileName: component.code.split("/").slice(-1)[0]!,
+        demoCodeFileName: component.demo_code.split("/").slice(-1)[0]!,
+        code,
+        demoCode,
+        registryDependencies,
+        npmDependencies: dependencies,
+        npmDependenciesOfRegistryDependencies,
+        tailwindConfig,
+        globalCss,
+      })
 
       await copyToClipboard(prompt)
       toast.success("AI prompt copied to clipboard")

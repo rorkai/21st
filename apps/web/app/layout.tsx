@@ -1,4 +1,5 @@
 import { GoogleAnalytics } from "@next/third-parties/google"
+import { Analytics } from "@vercel/analytics/react"
 import localFont from "next/font/local"
 
 import { Toaster } from "@/components/ui/sonner"
@@ -34,6 +35,7 @@ export default function RootLayout({
             <Toaster />
           </ThemeProvider>
         </div>
+        <Analytics />
       </body>
       <GoogleAnalytics gaId="G-X7C2K3V7GX" />
     </html>

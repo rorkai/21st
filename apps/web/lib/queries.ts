@@ -415,3 +415,32 @@ export function useHunterUser(hunterUsername: string | null) {
     staleTime: Infinity,
   })
 }
+
+export async function getHuntedComponents(
+  supabase: SupabaseClient<Database>,
+  hunterUsername: string,
+) {
+  const { data, error } = await supabase
+    .from("components")
+    .select(componentReadableDbFields)
+    .eq("hunter_username", hunterUsername)
+    .eq("is_public", true)
+    .order("downloads_count", { ascending: false })
+    .returns<(Component & { user: User })[]>()
+
+  if (error) {
+    console.error("Error fetching hunted components:", error)
+    return null
+  }
+
+  return data
+}
+
+export function useHuntedComponents(username: string) {
+  const supabase = useClerkSupabaseClient()
+  return useQuery({
+    queryKey: ["huntedComponents", username],
+    queryFn: () => getHuntedComponents(supabase, username),
+    staleTime: Infinity,
+  })
+}

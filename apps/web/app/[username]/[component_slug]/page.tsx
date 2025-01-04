@@ -1,13 +1,15 @@
 import React from "react"
 import { notFound } from "next/navigation"
-
-import ComponentPage from "@/components/ComponentPage"
+import dynamic from "next/dynamic"
 import ErrorPage from "@/components/ErrorPage"
-
 import { getComponent, getUserData } from "@/lib/queries"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 import { extractDemoComponentNames } from "@/lib/parsers"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
+
+const ComponentPage = dynamic(() => import("@/components/ComponentPage"), {
+  ssr: false,
+})
 
 export const generateMetadata = async ({
   params,
@@ -99,12 +101,17 @@ const fetchFileTextContent = async (url: string) => {
     const response = await fetch(url)
     if (!response.ok) {
       console.error(`Error response in fetching file ${filename}`, response)
-      throw new Error(`Error response in fetching file ${filename}: ${response.statusText}`)
+      throw new Error(
+        `Error response in fetching file ${filename}: ${response.statusText}`,
+      )
     }
     return { data: await response.text(), error: null }
   } catch (err) {
     console.error(`Failed to fetch file ${filename}`, err)
-    return { error: new Error(`Failed to fetch file ${filename}: ${err}`), data: null }
+    return {
+      error: new Error(`Failed to fetch file ${filename}: ${err}`),
+      data: null,
+    }
   }
 }
 

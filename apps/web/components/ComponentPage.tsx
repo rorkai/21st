@@ -105,15 +105,19 @@ const useKeyboardShortcuts = ({
   setIsEditDialogOpen: Dispatch<SetStateAction<boolean>>
 }) => {
   const handleShareClick = async () => {
+    if (typeof window === "undefined") return
+
     const url = `${window.location.origin}/${component.user.username}/${component.component_slug}`
     try {
-      await navigator?.clipboard?.writeText(url)
-      trackEvent(AMPLITUDE_EVENTS.SHARE_COMPONENT, {
-        componentId: component.id,
-        componentName: component.name,
-        url,
-      })
-      toast("Link copied to clipboard")
+      if (typeof navigator !== "undefined" && navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url)
+        trackEvent(AMPLITUDE_EVENTS.SHARE_COMPONENT, {
+          componentId: component.id,
+          componentName: component.name,
+          url,
+        })
+        toast("Link copied to clipboard")
+      }
     } catch (err) {
       console.error("Error copying link: ", err)
     }
@@ -185,6 +189,10 @@ const useKeyboardShortcuts = ({
 }
 
 const copyToClipboard = async (text: string) => {
+  if (typeof window === "undefined") {
+    return // Skip execution on server
+  }
+
   try {
     if (navigator?.clipboard?.writeText) {
       await navigator.clipboard.writeText(text)
@@ -201,6 +209,7 @@ const copyToClipboard = async (text: string) => {
       return
     }
 
+    // Fallback using document
     const textarea = document.createElement("textarea")
     textarea.value = text
     textarea.style.position = "fixed"

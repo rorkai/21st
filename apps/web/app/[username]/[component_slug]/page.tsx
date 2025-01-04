@@ -52,6 +52,7 @@ export const generateMetadata = async ({
   }
 
   return {
+    metadataBase: new URL("https://21st.dev"),
     title: `${component.name} | 21st.dev - The NPM for Design Engineers`,
     description:
       component.description ||

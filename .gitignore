@@ -44,6 +44,3 @@ yarn-error.log*
 # Video converter folders
 video-converter
 rename
-
-# V0 Template
-apps/template/

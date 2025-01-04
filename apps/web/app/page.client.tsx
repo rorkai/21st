@@ -10,8 +10,10 @@ import { useClerkSupabaseClient } from "@/lib/clerk"
 import { sortComponents, filterComponents } from "@/lib/filters.client"
 import { setCookie } from "@/lib/cookies"
 
-import { ComponentCard } from "@/components/ComponentCard"
-import { Skeleton } from "@/components/ui/skeleton"
+import {
+  ComponentCard,
+  ComponentCardSkeleton,
+} from "@/components/ComponentCard"
 import { searchQueryAtom } from "@/components/Header"
 import {
   ComponentsHeader,
@@ -35,12 +37,10 @@ export function HomePageClient({
   initialComponents,
   initialSortBy,
   initialQuickFilter,
-  componentsTotalCount,
 }: {
   initialComponents: (Component & { user: User })[]
   initialSortBy: SortOption
   initialQuickFilter: QuickFilterOption
-  componentsTotalCount: number
 }) {
   const [searchQuery] = useAtom(searchQueryAtom)
   const supabase = useClerkSupabaseClient()
@@ -56,7 +56,9 @@ export function HomePageClient({
     setQuickFilter(initialQuickFilter)
   }
 
-  const { data: components } = useQuery<(Component & { user: User })[]>({
+  const { data: components, isLoading } = useQuery<
+    (Component & { user: User })[]
+  >({
     queryKey: ["components", searchQuery],
     queryFn: async () => {
       if (!searchQuery) {
@@ -80,15 +82,16 @@ export function HomePageClient({
         },
       )
       if (error) {
-        throw new Error(error.message || `HTTP error: ${status}`)
+        throw new Error(error.message)
       }
       return searchResults.map((result) => ({
         ...result,
         user: result.user_data as User,
-        fts: undefined,
-      })) as (Component & { user: User })[]
+        downloads_count: result.downloads_count || 0,
+        fts: null,
+      })) as unknown as (Component & { user: User })[]
     },
-    initialData: sortBy === undefined ? initialComponents : [],
+    initialData: undefined,
     refetchOnWindowFocus: false,
     retry: false,
   })
@@ -110,28 +113,16 @@ export function HomePageClient({
       <div className="flex flex-col">
         <ComponentsHeader
           filtersDisabled={!!searchQuery}
-          components={components}
+          components={isLoading ? initialComponents : components}
         />
         <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-9 list-none pb-10">
           {filteredAndSortedComponents?.map((component) => (
             <ComponentCard key={component.id} component={component} />
           ))}
-          {components === undefined && (
+          {isLoading && (
             <>
-              {[...Array(12)].map((_, index) => (
-                <div key={index} className="overflow-hidden">
-                  <div className="relative aspect-[4/3] mb-3">
-                    <Skeleton className="w-full h-full rounded-lg" />
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Skeleton className="w-6 h-6 rounded-full" />
-                    <Skeleton className="h-4 w-1/2" />
-                    <div className="flex items-center space-x-2 ml-auto">
-                      <Skeleton className="w-4 h-4" />
-                      <Skeleton className="w-4 h-4" />
-                    </div>
-                  </div>
-                </div>
+              {Array.from({ length: 12 }).map((_, i) => (
+                <ComponentCardSkeleton key={i} />
               ))}
             </>
           )}

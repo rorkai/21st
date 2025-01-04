@@ -547,13 +547,18 @@ export default function ComponentPage({
                   </>
                 ) : (
                   <>
-                    {
-                      promptOptions.find(
-                        (opt): opt is PromptOptionBase =>
-                          opt.id === selectedPromptType && "icon" in opt,
-                      )?.icon
-                    }
-                    Copy prompt
+                    <div className="flex items-center gap-2">
+                      <div className="h-5 w-5 flex items-center justify-center">
+                        {
+                          promptOptions.find(
+                            (opt): opt is PromptOptionBase =>
+                              opt.type === "option" &&
+                              opt.id === selectedPromptType,
+                          )?.icon
+                        }
+                      </div>
+                      Copy prompt
+                    </div>
                   </>
                 )}
               </Button>
@@ -600,10 +605,10 @@ export default function ComponentPage({
                           className="items-start [&>span]:pt-1"
                         >
                           <div className="flex items-start gap-3">
-                            <div className="h-5 w-5 flex items-center justify-center">
-                              {React.cloneElement(
-                                option.icon as React.ReactElement,
-                              )}
+                            <div className="h-5 w-5 flex items-center pt-[2px] justify-center">
+                              <div className="svg.lucide.lucide-sparkles mr-2 min-h-[20px] min-w-[20px] max-h-[20px] max-w-[20px]">
+                                {option.icon}
+                              </div>
                             </div>
                             <div className="flex flex-col gap-0.5">
                               <span className="text-sm font-medium">

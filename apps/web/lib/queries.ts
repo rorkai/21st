@@ -385,3 +385,33 @@ export function useUpdateComponentWithTags(
     },
   })
 }
+
+export async function getHunterUser(
+  supabase: SupabaseClient<Database>,
+  hunterUsername: string | null,
+): Promise<User | null> {
+  if (!hunterUsername) return null
+
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("username", hunterUsername)
+    .single()
+
+  if (error) {
+    console.error("Error fetching hunter user:", error)
+    return null
+  }
+
+  return data
+}
+
+export function useHunterUser(hunterUsername: string | null) {
+  const supabase = useClerkSupabaseClient()
+  return useQuery({
+    queryKey: ["hunterUser", hunterUsername],
+    queryFn: () => getHunterUser(supabase, hunterUsername),
+    enabled: !!hunterUsername,
+    staleTime: Infinity,
+  })
+}

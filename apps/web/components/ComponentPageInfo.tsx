@@ -10,6 +10,7 @@ import {
   Scale,
   CalendarDays,
   Info,
+  Binoculars,
 } from "lucide-react"
 
 import { Component, Tag, User } from "@/types/global"
@@ -37,6 +38,7 @@ import { getLicenseBySlug } from "@/lib/licenses"
 import { formatDate } from "@/lib/utils"
 import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { trackEvent } from "@/lib/amplitude"
+import { useHunterUser } from "@/lib/queries"
 
 export const ComponentPageInfo = ({
   component,
@@ -87,6 +89,8 @@ export const ComponentPageInfo = ({
       enabled: directRegistryDependencies.length > 0,
       staleTime: Infinity,
     })
+
+  const { data: hunterUser } = useHunterUser(component.hunter_username)
 
   const copyAllDependencies = () => {
     const dependenciesString = Object.entries({
@@ -214,6 +218,85 @@ export const ComponentPageInfo = ({
                           {component.user.manually_added
                             ? `Created by 21st.dev`
                             : `Joined ${formatDate(new Date(component.user.created_at))}`}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </HoverCardContent>
+            </HoverCard>
+          </div>
+        )}
+
+        {hunterUser && (
+          <div className="flex flex-col gap-2">
+            <span className="text-muted-foreground">Hunted by</span>
+            <HoverCard openDelay={300}>
+              <HoverCardTrigger asChild>
+                <div className="flex items-center justify-start hover:bg-accent rounded-md px-2 py-1 -mx-2 mr-auto">
+                  <Link
+                    href={`/${hunterUser.username}`}
+                    className="flex items-center"
+                  >
+                    <UserAvatar
+                      src={hunterUser.image_url || "/placeholder.svg"}
+                      alt={hunterUser.name || hunterUser.username}
+                      size={20}
+                    />
+                    <span className="ml-1 font-medium">
+                      {hunterUser.name || hunterUser.username}
+                    </span>
+                  </Link>
+                </div>
+              </HoverCardTrigger>
+              <HoverCardContent
+                align="start"
+                className="w-[320px]"
+                side="bottom"
+              >
+                <div className="flex gap-4">
+                  <Avatar className="h-12 w-12">
+                    <AvatarImage
+                      src={hunterUser.image_url || "/placeholder.svg"}
+                      alt={hunterUser.name || hunterUser.username}
+                    />
+                    <AvatarFallback>
+                      {hunterUser.name?.[0]?.toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="space-y-1">
+                    <Link
+                      href={`/${hunterUser.username}`}
+                      className="hover:underline"
+                    >
+                      <h4 className="text-sm font-semibold">
+                        {hunterUser.name || hunterUser.username}
+                      </h4>
+                    </Link>
+                    <Link
+                      href={`/${hunterUser.username}`}
+                      className="hover:underline"
+                    >
+                      <p className="text-sm text-muted-foreground">
+                        @{hunterUser.username}
+                      </p>
+                    </Link>
+                    {hunterUser.bio && (
+                      <p className="text-xs text-muted-foreground whitespace-pre-wrap">
+                        {hunterUser.bio}
+                      </p>
+                    )}
+                    {hunterUser.created_at && (
+                      <div className="flex items-center pt-1">
+                        {!hunterUser.manually_added ? (
+                          <CalendarDays className="mr-2 h-4 w-4 opacity-70" />
+                        ) : (
+                          <Binoculars className="mr-2 h-4 w-4 opacity-70" />
+                        )}
+                        <span className="text-xs text-muted-foreground">
+                          {hunterUser.manually_added
+                            ? `Component hunter`
+                            : `Joined ${formatDate(new Date(hunterUser.created_at))}`}
                         </span>
                       </div>
                     )}

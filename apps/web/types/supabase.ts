@@ -7,6 +7,31 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          operationName?: string
+          query?: string
+          variables?: Json
+          extensions?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       component_dependencies_closure: {
@@ -180,6 +205,7 @@ export type Database = {
           downloads_count: number
           fts: unknown | null
           global_css_extension: string | null
+          hunter_username: string | null
           id: number
           is_paid: boolean
           is_public: boolean
@@ -212,6 +238,7 @@ export type Database = {
           downloads_count?: number
           fts?: unknown | null
           global_css_extension?: string | null
+          hunter_username?: string | null
           id?: number
           is_paid?: boolean
           is_public?: boolean
@@ -244,6 +271,7 @@ export type Database = {
           downloads_count?: number
           fts?: unknown | null
           global_css_extension?: string | null
+          hunter_username?: string | null
           id?: number
           is_paid?: boolean
           is_public?: boolean
@@ -262,6 +290,34 @@ export type Database = {
           website_url?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "components_hunter_username_fkey"
+            columns: ["hunter_username"]
+            isOneToOne: false
+            referencedRelation: "component_dependencies_graph_view"
+            referencedColumns: ["dependency_author_username"]
+          },
+          {
+            foreignKeyName: "components_hunter_username_fkey"
+            columns: ["hunter_username"]
+            isOneToOne: false
+            referencedRelation: "component_dependencies_graph_view"
+            referencedColumns: ["source_author_username"]
+          },
+          {
+            foreignKeyName: "components_hunter_username_fkey"
+            columns: ["hunter_username"]
+            isOneToOne: false
+            referencedRelation: "components_with_username"
+            referencedColumns: ["username"]
+          },
+          {
+            foreignKeyName: "components_hunter_username_fkey"
+            columns: ["hunter_username"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["username"]
+          },
           {
             foreignKeyName: "components_user_id_fkey"
             columns: ["user_id"]
@@ -304,7 +360,7 @@ export type Database = {
           pro_referral_url: string | null
           twitter_url: string | null
           updated_at: string | null
-          username: string
+          username: string | null
           website_url: string | null
         }
         Insert: {
@@ -321,7 +377,7 @@ export type Database = {
           pro_referral_url?: string | null
           twitter_url?: string | null
           updated_at?: string | null
-          username: string
+          username?: string | null
           website_url?: string | null
         }
         Update: {
@@ -338,7 +394,7 @@ export type Database = {
           pro_referral_url?: string | null
           twitter_url?: string | null
           updated_at?: string | null
-          username?: string
+          username?: string | null
           website_url?: string | null
         }
         Relationships: []
@@ -520,6 +576,7 @@ export type Database = {
           downloads_count: number
           fts: unknown | null
           global_css_extension: string | null
+          hunter_username: string | null
           id: number
           is_paid: boolean
           is_public: boolean
@@ -569,17 +626,30 @@ export type Database = {
             }
             Returns: undefined
           }
-      update_component_with_tags: {
-        Args: {
-          p_component_id: number
-          p_name?: string
-          p_description?: string
-          p_license?: string
-          p_preview_url?: string
-          p_tags?: Json
-        }
-        Returns: undefined
-      }
+      update_component_with_tags:
+        | {
+            Args: {
+              p_component_id: number
+              p_name?: string
+              p_description?: string
+              p_license?: string
+              p_preview_url?: string
+              p_tags?: Json
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_component_id: number
+              p_name?: string
+              p_description?: string
+              p_license?: string
+              p_preview_url?: string
+              p_website_url?: string
+              p_tags?: Json
+            }
+            Returns: undefined
+          }
     }
     Enums: {
       [_ in never]: never

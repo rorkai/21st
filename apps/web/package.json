@@ -96,7 +96,7 @@
     "@types/react-syntax-highlighter": "^15.5.13",
     "eslint": "^8",
     "eslint-config-next": "14.2.6",
-    "supabase": ">=1.8.1",
+    "supabase": "link:supabase/tap/supabase",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   }

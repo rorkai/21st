@@ -1,4 +1,4 @@
-import { Tables } from "./supabase"
+import { Tables, Database } from "./supabase"
 
 export type User = Tables<"users">
 
@@ -33,3 +33,28 @@ export const PROMPT_TYPES = {
 } as const
 
 export type PromptType = (typeof PROMPT_TYPES)[keyof typeof PROMPT_TYPES]
+
+export type GetFilteredComponentsResponse =
+  Database["public"]["Functions"]["get_filtered_components"]["Returns"]
+export type GetFilteredComponentsArgs =
+  Database["public"]["Functions"]["get_filtered_components"]["Args"]
+export type SearchComponentsResponse =
+  Database["public"]["Functions"]["search_components"]["Returns"]
+export type SearchComponentsArgs =
+  Database["public"]["Functions"]["search_components"]["Args"]
+
+export interface ComponentCount {
+  filter_type: string
+  count: number
+}
+
+export type GetComponentsCountsResponse = ComponentCount[]
+export type GetComponentsCountsArgs = {
+  p_sort_by: string
+}
+
+export type ComponentWithUser = Component & { user: User }
+export type FilteredComponent =
+  Database["public"]["Functions"]["get_filtered_components"]["Returns"][number]
+export type SearchComponent =
+    Database["public"]["Functions"]["search_components"]["Returns"][number]

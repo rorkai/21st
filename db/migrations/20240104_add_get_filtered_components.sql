@@ -24,6 +24,7 @@ CREATE OR REPLACE FUNCTION public.get_filtered_components(
   direct_registry_dependencies jsonb,
   demo_direct_registry_dependencies jsonb,
   preview_url text,
+  video_url text,
   license text,
   user_data jsonb,
   total_count bigint
@@ -82,6 +83,7 @@ BEGIN
     c.direct_registry_dependencies,
     c.demo_direct_registry_dependencies,
     c.preview_url,
+    c.video_url,
     c.license,
     c.user_data,
     v_total_count as total_count

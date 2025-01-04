@@ -7,12 +7,16 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { motion } from "framer-motion"
 import debounce from "lodash/debounce"
 
-import { Component, QuickFilterOption, SortOption, User } from "@/types/global"
-import type {
+import {
+  Component,
+  QuickFilterOption,
+  SortOption,
+  User,
   GetFilteredComponentsResponse,
   SearchComponentsResponse,
-  Database,
-} from "@/types/supabase"
+  ComponentWithUser,
+} from "@/types/global"
+
 
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import { setCookie } from "@/lib/cookies"
@@ -114,12 +118,6 @@ export function HomePageClient({
     }
   }, [quickFilter, debouncedSetQuickFilter, isStorageLoaded])
 
-  type ComponentWithUser = Component & { user: User }
-  type FilteredComponent =
-    Database["public"]["Functions"]["get_filtered_components"]["Returns"][number]
-  type SearchComponent =
-    Database["public"]["Functions"]["search_components"]["Returns"][number]
-
   interface QueryResult {
     data: ComponentWithUser[]
     total_count: number
@@ -158,42 +156,21 @@ export function HomePageClient({
           }
 
           const components = data.map(
-            (item: GetFilteredComponentsResponse[number]) => {
-              const userData = item.user_data as Record<string, unknown>
-              return {
-                id: item.id,
-                component_names: item.component_names,
-                description: item.description,
-                code: item.code,
-                demo_code: item.demo_code,
-                created_at: item.created_at,
-                updated_at: item.updated_at,
-                user_id: item.user_id,
-                dependencies: item.dependencies,
-                is_public: item.is_public,
-                downloads_count: item.downloads_count,
-                likes_count: item.likes_count,
-                component_slug: item.component_slug,
-                name: item.name,
-                demo_dependencies: item.demo_dependencies,
-                registry: item.registry,
-                direct_registry_dependencies: item.direct_registry_dependencies,
-                demo_direct_registry_dependencies:
-                  item.demo_direct_registry_dependencies,
-                preview_url: item.preview_url,
-                license: item.license,
-                compiled_css: null,
-                global_css_extension: null,
-                hunter_username: null,
-                is_paid: false,
-                payment_url: null,
-                price: 0,
-                pro_preview_image_url: null,
-                video_url: null,
-                website_url: null,
-                user: userData as User,
-              }
-            },
+            (item: GetFilteredComponentsResponse[number]) => ({
+              ...item,
+              user: item.user_data as User,
+              compiled_css: null,
+              fts: null,
+              global_css_extension: null,
+              hunter_username: null,
+              is_paid: false,
+              payment_url: null,
+              price: 0,
+              pro_preview_image_url: null,
+              website_url: null,
+              tailwind_config_extension: null,
+              video_url: item.video_url || null,
+            }),
           ) as ComponentWithUser[]
 
           return {
@@ -253,7 +230,7 @@ export function HomePageClient({
               payment_url: null,
               price: 0,
               pro_preview_image_url: null,
-              video_url: null,
+              video_url: result.video_url,
               website_url: null,
               user: userData as User,
               fts: null,

@@ -295,14 +295,14 @@ export type Database = {
             columns: ["hunter_username"]
             isOneToOne: false
             referencedRelation: "component_dependencies_graph_view"
-            referencedColumns: ["dependency_author_username"]
+            referencedColumns: ["source_author_username"]
           },
           {
             foreignKeyName: "components_hunter_username_fkey"
             columns: ["hunter_username"]
             isOneToOne: false
             referencedRelation: "component_dependencies_graph_view"
-            referencedColumns: ["source_author_username"]
+            referencedColumns: ["dependency_author_username"]
           },
           {
             foreignKeyName: "components_hunter_username_fkey"
@@ -484,6 +484,13 @@ export type Database = {
           },
         ]
       }
+      component_stats: {
+        Row: {
+          count: number | null
+          filter_type: string | null
+        }
+        Relationships: []
+      }
       components_with_username: {
         Row: {
           code: string | null
@@ -559,6 +566,56 @@ export type Database = {
           tags: Json
         }[]
       }
+      get_components_counts:
+        | {
+            Args: Record<PropertyKey, never>
+            Returns: {
+              filter_type: string
+              count: number
+            }[]
+          }
+        | {
+            Args: {
+              p_sort_by: string
+            }
+            Returns: {
+              filter_type: string
+              count: number
+            }[]
+          }
+      get_filtered_components: {
+        Args: {
+          p_quick_filter: string
+          p_sort_by: string
+          p_offset: number
+          p_limit: number
+        }
+        Returns: {
+          id: number
+          component_names: Json
+          description: string
+          code: string
+          demo_code: string
+          created_at: string
+          updated_at: string
+          user_id: string
+          dependencies: Json
+          is_public: boolean
+          downloads_count: number
+          likes_count: number
+          component_slug: string
+          name: string
+          demo_dependencies: Json
+          registry: string
+          direct_registry_dependencies: Json
+          demo_direct_registry_dependencies: Json
+          preview_url: string
+          video_url: string
+          license: string
+          user_data: Json
+          total_count: number
+        }[]
+      }
       get_random_components: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -611,29 +668,22 @@ export type Database = {
         Args: {
           search_query: string
         }
-        Returns: Array<{
+        Returns: Database["public"]["CompositeTypes"]["component_with_user"][]
+      }
+      search_components_preview: {
+        Args: {
+          p_search_query: string
+        }
+        Returns: {
           id: number
-          component_names: Json
-          description: string | null
-          code: string
-          demo_code: string
-          created_at: string
-          updated_at: string
-          user_id: string
-          dependencies: Json | null
-          is_public: boolean
+          name: string
+          description: string
+          preview_url: string
+          user_data: Json
           downloads_count: number
           likes_count: number
           component_slug: string
-          name: string
-          demo_dependencies: Json | null
-          registry: string
-          direct_registry_dependencies: Json
-          demo_direct_registry_dependencies: Json
-          preview_url: string
-          license: string
-          user_data: Json
-        }>
+        }[]
       }
       update_component_dependencies_closure:
         | {
@@ -672,38 +722,6 @@ export type Database = {
             }
             Returns: undefined
           }
-      get_filtered_components: {
-        Args: {
-          p_quick_filter: string
-          p_sort_by: string
-          p_offset: number
-          p_limit: number
-        }
-        Returns: Array<{
-          id: number
-          component_names: Json
-          description: string | null
-          code: string
-          demo_code: string
-          created_at: string
-          updated_at: string
-          user_id: string
-          dependencies: Json | null
-          is_public: boolean
-          downloads_count: number
-          likes_count: number
-          component_slug: string
-          name: string
-          demo_dependencies: Json | null
-          registry: string
-          direct_registry_dependencies: Json
-          demo_direct_registry_dependencies: Json
-          preview_url: string
-          license: string
-          user_data: Json
-          total_count: number
-        }>
-      }
     }
     Enums: {
       [_ in never]: never
@@ -841,18 +859,3 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
     ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
-
-export type GetFilteredComponentsResponse = Database["public"]["Functions"]["get_filtered_components"]["Returns"]
-export type GetFilteredComponentsArgs = Database["public"]["Functions"]["get_filtered_components"]["Args"]
-export type SearchComponentsResponse = Database["public"]["Functions"]["search_components"]["Returns"]
-export type SearchComponentsArgs = Database["public"]["Functions"]["search_components"]["Args"]
-
-export interface ComponentCount {
-  filter_type: string
-  count: number
-}
-
-export type GetComponentsCountsResponse = ComponentCount[]
-export type GetComponentsCountsArgs = {
-  p_sort_by: string
-}

@@ -2,6 +2,103 @@ import endent from "endent"
 import { PROMPT_TYPES } from "@/types/global"
 import { PromptType } from "@/types/global"
 import { uniq } from "lodash"
+import { Brain, Sparkles } from "lucide-react"
+import { Icons } from "@/components/icons"
+
+interface PromptOptionBase {
+  type: "option"
+  id: string
+  label: string
+  description: string
+  action: "copy" | "open"
+  icon: JSX.Element
+}
+
+interface PromptSeparator {
+  type: "separator"
+  id: string
+}
+
+type PromptOption = PromptOptionBase | PromptSeparator
+
+export const promptOptions: PromptOption[] = [
+  {
+    type: "option",
+    id: PROMPT_TYPES.BASIC,
+    label: "Basic",
+    description: "Standard prompt for AI code editors",
+    action: "copy",
+    icon: (
+      <Sparkles
+        size={16}
+        className="mr-2 min-h-[16px] min-w-[16px] max-h-[16px] max-w-[16px]"
+      />
+    ),
+  },
+  {
+    type: "option",
+    id: PROMPT_TYPES.EXTENDED,
+    label: "Extended",
+    description: "Extended prompt for complex components",
+    action: "copy",
+    icon: (
+      <Brain
+        size={16}
+        className="mr-2 min-h-[16px] min-w-[16px] max-h-[16px] max-w-[16px]"
+      />
+    ),
+  },
+  {
+    id: "separator1",
+    type: "separator",
+  },
+  {
+    type: "option",
+    id: PROMPT_TYPES.V0,
+    label: "v0 by Vercel",
+    description: "Optimized for v0.dev",
+    action: "copy",
+    icon: (
+      <Icons.v0Logo className="mr-2 min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
+    ),
+  },
+  {
+    type: "option",
+    id: PROMPT_TYPES.LOVABLE,
+    label: "Lovable",
+    description: "Optimized for Lovable.dev",
+    action: "copy",
+    icon: (
+      <Icons.lovableLogo className="mr-2 min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
+    ),
+  },
+  {
+    type: "option",
+    id: PROMPT_TYPES.BOLT,
+    label: "Bolt.new",
+    description: "Optimized for Bolt.new",
+    action: "copy",
+    icon: (
+      <Icons.boltLogo className="mr-2 min-h-[22px] min-w-[22px] max-h-[22px] max-w-[22px]" />
+    ),
+  },
+  {
+    id: "separator2",
+    type: "separator",
+  },
+  {
+    type: "option",
+    id: "v0-open",
+    label: "Open in v0.dev",
+    description: "Open component in v0.dev",
+    action: "open",
+    icon: (
+      <Icons.v0Logo className="mr-2 min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
+    ),
+  },
+]
+
+export type { PromptOption, PromptOptionBase }
 
 export const getComponentInstallPrompt = ({
   promptType,

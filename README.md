@@ -15,7 +15,8 @@ We support:
 - Pure React components
 - Next.js client components (currently, we polyfill Next-specific libraries in CodeSandbox, but will switch to server-side rendering)
 - TypeScript
-- Tailwind themes
+- Tailwind themes with custom configuration
+- Custom global CSS styles
 - RadixUI
 - Any other npm dependencies (via [Sandpack](https://sandpack.codesandbox.io/))
 - Internal dependencies (you use any component of our registry as a dependency)
@@ -130,6 +131,7 @@ You can also contribute by:
 
 - AI design engineer [@serafimcloud](https://x.com/serafimcloud)
 - fullstack engineer [@daniel_dhawan](https://x.com/daniel_dhawan)
+- fullstack engineer [@garrrikkotua](https://x.com/garrrikkotua)
 
 ## Acknowledgments
 

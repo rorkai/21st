@@ -17,7 +17,12 @@ import {
   trackEvent,
   AMPLITUDE_EVENTS,
 } from "@/lib/amplitude"
-import { getComponentInstallPrompt, formatV0Prompt } from "@/lib/prompts"
+import {
+  getComponentInstallPrompt,
+  formatV0Prompt,
+  promptOptions,
+  type PromptOptionBase,
+} from "@/lib/prompts"
 
 import {
   Tooltip,
@@ -32,6 +37,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
 import { Hotkey } from "./ui/hotkey"
 import { UserAvatar } from "./UserAvatar"
@@ -42,17 +48,7 @@ import { EditComponentDialog } from "./EditComponentDialog"
 import { usePublishAs } from "./publish/use-publish-as"
 import { Icons } from "@/components/icons"
 
-import {
-  ChevronRight,
-  CodeXml,
-  Info,
-  Pencil,
-  Sparkles,
-  ChevronDown,
-  Brain,
-  Heart,
-  Zap,
-} from "lucide-react"
+import { ChevronRight, CodeXml, Info, Pencil, ChevronDown } from "lucide-react"
 import { toast } from "sonner"
 import { atomWithStorage } from "jotai/utils"
 
@@ -61,77 +57,6 @@ const selectedPromptTypeAtom = atomWithStorage<PromptType | "v0-open">(
   "selectedPromptType",
   PROMPT_TYPES.BASIC,
 )
-
-const promptOptions = [
-  {
-    id: PROMPT_TYPES.BASIC,
-    label: "Basic",
-    description: "Standard prompt for AI code editors",
-    action: "copy",
-    icon: (
-      <Sparkles
-        size={16}
-        className="mr-2 min-h-[16px] min-w-[16px] max-h-[16px] max-w-[16px]"
-      />
-    ),
-  },
-  {
-    id: PROMPT_TYPES.EXTENDED,
-    label: "Extended",
-    description: "Extended prompt for complex components",
-    action: "copy",
-    icon: (
-      <Brain
-        size={16}
-        className="mr-2 min-h-[16px] min-w-[16px] max-h-[16px] max-w-[16px]"
-      />
-    ),
-  },
-  {
-    id: "separator1",
-    type: "separator",
-  },
-  {
-    id: PROMPT_TYPES.V0,
-    label: "v0 by Vercel",
-    description: "Optimized for v0.dev",
-    action: "copy",
-    icon: (
-      <Icons.v0Logo className="mr-2 min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
-    ),
-  },
-  {
-    id: PROMPT_TYPES.LOVABLE,
-    label: "Lovable",
-    description: "Optimized for Lovable.dev",
-    action: "copy",
-    icon: (
-      <Icons.lovableLogo className="mr-2 min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
-    ),
-  },
-  {
-    id: PROMPT_TYPES.BOLT,
-    label: "Bolt.new",
-    description: "Optimized for Bolt.new",
-    action: "copy",
-    icon: (
-      <Icons.boltLogo className="mr-2 min-h-[22px] min-w-[22px] max-h-[22px] max-w-[22px]" />
-    ),
-  },
-  {
-    id: "separator2",
-    type: "separator",
-  },
-  {
-    id: "v0-open",
-    label: "Open in v0.dev",
-    description: "Open component in v0.dev",
-    action: "open",
-    icon: (
-      <Icons.v0Logo className="min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
-    ),
-  },
-]
 
 const useAnalytics = ({
   component,
@@ -609,13 +534,15 @@ export default function ComponentPage({
                 {selectedPromptType === "v0-open" ? (
                   <>
                     <span className="mr-2">Open in</span>
-                    <Icons.v0Logo className="mr-2 min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
+                    <Icons.v0Logo className="min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
                   </>
                 ) : (
                   <>
                     {
-                      promptOptions.find((opt) => opt.id === selectedPromptType)
-                        ?.icon
+                      promptOptions.find(
+                        (opt): opt is PromptOptionBase =>
+                          opt.id === selectedPromptType && "icon" in opt,
+                      )?.icon
                     }
                     Copy prompt
                   </>
@@ -642,10 +569,22 @@ export default function ComponentPage({
                       setSelectedPromptType(value as PromptType | "v0-open")
                     }
                   >
-                    {promptOptions.map((option) =>
-                      option.type === "separator" ? (
-                        <DropdownMenuSeparator key={option.id} />
-                      ) : (
+                    <DropdownMenuLabel>Copy prompt</DropdownMenuLabel>
+                    {promptOptions.map((option) => {
+                      if (option.type === "separator") {
+                        return (
+                          <>
+                            <DropdownMenuSeparator key={option.id} />
+                            <DropdownMenuLabel>
+                              {option.id === "separator1"
+                                ? "Copy optimized prompt"
+                                : "Open in AI editor"}
+                            </DropdownMenuLabel>
+                          </>
+                        )
+                      }
+
+                      return (
                         <DropdownMenuRadioItem
                           key={option.id}
                           value={option.id}
@@ -667,8 +606,8 @@ export default function ComponentPage({
                             </div>
                           </div>
                         </DropdownMenuRadioItem>
-                      ),
-                    )}
+                      )
+                    })}
                   </DropdownMenuRadioGroup>
                 </DropdownMenuContent>
               </DropdownMenu>

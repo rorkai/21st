@@ -272,22 +272,27 @@ export const createV0Template = ({
   globalCss?: string
 }) => {
   const normalizedName = componentName.toLowerCase().replace(/\s+/g, "-")
+  const templateName = "21st"
 
   const template = {
-    name: normalizedName,
+    name: templateName,
     type: "registry:block",
     title: componentName,
     description: "A component from 21st.dev registry",
-    meta: {
-      env: [] as { name: string; url: string }[],
+    dependencies: {
+      ...npmDependencies,
+      ...npmDependenciesOfRegistryDependencies,
     },
+    registryDependencies: Object.keys(registryDependencies)
+      .filter((path) => path.startsWith("shadcn/"))
+      .map((path) => path.replace("shadcn/", "")),
     files: [
       {
-        path: "app/page.tsx",
+        path: `${templateName}/app/page.tsx`,
         type: "registry:page",
         target: "app/page.tsx",
         content: `
-import { ${componentName} } from "@/components/ui/${normalizedName}"
+import { ${componentName} } from "@/components/${normalizedName}"
 
 export default function Page() {
   return <${componentName} />
@@ -295,7 +300,7 @@ export default function Page() {
 `,
       },
       {
-        path: "app/layout.tsx",
+        path: `${templateName}/app/layout.tsx`,
         type: "registry:page",
         target: "app/layout.tsx",
         content: `
@@ -315,28 +320,29 @@ export default function RootLayout({
 }`,
       },
       {
-        path: `components/ui/${normalizedName}.tsx`,
+        path: `${templateName}/components/${normalizedName}.tsx`,
         type: "registry:component",
         content: code,
       },
       {
-        path: `components/ui/${normalizedName}.demo.tsx`,
+        path: `${templateName}/components/${normalizedName}.demo.tsx`,
         type: "registry:component",
         content: demoCode,
       },
     ] as V0TemplateFile[],
-    dependencies: {
-      ...npmDependencies,
-      ...npmDependenciesOfRegistryDependencies,
-    },
   }
 
   if (Object.keys(registryDependencies).length > 0) {
     Object.entries(registryDependencies).forEach(([path, content]) => {
+      // Skip shadcn components as they are handled by v0.dev
+      if (path.startsWith("shadcn/")) {
+        return
+      }
+
       const fileName = path.split("/").pop()
       if (fileName && !fileName.startsWith(normalizedName)) {
         template.files.push({
-          path: `components/ui/${fileName}`,
+          path: `${templateName}/components/${fileName}`,
           type: "registry:component",
           content,
         })
@@ -346,7 +352,7 @@ export default function RootLayout({
 
   if (tailwindConfig) {
     template.files.push({
-      path: "tailwind.config.js",
+      path: `${templateName}/tailwind.config.js`,
       type: "registry:config",
       target: "tailwind.config.js",
       content: tailwindConfig,
@@ -355,7 +361,7 @@ export default function RootLayout({
 
   if (globalCss) {
     template.files.push({
-      path: "app/globals.css",
+      path: `${templateName}/app/globals.css`,
       type: "registry:page",
       target: "app/globals.css",
       content: globalCss,

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react"
 
-import { useAtom, Atom } from "jotai"
+import { useAtom } from "jotai"
 import { atomWithStorage, createJSONStorage } from "jotai/utils"
 import { useMediaQuery } from "@/hooks/use-media-query"
 
@@ -65,9 +65,8 @@ const useSearchHotkeys = (inputRef: React.RefObject<HTMLInputElement>) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
-        (event.metaKey || event.ctrlKey) &&
-        event.shiftKey &&
-        event.key.toLowerCase() === "f"
+        event.key === "/" &&
+        !["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName || "")
       ) {
         event.preventDefault()
         inputRef.current?.focus()
@@ -81,27 +80,15 @@ const useSearchHotkeys = (inputRef: React.RefObject<HTMLInputElement>) => {
   }, [])
 }
 
-const getFilteredCount = (
-  components: (Component & { user: User })[],
-  filter: QuickFilterOption,
-) => {
-  if (!components) return 0
-  return filterComponents(components, filter).length
-}
-
 interface ComponentsHeaderProps {
   filtersDisabled: boolean
-  components?: (Component & { user: User })[]
   currentSection?: string
-  totalCount?: number
   tabCounts: Record<QuickFilterOption, number>
 }
 
 export function ComponentsHeader({
   filtersDisabled,
-  components,
   currentSection,
-  totalCount,
   tabCounts,
 }: ComponentsHeaderProps) {
   const [quickFilter, setQuickFilter] = useAtom(quickFilterAtom)
@@ -202,10 +189,8 @@ export function ComponentsHeader({
               </button>
             ) : (
               <div className="pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-2 text-muted-foreground">
-                <kbd className="hidden lg:inline-flex h-5 max-h-full items-center rounded border border-border px-1 font-[inherit] text-[0.625rem] font-medium gap-[2px] text-muted-foreground/70">
-                  <span className="text-[11px] font-sans">⌘</span>
-                  <span className="text-[11px] font-sans">⇧</span>
-                  <span className="text-[11px] font-sans">F</span>
+                <kbd className="hidden lg:inline-flex size-5 items-center justify-center rounded border bg-muted px-1 font-[inherit] text-[0.625rem] font-medium text-muted-foreground/70">
+                  <span className="text-[11px] font-sans">/</span>
                 </kbd>
               </div>
             )}

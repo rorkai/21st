@@ -10,7 +10,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-export function ThemeToggle() {
+interface ThemeToggleProps {
+  fillIcon?: boolean
+}
+
+export function ThemeToggle({ fillIcon = true }: ThemeToggleProps) {
   const { resolvedTheme, setTheme } = useTheme()
 
   return (
@@ -29,14 +33,14 @@ export function ThemeToggle() {
             <Sun
               size={18}
               strokeWidth={2}
-              className="shrink-0 fill-current"
+              className={`shrink-0 ${fillIcon ? "fill-current" : ""}`}
               aria-hidden="true"
             />
           ) : (
             <Moon
               size={18}
               strokeWidth={2}
-              className="shrink-0 fill-current"
+              className={`shrink-0 ${fillIcon ? "fill-current" : ""}`}
               aria-hidden="true"
             />
           )}

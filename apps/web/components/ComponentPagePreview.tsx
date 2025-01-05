@@ -119,8 +119,6 @@ export function ComponentPagePreview({
     compiledCss,
   )
 
-  if (!css) return <LoadingSpinner />
-
   const files = {
     ...generateSandpackFiles({
       demoComponentNames,
@@ -129,7 +127,7 @@ export function ComponentPagePreview({
       code,
       demoCode,
       theme: isDarkTheme ? "dark" : "light",
-      css,
+      css: css || "",
       customTailwindConfig: tailwindConfig,
       customGlobalCss: globalCss,
     }),
@@ -143,6 +141,23 @@ export function ComponentPagePreview({
   const demoComponentFile = Object.keys(files).find((file) =>
     file.endsWith(`demo.tsx`),
   )
+
+  const [activeFile, setActiveFile] = useState<string>(
+    demoComponentFile ?? mainComponentFile ?? "",
+  )
+
+  if (!css)
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-3 w-full">
+        <LoadingSpinner />
+        <p className="text-muted-foreground text-sm">
+          Preparing styles and dependencies...
+        </p>
+        <p className="text-muted-foreground/60 text-xs">
+          This may take a few seconds on first load
+        </p>
+      </div>
+    )
 
   const visibleFiles = [
     demoComponentFile,
@@ -160,10 +175,6 @@ export function ComponentPagePreview({
       const fileName = parts[parts.length - 1]
       return [path, `${fileName} (dependency)`]
     }),
-  )
-
-  const [activeFile, setActiveFile] = useState<string>(
-    demoComponentFile ?? mainComponentFile ?? "",
   )
 
   const providerProps: SandpackProviderProps = {

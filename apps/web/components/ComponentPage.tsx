@@ -581,12 +581,14 @@ export default function ComponentPage({
                     {selectedPromptType === "v0-open" ? (
                       <>
                         <span className="mr-2">Open in</span>
-                        <Icons.v0Logo className="min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
+                        <div className="flex items-center justify-center w-[18px] h-[18px]">
+                          <Icons.v0Logo className="min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
+                        </div>
                       </>
                     ) : (
                       <>
                         <div className="flex items-center gap-2">
-                          <div className="h-5 w-5 flex items-center justify-center">
+                          <div className="flex items-center justify-center w-[22px] h-[22px]">
                             {
                               promptOptions.find(
                                 (opt): opt is PromptOptionBase =>
@@ -595,7 +597,7 @@ export default function ComponentPage({
                               )?.icon
                             }
                           </div>
-                          Copy prompt
+                          <span>Copy prompt</span>
                         </div>
                       </>
                     )}
@@ -662,10 +664,8 @@ export default function ComponentPage({
                           className="items-start [&>span]:pt-1"
                         >
                           <div className="flex items-start gap-3">
-                            <div className="h-5 w-5 flex items-center pt-[2px] justify-center">
-                              <div className="svg.lucide.lucide-sparkles mr-2 min-h-[20px] min-w-[20px] max-h-[20px] max-w-[20px]">
-                                {option.icon}
-                              </div>
+                            <div className="flex items-center justify-center w-[22px] h-[22px]">
+                              {option.icon}
                             </div>
                             <div className="flex flex-col gap-0.5">
                               <span className="text-sm font-medium">

@@ -31,7 +31,7 @@ export const promptOptions: PromptOption[] = [
     icon: (
       <Sparkles
         size={16}
-        className="mr-2 min-h-[16px] min-w-[16px] max-h-[16px] max-w-[16px]"
+        className="min-h-[16px] min-w-[16px] max-h-[16px] max-w-[16px]"
       />
     ),
   },
@@ -44,7 +44,7 @@ export const promptOptions: PromptOption[] = [
     icon: (
       <Brain
         size={16}
-        className="mr-2 min-h-[16px] min-w-[16px] max-h-[16px] max-w-[16px]"
+        className="min-h-[16px] min-w-[16px] max-h-[16px] max-w-[16px]"
       />
     ),
   },
@@ -59,7 +59,7 @@ export const promptOptions: PromptOption[] = [
     description: "Optimized for v0.dev",
     action: "copy",
     icon: (
-      <Icons.v0Logo className="mr-2 min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
+      <Icons.v0Logo className="min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
     ),
   },
   {
@@ -69,7 +69,7 @@ export const promptOptions: PromptOption[] = [
     description: "Optimized for Lovable.dev",
     action: "copy",
     icon: (
-      <Icons.lovableLogo className="mr-2 min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
+      <Icons.lovableLogo className="min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
     ),
   },
   {
@@ -79,7 +79,7 @@ export const promptOptions: PromptOption[] = [
     description: "Optimized for Bolt.new",
     action: "copy",
     icon: (
-      <Icons.boltLogo className="mr-2 min-h-[22px] min-w-[22px] max-h-[22px] max-w-[22px]" />
+      <Icons.boltLogo className="min-h-[22px] min-w-[22px] max-h-[22px] max-w-[22px]" />
     ),
   },
   {
@@ -93,7 +93,7 @@ export const promptOptions: PromptOption[] = [
     description: "Open component in v0.dev",
     action: "open",
     icon: (
-      <Icons.v0Logo className="mr-2 min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
+      <Icons.v0Logo className="min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
     ),
   },
 ]

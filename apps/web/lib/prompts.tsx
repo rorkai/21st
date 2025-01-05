@@ -147,11 +147,13 @@ export const getComponentInstallPrompt = ({
   prompt +=
     "Copy-paste this component to /components/ui folder:\n" +
     endent`
+      \`\`\`tsx
       ${componentFileName}
       ${code}
 
       ${componentDemoFileName}
       ${demoCode}
+      \`\`\`
     ` +
     "\n"
 
@@ -163,8 +165,10 @@ export const getComponentInstallPrompt = ({
         ${Object.entries(registryDependencies)
           .map(
             ([fileName, fileContent]) => endent`
+            \`\`\`tsx
             ${fileName}
             ${fileContent}
+            \`\`\`
           `,
           )
           .join("\n")}
@@ -181,7 +185,9 @@ export const getComponentInstallPrompt = ({
       "\n" +
       endent`
         Install NPM dependencies:
+        \`\`\`bash
         ${allDependencies.join(", ")}
+        \`\`\`
       ` +
       "\n"
   }
@@ -191,7 +197,9 @@ export const getComponentInstallPrompt = ({
       "\n" +
       endent`
         Extend existing tailwind.config.js with this code:
+        \`\`\`js
         ${tailwindConfig}
+        \`\`\`
       ` +
       "\n"
   }
@@ -201,7 +209,9 @@ export const getComponentInstallPrompt = ({
       "\n" +
       endent`
         Extend existing globals.css with this code:
+        \`\`\`css
         ${globalCss}
+        \`\`\`
       ` +
       "\n"
   }
@@ -246,7 +256,6 @@ export const getComponentInstallPrompt = ({
 }
 
 export const formatV0Prompt = (componentName: string, code: string) => {
-  // Экранируем все обратные кавычки в коде
   const escapedCode = code.replace(/`/g, "\\`")
 
   return `This new chat was started by template of component ${componentName}.

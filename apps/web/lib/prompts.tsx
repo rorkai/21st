@@ -250,6 +250,7 @@ export const getComponentInstallPrompt = ({
     "\n" +
     endent`
       Remember: Do not change the component's code unless it's required to integrate or the user asks you to.
+      IMPORTANT: Create all mentioned files in full, without abbreviations. Do not use placeholders like “insert the rest of the code here” – output every line of code exactly as it is, so it can be copied and pasted directly into the project.
     `
 
   return prompt

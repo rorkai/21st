@@ -1,39 +1,45 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
+
 import { useUser } from "@clerk/nextjs"
 import { Heart } from "lucide-react"
 import { toast } from "sonner"
 
-import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
-import { trackEvent } from "@/lib/amplitude"
+import { Button } from "@/components/ui/button"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+
+import { AMPLITUDE_EVENTS, trackEvent } from "@/lib/amplitude"
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import { useLikeMutation } from "@/lib/queries"
 import { cn } from "@/lib/utils"
 
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
-
 interface LikeButtonProps {
   componentId: number
+  componentLikesCount?: number
   size?: number
   showTooltip?: boolean
-  variant?: "default" | "circle"
   liked: boolean
   onClick?: () => void
 }
 
 export function LikeButton({
   componentId,
+  componentLikesCount = 0,
   size = 18,
   showTooltip = false,
   liked,
-  variant = "default",
   onClick,
 }: LikeButtonProps) {
   const { user } = useUser()
   const supabase = useClerkSupabaseClient()
   const likeMutation = useLikeMutation(supabase, user?.id)
   const [isHovered, setIsHovered] = useState(false)
+  const [localLikesCount, setLocalLikesCount] = useState(componentLikesCount)
 
   const handleLike = (e?: React.MouseEvent) => {
     if (e) {
@@ -51,6 +57,7 @@ export function LikeButton({
     }
 
     likeMutation.mutate({ componentId, liked })
+    setLocalLikesCount(liked ? localLikesCount - 1 : localLikesCount + 1)
     toast.success(liked ? "Unliked component" : "Liked component")
 
     trackEvent(
@@ -88,18 +95,16 @@ export function LikeButton({
     }
   }, [liked])
 
-  const buttonClasses = cn(
-    "flex items-center justify-center relative transition-colors duration-200",
-    variant === "default"
-      ? "h-8 w-8 hover:bg-accent rounded-md"
-      : "p-1 hover:bg-accent rounded-full",
-  )
+  useEffect(() => {
+    setLocalLikesCount(componentLikesCount)
+  }, [componentLikesCount])
 
   const button = (
-    <button
+    <Button
       onClick={onClick ?? handleLike}
       disabled={likeMutation.isPending}
-      className={buttonClasses}
+      variant="ghost"
+      className="h-8 px-1.5"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -107,12 +112,18 @@ export function LikeButton({
         size={size}
         fill={liked || isHovered ? "red" : "none"}
         className={cn(
+          "h-[18px] w-[18px]",
           liked || isHovered
             ? "stroke-none scale-110 transition-transform"
             : "",
         )}
       />
-    </button>
+      {localLikesCount !== undefined && (
+        <span className="ms-1.5 text-xs font-medium text-muted-foreground">
+          {localLikesCount}
+        </span>
+      )}
+    </Button>
   )
 
   if (showTooltip) {

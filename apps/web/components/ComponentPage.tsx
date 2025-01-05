@@ -439,10 +439,17 @@ export default function ComponentPage({
     >
       <div className="flex justify-between items-center">
         <div className="flex gap-1 items-center">
-          <Link
-            href="/"
-            className="flex items-center justify-center w-5 h-5 rounded-full cursor-pointer bg-foreground"
-          />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                href="/"
+                className="flex items-center justify-center w-5 h-5 rounded-full cursor-pointer bg-foreground"
+              />
+            </TooltipTrigger>
+            <TooltipContent side="bottom" align="start" className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
+              <p className="flex items-center gap-1.5">Back to homepage</p>
+            </TooltipContent>
+          </Tooltip>
           <ChevronRight size={12} className="text-muted-foreground" />
           <Link
             href={`/${component.user.username}`}
@@ -466,9 +473,32 @@ export default function ComponentPage({
 
         <div className="flex items-center gap-1">
           <ThemeToggle />
+          {canEdit && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={handleEditClick}
+                  className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-md relative"
+                >
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Pencil size={16} />
+                  </div>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
+                <p className="flex items-center gap-1.5">
+                  Edit Component
+                  <kbd className="pointer-events-none text-muted-foreground h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 opacity-100 flex text-[11px] leading-none font-sans">
+                    E
+                  </kbd>
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          )}
           <SignedIn>
             <LikeButton
               componentId={component.id}
+              componentLikesCount={component.likes_count}
               size={18}
               showTooltip={true}
               liked={liked ?? false}
@@ -476,34 +506,16 @@ export default function ComponentPage({
           </SignedIn>
           <SignedOut>
             <SignInButton>
-              <LikeButton componentId={component.id} size={18} liked={false} />
+              <LikeButton
+                componentId={component.id}
+                componentLikesCount={component.likes_count}
+                size={18}
+                liked={false}
+              />
             </SignInButton>
           </SignedOut>
 
           <div className="hidden md:flex items-center gap-1">
-            {canEdit && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={handleEditClick}
-                    className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-md relative"
-                  >
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Pencil size={16} />
-                    </div>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
-                  <p className="flex items-center gap-1.5">
-                    Edit Component
-                    <kbd className="pointer-events-none text-muted-foreground h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 opacity-100 flex text-[11px] leading-none font-sans">
-                      E
-                    </kbd>
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-
             <div className="relative bg-muted rounded-lg h-8 p-0.5 flex">
               <div
                 className="absolute inset-y-0.5 rounded-md bg-background shadow transition-all duration-200 ease-in-out"

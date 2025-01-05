@@ -11,7 +11,6 @@ import { useClerkSupabaseClient } from "@/lib/clerk"
 import { useLikeMutation } from "@/lib/queries"
 import { cn } from "@/lib/utils"
 
-import { Hotkey } from "./ui/hotkey"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
 
 interface LikeButtonProps {
@@ -121,9 +120,11 @@ export function LikeButton({
       <Tooltip>
         <TooltipTrigger asChild>{button}</TooltipTrigger>
         <TooltipContent className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
-          <p className="flex items-center">
+          <p className="flex items-center gap-1.5">
             {liked ? "Unlike" : "Like"}
-            <Hotkey keys={["L"]} variant="outline" />
+            <kbd className="pointer-events-none h-5 text-muted-foreground select-none items-center gap-1 rounded border bg-muted px-1.5 opacity-100 flex text-[11px] leading-none font-sans">
+              L
+            </kbd>
           </p>
         </TooltipContent>
       </Tooltip>

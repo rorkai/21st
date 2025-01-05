@@ -14,7 +14,6 @@ import {
   extractAmbigiousRegistryDependencies,
 } from "../../lib/parsers"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import {
   Dialog,
@@ -40,7 +39,6 @@ import { useUser } from "@clerk/nextjs"
 import { useDebugMode } from "@/hooks/use-debug-mode"
 import { Tag } from "@/types/global"
 import { PublishComponentPreview } from "./preview"
-import { Hotkey } from "../ui/hotkey"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import {
@@ -1124,7 +1122,6 @@ const SuccessDialog = ({
   onGoToComponent,
 }: {
   isOpen: boolean
-  // eslint-disable-next-line no-unused-vars
   onOpenChange: (open: boolean) => void
   onAddAnother: () => void
   onGoToComponent: () => void
@@ -1144,11 +1141,20 @@ const SuccessDialog = ({
         <DialogFooter>
           <Button onClick={onAddAnother} variant="outline">
             Add Another
-            <Hotkey keys={["N"]} variant="outline" />
+            <kbd className="hidden md:inline-flex h-5 items-center rounded border border-border px-1.5 ml-1.5 font-mono text-[11px] font-medium text-muted-foreground">
+              N
+            </kbd>
           </Button>
           <Button onClick={onGoToComponent} variant="default">
             View Component
-            <Hotkey keys={["⏎"]} modifier={true} variant="primary" />
+            <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border-muted-foreground/40 bg-muted-foreground/20 px-1.5 ml-1.5 font-sans  text-[11px] text-muted leading-none  opacity-100 flex">
+              <span className="text-[11px] leading-none font-sans">
+                {navigator?.platform?.toLowerCase()?.includes("mac")
+                  ? "⌘"
+                  : "Ctrl"}
+              </span>
+              ⏎
+            </kbd>
           </Button>
         </DialogFooter>
       </DialogContent>

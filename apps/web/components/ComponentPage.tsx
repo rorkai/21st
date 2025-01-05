@@ -39,7 +39,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
-import { Hotkey } from "./ui/hotkey"
 import { UserAvatar } from "./UserAvatar"
 import { LikeButton } from "./LikeButton"
 import { ThemeToggle } from "./ThemeToggle"
@@ -97,12 +96,14 @@ const useKeyboardShortcuts = ({
   canEdit,
   isEditDialogOpen,
   setIsEditDialogOpen,
+  handlePromptAction,
 }: {
   component: Component & { user: User }
   setIsShowCode: Dispatch<SetStateAction<boolean>>
   canEdit: boolean
   isEditDialogOpen: boolean
   setIsEditDialogOpen: Dispatch<SetStateAction<boolean>>
+  handlePromptAction: () => void
 }) => {
   const handleShareClick = async () => {
     if (typeof window === "undefined") return
@@ -174,17 +175,26 @@ const useKeyboardShortcuts = ({
 
   useEffect(() => {
     const keyDownHandler = (e: KeyboardEvent) => {
-      if (e.code === "C" && e.shiftKey && (e.metaKey || e.ctrlKey)) {
+      if (e.code === "KeyX" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        handlePromptAction()
+      }
+    }
+
+    document.addEventListener("keydown", keyDownHandler)
+    return () => document.removeEventListener("keydown", keyDownHandler)
+  }, [handlePromptAction])
+
+  useEffect(() => {
+    const keyDownHandler = (e: KeyboardEvent) => {
+      if (e.code === "KeyC" && e.shiftKey && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
         handleShareClick()
       }
     }
 
     window.addEventListener("keydown", keyDownHandler)
-
-    return () => {
-      window.removeEventListener("keydown", keyDownHandler)
-    }
+    return () => window.removeEventListener("keydown", keyDownHandler)
   }, [])
 }
 
@@ -420,6 +430,7 @@ export default function ComponentPage({
     setIsShowCode,
     isEditDialogOpen,
     setIsEditDialogOpen,
+    handlePromptAction,
   })
 
   return (
@@ -483,7 +494,12 @@ export default function ComponentPage({
                   </button>
                 </TooltipTrigger>
                 <TooltipContent className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
-                  <p className="flex items-center">Edit Component</p>
+                  <p className="flex items-center gap-1.5">
+                    Edit Component
+                    <kbd className="pointer-events-none text-muted-foreground h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 opacity-100 flex text-[11px] leading-none font-sans">
+                      E
+                    </kbd>
+                  </p>
                 </TooltipContent>
               </Tooltip>
             )}
@@ -509,9 +525,11 @@ export default function ComponentPage({
                   </button>
                 </TooltipTrigger>
                 <TooltipContent className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
-                  <p className="flex items-center">
+                  <p className="flex items-center gap-1.5">
                     Component code
-                    <Hotkey keys={["["]} variant="outline" />
+                    <kbd className="pointer-events-none h-5 text-muted-foreground select-none items-center gap-1 rounded border bg-muted px-1.5 opacity-100 flex text-[11px] leading-none font-sans">
+                      [
+                    </kbd>
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -528,40 +546,63 @@ export default function ComponentPage({
                   </button>
                 </TooltipTrigger>
                 <TooltipContent className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
-                  <p className="flex items-center">
+                  <p className="flex items-center gap-1.5">
                     Component info
-                    <Hotkey keys={["]"]} variant="outline" />
+                    <kbd className="pointer-events-none h-5 text-muted-foreground select-none items-center gap-1 rounded border bg-muted px-1.5 opacity-100 flex text-[11px] leading-none font-sans">
+                      ]
+                    </kbd>
                   </p>
                 </TooltipContent>
               </Tooltip>
             </div>
             <div className="inline-flex -space-x-px divide-x divide-primary-foreground/30 rounded-lg shadow-sm">
-              <Button
-                onClick={handlePromptAction}
-                className="rounded-none shadow-none first:rounded-s-lg focus-visible:z-10"
-              >
-                {selectedPromptType === "v0-open" ? (
-                  <>
-                    <span className="mr-2">Open in</span>
-                    <Icons.v0Logo className="min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
-                  </>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-2">
-                      <div className="h-5 w-5 flex items-center justify-center">
-                        {
-                          promptOptions.find(
-                            (opt): opt is PromptOptionBase =>
-                              opt.type === "option" &&
-                              opt.id === selectedPromptType,
-                          )?.icon
-                        }
-                      </div>
-                      Copy prompt
-                    </div>
-                  </>
-                )}
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={handlePromptAction}
+                    className="rounded-none shadow-none first:rounded-s-lg focus-visible:z-10"
+                  >
+                    {selectedPromptType === "v0-open" ? (
+                      <>
+                        <span className="mr-2">Open in</span>
+                        <Icons.v0Logo className="min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <div className="h-5 w-5 flex items-center justify-center">
+                            {
+                              promptOptions.find(
+                                (opt): opt is PromptOptionBase =>
+                                  opt.type === "option" &&
+                                  opt.id === selectedPromptType,
+                              )?.icon
+                            }
+                          </div>
+                          Copy prompt
+                        </div>
+                      </>
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
+                  <p className="flex items-center gap-1.5">
+                    {selectedPromptType === "v0-open"
+                      ? "Open in v0"
+                      : "Copy AI prompt"}
+                    <kbd className="pointer-events-none h-5 text-muted-foreground select-none items-center gap-1 rounded border bg-muted px-1.5 font-sans text-[11px] leading-none opacity-100 flex">
+                      <span className="text-[11px] leading-none font-sans text-muted-foreground">
+                        {navigator?.platform?.toLowerCase()?.includes("mac")
+                          ? "⌘"
+                          : "Ctrl"}
+                      </span>
+                      <span className="text-[11px] leading-none font-sans text-muted-foreground">
+                        X
+                      </span>
+                    </kbd>
+                  </p>
+                </TooltipContent>
+              </Tooltip>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button

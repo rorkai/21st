@@ -201,7 +201,7 @@ export function ComponentPagePreview({
           <Suspense fallback={<LoadingSpinner />}>
             <SandpackPreview
               showSandpackErrorOverlay={false}
-              showOpenInCodeSandbox={false}
+              showOpenInCodeSandbox={process.env.NODE_ENV === "development"}
               showRefreshButton={false}
             />
           </Suspense>

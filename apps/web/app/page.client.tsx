@@ -339,8 +339,6 @@ export function HomePageClient({
       <div className="flex flex-col">
         <ComponentsHeader
           filtersDisabled={!!searchQuery}
-          components={allComponents}
-          totalCount={tabCounts[quickFilter]}
           tabCounts={tabCounts}
         />
         {showSkeleton ? (

@@ -10,7 +10,6 @@ import { ArrowUpDown, CircleX } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { AMPLITUDE_EVENTS, trackEvent } from "@/lib/amplitude"
-import { filterComponents } from "@/lib/filters.client"
 
 import { Input } from "@/components/ui/input"
 import {

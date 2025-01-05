@@ -119,6 +119,38 @@ export default function PublishComponentForm() {
   const registryToPublish = form.watch("registry")
 
   const [formStep, setFormStep] = useState<FormStep>("nameSlugForm")
+  const isFirstRender = useRef(true)
+  const isNavigatingAway = useRef(false)
+
+  useEffect(() => {
+    const message = "You have unsaved changes. Are you sure you want to leave?"
+
+    if (formStep === "nameSlugForm") {
+      window.onbeforeunload = null
+      window.onpopstate = null
+      return
+    }
+
+    window.onpopstate = () => {
+      if (!isNavigatingAway.current && !window.confirm(message)) {
+        window.history.pushState(null, "", window.location.href)
+      } else {
+        isNavigatingAway.current = true
+        router.back()
+      }
+    }
+
+    // Add history entry only on the first non-nameSlugForm step
+    if (isFirstRender.current) {
+      window.history.pushState(null, "", window.location.href)
+      isFirstRender.current = false
+    }
+
+    return () => {
+      window.onpopstate = null
+    }
+  }, [formStep, router])
+
   const [parsedCode, setParsedCode] = useState<ParsedCodeData>({
     dependencies: {},
     demoDependencies: {},
@@ -901,6 +933,7 @@ export default function PublishComponentForm() {
                   unknownDependencies?.length > 0 && (
                     <ResolveUnknownDependenciesAlertForm
                       unknownDependencies={unknownDependencies}
+                      onBack={() => setFormStep("customization")}
                       onDependenciesResolved={(resolvedDependencies) => {
                         form.setValue(
                           "unknown_dependencies",

@@ -146,6 +146,9 @@ export function ComponentPagePreview({
     demoComponentFile ?? mainComponentFile ?? "",
   )
 
+  const [previewError, setPreviewError] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
   if (!css)
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3 w-full">
@@ -209,13 +212,40 @@ export function ComponentPagePreview({
           className="flex-grow h-full relative"
           transition={{ duration: 0.3 }}
         >
-          <Suspense fallback={<LoadingSpinner />}>
-            <SandpackPreview
-              showSandpackErrorOverlay={false}
-              showOpenInCodeSandbox={process.env.NODE_ENV === "development"}
-              showRefreshButton={false}
-            />
+          <Suspense fallback={<LoadingSpinner text="Loading preview..." />}>
+            {previewError ? (
+              <div className="flex flex-col items-center justify-center h-full gap-3">
+                <p className="text-muted-foreground text-sm">
+                  Failed to load preview
+                </p>
+                <button
+                  onClick={() => {
+                    setPreviewError(false)
+                    setIsLoading(true)
+                  }}
+                  className="text-sm underline text-muted-foreground hover:text-foreground"
+                >
+                  Try again
+                </button>
+              </div>
+            ) : (
+              <SandpackPreview
+                showSandpackErrorOverlay={false}
+                showOpenInCodeSandbox={process.env.NODE_ENV === "development"}
+                showRefreshButton={false}
+                onLoad={() => setIsLoading(false)}
+                onError={() => {
+                  setPreviewError(true)
+                  setIsLoading(false)
+                }}
+              />
+            )}
           </Suspense>
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+              <LoadingSpinner text="Starting preview..." />
+            </div>
+          )}
         </motion.div>
       </SandpackProviderUnstyled>
       <div className="h-full w-full md:max-w-[30%] min-h-90vh overflow-hidden rounded-lg border border-border min-w-[350px] dark:bg-[#151515]">

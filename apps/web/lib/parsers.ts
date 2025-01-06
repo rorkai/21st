@@ -123,6 +123,9 @@ export function extractNPMDependencies(code: string): Record<string, string> {
           !source.startsWith("@/")
         ) {
           let packageName = source
+          if (packageName === "motion/react") {
+            packageName = "motion"
+          }
           if (shouldAddDependency(packageName)) {
             dependencies[packageName] = "latest"
           }
@@ -144,6 +147,9 @@ export function extractNPMDependencies(code: string): Record<string, string> {
             !source.startsWith("@/")
           ) {
             let packageName = source
+            if (packageName === "motion/react") {
+              packageName = "motion"
+            }
             if (shouldAddDependency(packageName)) {
               dependencies[packageName] = "latest"
             }

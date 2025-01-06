@@ -223,6 +223,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const ThemeContext = createContext({
   theme: 'light',
   setTheme: (theme: string) => {},
+  resolvedTheme: 'light',
 });
 
 export const useTheme = () => useContext(ThemeContext);
@@ -236,8 +237,10 @@ export const ThemeProvider = ({ children, defaultTheme = 'light', enableSystem =
     root.classList.add(theme);
   }, [theme]);
 
+  const resolvedTheme = theme === 'system' ? 'light' : theme;
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, resolvedTheme }}>
       {children}
     </ThemeContext.Provider>
   );

@@ -147,7 +147,82 @@ export function generateSandpackFiles({
   customTailwindConfig?: string
   customGlobalCss?: string
 }) {
-  const appTsxContent = `
+  const pathParts = relativeImportPath.split("/")
+  const isBlocksRegistry = pathParts[pathParts.length - 1] === "blocks"
+  console.log(
+    "Path:",
+    relativeImportPath,
+    "Last part:",
+    pathParts[pathParts.length - 1],
+    "Is blocks:",
+    isBlocksRegistry,
+  )
+
+  const appTsxContent = isBlocksRegistry
+    ? `
+import React, { useState } from 'react';
+import { ThemeProvider } from './next-themes';
+import { RouterProvider } from 'next/router';
+import './styles.css';
+import DefaultDemoExport, { ${demoComponentNames.join(", ")} } from './demo';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem } from './components/ui/select';
+
+const demoComponentNames = ${JSON.stringify(demoComponentNames)};
+const DemoComponents = {
+  ...{
+    ${demoComponentNames.map((name) => `"${name}": ${name}`).join(",\n")}
+  },
+  ...DefaultDemoExport,
+};
+
+export default function App() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const CurrentComponent = Object.values(DemoComponents)[currentIndex];
+  const showSelect = demoComponentNames.length > 1;
+
+  const handleSelect = (value) => {
+    const index = demoComponentNames.indexOf(value);
+    if (index !== -1) {
+      setCurrentIndex(index);
+    }
+  };
+
+  return (
+    <ThemeProvider attribute="class" defaultTheme="${theme}" enableSystem={false}>
+      <RouterProvider>
+        <div className="bg-background text-foreground py-12 sm:py-24 md:py-32 px-4 fade-bottom overflow-hidden pb-0 sm:pb-0 md:pb-0">
+          {showSelect && (
+            <div className="absolute z-10 top-4 right-4">
+              <Select onValueChange={handleSelect} defaultValue={demoComponentNames[0]} className="shadow">
+                <SelectTrigger className="gap-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    ${demoComponentNames
+                      .map(
+                        (name) => `
+                      <SelectItem key="${name}" value="${name}">
+                        ${name.replace(/([A-Z])/g, " $1").trim()}
+                      </SelectItem>
+                      `,
+                      )
+                      .join("")}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <div className="w-full">
+            {CurrentComponent ? <CurrentComponent /> : <div>Component not found</div>}
+          </div>
+        </div>
+      </RouterProvider>
+    </ThemeProvider>
+  );
+}
+`
+    : `
 import React, { useState } from 'react';
 import { ThemeProvider } from './next-themes';
 import { RouterProvider } from 'next/router';

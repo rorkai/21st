@@ -46,7 +46,7 @@ export const UserAvatar = ({
   )
 
   return (
-    <HoverCard openDelay={300}>
+    <HoverCard>
       <HoverCardTrigger asChild>{wrappedAvatar}</HoverCardTrigger>
       <HoverCardContent
         align="start"

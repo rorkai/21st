@@ -190,7 +190,7 @@ export default function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="${theme}" enableSystem={false}>
       <RouterProvider>
-        <div className="bg-background text-foreground py-12 sm:py-24 md:py-32 px-4 fade-bottom overflow-hidden pb-0 sm:pb-0 md:pb-0">
+        <div className="bg-background text-foreground">
           {showSelect && (
             <div className="absolute z-10 top-4 right-4">
               <Select onValueChange={handleSelect} defaultValue={demoComponentNames[0]} className="shadow">

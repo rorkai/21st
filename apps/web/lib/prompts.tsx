@@ -259,11 +259,13 @@ export const getComponentInstallPrompt = ({
 export const formatV0Prompt = (componentName: string, code: string) => {
   const escapedCode = code.replace(/`/g, "\\`")
 
-  return `This new chat was started by template of component ${componentName}.
+  return endent
+    `Create a new project that uses this ${componentName} component:
 
-\`\`\`tsx
-${escapedCode}
-\`\`\`
+    \`\`\`tsx
+    ${escapedCode}
+    \`\`\`
 
-Please wait instruction how to integrate it in next message`
+    Ask the user for project description and instructions on how to integrate the component.
+    `
 }

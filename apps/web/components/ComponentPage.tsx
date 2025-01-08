@@ -380,21 +380,18 @@ export default function ComponentPage({
     }
 
     try {
-      const prompt =
-        selectedOption?.id === PROMPT_TYPES.V0
-          ? formatV0Prompt(component.name, code)
-          : getComponentInstallPrompt({
-              promptType: selectedPromptType as PromptType,
-              codeFileName: component.code.split("/").slice(-1)[0]!,
-              demoCodeFileName: component.demo_code.split("/").slice(-1)[0]!,
-              code,
-              demoCode,
-              registryDependencies,
-              npmDependencies: dependencies,
-              npmDependenciesOfRegistryDependencies,
-              tailwindConfig,
-              globalCss,
-            })
+      const prompt = getComponentInstallPrompt({
+        promptType: selectedPromptType as PromptType,
+        codeFileName: component.code.split("/").slice(-1)[0]!,
+        demoCodeFileName: component.demo_code.split("/").slice(-1)[0]!,
+        code,
+        demoCode,
+        registryDependencies,
+        npmDependencies: dependencies,
+        npmDependenciesOfRegistryDependencies,
+        tailwindConfig,
+        globalCss,
+      })
 
       await copyToClipboard(prompt)
       toast.success("AI prompt copied to clipboard")

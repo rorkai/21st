@@ -146,6 +146,6 @@ This project wouldn't be possible without
 - [Cloudflare](https://cloudlfare.com)
 - [Cursor](https://cursor.com)
 - [Claude 3.5 Sonnet by Anthropic](https://anthropic.com/)
-- [MagicUI](https://magicui.com)
+- [MagicUI](https://magicui.design)
 
 And, of course, our open source contributors ❤️

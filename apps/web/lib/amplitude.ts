@@ -5,7 +5,7 @@ export const initAmplitude = () => {
   if (typeof window !== "undefined") {
     if (process.env.NODE_ENV === "production") {
       const sessionReplayTracking = sessionReplayPlugin({
-        sampleRate: 0.1,
+        sampleRate: 0.0001,
       })
       amplitude.add(sessionReplayTracking)
     }

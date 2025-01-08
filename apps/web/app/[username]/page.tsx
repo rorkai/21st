@@ -27,6 +27,7 @@ export const generateMetadata = async ({
   const ogImageUrl = `${process.env.NEXT_PUBLIC_APP_URL}/${user.username}/opengraph-image`
 
   return {
+    metadataBase: new URL("https://21st.dev"),
     title: `${user.name || user.username} | 21st.dev - The NPM for Design Engineers`,
     description: `Collection of free open source shadcn/ui React Tailwind components by ${user.name || user.username}.`,
     openGraph: {
@@ -45,7 +46,7 @@ export const generateMetadata = async ({
       card: "summary_large_image",
       title: `${user.name || user.username}'s Components | 21st.dev - The NPM for Design Engineers`,
       description: `Browse ${user.name || user.username}'s collection of React Tailwind components inspired by shadcn/ui.`,
-      images: [`${process.env.NEXT_PUBLIC_APP_URL}/og-image.png`],
+      images: [ogImageUrl],
     },
     keywords: [
       "react components",

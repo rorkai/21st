@@ -272,7 +272,7 @@ export function ComponentPagePreview({
                   canEdit={canEdit}
                   setIsEditDialogOpen={setIsEditDialogOpen}
                 />
-                <div className="flex w-full flex-col">
+                <div className="flex w-full h-full flex-col">
                   {isShowCode ? (
                     <>
                       <CopyCommandSection component={component} />

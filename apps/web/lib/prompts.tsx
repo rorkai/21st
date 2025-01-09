@@ -137,6 +137,43 @@ export const getComponentInstallPrompt = ({
   const componentDemoFileName = demoCodeFileName.split("/").slice(-1)[0]
 
   let prompt = ""
+
+  if (promptType === PROMPT_TYPES.SITEBREW) {
+    prompt += 
+      endent`
+        Here are some files, please add their functionality and design to the project, but write it all down in the one file that we currently have.
+        Replicate these components and add them to the code:
+        ${componentFileName}
+        ${code}
+        ${componentDemoFileName}
+        ${demoCode}
+      ` + "\n"
+
+    if (Object.keys(registryDependencies || {}).length > 0) {
+      prompt +=
+      "\n" +
+      endent`
+        Here are some dependencies, also incorporate them into the one file where needed
+        ${Object.entries(registryDependencies)
+          .map(
+            ([fileName, fileContent]) => endent`
+            -----
+            ${fileName}
+            ${fileContent}
+          `,
+          )
+          .join("\n")}
+      ` +
+      "\n"
+    }
+    prompt +=
+      endent`
+        REMEMBER: MAKE SURE THE ENTIRE DESIGN AND FUNCTIONALITY REMAINS AS IS AND IS IN FULL. 
+      ` + "\n"
+    return prompt
+  }
+
+  
   if (promptType === PROMPT_TYPES.EXTENDED) {
     prompt +=
       endent`

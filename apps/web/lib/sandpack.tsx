@@ -149,14 +149,6 @@ export function generateSandpackFiles({
 }) {
   const pathParts = relativeImportPath.split("/")
   const isBlocksRegistry = pathParts[pathParts.length - 1] === "blocks"
-  console.log(
-    "Path:",
-    relativeImportPath,
-    "Last part:",
-    pathParts[pathParts.length - 1],
-    "Is blocks:",
-    isBlocksRegistry,
-  )
 
   const appTsxContent = isBlocksRegistry
     ? `

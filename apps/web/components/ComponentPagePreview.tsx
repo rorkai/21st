@@ -1,4 +1,4 @@
-import React, { useState, useRef, Suspense } from "react"
+import React, { useState, useRef, Suspense, useEffect } from "react"
 import { useAnimation, motion } from "framer-motion"
 import { useAtom } from "jotai"
 import { useTheme } from "next-themes"
@@ -148,6 +148,19 @@ export function ComponentPagePreview({
 
   const [previewError, setPreviewError] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [loadingText, setLoadingText] = useState("Starting preview...")
+
+  useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => {
+        setLoadingText(
+          "Loading is taking longer than usual. You may want to refresh the page...",
+        )
+      }, 4000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [isLoading])
 
   if (!css)
     return (
@@ -243,7 +256,7 @@ export function ComponentPagePreview({
           </Suspense>
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/50">
-              <LoadingSpinner text="Starting preview..." />
+              <LoadingSpinner text={loadingText} />
             </div>
           )}
         </motion.div>

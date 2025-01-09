@@ -48,6 +48,7 @@ export function EditComponentDialog({
       unknown_dependencies: [],
       slug_available: true,
       preview_image_data_url: component.preview_url,
+      preview_video_data_url: component.video_url ?? "",
       description: component.description ?? "",
       license: component.license,
       website_url: component.website_url ?? "",
@@ -133,6 +134,21 @@ export function EditComponentDialog({
       } catch (error) {
         console.error("Failed to upload image:", error)
         toast.error("Failed to upload image. Please try again.")
+        return
+      }
+    }
+
+    if (formData.preview_video_file instanceof File) {
+      const fileKey = `${component.component_slug}.mp4`
+      try {
+        const videoUrl = await uploadToR2Mutation.mutateAsync({
+          file: formData.preview_video_file,
+          fileKey,
+        })
+        updatedData.video_url = videoUrl
+      } catch (error) {
+        console.error("Failed to upload video:", error)
+        toast.error("Failed to upload video. Please try again.")
         return
       }
     }

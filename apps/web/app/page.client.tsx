@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useMemo, useState, useCallback } from "react"
+import React, { useEffect, useState, useCallback } from "react"
 
 import { useAtom } from "jotai"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
@@ -12,11 +12,8 @@ import {
   QuickFilterOption,
   SortOption,
   User,
-  GetFilteredComponentsResponse,
-  SearchComponentsResponse,
   ComponentWithUser,
 } from "@/types/global"
-
 
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import { setCookie } from "@/lib/cookies"
@@ -118,13 +115,8 @@ export function HomePageClient({
     }
   }, [quickFilter, debouncedSetQuickFilter, isStorageLoaded])
 
-  interface QueryResult {
-    data: ComponentWithUser[]
-    total_count: number
-  }
-
   const { data, isLoading, isFetching, fetchNextPage, hasNextPage } =
-    useInfiniteQuery<QueryResult, Error>({
+    useInfiniteQuery({
       queryKey: [
         "filtered-components",
         debouncedQuickFilter,
@@ -147,7 +139,7 @@ export function HomePageClient({
             throw new Error(error.message || `HTTP error: ${status}`)
           }
 
-          const data = (filteredData || []) as GetFilteredComponentsResponse
+          const data = filteredData || []
           if (data.length === 0) {
             return {
               data: [],
@@ -155,23 +147,21 @@ export function HomePageClient({
             }
           }
 
-          const components = data.map(
-            (item: GetFilteredComponentsResponse[number]) => ({
-              ...item,
-              user: item.user_data as User,
-              compiled_css: null,
-              fts: null,
-              global_css_extension: null,
-              hunter_username: null,
-              is_paid: false,
-              payment_url: null,
-              price: 0,
-              pro_preview_image_url: null,
-              website_url: null,
-              tailwind_config_extension: null,
-              video_url: item.video_url || null,
-            }),
-          ) as ComponentWithUser[]
+          const components = data.map((item) => ({
+            ...item,
+            user: item.user_data as User,
+            compiled_css: null,
+            fts: null,
+            global_css_extension: null,
+            hunter_username: null,
+            is_paid: false,
+            payment_url: null,
+            price: 0,
+            pro_preview_image_url: null,
+            website_url: null,
+            tailwind_config_extension: null,
+            video_url: item.video_url || null,
+          })) as ComponentWithUser[]
 
           return {
             data: components,
@@ -190,7 +180,7 @@ export function HomePageClient({
           throw new Error(error.message)
         }
 
-        const searchResults = (searchData || []) as SearchComponentsResponse
+        const searchResults = searchData || []
         if (searchResults.length === 0) {
           return {
             data: [],
@@ -198,45 +188,43 @@ export function HomePageClient({
           }
         }
 
-        const components = searchResults.map(
-          (result: SearchComponentsResponse[number]) => {
-            const userData = result.user_data as Record<string, unknown>
-            return {
-              id: result.id,
-              component_names: result.component_names,
-              description: result.description,
-              code: result.code,
-              demo_code: result.demo_code,
-              created_at: result.created_at,
-              updated_at: result.updated_at,
-              user_id: result.user_id,
-              dependencies: result.dependencies,
-              is_public: result.is_public,
-              downloads_count: result.downloads_count || 0,
-              likes_count: result.likes_count,
-              component_slug: result.component_slug,
-              name: result.name,
-              demo_dependencies: result.demo_dependencies,
-              registry: result.registry,
-              direct_registry_dependencies: result.direct_registry_dependencies,
-              demo_direct_registry_dependencies:
-                result.demo_direct_registry_dependencies,
-              preview_url: result.preview_url,
-              license: result.license,
-              compiled_css: null,
-              global_css_extension: null,
-              hunter_username: null,
-              is_paid: false,
-              payment_url: null,
-              price: 0,
-              pro_preview_image_url: null,
-              video_url: result.video_url,
-              website_url: null,
-              user: userData as User,
-              fts: null,
-            }
-          },
-        ) as ComponentWithUser[]
+        const components = searchResults.map((result) => {
+          const userData = result.user_data as Record<string, unknown>
+          return {
+            id: result.id,
+            component_names: result.component_names,
+            description: result.description,
+            code: result.code,
+            demo_code: result.demo_code,
+            created_at: result.created_at,
+            updated_at: result.updated_at,
+            user_id: result.user_id,
+            dependencies: result.dependencies,
+            is_public: result.is_public,
+            downloads_count: result.downloads_count || 0,
+            likes_count: result.likes_count,
+            component_slug: result.component_slug,
+            name: result.name,
+            demo_dependencies: result.demo_dependencies,
+            registry: result.registry,
+            direct_registry_dependencies: result.direct_registry_dependencies,
+            demo_direct_registry_dependencies:
+              result.demo_direct_registry_dependencies,
+            preview_url: result.preview_url,
+            license: result.license,
+            compiled_css: null,
+            global_css_extension: null,
+            hunter_username: null,
+            is_paid: false,
+            payment_url: null,
+            price: 0,
+            pro_preview_image_url: null,
+            video_url: result.video_url,
+            website_url: null,
+            user: userData as User,
+            fts: null,
+          }
+        }) as ComponentWithUser[]
 
         return {
           data: components,
@@ -259,9 +247,7 @@ export function HomePageClient({
       },
     })
 
-  const allComponents = useMemo(() => {
-    return data?.pages.flatMap((page) => page.data) || []
-  }, [data?.pages]) as ComponentWithUser[]
+  const allComponents = data?.pages.flatMap((page) => page.data)
 
   const showSkeleton = isLoading || !data?.pages?.[0]?.data?.length
   const showSpinner = isFetching && !showSkeleton
@@ -280,7 +266,6 @@ export function HomePageClient({
         return counts
       }
 
-      // @ts-ignore - Temporary ignore until Supabase types are updated
       const { data, error } = await supabase.rpc("get_components_counts")
 
       if (!error && Array.isArray(data)) {
@@ -349,7 +334,7 @@ export function HomePageClient({
           </div>
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-9 list-none pb-10">
-            {allComponents.map((component) => (
+            {allComponents?.map((component) => (
               <ComponentCard
                 key={component.id}
                 component={component}

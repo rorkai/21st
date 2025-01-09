@@ -79,17 +79,15 @@ const useSearchHotkeys = (inputRef: React.RefObject<HTMLInputElement>) => {
   }, [])
 }
 
-interface ComponentsHeaderProps {
-  filtersDisabled: boolean
-  currentSection?: string
-  tabCounts: Record<QuickFilterOption, number>
-}
-
 export function ComponentsHeader({
   filtersDisabled,
   currentSection,
   tabCounts,
-}: ComponentsHeaderProps) {
+}: {
+  filtersDisabled: boolean
+  currentSection?: string
+  tabCounts: Record<QuickFilterOption, number>
+}) {
   const [quickFilter, setQuickFilter] = useAtom(quickFilterAtom)
   const [sortBy, setSortBy] = useAtom(sortByAtom)
   const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom)

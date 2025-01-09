@@ -26,6 +26,7 @@ export const SORT_OPTIONS = {
 
 export const PROMPT_TYPES = {
   BASIC: "basic",
+  SITEBREW: "sitebrew",
   V0: "v0",
   LOVABLE: "lovable",
   BOLT: "bolt",

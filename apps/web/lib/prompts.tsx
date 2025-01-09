@@ -54,6 +54,16 @@ export const promptOptions: PromptOption[] = [
   },
   {
     type: "option",
+    id: PROMPT_TYPES.SITEBREW,
+    label: "sitebrew.ai",
+    description: "Optimized for sitebrew.ai",
+    action: "copy",
+    icon: (
+      <Icons.sitebrewLogo className="min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
+    ),
+  },
+  {
+    type: "option",
     id: PROMPT_TYPES.V0,
     label: "v0 by Vercel",
     description: "Optimized for v0.dev",

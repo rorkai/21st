@@ -1,5 +1,6 @@
 import { LucideProps, Moon, SunMedium, type LucideIcon } from "lucide-react"
 import { LovableLogo } from "./lovable"
+import { SitebrewLogo } from "./sitebrew"
 import { TerminalIcon } from "./terminal"
 
 export type Icon = LucideIcon
@@ -36,6 +37,7 @@ export const Icons = {
     </svg>
   ),
   lovableLogo: LovableLogo,
+  sitebrewLogo: SitebrewLogo,
   boltLogo: (props: LucideProps) => (
     <svg
       {...props}

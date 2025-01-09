@@ -530,7 +530,7 @@ export {
     "/node_modules/next/index.js": `
       export { default as Image } from './image';
       export { default as Link } from './link';
-      export { useRouter, RouterProvider } from './router';
+      export { useRouter, RouterProvider, usePathname } from './router';
       export { default as Head } from './head';
       export { default as Script } from './script';
       export { default as dynamic } from './dynamic';
@@ -583,6 +583,11 @@ export {
       });
       
       export const useRouter = () => useContext(RouterContext);
+      
+      export const usePathname = () => {
+        const router = useRouter();
+        return router.pathname;
+      };
       
       export const RouterProvider = ({ children }) => {
         const router = {
@@ -643,6 +648,9 @@ export {
           </Html>
         );
       }
+    `,
+    "/node_modules/next/navigation.js": `
+      export { usePathname } from './router';
     `,
     [`${relativeImportPath}/${componentSlug}.tsx`]: code,
     "/demo.tsx": demoCode,

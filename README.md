@@ -4,8 +4,6 @@
 
 Inspired by [shadcn/ui](https://ui.shadcn.com/).
 
-Built by RorkAI team and Claude 3.5 Sonnet.
-
 ## Publish your component
 
 It takes 1 min to publish via our [publish page](https://21st.dev). To publish, you just need two files: `component.tsx` and `component.demo.tsx`.

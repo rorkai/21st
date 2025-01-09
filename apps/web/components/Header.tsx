@@ -79,7 +79,7 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
               <SignedIn>
                 {!isPublishPage && (
                   <Button asChild className="ml-2">
-                    <Link href="/publish">Publish</Link>
+                    <Link href="/publish">Publish component</Link>
                   </Button>
                 )}
                 <DropdownMenu>
@@ -136,7 +136,7 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
 
               <SignedOut>
                 <SignInButton>
-                  <Button className="ml-2">Publish</Button>
+                  <Button className="ml-2">Publish component</Button>
                 </SignInButton>
               </SignedOut>
             </>

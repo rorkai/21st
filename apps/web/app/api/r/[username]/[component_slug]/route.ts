@@ -5,6 +5,14 @@ import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 import { Tables } from "@/types/supabase"
 import { extractCssVars } from "@/lib/parsers"
 
+// registry:hooks in 21st.dev -> registry:hook in shadcn/ui
+const getShadcnRegistrySlug = (registryName: string) => {
+  if (registryName === "hooks") {
+    return "registry:hook"
+  }
+  return `registry:${registryName}`
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { username: string; component_slug: string } },
@@ -69,7 +77,7 @@ export async function GET(
     ).map(([path, { code, registry }]) => ({
       path,
       content: code,
-      type: `registry:${registry}`,
+      type: getShadcnRegistrySlug(registry),
       target: "",
     }))
 
@@ -160,7 +168,7 @@ export async function GET(
 
     const responseData: ComponentRegistryResponse = {
       name: component_slug,
-      type: `registry:${component.registry}`,
+      type: getShadcnRegistrySlug(component.registry),
       dependencies: npmDependencies.length > 0 ? npmDependencies : undefined,
       files,
       ...(cssVars ? { cssVars } : {}),

@@ -86,6 +86,20 @@ module.exports = {
             opacity: "0.8",
           },
         },
+        "ping-slow": {
+          "75%, 100%": {
+            transform: "scale(1.5)",
+            opacity: "0",
+          },
+        },
+        "scale-pulse": {
+          "0%, 100%": {
+            transform: "scale(1)",
+          },
+          "50%": {
+            transform: "scale(1.3)",
+          },
+        },
         "accordion-down": {
           from: {
             height: "0",
@@ -151,6 +165,8 @@ module.exports = {
         aurora: "aurora 60s linear infinite",
         "success-ring": "success-ring 850ms ease-out forwards",
         "copy-success": "copy-success 1000ms ease-out forwards",
+        "ping-slow": "ping-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "scale-pulse": "scale-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
     },
   },

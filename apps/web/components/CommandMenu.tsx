@@ -154,6 +154,24 @@ export function CommandMenu() {
     retry: false,
   })
 
+  const { data: users } = useQuery<User[]>({
+    queryKey: ["command-menu-users", searchQuery],
+    queryFn: async () => {
+      if (!searchQuery) return []
+
+      const { data: searchResults, error } = await supabase
+        .from("users")
+        .select("*")
+        .ilike("username", `%${searchQuery}%`)
+        .limit(5)
+
+      if (error) throw new Error(error.message)
+      return searchResults
+    },
+    refetchOnWindowFocus: false,
+    retry: false,
+  })
+
   const filteredSections = useMemo(() => {
     if (!searchQuery) return sections
     return sections
@@ -349,10 +367,47 @@ export function CommandMenu() {
                 </CommandGroup>
               )}
 
+              {users && users.length > 0 && (
+                <>
+                  <CommandSeparator />
+                  <CommandGroup heading="Users">
+                    {users.map((user) => (
+                      <CommandItem
+                        key={user.id}
+                        value={`user-${user.username}`}
+                        onSelect={() => {
+                          router.push(`/${user.username}`)
+                          setSearchQuery("")
+                          setValue("")
+                          setOpen(false)
+                        }}
+                        className="flex items-center gap-2"
+                      >
+                        <div className="w-6 h-6 rounded-full overflow-hidden relative">
+                          <Image
+                            src={user.image_url || "/default-avatar.png"}
+                            alt={user.username || "User Avatar"}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <span className="truncate">
+                          {user.name || user.username}
+                        </span>
+
+                        <span className="text-xs text-muted-foreground">
+                          {user.username}
+                        </span>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </>
+              )}
+
               {components && components.length > 0 && (
                 <>
                   <CommandSeparator />
-                  <CommandGroup heading="Search results">
+                  <CommandGroup heading="Components">
                     {components.map((component) => (
                       <CommandItem
                         key={component.id}

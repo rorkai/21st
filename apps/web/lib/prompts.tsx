@@ -83,6 +83,16 @@ export const promptOptions: PromptOption[] = [
     ),
   },
   {
+    type: "option",
+    id: PROMPT_TYPES.SITEBREW,
+    label: "sitebrew.ai",
+    description: "Optimized for sitebrew.ai",
+    action: "copy",
+    icon: (
+      <Icons.sitebrewLogo className="min-h-[18px] min-w-[18px] max-h-[18px] max-w-[18px]" />
+    ),
+  },
+  {
     id: "separator2",
     type: "separator",
   },
@@ -127,6 +137,42 @@ export const getComponentInstallPrompt = ({
   const componentDemoFileName = demoCodeFileName.split("/").slice(-1)[0]
 
   let prompt = ""
+
+  if (promptType === PROMPT_TYPES.SITEBREW) {
+    prompt +=
+      "Take the following code of a react component and add it to the artifact.\n" + 
+      endent`        
+        ${componentFileName}
+        ${code}
+        ${componentDemoFileName}
+        ${demoCode}
+      ` + "\n"
+
+    if (Object.keys(registryDependencies || {}).length > 0) {
+      prompt +=
+      "\n" +
+      endent`
+        ${Object.entries(registryDependencies)
+          .map(
+            ([fileName, fileContent]) => endent`
+            -------
+            ${fileName}
+            ${fileContent}
+          `,
+          )
+          .join("\n")}
+      ` +
+      "\n"
+    }
+    prompt +=
+      "\n" + 
+      endent`
+        REMEMBER TO KEEP THE DESIGN AND FUNCTIONALITY OF THE COMPONENT AS IS AND IN FULL 
+      ` + "\n"
+    return prompt
+  }
+
+  
   if (promptType === PROMPT_TYPES.EXTENDED) {
     prompt +=
       endent`

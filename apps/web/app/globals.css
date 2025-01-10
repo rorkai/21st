@@ -95,6 +95,10 @@ iframe {
   overflow: auto;
 }
 
+.cm-content {
+  margin-bottom: 100px !important;
+}
+
 .sp-preview-iframe {
   border: none;
   height: 100% !important;

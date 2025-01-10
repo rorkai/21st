@@ -36,3 +36,11 @@ export const PROMPT_TYPES = {
 export type PromptType = (typeof PROMPT_TYPES)[keyof typeof PROMPT_TYPES]
 
 export type ComponentWithUser = Component & { user: User }
+
+// Define activity types enum
+export enum AnalyticsActivityType {
+  COMPONENT_VIEW = 'component_view',
+  COMPONENT_CODE_COPY = 'component_code_copy',
+  COMPONENT_PROMPT_COPY = 'component_prompt_copy',
+  COMPONENT_CLI_DOWNLOAD = 'component_cli_download',
+}

@@ -23,6 +23,8 @@ import {
   promptOptions,
   type PromptOptionBase,
 } from "@/lib/prompts"
+import { useSupabaseAnalytics } from "@/hooks/use-analytics"
+import { AnalyticsActivityType } from "@/types/global"
 
 import {
   Tooltip,
@@ -47,7 +49,14 @@ import { EditComponentDialog } from "./EditComponentDialog"
 import { usePublishAs } from "./publish/use-publish-as"
 import { Icons } from "@/components/icons"
 
-import { ChevronRight, CodeXml, Info, Pencil, ChevronDown } from "lucide-react"
+import {
+  ChevronRight,
+  CodeXml,
+  Info,
+  Pencil,
+  ChevronDown,
+  Flag,
+} from "lucide-react"
 import { toast } from "sonner"
 import { atomWithStorage } from "jotai/utils"
 
@@ -64,6 +73,7 @@ const useAnalytics = ({
   component: Component & { user: User; tags: Tag[] }
   user: ReturnType<typeof useUser>["user"]
 }) => {
+  const { capture } = useSupabaseAnalytics()
   useEffect(() => {
     trackPageProperties({
       componentId: component.id,
@@ -75,6 +85,7 @@ const useAnalytics = ({
       hasDemo: !!component.demo_code,
       deviceType: window.innerWidth < 768 ? "mobile" : "desktop",
     })
+    capture(component.id, AnalyticsActivityType.COMPONENT_VIEW, user?.id)
   }, [component.id])
 
   useEffect(() => {
@@ -266,6 +277,7 @@ export default function ComponentPage({
   const { theme } = useTheme()
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const { isAdmin } = usePublishAs({ username: user?.username ?? "" })
+  const { capture } = useSupabaseAnalytics()
 
   const canEdit = user?.id === component.user_id || isAdmin
 
@@ -376,6 +388,11 @@ export default function ComponentPage({
         action: "open",
         destination: "v0.dev",
       })
+      capture(
+        component.id,
+        AnalyticsActivityType.COMPONENT_PROMPT_COPY,
+        user?.id,
+      )
       return
     }
 
@@ -395,6 +412,11 @@ export default function ComponentPage({
 
       await copyToClipboard(prompt)
       toast.success("AI prompt copied to clipboard")
+      capture(
+        component.id,
+        AnalyticsActivityType.COMPONENT_PROMPT_COPY,
+        user?.id,
+      )
 
       trackEvent(AMPLITUDE_EVENTS.COPY_AI_PROMPT, {
         componentId: component.id,
@@ -414,6 +436,28 @@ export default function ComponentPage({
       console.error("Failed to copy AI prompt:", err)
       toast.error("Failed to generate AI prompt")
     }
+  }
+
+  const handleCodeCopy = async (text: string) => {
+    try {
+      await copyToClipboard(text)
+      toast.success("Code copied to clipboard")
+      capture(component.id, AnalyticsActivityType.COMPONENT_CODE_COPY, user?.id)
+    } catch (err) {
+      console.error("Failed to copy code:", err)
+      toast.error("Failed to copy code")
+    }
+  }
+
+  const handleReportClick = () => {
+    const issueTitle = encodeURIComponent(`Report: ${component.name} component`)
+    const issueBody = encodeURIComponent(
+      `Component: ${component.name}\nAuthor: ${component.user.username}\nURL: ${window.location.href}\n\nPlease describe the issue:`,
+    )
+    window.open(
+      `https://github.com/rorkai/21st/issues/new?title=${issueTitle}&body=${issueBody}`,
+      "_blank",
+    )
   }
 
   useAnalytics({
@@ -474,6 +518,24 @@ export default function ComponentPage({
 
         <div className="flex items-center gap-1">
           <ThemeToggle fillIcon={false} />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={handleReportClick}
+                className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-md relative group"
+              >
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Flag
+                    size={16}
+                    className="group-hover:text-red-500 transition-colors"
+                  />
+                </div>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
+              <p className="flex items-center gap-1.5">Report Component</p>
+            </TooltipContent>
+          </Tooltip>
           {canEdit && (
             <Tooltip>
               <TooltipTrigger asChild>

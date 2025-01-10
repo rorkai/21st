@@ -45,7 +45,7 @@ export function ComponentCard({
     <div className="overflow-hidden">
       <Link href={componentUrl} className="block cursor-pointer">
         <div className="relative aspect-[4/3] mb-3 group">
-          <CopyComponentButton codeUrl={component.code} />
+          <CopyComponentButton codeUrl={component.code} component={component} />
           <div className="absolute inset-0 rounded-lg overflow-hidden">
             <div className="relative w-full h-full">
               <div className="absolute inset-0" style={{ margin: "-1px" }}>
@@ -70,7 +70,7 @@ export function ComponentCard({
               <Video size={16} className="text-foreground" />
             </div>
           )}
-          <CopyComponentButton codeUrl={component.code} />
+          <CopyComponentButton codeUrl={component.code} component={component} />
         </div>
       </Link>
       <div className="flex items-center space-x-3">

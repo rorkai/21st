@@ -4,6 +4,15 @@ import { ComponentRegistryResponse } from "./types"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 import { Tables } from "@/types/supabase"
 import { extractCssVars } from "@/lib/parsers"
+import { AnalyticsActivityType } from "@/types/global"
+
+// registry:hooks in 21st.dev -> registry:hook in shadcn/ui
+const getShadcnRegistrySlug = (registryName: string) => {
+  if (registryName === "hooks") {
+    return "registry:hook"
+  }
+  return `registry:${registryName}`
+}
 
 export async function GET(
   request: NextRequest,
@@ -50,6 +59,21 @@ export async function GET(
             console.log("Downloads count incremented")
           }
         })
+
+      supabaseWithAdminAccess
+        .from("component_analytics")
+        .insert({
+          component_id: component.id,
+          activity_type: AnalyticsActivityType.COMPONENT_CLI_DOWNLOAD,
+          created_at: new Date().toISOString(),
+        })
+        .then(({ error }) => {
+          if (error) {
+            console.error("Error capturing analytics:", error)
+          } else {
+            console.log("Analytics captured")
+          }
+        })
     }
 
     const dependencies = component.dependencies as Record<string, string>
@@ -69,7 +93,7 @@ export async function GET(
     ).map(([path, { code, registry }]) => ({
       path,
       content: code,
-      type: `registry:${registry}`,
+      type: getShadcnRegistrySlug(registry),
       target: "",
     }))
 
@@ -160,7 +184,7 @@ export async function GET(
 
     const responseData: ComponentRegistryResponse = {
       name: component_slug,
-      type: `registry:${component.registry}`,
+      type: getShadcnRegistrySlug(component.registry),
       dependencies: npmDependencies.length > 0 ? npmDependencies : undefined,
       files,
       ...(cssVars ? { cssVars } : {}),

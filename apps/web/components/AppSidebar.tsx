@@ -136,8 +136,16 @@ export function AppSidebar() {
                               )
                             }}
                           >
-                            <a href={item.href}>
+                            <a
+                              href={item.href}
+                              className="flex items-center justify-between w-full"
+                            >
                               <span>{item.title}</span>
+                              {item.isNew && (
+                                <Badge className="ml-1.5 text-xs bg-[#adfa1d] text-black px-1.5 rounded-md pointer-events-none select-none">
+                                  New
+                                </Badge>
+                              )}
                             </a>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>

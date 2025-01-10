@@ -136,7 +136,7 @@ export const ComponentPageInfo = ({
   }
 
   return (
-    <div className="text-sm overflow-y-auto max-h-[calc(100vh-100px)] bg-background dark:bg-muted text-foreground">
+    <div className="text-sm overflow-y-auto max-h-[calc(100vh-100px)] bg-background dark:bg-[#151515] text-foreground">
       <div className="p-4 space-y-3 bg-muted dark:bg-background">
         {component.name && (
           <div className="flex items-center font-medium">

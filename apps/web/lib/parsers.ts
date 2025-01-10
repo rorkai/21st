@@ -204,7 +204,7 @@ export function extractAmbigiousRegistryDependencies(code: string) {
 }
 
 export function extractRegistryDependenciesFromImports(code: string): string[] {
-  const registryDeps = []
+  const registryDeps = new Set<string>()
 
   const importRegex =
     /import\s+(?:{\s*[\w\s,]+\s*}|\*\s+as\s+\w+|\w+)\s+from\s+['"](\+@[\w-]+\/[\w-]+)['"]/g
@@ -213,10 +213,10 @@ export function extractRegistryDependenciesFromImports(code: string): string[] {
   while ((match = importRegex.exec(code)) !== null) {
     const importPath = match[1]!
     const [, author, slug] = importPath.match(/\+@([\w-]+)\/([\w-]+)/)!
-    registryDeps.push(`${author}/${slug}`)
+    registryDeps.add(`${author}/${slug}`)
   }
 
-  return registryDeps
+  return [...registryDeps]
 }
 
 // export function replaceRegistryImports(code: string): string {

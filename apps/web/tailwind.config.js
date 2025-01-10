@@ -86,6 +86,20 @@ module.exports = {
             opacity: "0.8",
           },
         },
+        "ping-slow": {
+          "75%, 100%": {
+            transform: "scale(1.5)",
+            opacity: "0",
+          },
+        },
+        "scale-pulse": {
+          "0%, 100%": {
+            transform: "scale(1)",
+          },
+          "50%": {
+            transform: "scale(1.3)",
+          },
+        },
         "accordion-down": {
           from: {
             height: "0",
@@ -110,6 +124,37 @@ module.exports = {
             backgroundPosition: "350% 50%, 350% 50%",
           },
         },
+        "success-pulse": {
+          "0%": { opacity: 0 },
+          "50%": { opacity: 1 },
+          "100%": { opacity: 0 },
+        },
+        "success-ring": {
+          "0%": {
+            outline: "2px solid hsl(var(--primary))",
+            outlineOffset: "2px",
+            opacity: "0",
+          },
+          "30%": {
+            opacity: "1",
+          },
+          "100%": {
+            outline: "2px solid hsl(var(--primary))",
+            outlineOffset: "2px",
+            opacity: "0",
+          },
+        },
+        "copy-success": {
+          "0%": {
+            opacity: "0",
+          },
+          "15%": {
+            opacity: "1",
+          },
+          "100%": {
+            opacity: "0",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -118,6 +163,10 @@ module.exports = {
         "pulse-fast":
           "pulse-custom 2s cubic-bezier(0.4, 0, 0.6, 1) infinite 1s",
         aurora: "aurora 60s linear infinite",
+        "success-ring": "success-ring 850ms ease-out forwards",
+        "copy-success": "copy-success 1000ms ease-out forwards",
+        "ping-slow": "ping-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "scale-pulse": "scale-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
     },
   },

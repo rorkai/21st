@@ -190,15 +190,19 @@ export default function PublishComponentForm() {
           demoDependencies,
           componentNames,
           demoComponentNames,
-          directRegistryDependencyImports,
+          directRegistryDependencyImports: [
+            ...new Set(directRegistryDependencyImports),
+          ],
         })
 
-        const ambigiousRegistryDependencies = Object.values(
-          extractAmbigiousRegistryDependencies(code),
-        )
-        const ambigiousDemoDirectRegistryDependencies = Object.values(
-          extractAmbigiousRegistryDependencies(demoCode),
-        )
+        const ambigiousRegistryDependencies = [
+          ...new Set(Object.values(extractAmbigiousRegistryDependencies(code))),
+        ]
+        const ambigiousDemoDirectRegistryDependencies = [
+          ...new Set(
+            Object.values(extractAmbigiousRegistryDependencies(demoCode)),
+          ),
+        ]
 
         const parsedUnknownDependencies = [
           ...ambigiousRegistryDependencies,
@@ -945,18 +949,22 @@ export default function PublishComponentForm() {
                           ),
                         )
                         form.setValue("direct_registry_dependencies", [
-                          ...form.getValues("direct_registry_dependencies"),
-                          ...resolvedDependencies
-                            .filter((d) => !d.isDemoDependency)
-                            .map((d) => `${d.username}/${d.slug}`),
+                          ...new Set([
+                            ...form.getValues("direct_registry_dependencies"),
+                            ...resolvedDependencies
+                              .filter((d) => !d.isDemoDependency)
+                              .map((d) => `${d.username}/${d.slug}`),
+                          ]),
                         ])
                         form.setValue("demo_direct_registry_dependencies", [
-                          ...form.getValues(
-                            "demo_direct_registry_dependencies",
-                          ),
-                          ...resolvedDependencies
-                            .filter((d) => d.isDemoDependency)
-                            .map((d) => `${d.username}/${d.slug}`),
+                          ...new Set([
+                            ...form.getValues(
+                              "demo_direct_registry_dependencies",
+                            ),
+                            ...resolvedDependencies
+                              .filter((d) => d.isDemoDependency)
+                              .map((d) => `${d.username}/${d.slug}`),
+                          ]),
                         ])
                       }}
                     />

@@ -154,6 +154,24 @@ export function CommandMenu() {
     retry: false,
   })
 
+  const { data: users } = useQuery<User[]>({
+    queryKey: ["command-menu-users", searchQuery],
+    queryFn: async () => {
+      if (!searchQuery) return []
+
+      const { data: searchResults, error } = await supabase
+        .from("users")
+        .select("*")
+        .ilike("username", `%${searchQuery}%`)
+        .limit(5)
+
+      if (error) throw new Error(error.message)
+      return searchResults
+    },
+    refetchOnWindowFocus: false,
+    retry: false,
+  })
+
   const filteredSections = useMemo(() => {
     if (!searchQuery) return sections
     return sections
@@ -349,10 +367,47 @@ export function CommandMenu() {
                 </CommandGroup>
               )}
 
+              {users && users.length > 0 && (
+                <>
+                  <CommandSeparator />
+                  <CommandGroup heading="Users">
+                    {users.map((user) => (
+                      <CommandItem
+                        key={user.id}
+                        value={`user-${user.username}`}
+                        onSelect={() => {
+                          router.push(`/${user.username}`)
+                          setSearchQuery("")
+                          setValue("")
+                          setOpen(false)
+                        }}
+                        className="flex items-center gap-2"
+                      >
+                        <div className="w-6 h-6 rounded-full overflow-hidden relative">
+                          <Image
+                            src={user.image_url || "/default-avatar.png"}
+                            alt={user.username || "User Avatar"}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <span className="truncate">
+                          {user.name || user.username}
+                        </span>
+
+                        <span className="text-xs text-muted-foreground">
+                          {user.username}
+                        </span>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </>
+              )}
+
               {components && components.length > 0 && (
                 <>
                   <CommandSeparator />
-                  <CommandGroup heading="Search results">
+                  <CommandGroup heading="Components">
                     {components.map((component) => (
                       <CommandItem
                         key={component.id}
@@ -403,9 +458,41 @@ export function CommandMenu() {
           </div>
 
           <div className="absolute bottom-0 left-0 right-0 border-t border-border h-10 pl-4 pr-3 flex items-center justify-between bg-background text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-foreground/80" />
-              <span className="text-sm font-medium">21st.dev</span>
+            <div className="flex items-center gap-2 group hover:cursor-pointer">
+              <div className="relative w-3 h-3">
+                <div
+                  className="absolute inset-0 rounded-full bg-foreground/80 transition-all duration-500 
+                  group-hover:opacity-0 group-hover:scale-90"
+                />
+                <div
+                  className="absolute inset-0 opacity-0 transition-all duration-500 transform
+                  group-hover:opacity-100 group-hover:scale-100 origin-center"
+                >
+                  <div className="relative w-full h-full">
+                    <span
+                      className="absolute inset-0 text-[0.75rem] flex items-center justify-center
+                      animate-in zoom-in-95 duration-300"
+                      style={{
+                        animationFillMode: "forwards",
+                        transform: "translateY(-0.5px)",
+                      }}
+                    >
+                      ❤️
+                    </span>
+                    <div
+                      className="absolute inset-0 rounded-full bg-pink-500/20 animate-ping-slow 
+                      group-hover:opacity-100 opacity-0 transition-opacity duration-300"
+                    />
+                    <div
+                      className="absolute inset-0 rounded-full bg-pink-500/10
+                      group-hover:animate-scale-pulse opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    />
+                  </div>
+                </div>
+              </div>
+              <span className="text-sm font-medium transition-colors duration-300 group-hover:text-primary">
+                21st.dev
+              </span>
             </div>
 
             <div className="flex items-center">

@@ -110,6 +110,37 @@ module.exports = {
             backgroundPosition: "350% 50%, 350% 50%",
           },
         },
+        "success-pulse": {
+          "0%": { opacity: 0 },
+          "50%": { opacity: 1 },
+          "100%": { opacity: 0 },
+        },
+        "success-ring": {
+          "0%": {
+            outline: "2px solid hsl(var(--primary))",
+            outlineOffset: "2px",
+            opacity: "0",
+          },
+          "30%": {
+            opacity: "1",
+          },
+          "100%": {
+            outline: "2px solid hsl(var(--primary))",
+            outlineOffset: "2px",
+            opacity: "0",
+          },
+        },
+        "copy-success": {
+          "0%": {
+            opacity: "0",
+          },
+          "15%": {
+            opacity: "1",
+          },
+          "100%": {
+            opacity: "0",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -118,6 +149,8 @@ module.exports = {
         "pulse-fast":
           "pulse-custom 2s cubic-bezier(0.4, 0, 0.6, 1) infinite 1s",
         aurora: "aurora 60s linear infinite",
+        "success-ring": "success-ring 850ms ease-out forwards",
+        "copy-success": "copy-success 1000ms ease-out forwards",
       },
     },
   },

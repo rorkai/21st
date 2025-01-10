@@ -139,10 +139,9 @@ export const getComponentInstallPrompt = ({
   let prompt = ""
 
   if (promptType === PROMPT_TYPES.SITEBREW) {
-    prompt += 
-      endent`
-        Here are some files, please add their functionality and design to the project, but write it all down in the one file that we currently have.
-        Replicate these components and add them to the code:
+    prompt +=
+      "Take the following code of a react component and add it to the artifact.\n" + 
+      endent`        
         ${componentFileName}
         ${code}
         ${componentDemoFileName}
@@ -153,11 +152,10 @@ export const getComponentInstallPrompt = ({
       prompt +=
       "\n" +
       endent`
-        Here are some dependencies, also incorporate them into the one file where needed
         ${Object.entries(registryDependencies)
           .map(
             ([fileName, fileContent]) => endent`
-            -----
+            -------
             ${fileName}
             ${fileContent}
           `,
@@ -167,8 +165,9 @@ export const getComponentInstallPrompt = ({
       "\n"
     }
     prompt +=
+      "\n" + 
       endent`
-        REMEMBER: MAKE SURE THE ENTIRE DESIGN AND FUNCTIONALITY REMAINS AS IS AND IS IN FULL. 
+        REMEMBER TO KEEP THE DESIGN AND FUNCTIONALITY OF THE COMPONENT AS IS AND IN FULL 
       ` + "\n"
     return prompt
   }

@@ -13,14 +13,19 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { useSupabaseAnalytics } from "@/hooks/use-analytics"
+import { AnalyticsActivityType, Component, User } from "@/types/global"
 
-interface CopyComponentButtonProps {
+export function CopyComponentButton({
+  codeUrl,
+  component,
+}: {
   codeUrl: string
-}
-
-export function CopyComponentButton({ codeUrl }: CopyComponentButtonProps) {
+  component: Component & { user: User }
+}) {
   const [copied, setCopied] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const { capture } = useSupabaseAnalytics()
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -34,6 +39,11 @@ export function CopyComponentButton({ codeUrl }: CopyComponentButtonProps) {
       setCopied(true)
       toast("Copied to clipboard")
       setTimeout(() => setCopied(false), 1500)
+      capture(
+        component.id,
+        AnalyticsActivityType.COMPONENT_CODE_COPY,
+        component.user.id,
+      )
     } catch (err) {
       console.error("Failed to copy code:", err)
       toast.error("Failed to copy code")

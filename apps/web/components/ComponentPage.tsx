@@ -23,6 +23,8 @@ import {
   promptOptions,
   type PromptOptionBase,
 } from "@/lib/prompts"
+import { useSupabaseAnalytics } from "@/hooks/use-analytics"
+import { AnalyticsActivityType } from "@/types/global"
 
 import {
   Tooltip,
@@ -64,6 +66,7 @@ const useAnalytics = ({
   component: Component & { user: User; tags: Tag[] }
   user: ReturnType<typeof useUser>["user"]
 }) => {
+  const { capture } = useSupabaseAnalytics()
   useEffect(() => {
     trackPageProperties({
       componentId: component.id,
@@ -75,6 +78,7 @@ const useAnalytics = ({
       hasDemo: !!component.demo_code,
       deviceType: window.innerWidth < 768 ? "mobile" : "desktop",
     })
+    capture(component.id, AnalyticsActivityType.COMPONENT_VIEW, user?.id)
   }, [component.id])
 
   useEffect(() => {
@@ -266,6 +270,7 @@ export default function ComponentPage({
   const { theme } = useTheme()
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const { isAdmin } = usePublishAs({ username: user?.username ?? "" })
+  const { capture } = useSupabaseAnalytics()
 
   const canEdit = user?.id === component.user_id || isAdmin
 
@@ -376,6 +381,7 @@ export default function ComponentPage({
         action: "open",
         destination: "v0.dev",
       })
+      capture(component.id, AnalyticsActivityType.COMPONENT_PROMPT_COPY, user?.id)
       return
     }
 
@@ -395,6 +401,7 @@ export default function ComponentPage({
 
       await copyToClipboard(prompt)
       toast.success("AI prompt copied to clipboard")
+      capture(component.id, AnalyticsActivityType.COMPONENT_PROMPT_COPY, user?.id)
 
       trackEvent(AMPLITUDE_EVENTS.COPY_AI_PROMPT, {
         componentId: component.id,
@@ -413,6 +420,17 @@ export default function ComponentPage({
     } catch (err) {
       console.error("Failed to copy AI prompt:", err)
       toast.error("Failed to generate AI prompt")
+    }
+  }
+
+  const handleCodeCopy = async (text: string) => {
+    try {
+      await copyToClipboard(text)
+      toast.success("Code copied to clipboard")
+      capture(component.id, AnalyticsActivityType.COMPONENT_CODE_COPY, user?.id)
+    } catch (err) {
+      console.error("Failed to copy code:", err)
+      toast.error("Failed to copy code")
     }
   }
 

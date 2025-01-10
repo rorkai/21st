@@ -44,6 +44,7 @@ import { generateSandpackFiles } from "@/lib/sandpack"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { getPackageRunner, cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { useUser } from "@clerk/nextjs"
 
 import styles from "./ComponentPreview.module.css"
 
@@ -83,6 +84,7 @@ export function ComponentPagePreview({
   setIsEditDialogOpen: (value: boolean) => void
 }) {
   const sandpackRef = useRef<HTMLDivElement>(null)
+  const { user } = useUser()
   const { resolvedTheme } = useTheme()
   const isDarkTheme = resolvedTheme === "dark"
   const [isShowCode, setIsShowCode] = useAtom(isShowCodeAtom)
@@ -280,7 +282,7 @@ export function ComponentPagePreview({
                       <div
                         className={`overflow-auto ${styles.codeViewerWrapper} relative`}
                       >
-                        <CopyCodeButton />
+                        <CopyCodeButton component_id={component.id} user_id={user?.id} />
                         <Tabs value={activeFile} onValueChange={setActiveFile}>
                           <TabsList className="h-9 relative bg-muted dark:bg-background justify-start w-full gap-0.5 pb-0 before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-border px-4 overflow-x-auto flex-nowrap hide-scrollbar">
                             {visibleFiles.map((file) => (

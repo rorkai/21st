@@ -4,6 +4,7 @@ import { ComponentRegistryResponse } from "./types"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 import { Tables } from "@/types/supabase"
 import { extractCssVars } from "@/lib/parsers"
+import { AnalyticsActivityType } from "@/types/global"
 
 // registry:hooks in 21st.dev -> registry:hook in shadcn/ui
 const getShadcnRegistrySlug = (registryName: string) => {
@@ -56,6 +57,21 @@ export async function GET(
             console.error("Error incrementing downloads count:", error)
           } else {
             console.log("Downloads count incremented")
+          }
+        })
+
+      supabaseWithAdminAccess
+        .from("component_analytics")
+        .insert({
+          component_id: component.id,
+          activity_type: AnalyticsActivityType.COMPONENT_CLI_DOWNLOAD,
+          timestamp: new Date().toISOString(),
+        })
+        .then(({ error }) => {
+          if (error) {
+            console.error("Error capturing analytics:", error)
+          } else {
+            console.log("Analytics captured")
           }
         })
     }

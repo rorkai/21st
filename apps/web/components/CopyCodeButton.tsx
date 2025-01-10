@@ -3,11 +3,20 @@ import { useSandpack } from "@codesandbox/sandpack-react"
 import { toast } from "sonner"
 import { CheckIcon, Clipboard } from "lucide-react"
 import { trackEvent, AMPLITUDE_EVENTS } from "../lib/amplitude"
+import { useSupabaseAnalytics } from "@/hooks/use-analytics"
+import { AnalyticsActivityType } from "@/types/global"
 
-export const CopyCodeButton = () => {
+export const CopyCodeButton = ({
+  component_id,
+  user_id,
+}: {
+  component_id: number
+  user_id?: string
+}) => {
   const [codeCopied, setCodeCopied] = useState(false)
   const [hasSelection, setHasSelection] = useState(false)
   const { sandpack } = useSandpack()
+  const { capture } = useSupabaseAnalytics()
 
   const copyCode = (source: "button" | "shortcut") => {
     const activeFile = sandpack.activeFile
@@ -21,6 +30,7 @@ export const CopyCodeButton = () => {
         fileExtension: activeFile.split(".").pop(),
         copySource: source,
       })
+      capture(component_id, AnalyticsActivityType.COMPONENT_CODE_COPY, user_id)
       setTimeout(() => setCodeCopied(false), 2000)
     }
   }

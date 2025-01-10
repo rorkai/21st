@@ -152,7 +152,7 @@ export function generateSandpackFiles({
 
   const appTsxContent = isBlocksRegistry
     ? `
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ThemeProvider } from './next-themes';
 import { RouterProvider } from 'next/router';
 import './styles.css';
@@ -179,13 +179,31 @@ export default function App() {
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Check if CMD/Meta key is pressed
+      if (event.metaKey) {
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          setCurrentIndex((prev) => (prev + 1) % demoComponentNames.length);
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          setCurrentIndex((prev) => (prev - 1 + demoComponentNames.length) % demoComponentNames.length);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
     <ThemeProvider attribute="class" defaultTheme="${theme}" enableSystem={false}>
       <RouterProvider>
         <div className="bg-background text-foreground">
           {showSelect && (
-            <div className="absolute z-10 top-4 right-4">
-              <Select onValueChange={handleSelect} defaultValue={demoComponentNames[0]} className="shadow">
+            <div className="absolute z-10 top-4 right-4 flex flex-col items-end gap-1">
+              <Select onValueChange={handleSelect} value={demoComponentNames[currentIndex]} className="shadow">
                 <SelectTrigger className="gap-2">
                   <SelectValue />
                 </SelectTrigger>
@@ -215,7 +233,7 @@ export default function App() {
 }
 `
     : `
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ThemeProvider } from './next-themes';
 import { RouterProvider } from 'next/router';
 import './styles.css';  // Import the compiled CSS
@@ -245,28 +263,46 @@ export default function App() {
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Check if CMD/Meta key is pressed
+      if (event.metaKey) {
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          setCurrentIndex((prev) => (prev + 1) % demoComponentNames.length);
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          setCurrentIndex((prev) => (prev - 1 + demoComponentNames.length) % demoComponentNames.length);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
     <ThemeProvider attribute="class" defaultTheme="${theme}" enableSystem={false}>
       <RouterProvider>
           <div className="relative flex items-center justify-center h-screen w-full m-auto p-16 bg-background text-foreground">
             <div className="absolute lab-bg inset-0 size-full bg-[radial-gradient(#00000021_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff22_1px,transparent_1px)] [background-size:16px_16px]"></div>
             {showSelect && (
-              <div className="absolute z-10 top-4 right-4">
-                <Select onValueChange={handleSelect} defaultValue={demoComponentNames[0]} className="shadow">
+              <div className="absolute z-10 top-4 right-4 flex flex-col items-end gap-1">
+                <Select onValueChange={handleSelect} value={demoComponentNames[currentIndex]} className="shadow">
                   <SelectTrigger className="gap-2">
-                  <SelectValue />
+                    <SelectValue />
                   </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    ${demoComponentNames
-                      .map(
-                        (name) => `
-                      <SelectItem key="${name}" value="${name}">
-                        ${name.replace(/([A-Z])/g, " $1").trim()}
-                      </SelectItem>
-                      `,
-                      )
-                      .join("")}
+                  <SelectContent>
+                    <SelectGroup>
+                      ${demoComponentNames
+                        .map(
+                          (name) => `
+                        <SelectItem key="${name}" value="${name}">
+                          ${name.replace(/([A-Z])/g, " $1").trim()}
+                        </SelectItem>
+                        `,
+                        )
+                        .join("")}
                     </SelectGroup>
                   </SelectContent>
                 </Select>

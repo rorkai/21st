@@ -65,7 +65,7 @@ export async function GET(
         .insert({
           component_id: component.id,
           activity_type: AnalyticsActivityType.COMPONENT_CLI_DOWNLOAD,
-          timestamp: new Date().toISOString(),
+          created_at: new Date().toISOString(),
         })
         .then(({ error }) => {
           if (error) {

@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og"
 import { getUserData } from "@/lib/queries"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
+import { backgroundImageBase64 } from "@/lib/constants"
 
 export const runtime = "edge"
 export const alt = "User Profile"
@@ -56,6 +57,9 @@ export default async function Image({
           justifyContent: "space-between",
           boxSizing: "border-box",
           position: "relative",
+          backgroundImage: `url(data:image/jpeg;base64,${backgroundImageBase64})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
         }}
       >
         <div

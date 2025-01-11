@@ -556,6 +556,36 @@ export type Database = {
           },
         ]
       }
+      mv_component_analytics: {
+        Row: {
+          activity_type: string | null
+          component_id: number | null
+          count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "component_analytics_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "component_dependencies_graph_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_analytics_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_analytics_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components_with_username"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       delete_component: {

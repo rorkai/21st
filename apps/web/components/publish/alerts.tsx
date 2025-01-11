@@ -1,6 +1,6 @@
 import { motion } from "framer-motion"
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert"
-import { Codepen, FileTerminal, SunMoon } from "lucide-react"
+import { Codepen, FileTerminal, SunMoon, ChevronLeft } from "lucide-react"
 import { Code } from "../ui/code"
 import { Label } from "@radix-ui/react-label"
 import { ParsedCodeData } from "./PublishComponentForm"
@@ -14,6 +14,7 @@ import { FormEvent } from "react"
 export const ResolveUnknownDependenciesAlertForm = ({
   unknownDependencies,
   onDependenciesResolved,
+  onBack,
 }: {
   unknownDependencies: {
     slugWithUsername: string
@@ -29,6 +30,7 @@ export const ResolveUnknownDependenciesAlertForm = ({
       isDemoDependency: boolean
     }[],
   ) => void
+  onBack: () => void
 }) => {
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -80,7 +82,7 @@ export const ResolveUnknownDependenciesAlertForm = ({
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full relative h-[70vh]">
       <Alert className="my-2">
         <Codepen className="h-4 w-4" />
         <AlertTitle>Unknown dependencies detected</AlertTitle>
@@ -117,9 +119,14 @@ export const ResolveUnknownDependenciesAlertForm = ({
             )}
           </div>
         ))}
-        <Button type="submit" className="mt-4 w-full">
-          Save
-        </Button>
+        <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
+          <Button size="icon" variant="outline" onClick={onBack} type="button">
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <Button type="submit" size="sm">
+            Continue
+          </Button>
+        </div>
       </form>
     </div>
   )
@@ -166,10 +173,11 @@ export const CodeGuidelinesAlert = () => {
                 <li>TypeScript is fully supported</li>
                 <li>Tailwind is fully supported</li>
                 <li>
-                  By default, we use default {" "}
+                  By default, we use default{" "}
                   <Code code="tailwind.config.ts" language="pseudo" /> and{" "}
                   <Code code="global.css" language="pseudo" /> from{" "}
-                  <Code code="shadcn/ui" language="pseudo" /> – you can extend them later
+                  <Code code="shadcn/ui" language="pseudo" /> – you can extend
+                  them later
                 </li>
               </ul>
             </li>
@@ -226,7 +234,11 @@ export const DemoComponentGuidelinesAlert = ({
             <ul className="list-disc pl-5 mt-1">
               <li>
                 Import your component with curly braces from{" "}
-                <Code code={`@/components/${registryToPublish}`} language="pseudo" /> path:
+                <Code
+                  code={`@/components/${registryToPublish}`}
+                  language="pseudo"
+                />{" "}
+                path:
                 <Code
                   display="block"
                   code={`import { ${mainComponentName ?? "MyComponent"} } from "@/components/${registryToPublish}/${componentSlug}"`}

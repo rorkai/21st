@@ -1,9 +1,9 @@
 // Represents a file associated with the component
 type ComponentFile = {
-  path: string    // e.g., "magicui/marquee.tsx"
+  path: string // e.g., "magicui/marquee.tsx"
   content: string // e.g., "import React from 'react';\n\nconst Marquee = () => {...}"
-  type: string    // e.g., "registry:ui"
-  target: string  // e.g., "" (often empty)
+  type: string // e.g., "registry:ui"
+  target: string // e.g., "" (often empty)
 }
 
 // Represents the Tailwind CSS configuration
@@ -23,13 +23,13 @@ type TailwindConfig = {
 // Represents CSS variables for light and dark themes
 type CssVars = {
   light: Record<string, string> // e.g., { "--color-1": "0 100% 63%" }
-  dark: Record<string, string>  // e.g., { "--color-1": "0 100% 63%" }
+  dark: Record<string, string> // e.g., { "--color-1": "0 100% 63%" }
 }
 
 // Represents the complete component response structure
 export type ComponentRegistryResponse = {
-  name: string           // e.g., "marquee"
-  type: string           // e.g., "registry:ui"
+  name: string // e.g., "marquee"
+  type: string // e.g., "registry:ui"
   dependencies?: string[] // e.g., ["framer-motion", "next-themes"]
   files: ComponentFile[] // Array of ComponentFile objects
   tailwind?: {

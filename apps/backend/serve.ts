@@ -22,129 +22,162 @@ export const compileCSS = async ({
   baseGlobalCss?: string
   customGlobalCss?: string
 }) => {
-  const globalCss = endent`
-    ${baseGlobalCss}
-    ${customGlobalCss ?? ""}
-  `
-
-  const baseConfigObj = Function(
-    "require",
-    "module",
+  try {
+    const globalCss = endent`
+      ${baseGlobalCss}
+      ${customGlobalCss ?? ""}
     `
-    module.exports = ${baseTailwindConfig};
-    return module.exports;
-  `,
-  )(require, { exports: {} })
 
-  if (customTailwindConfig) {
-    const transpiledCustomTailwindConfig = ts.transpileModule(customTailwindConfig, {
-      compilerOptions: {
-        target: ts.ScriptTarget.ES2015,
-        module: ts.ModuleKind.CommonJS,
-        removeComments: true,
-      },
-    }).outputText
-
-
-    const matches = transpiledCustomTailwindConfig.match(
-      /([\s\S]*?)(module\.exports\s*=\s*({[\s\S]*?});)([\s\S]*)/,
-    )
-
-    if (matches) {
-      const [_, beforeConfig, __, configObject, afterConfig] = matches
-
-
-      const customConfigObj = Function(
-        "require",
-        "module",
-        `
-        ${beforeConfig || ""}
-        module.exports = ${configObject};
-        ${afterConfig || ""}
-        return module.exports;
-      `,
-      )(require, { exports: {} })
-
-      const mergedConfig = merge(baseConfigObj, customConfigObj)
-
-      // Custom serialization to handle functions
-      let serializedConfig = JSON.stringify(
-        mergedConfig,
-        (key, value) => {
-          if (typeof value === "function") {
-            return value.name || value.toString()
-          }
-          return value
-        },
-        2,
-      )
-
-      // Match any string that looks like a function, including escaped ones
-      serializedConfig = serializedConfig.replace(
-        /"(function[\s\S]*?\{[\s\S]*?\}|[\w]+)"/g,
-        (match, functionContent) => {
-          // If it's a function definition (starts with 'function'), return it unquoted and unescaped
-          if (functionContent.startsWith('function')) {
-            // Unescape the function content
-            return functionContent
-              .replace(/\\"/g, '"')  // Replace \" with "
-              .replace(/\\n/g, '\n') // Replace \n with newline
-              .replace(/\\\\/g, '\\') // Replace \\ with \
-          }
-          // For named functions in plugins array
-          if (
-            mergedConfig.plugins?.some(
-              (plugin: Function) => plugin.name === functionContent
-            )
-          ) {
-            return functionContent
-          }
-          // Keep quotes for non-functions
-          return `"${functionContent}"`
-        }
-      )
-
-      const finalConfig = endent`
-        ${beforeConfig || ""}
-        module.exports = ${serializedConfig};
-        ${afterConfig || ""}
+    const baseConfigObj = Function(
+      "require",
+      "module",
       `
+      module.exports = ${baseTailwindConfig};
+      return module.exports;
+    `,
+    )(require, { exports: {} })
 
-      const evaluatedFinalConfig = Function(
+    if (customTailwindConfig) {
+      try {
+        const transpiledCustomTailwindConfig = ts.transpileModule(
+          customTailwindConfig,
+          {
+            compilerOptions: {
+              target: ts.ScriptTarget.ES2015,
+              module: ts.ModuleKind.CommonJS,
+              removeComments: true,
+            },
+          },
+        ).outputText
+
+        const matches = transpiledCustomTailwindConfig.match(
+          /([\s\S]*?)(module\.exports\s*=\s*({[\s\S]*?});)([\s\S]*)/,
+        )
+
+        if (!matches) {
+          throw new Error("Invalid Tailwind config format: Could not parse configuration object")
+        }
+
+        const [_, beforeConfig, __, configObject, afterConfig] = matches
+
+        try {
+          const customConfigObj = Function(
+            "require",
+            "module",
+            `
+            ${beforeConfig || ""}
+            module.exports = ${configObject};
+            ${afterConfig || ""}
+            return module.exports;
+          `,
+          )(require, { exports: {} })
+
+          const mergedConfig = merge(baseConfigObj, customConfigObj)
+
+          // Custom serialization to handle functions
+          let serializedConfig = JSON.stringify(
+            mergedConfig,
+            (key, value) => {
+              if (typeof value === "function") {
+                return value.name || value.toString()
+              }
+              return value
+            },
+            2,
+          )
+
+          // Match any string that looks like a function, including escaped ones
+          serializedConfig = serializedConfig.replace(
+            /"(function[\s\S]*?\{[\s\S]*?\}|[\w]+)"/g,
+            (match, functionContent) => {
+              // If it's a function definition (starts with 'function'), return it unquoted and unescaped
+              if (functionContent.startsWith("function")) {
+                // Unescape the function content
+                return functionContent
+                  .replace(/\\"/g, '"') // Replace \" with "
+                  .replace(/\\n/g, "\n") // Replace \n with newline
+                  .replace(/\\\\/g, "\\") // Replace \\ with \
+              }
+              // For named functions in plugins array
+              if (
+                mergedConfig.plugins?.some(
+                  (plugin: Function) => plugin.name === functionContent,
+                )
+              ) {
+                return functionContent
+              }
+              // Keep quotes for non-functions
+              return `"${functionContent}"`
+            },
+          )
+
+          const finalConfig = endent`
+            ${beforeConfig || ""}
+            module.exports = ${serializedConfig};
+            ${afterConfig || ""}
+          `
+
+          try {
+            const evaluatedFinalConfig = Function(
+              "require",
+              "module",
+              `
+              ${finalConfig};
+              return module.exports;
+            `,
+            )(require, { exports: {} })
+
+            return await processCSS(jsx, evaluatedFinalConfig, globalCss)
+          } catch (evalError) {
+            throw new Error(`Error evaluating final Tailwind config: ${evalError instanceof Error ? evalError.message : String(evalError)}`)
+          }
+        } catch (functionError) {
+          throw new Error(`Error processing custom Tailwind config: ${functionError instanceof Error ? functionError.message : String(functionError)}`)
+        }
+      } catch (transpileError) {
+        throw new Error(`Error transpiling custom Tailwind config: ${transpileError instanceof Error ? transpileError.message : String(transpileError)}`)
+      }
+    }
+
+    try {
+      const evaluatedBaseConfig = Function(
         "require",
         "module",
         `
-        ${finalConfig};
+        module.exports = ${baseTailwindConfig};
         return module.exports;
       `,
       )(require, { exports: {} })
 
-      return await processCSS(jsx, evaluatedFinalConfig, globalCss)
+      return await processCSS(jsx, evaluatedBaseConfig, globalCss)
+    } catch (baseConfigError) {
+      throw new Error(`Error processing base Tailwind config: ${baseConfigError instanceof Error ? baseConfigError.message : String(baseConfigError)}`)
     }
+  } catch (error) {
+    console.error("Detailed CSS compilation error:", {
+      error,
+      jsx: jsx.slice(0, 200) + "...",
+      customTailwindConfig: customTailwindConfig?.slice(0, 200) + "...",
+      customGlobalCss: customGlobalCss?.slice(0, 200) + "..."
+    });
+    throw error;
   }
-
-  const evaluatedBaseConfig = Function(
-    "require",
-    "module",
-    `
-    module.exports = ${baseTailwindConfig};
-    return module.exports;
-  `,
-  )(require, { exports: {} })
-
-  return await processCSS(jsx, evaluatedBaseConfig, globalCss)
 }
 
 const processCSS = async (jsx: string, config: object, globalCss: string) => {
-  const result = await postcss([
-    tailwindcss({
-      ...config,
-      content: [{ raw: jsx, extension: "tsx" }],
-    }),
-  ]).process(globalCss, {
-    from: undefined,
-  })
-  return result.css
+  try {
+    const result = await postcss([
+      tailwindcss({
+        ...config,
+        content: [{ raw: jsx, extension: "tsx" }],
+      }),
+    ]).process(globalCss, {
+      from: undefined,
+    })
+    return result.css
+  } catch (error) {
+    throw new Error(`PostCSS processing error: ${error instanceof Error ? error.message : String(error)}`)
+  }
 }
 
 function convertVideo(inputPath: string, outputPath: string): Promise<void> {
@@ -191,6 +224,10 @@ const server = serve({
           dependencies,
         } = await req.json()
 
+        if (!code) {
+          throw new Error("No code provided")
+        }
+
         const filteredCode = code
           .split("\n")
           .filter((line: string) => !line.trim().startsWith("import"))
@@ -208,19 +245,42 @@ const server = serve({
             .join("\n"),
         )
 
-        const css = await compileCSS({
-          jsx: `${filteredCode}\n${filteredDemoCode}\n${filteredDependencies.join("\n")}`,
-          baseTailwindConfig,
-          customTailwindConfig,
-          baseGlobalCss,
-          customGlobalCss,
-        })
+        try {
+          const css = await compileCSS({
+            jsx: `${filteredCode}\n${filteredDemoCode}\n${filteredDependencies.join("\n")}`,
+            baseTailwindConfig,
+            customTailwindConfig,
+            baseGlobalCss,
+            customGlobalCss,
+          })
 
-        return Response.json({ css }, { headers })
+          return Response.json({ css }, { headers })
+        } catch (cssError) {
+          console.error("CSS compilation error details:", {
+            error: cssError,
+            code: filteredCode.slice(0, 200) + "...", // First 200 chars for debugging
+            demoCode: filteredDemoCode.slice(0, 200) + "...",
+            customTailwindConfig: customTailwindConfig?.slice(0, 200) + "...",
+            customGlobalCss: customGlobalCss?.slice(0, 200) + "..."
+          })
+          
+          return Response.json(
+            { 
+              error: "Failed to compile CSS",
+              details: cssError instanceof Error ? cssError.message : String(cssError),
+              code: "CSS_COMPILATION_ERROR"
+            },
+            { status: 500, headers },
+          )
+        }
       } catch (error) {
-        console.error("CSS compilation error:", error)
+        console.error("Request processing error:", error)
         return Response.json(
-          { error: "Failed to compile CSS" },
+          { 
+            error: "Failed to process request",
+            details: error instanceof Error ? error.message : String(error),
+            code: "REQUEST_PROCESSING_ERROR"
+          },
           { status: 500, headers },
         )
       }

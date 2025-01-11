@@ -1,14 +1,15 @@
 "use client"
 
-import { motion } from "framer-motion"
-import { AuroraBackground } from "./ui/aurora-background"
-import { Button } from "./ui/button"
-import { Github } from "lucide-react"
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { motion } from "framer-motion"
+
 import { useIsMobile } from "@/hooks/use-media-query"
 import { setCookie } from "@/lib/cookies"
 import { ProductHuntAnnouncement } from "@/components/product-hunt"
+import { AuroraBackground } from "./ui/aurora-background"
+import { Button } from "./ui/button"
+import { Icons } from "./icons"
 
 export function HeroSection() {
   const router = useRouter()
@@ -23,17 +24,6 @@ export function HeroSection() {
       sameSite: "lax",
     })
     router.refresh()
-  }
-
-  const onEnterPublish = async () => {
-    await setCookie({
-      name: "has_visited",
-      value: "true",
-      expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
-      httpOnly: true,
-      sameSite: "lax",
-    })
-    router.push("/publish")
   }
 
   useEffect(() => {
@@ -74,19 +64,19 @@ export function HeroSection() {
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 md:mb-8 bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent leading-[1.2] pb-1">
-            The NPM for Design Engineers
+            The NPM for <br />
+            Design Engineers
           </h1>
 
           <p className="text-base sm:text-lg md:text-xl leading-relaxed mb-8 md:mb-12 bg-gradient-to-b from-muted-foreground to-muted-foreground/70 bg-clip-text text-transparent">
-            Ship polished UI faster with React Tailwind components based on
-            shadcn.
+            Ship polished UIs faster with React Tailwind components inspired by
+            shadcn/ui.
             <br />
-            Built by design engineers. One command to install.
-            <br />
-            Publish your own components.
+            Built by design engineers, for design engineers. One command to
+            install.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
             <Button size="lg" variant="default" onClick={onEnterWebsite}>
               Browse components
               {!isMobile && (
@@ -94,15 +84,6 @@ export function HeroSection() {
                   ⏎
                 </kbd>
               )}
-            </Button>
-
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-11"
-              onClick={onEnterPublish}
-            >
-              Publish a component
             </Button>
 
             <Button
@@ -116,7 +97,7 @@ export function HeroSection() {
                 target="_blank"
                 rel="noreferrer"
               >
-                <Github
+                <Icons.gitHub
                   className="h-4 w-4 text-foreground opacity-60"
                   aria-hidden="true"
                 />

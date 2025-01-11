@@ -334,7 +334,8 @@ export async function updateComponentWithTags(
   componentId: number,
   updatedData: Partial<Component & { tags?: Tag[] }>,
 ) {
-  const { name, description, license, preview_url, tags } = updatedData
+  const { name, description, license, preview_url, website_url, tags } =
+    updatedData
 
   const tagsJson = tags
     ? tags.map((tag) => ({
@@ -349,6 +350,7 @@ export async function updateComponentWithTags(
     p_description: description !== undefined ? description : null,
     p_license: license !== undefined ? license : null,
     p_preview_url: preview_url !== undefined ? preview_url : null,
+    p_website_url: website_url !== undefined ? website_url : null,
     p_tags: tagsJson,
   })
 
@@ -381,5 +383,64 @@ export function useUpdateComponentWithTags(
       queryClient.invalidateQueries({ queryKey: ["component", componentId] })
       queryClient.invalidateQueries({ queryKey: ["components"] })
     },
+  })
+}
+
+export async function getHunterUser(
+  supabase: SupabaseClient<Database>,
+  hunterUsername: string | null,
+): Promise<User | null> {
+  if (!hunterUsername) return null
+
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("username", hunterUsername)
+    .single()
+
+  if (error) {
+    console.error("Error fetching hunter user:", error)
+    return null
+  }
+
+  return data
+}
+
+export function useHunterUser(hunterUsername: string | null) {
+  const supabase = useClerkSupabaseClient()
+  return useQuery({
+    queryKey: ["hunterUser", hunterUsername],
+    queryFn: () => getHunterUser(supabase, hunterUsername),
+    enabled: !!hunterUsername,
+    staleTime: Infinity,
+  })
+}
+
+export async function getHuntedComponents(
+  supabase: SupabaseClient<Database>,
+  hunterUsername: string,
+) {
+  const { data, error } = await supabase
+    .from("components")
+    .select(componentReadableDbFields)
+    .eq("hunter_username", hunterUsername)
+    .eq("is_public", true)
+    .order("downloads_count", { ascending: false })
+    .returns<(Component & { user: User })[]>()
+
+  if (error) {
+    console.error("Error fetching hunted components:", error)
+    return null
+  }
+
+  return data
+}
+
+export function useHuntedComponents(username: string) {
+  const supabase = useClerkSupabaseClient()
+  return useQuery({
+    queryKey: ["huntedComponents", username],
+    queryFn: () => getHuntedComponents(supabase, username),
+    staleTime: Infinity,
   })
 }

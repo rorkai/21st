@@ -48,7 +48,7 @@ export const uploadToR2 = async ({
     const content = file.textContent
       ? file.textContent
       : Buffer.from(file.encodedContent!, "base64")
-    
+
     const command = new PutObjectCommand({
       Bucket: bucketName,
       Key: fileKey,

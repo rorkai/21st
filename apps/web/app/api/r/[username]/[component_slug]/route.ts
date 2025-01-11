@@ -4,6 +4,15 @@ import { ComponentRegistryResponse } from "./types"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 import { Tables } from "@/types/supabase"
 import { extractCssVars } from "@/lib/parsers"
+import { AnalyticsActivityType } from "@/types/global"
+
+// registry:hooks in 21st.dev -> registry:hook in shadcn/ui
+const getShadcnRegistrySlug = (registryName: string) => {
+  if (registryName === "hooks") {
+    return "registry:hook"
+  }
+  return `registry:${registryName}`
+}
 
 export async function GET(
   request: NextRequest,
@@ -50,6 +59,21 @@ export async function GET(
             console.log("Downloads count incremented")
           }
         })
+
+      supabaseWithAdminAccess
+        .from("component_analytics")
+        .insert({
+          component_id: component.id,
+          activity_type: AnalyticsActivityType.COMPONENT_CLI_DOWNLOAD,
+          created_at: new Date().toISOString(),
+        })
+        .then(({ error }) => {
+          if (error) {
+            console.error("Error capturing analytics:", error)
+          } else {
+            console.log("Analytics captured")
+          }
+        })
     }
 
     const dependencies = component.dependencies as Record<string, string>
@@ -69,7 +93,7 @@ export async function GET(
     ).map(([path, { code, registry }]) => ({
       path,
       content: code,
-      type: `registry:${registry}`,
+      type: getShadcnRegistrySlug(registry),
       target: "",
     }))
 
@@ -97,69 +121,75 @@ export async function GET(
       ? (() => {
           try {
             // First get the whole config object
-            const configMatch = tailwindConfig.match(/module\.exports\s*=\s*({[\s\S]*})/);
+            const configMatch = tailwindConfig.match(
+              /module\.exports\s*=\s*({[\s\S]*})/,
+            )
             if (!configMatch?.[1]) {
-              console.log("No config match found");
-              return {};
+              console.log("No config match found")
+              return {}
             }
-            
+
             // First clean up the config string
             const cleanConfig = configMatch[1]
-              .replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '') // Remove comments
-              .replace(/(\w+):/g, '"$1":')  // Add quotes to keys
-              .replace(/'/g, '"'); // Normalize quotes
+              .replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, "") // Remove comments
+              .replace(/(\w+):/g, '"$1":') // Add quotes to keys
+              .replace(/'/g, '"') // Normalize quotes
 
             // First find the theme object
-            const themeMatch = cleanConfig.match(/"theme"\s*:\s*({[^}]*(?:}[^}]*)*})/);
+            const themeMatch = cleanConfig.match(
+              /"theme"\s*:\s*({[^}]*(?:}[^}]*)*})/,
+            )
             if (!themeMatch?.[1]) {
-              console.log("No theme object found");
-              return {};
+              console.log("No theme object found")
+              return {}
             }
 
             // Then find the extend object within theme
-            const extendMatch = themeMatch[1].match(/"extend"\s*:\s*({[^}]*(?:}[^}]*)*})[^}]*$/);
+            const extendMatch = themeMatch[1].match(
+              /"extend"\s*:\s*({[^}]*(?:}[^}]*)*})[^}]*$/,
+            )
             if (!extendMatch?.[1]) {
-              console.log("No extend object found");
-              return {};
+              console.log("No extend object found")
+              return {}
             }
 
             let cleanThemeExtend = extendMatch[1]
-              .replace(/\s+/g, ' ') // Normalize whitespace
-              .replace(/,\s*,/g, ',') // Remove double commas
-              .replace(/,\s*}/g, '}') // Remove trailing commas before closing braces
-              .replace(/}\s*,?\s*"plugins"[\s\S]*$/, '}') // Remove everything after the extend object
-              .replace(/}\s*}/g, '}') // Remove whitespace between closing braces
-              .replace(/}(?!}|$)/g, '},') // Add commas between objects where missing
-              .replace(/,+/g, ',') // Remove any remaining multiple commas
-              .trim();
+              .replace(/\s+/g, " ") // Normalize whitespace
+              .replace(/,\s*,/g, ",") // Remove double commas
+              .replace(/,\s*}/g, "}") // Remove trailing commas before closing braces
+              .replace(/}\s*,?\s*"plugins"[\s\S]*$/, "}") // Remove everything after the extend object
+              .replace(/}\s*}/g, "}") // Remove whitespace between closing braces
+              .replace(/}(?!}|$)/g, "},") // Add commas between objects where missing
+              .replace(/,+/g, ",") // Remove any remaining multiple commas
+              .trim()
 
             // Count opening and closing braces
-            const openBraces = (cleanThemeExtend.match(/{/g) || []).length;
-            const closeBraces = (cleanThemeExtend.match(/}/g) || []).length;
+            const openBraces = (cleanThemeExtend.match(/{/g) || []).length
+            const closeBraces = (cleanThemeExtend.match(/}/g) || []).length
 
             // Add missing closing braces
             if (openBraces > closeBraces) {
-              cleanThemeExtend += '}'.repeat(openBraces - closeBraces);
+              cleanThemeExtend += "}".repeat(openBraces - closeBraces)
             }
-            
+
             // Try to parse and re-stringify to ensure valid JSON
-            const parsed = JSON.parse(cleanThemeExtend);
-            return { theme: { extend: parsed } };
+            const parsed = JSON.parse(cleanThemeExtend)
+            return { theme: { extend: parsed } }
           } catch (error) {
-            console.error("Error parsing tailwind theme.extend:", error);
-            throw error;
+            console.error("Error parsing tailwind theme.extend:", error)
+            throw error
           }
         })()
-      : {};
+      : {}
 
     const responseData: ComponentRegistryResponse = {
       name: component_slug,
-      type: `registry:${component.registry}`,
+      type: getShadcnRegistrySlug(component.registry),
       dependencies: npmDependencies.length > 0 ? npmDependencies : undefined,
       files,
       ...(cssVars ? { cssVars } : {}),
       ...(tailwindConfigObject
-        ? { tailwind: { config: tailwindConfigObject as any} }
+        ? { tailwind: { config: tailwindConfigObject as any } }
         : {}),
     }
 

@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from "react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+
+import { atom } from "jotai"
 import {
   SignInButton,
   SignedIn,
@@ -10,12 +11,9 @@ import {
   useClerk,
   UserProfile,
 } from "@clerk/nextjs"
-import { UserAvatar } from "./UserAvatar"
-import { atom, useAtom } from "jotai"
-import { useIsMobile, useMediaQuery } from "@/hooks/use-media-query"
-import { HeaderServer } from "./HeaderServer"
-import { NavigationMenuLink } from "@/components/ui/navigation-menu"
-import { cn } from "@/lib/utils"
+import { LogOut, Settings, X, FileText } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,18 +22,23 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { LogOut, Settings, X, FileText } from "lucide-react"
-import { ShimmerButton } from "./ui/shimmer-button"
+import { ShimmerButton } from "@/components/ui/shimmer-button"
+import { NavigationMenuLink } from "@/components/ui/navigation-menu"
+
+import { useIsMobile } from "@/hooks/use-media-query"
+import { cn } from "@/lib/utils"
+
+import { HeaderServer } from "./HeaderServer"
+import { UserAvatar } from "./UserAvatar"
 
 export const searchQueryAtom = atom("")
 
 export function Header({ tagName, page }: { tagName?: string; page?: string }) {
   const isHomePage = page === "home"
   const isPublishPage = page === "publish"
-  const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom)
+  const isProPage = page === "pro"
   const inputRef = React.useRef<HTMLInputElement>(null)
   const isMobile = useIsMobile()
-  const isDesktop = useMediaQuery("(min-width: 1024px)")
   const { user, signOut } = useClerk()
   const [showUserProfile, setShowUserProfile] = useState(false)
 
@@ -58,9 +61,15 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
 
   return (
     <>
-      <header className="flex fixed top-0 left-0 right-0 h-14 z-50 items-center justify-between border-b border-border/40 px-4 py-3 bg-background text-foreground">
+      <header className={cn("flex fixed top-0 left-0 right-0 h-14 z-50 items-center justify-between px-4 py-3 text-foreground", {
+        "border-b border-border/40 bg-background": !isPublishPage
+      })}>
         <div className="flex items-center gap-4">
-          <HeaderServer tagName={tagName} isHomePage={isHomePage} />
+          <HeaderServer
+            tagName={tagName}
+            isHomePage={isHomePage}
+            isProPage={isProPage}
+          />
         </div>
 
         <div className="flex items-center gap-2">
@@ -77,18 +86,20 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
               Support us on Product Hunt
             </span>
           </ShimmerButton>
+        </div>
+        <div className="flex items-center">
           {!isMobile && <HeaderServer.ThemeToggle />}
-          <HeaderServer.SocialIcons isMobile={isMobile} />
+          <HeaderServer.SocialIcons />
           {!isMobile && (
             <>
               <SignedIn>
                 {!isPublishPage && (
-                  <Button asChild>
-                    <Link href="/publish">Publish</Link>
+                  <Button asChild className="ml-2">
+                    <Link href="/publish">Publish component</Link>
                   </Button>
                 )}
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="cursor-pointer rounded-full">
+                  <DropdownMenuTrigger className="cursor-pointer rounded-full ml-2">
                     <UserAvatar
                       src={user?.imageUrl}
                       alt={user?.fullName}
@@ -128,6 +139,7 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
                       <FileText className="w-4 h-4 mr-2 opacity-60" />
                       <span>Terms of Service</span>
                     </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onSelect={() => signOut({ redirectUrl: "/" })}
                     >
@@ -140,7 +152,7 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
 
               <SignedOut>
                 <SignInButton>
-                  <Button>Publish</Button>
+                  <Button className="ml-2">Publish component</Button>
                 </SignInButton>
               </SignedOut>
             </>

@@ -1,14 +1,17 @@
-import { cookies } from "next/headers"
-import { Header } from "../components/Header"
 import React from "react"
-import { HomePageClient } from "./page.client"
 import { Metadata } from "next"
-import { supabaseWithAdminAccess } from "@/lib/supabase"
+import { cookies } from "next/headers"
+
 import { Component, SortOption, User } from "@/types/global"
+import { Tables } from "@/types/supabase"
+
+import { supabaseWithAdminAccess } from "@/lib/supabase"
+import { filterComponents, sortComponents } from "@/lib/filters.client"
+
+import { Header } from "../components/Header"
 import { HeroSection } from "@/components/HeroSection"
 import { NewsletterDialog } from "@/components/NewsletterDialog"
-import { Tables } from "@/types/supabase"
-import { filterComponents, sortComponents } from "@/lib/filters.client"
+import { HomePageClient } from "./page.client"
 
 export const dynamic = "force-dynamic"
 
@@ -18,7 +21,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
     "@type": "WebSite",
     name: "21st.dev - The NPM for Design Engineers",
     description:
-      "Ship polished UI faster with ready-to-use React Tailwind components based on shadcn. Share your own components with the community.",
+      "Ship polished UIs faster with ready-to-use React Tailwind components inspired by shadcn/ui. Built by design engineers, for design engineers.",
     url: process.env.NEXT_PUBLIC_APP_URL,
     potentialAction: {
       "@type": "SearchAction",
@@ -33,7 +36,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
   return {
     title: "21st.dev – The NPM for Design Engineers",
     description:
-      "Ship polished UI faster with ready-to-use React Tailwind components based on shadcn. Built by design engineers, for design engineers. Publish and share your components with the community.",
+      "Ship polished UIs faster with ready-to-use React Tailwind components inspired by shadcn/ui. Built by design engineers, for design engineers.",
     keywords: [
       "react components",
       "tailwind css",
@@ -46,7 +49,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
     openGraph: {
       title: "21st.dev - The NPM for Design Engineers",
       description:
-        "Ship polished UI faster. Built by design engineers, for design engineers. Share your components with the community.",
+        "Ship polished UIs faster with ready-to-use React Tailwind components inspired by shadcn/ui. Built by design engineers, for design engineers.",
       images: [
         {
           url: `${process.env.NEXT_PUBLIC_APP_URL}/og-image.png`,
@@ -59,7 +62,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
       card: "summary_large_image",
       title: "21st.dev - The NPM for Design Engineers",
       description:
-        "Ship polished UI faster. Built by design engineers, for design engineers. Share your components with the community.",
+        "Ship polished UIs faster with ready-to-use React Tailwind components inspired by shadcn/ui. Built by design engineers, for design engineers.",
       images: [`${process.env.NEXT_PUBLIC_APP_URL}/og-image.png`],
     },
     other: {
@@ -73,7 +76,7 @@ export default async function HomePage() {
   const shouldShowHero = !cookieStore.has("has_visited")
   const hasOnboarded = cookieStore.has("has_onboarded")
   // const defaultSortBy = hasOnboarded ? "likes" : "downloads"
-  const defaultQuickFilter = hasOnboarded ? "last_week" : "all"
+  const defaultQuickFilter = hasOnboarded ? "last_released" : "all"
   const defaultSortBy = "downloads"
 
   const sortByPreference: SortOption =

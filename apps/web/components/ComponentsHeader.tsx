@@ -1,7 +1,17 @@
 "use client"
 
-import { useAtom, Atom } from "jotai"
-import { atomWithStorage } from "jotai/utils"
+import { useEffect, useRef, useCallback } from "react"
+
+import { useAtom } from "jotai"
+import { atomWithStorage, createJSONStorage } from "jotai/utils"
+import { useMediaQuery } from "@/hooks/use-media-query"
+
+import { ArrowUpDown, CircleX } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { AMPLITUDE_EVENTS, trackEvent } from "@/lib/amplitude"
+
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -9,26 +19,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import type { SortOption, QuickFilterOption } from "@/types/global"
-import { QUICK_FILTER_OPTIONS, SORT_OPTIONS } from "@/types/global"
-import NumberFlow from "@number-flow/react"
-import { Input } from "@/components/ui/input"
-import { useMediaQuery } from "@/hooks/use-media-query"
-import { searchQueryAtom } from "@/components/Header"
-import { useEffect, useRef } from "react"
-import { ArrowUpDown, CircleX } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { AMPLITUDE_EVENTS, trackEvent } from "@/lib/amplitude"
-import { cn } from "@/lib/utils"
+import { searchQueryAtom } from "@/components/Header"
 
-export const quickFilterAtom = atomWithStorage<QuickFilterOption | undefined>(
+import type {
+  SortOption,
+  QuickFilterOption,
+  Component,
+  User,
+} from "@/types/global"
+import { QUICK_FILTER_OPTIONS, SORT_OPTIONS } from "@/types/global"
+
+export const quickFilterAtom = atomWithStorage<QuickFilterOption>(
   "quick-filter",
-  undefined,
+  "all",
+  createJSONStorage(() => localStorage),
 )
 
-export const sortByAtom: Atom<SortOption | undefined> = atomWithStorage(
+export const sortByAtom = atomWithStorage<SortOption>(
   "components-sort-by",
-  undefined,
+  "downloads",
+  createJSONStorage(() => localStorage),
 )
 
 const useTrackSearchQueries = () => {
@@ -52,7 +63,10 @@ const useTrackSearchQueries = () => {
 const useSearchHotkeys = (inputRef: React.RefObject<HTMLInputElement>) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
+      if (
+        event.key === "/" &&
+        !["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName || "")
+      ) {
         event.preventDefault()
         inputRef.current?.focus()
       } else if (event.key === "Escape") {
@@ -66,21 +80,37 @@ const useSearchHotkeys = (inputRef: React.RefObject<HTMLInputElement>) => {
 }
 
 export function ComponentsHeader({
-  totalCount,
   filtersDisabled,
+  currentSection,
+  tabCounts,
 }: {
-  totalCount: number
   filtersDisabled: boolean
+  currentSection?: string
+  tabCounts: Record<QuickFilterOption, number>
 }) {
   const [quickFilter, setQuickFilter] = useAtom(quickFilterAtom)
   const [sortBy, setSortBy] = useAtom(sortByAtom)
   const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom)
   const inputRef = useRef<HTMLInputElement>(null)
   const isDesktop = useMediaQuery("(min-width: 768px)")
-  const isWide = useMediaQuery("(min-width: 1200px)")
+  const isMobile = useMediaQuery("(max-width: 768px)")
 
   useTrackSearchQueries()
   useSearchHotkeys(inputRef)
+
+  const handleQuickFilterChange = useCallback(
+    (value: string) => {
+      setQuickFilter(value as QuickFilterOption)
+    },
+    [setQuickFilter],
+  )
+
+  const handleSortByChange = useCallback(
+    (value: string) => {
+      setSortBy(value as SortOption)
+    },
+    [setSortBy],
+  )
 
   const handleClearInput = () => {
     setSearchQuery("")
@@ -88,10 +118,23 @@ export function ComponentsHeader({
   }
 
   const getFilterLabel = (label: string) => {
-    if (!isWide && label === "All Components") {
+    if (isMobile && label === "All Components") {
       return "All"
     }
     return label
+  }
+
+  const getSearchPlaceholder = () => {
+    const isTablet = useMediaQuery("(min-width: 768px) and (max-width: 1200px)")
+
+    if (isTablet) {
+      return "Search..."
+    }
+
+    if (currentSection) {
+      return `Search ${currentSection.toLowerCase()}...`
+    }
+    return "Search components..."
   }
 
   return (
@@ -100,44 +143,42 @@ export function ComponentsHeader({
         <div className="flex items-center gap-4">
           <Tabs
             value={quickFilter}
-            onValueChange={(value) =>
-              setQuickFilter(value as QuickFilterOption)
-            }
+            onValueChange={handleQuickFilterChange}
             className={cn("w-full md:w-auto", filtersDisabled && "opacity-50")}
           >
-            <TabsList className="w-full md:w-auto h-auto -space-x-px bg-background p-0 shadow-sm shadow-black/5 rtl:space-x-reverse">
+            <TabsList className="w-full md:w-auto h-8 -space-x-px bg-background p-0 shadow-sm shadow-black/5 rtl:space-x-reverse">
               {Object.entries(QUICK_FILTER_OPTIONS).map(([value, label]) => (
                 <TabsTrigger
                   key={value}
                   value={value}
-                  className="flex-1 md:flex-initial relative overflow-hidden rounded-none border border-border py-2 px-4 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 first:rounded-s last:rounded-e data-[state=active]:bg-muted data-[state=active]:after:bg-primary"
+                  disabled={tabCounts?.[value as QuickFilterOption] === 0}
+                  className="flex-1 md:flex-initial relative overflow-hidden rounded-none border border-border h-8 px-4 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 first:rounded-s last:rounded-e data-[state=active]:bg-muted data-[state=active]:after:bg-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <span className="truncate">{getFilterLabel(label)}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="truncate">{getFilterLabel(label)}</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {tabCounts?.[value as QuickFilterOption] ?? 0}
+                    </span>
+                  </div>
                 </TabsTrigger>
               ))}
             </TabsList>
           </Tabs>
-          {isWide && (
-            <div className="hidden md:flex text-sm text-muted-foreground items-center gap-1">
-              <NumberFlow value={totalCount} className="tabular-nums" />
-              <span>{totalCount === 1 ? "component" : "components"}</span>
-            </div>
-          )}
         </div>
 
-        <div className="flex items-center gap-2 md:w-[450px]">
-          <div className="relative flex-1">
+        <div className="flex items-center gap-2 md:w-auto min-w-0">
+          <div className="relative flex-1 min-w-0 lg:min-w-[250px] md:min-w-[100px]">
             <Input
               ref={inputRef}
               type="text"
-              placeholder="Search components..."
+              placeholder={getSearchPlaceholder()}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full"
+              className="w-full h-8 min-w-[100px] [&::placeholder]:pe-8 lg:[&::placeholder]:pe-16"
             />
             {searchQuery ? (
               <button
-                className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-lg text-muted-foreground/80 outline-offset-2 transition-colors hover:text-foreground focus:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring/70"
+                className="absolute inset-y-0 end-0 flex h-full w-8 md:w-9 items-center justify-center rounded-e-lg text-muted-foreground/80 outline-offset-2 transition-colors hover:text-foreground focus:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring/70"
                 onClick={handleClearInput}
                 aria-label="Clear search"
               >
@@ -145,16 +186,16 @@ export function ComponentsHeader({
               </button>
             ) : (
               <div className="pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-2 text-muted-foreground">
-                <kbd className="hidden md:inline-flex h-5 max-h-full items-center rounded border border-border px-1 font-[inherit] text-[0.625rem] font-medium text-muted-foreground/70">
-                  ⌘K
+                <kbd className="hidden lg:inline-flex size-5 items-center justify-center rounded border bg-muted px-1 font-[inherit] text-[0.625rem] font-medium text-muted-foreground/70">
+                  <span className="text-[11px] font-sans">/</span>
                 </kbd>
               </div>
             )}
           </div>
 
-          <Select value={sortBy} onValueChange={setSortBy}>
+          <Select value={sortBy} onValueChange={handleSortByChange}>
             <SelectTrigger
-              className={`${isDesktop ? "w-[180px]" : "w-auto min-w-[40px] px-2"}`}
+              className={`h-8 ${isDesktop ? "w-[180px]" : "w-auto min-w-[40px] px-2"}`}
             >
               {isDesktop ? (
                 <SelectValue placeholder="Sort by" />

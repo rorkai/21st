@@ -11,7 +11,7 @@ export function filterComponents(
   switch (quickFilter) {
     case "all":
       break
-    case "last_week":
+    case "last_released":
       filtered = filtered.filter((c) => {
         const date = new Date(c.created_at)
         const now = new Date()

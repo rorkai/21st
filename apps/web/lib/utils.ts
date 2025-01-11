@@ -6,9 +6,17 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function getPackageRunner(packageManager: string) {
-  if (packageManager === "pnpm") return "pnpm dlx"
-  if (packageManager === "bun") return "bunx"
-  return "npx"
+  switch (packageManager) {
+    case "pnpm":
+      return "pnpm dlx"
+    case "yarn":
+      return "npx"
+    case "bun":
+      return "bunx --bun"
+    case "npm":
+    default:
+      return "npx"
+  }
 }
 
 export function formatDate(date: Date) {

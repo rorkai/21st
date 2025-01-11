@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
+
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -10,10 +12,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+
+import { useIsMobile } from "@/hooks/use-media-query"
+
 import { Mail } from "lucide-react"
 import { toast } from "sonner"
-import { useIsMobile } from "@/hooks/use-media-query"
-import Link from "next/link"
 
 export function NewsletterDialog() {
   const [isOpen, setIsOpen] = useState(false)
@@ -139,7 +142,8 @@ export function NewsletterDialog() {
         </form>
 
         <p className="text-center text-xs text-muted-foreground">
-          By subscribing you agree to our <Link href="/privacy">Privacy Policy</Link>.
+          By subscribing you agree to our{" "}
+          <Link href="/privacy">Privacy Policy</Link>.
         </p>
       </DialogContent>
     </Dialog>

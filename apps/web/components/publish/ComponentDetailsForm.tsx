@@ -4,7 +4,6 @@ import { Controller, useController, UseFormReturn } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Hotkey } from "@/components/ui/hotkey"
 import {
   makeSlugFromName,
   generateUniqueSlug,
@@ -65,8 +64,8 @@ const ComponentDetailsForm = ({
 }) => {
   useSubmitFormHotkeys(form, handleSubmit, hotkeysEnabled)
   const { data: availableTags = [] } = useAvailableTags()
-  const { theme } = useTheme()
-  const isDarkTheme = theme === "dark"
+  const { resolvedTheme } = useTheme()
+  const isDarkTheme = resolvedTheme === "dark"
   const [open, setOpen] = useState(false)
   const previewImageDataUrl = form.watch("preview_image_data_url")
 
@@ -114,6 +113,17 @@ const ComponentDetailsForm = ({
     multiple: false,
   })
 
+  const handleTextareaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const textarea = e.target
+    textarea.style.height = "auto"
+
+    const style = window.getComputedStyle(textarea)
+    const borderHeight =
+      parseInt(style.borderTopWidth) + parseInt(style.borderBottomWidth)
+
+    textarea.style.height = `${textarea.scrollHeight + borderHeight}px`
+  }
+
   return (
     <div
       className={`flex flex-col gap-4 w-full ${isDarkTheme ? "text-foreground" : "text-muted-foreground"}`}
@@ -131,7 +141,9 @@ const ComponentDetailsForm = ({
           id="description"
           placeholder="Add some description to help others discover your component"
           {...form.register("description")}
-          className="mt-1 w-full text-foreground"
+          className="mt-1 w-full text-foreground min-h-[none] resize-none"
+          onInput={handleTextareaInput}
+          rows={2}
         />
       </div>
 
@@ -224,9 +236,12 @@ const ComponentDetailsForm = ({
       </div>
 
       <div className="w-full">
-        <Label htmlFor="preview_video" className="block text-sm font-medium">
-          Video Preview (optional)
-        </Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="preview_video" className="text-sm font-medium">
+            Video Preview
+          </Label>
+          <span className="text-sm text-muted-foreground">Optional</span>
+        </div>
         {!previewVideoDataUrl ? (
           <div
             {...getVideoRootProps()}
@@ -343,9 +358,12 @@ const ComponentDetailsForm = ({
       </div>
 
       <div className="w-full">
-        <label htmlFor="tags" className="block text-sm font-medium">
-          Tags (optional)
-        </label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="tags" className="text-sm font-medium">
+            Tags
+          </Label>
+          <span className="text-sm text-muted-foreground">Optional</span>
+        </div>
         <Controller
           name="tags"
           control={form.control}
@@ -379,15 +397,39 @@ const ComponentDetailsForm = ({
       </div>
 
       <div className="w-full">
-        <Label htmlFor="website_url" className="block text-sm font-medium">
-          Website (optional)
-        </Label>
-        <Input
-          id="website_url"
-          placeholder="Component's website, docs or GitHub link..."
-          {...form.register("website_url")}
-          className="mt-1 w-full text-foreground"
-        />
+        <div className="flex items-center justify-between">
+          <Label htmlFor="website_url" className="text-sm font-medium">
+            Website
+          </Label>
+          <span className="text-sm text-muted-foreground">Optional</span>
+        </div>
+        <div className="relative mt-1">
+          <Controller
+            name="website_url"
+            control={form.control}
+            render={({ field }) => (
+              <Input
+                id="website_url"
+                placeholder="google.com"
+                className="ps-16 text-foreground w-full"
+                value={field.value?.replace(/^https?:\/\//, "") || ""}
+                onChange={(e) => {
+                  const displayValue = e.target.value.replace(
+                    /^https?:\/\//,
+                    "",
+                  )
+                  const fullValue = displayValue
+                    ? `https://${displayValue}`
+                    : ""
+                  field.onChange(fullValue)
+                }}
+              />
+            )}
+          />
+          <span className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-sm text-muted-foreground">
+            https://
+          </span>
+        </div>
       </div>
 
       <Button
@@ -403,7 +445,14 @@ const ComponentDetailsForm = ({
             ? "Save changes"
             : "Add component"}
         {!isSubmitting && isFormValid(form) && (
-          <Hotkey keys={["⌘", "⏎"]} variant="primary" />
+          <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border-muted-foreground/40 bg-muted-foreground/20 px-1.5 ml-1.5 font-sans  text-[11px] text-muted leading-none  opacity-100 flex">
+            <span className="text-[11px] leading-none font-sans">
+              {navigator?.platform?.toLowerCase()?.includes("mac")
+                ? "⌘"
+                : "Ctrl"}
+            </span>
+            ⏎
+          </kbd>
         )}
       </Button>
     </div>

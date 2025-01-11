@@ -8,7 +8,7 @@ export function useDebugMode() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.shiftKey && event.key === 'D') {
+      if (event.ctrlKey && event.shiftKey && event.key === "D") {
         event.preventDefault()
         setIsDebug((prevState: boolean) => !prevState)
       }

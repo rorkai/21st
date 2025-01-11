@@ -16,8 +16,8 @@ export default function PrivacyPolicy() {
         <h2>1. Introduction</h2>
         <p>
           This Privacy Policy explains how 21st.dev ("we", "our", or "us"),
-          operated by Serafim Korablev, collects and uses
-          information through our website and services.
+          operated by Serafim Korablev, collects and uses information through
+          our website and services.
         </p>
 
         <h2>2. Information We Collect</h2>

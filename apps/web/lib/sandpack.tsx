@@ -1,5 +1,4 @@
-export const defaultTailwindConfig = 
-`module.exports = {
+export const defaultTailwindConfig = `module.exports = {
   darkMode: ["class"],
   content: ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}"],
   theme: {
@@ -148,8 +147,93 @@ export function generateSandpackFiles({
   customTailwindConfig?: string
   customGlobalCss?: string
 }) {
-  const appTsxContent = `
-import React, { useState } from 'react';
+  const pathParts = relativeImportPath.split("/")
+  const isBlocksRegistry = pathParts[pathParts.length - 1] === "blocks"
+
+  const appTsxContent = isBlocksRegistry
+    ? `
+import React, { useState, useEffect } from 'react';
+import { ThemeProvider } from './next-themes';
+import { RouterProvider } from 'next/router';
+import './styles.css';
+import DefaultDemoExport, { ${demoComponentNames.join(", ")} } from './demo';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem } from './components/ui/select';
+
+const demoComponentNames = ${JSON.stringify(demoComponentNames)};
+const DemoComponents = {
+  ...{
+    ${demoComponentNames.map((name) => `"${name}": ${name}`).join(",\n")}
+  },
+  ...DefaultDemoExport,
+};
+
+export default function App() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const CurrentComponent = Object.values(DemoComponents)[currentIndex];
+  const showSelect = demoComponentNames.length > 1;
+
+  const handleSelect = (value) => {
+    const index = demoComponentNames.indexOf(value);
+    if (index !== -1) {
+      setCurrentIndex(index);
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Check if CMD/Meta key is pressed
+      if (event.metaKey) {
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          setCurrentIndex((prev) => (prev + 1) % demoComponentNames.length);
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          setCurrentIndex((prev) => (prev - 1 + demoComponentNames.length) % demoComponentNames.length);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  return (
+    <ThemeProvider attribute="class" defaultTheme="${theme}" enableSystem={false}>
+      <RouterProvider>
+        <div className="bg-background text-foreground">
+          {showSelect && (
+            <div className="absolute z-10 top-4 right-4 flex flex-col items-end gap-1">
+              <Select onValueChange={handleSelect} value={demoComponentNames[currentIndex]} className="shadow">
+                <SelectTrigger className="gap-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    ${demoComponentNames
+                      .map(
+                        (name) => `
+                      <SelectItem key="${name}" value="${name}">
+                        ${name.replace(/([A-Z])/g, " $1").trim()}
+                      </SelectItem>
+                      `,
+                      )
+                      .join("")}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <div className="w-full">
+            {CurrentComponent ? <CurrentComponent /> : <div>Component not found</div>}
+          </div>
+        </div>
+      </RouterProvider>
+    </ThemeProvider>
+  );
+}
+`
+    : `
+import React, { useState, useEffect } from 'react';
 import { ThemeProvider } from './next-themes';
 import { RouterProvider } from 'next/router';
 import './styles.css';  // Import the compiled CSS
@@ -179,28 +263,46 @@ export default function App() {
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Check if CMD/Meta key is pressed
+      if (event.metaKey) {
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          setCurrentIndex((prev) => (prev + 1) % demoComponentNames.length);
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          setCurrentIndex((prev) => (prev - 1 + demoComponentNames.length) % demoComponentNames.length);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
     <ThemeProvider attribute="class" defaultTheme="${theme}" enableSystem={false}>
       <RouterProvider>
           <div className="relative flex items-center justify-center h-screen w-full m-auto p-16 bg-background text-foreground">
             <div className="absolute lab-bg inset-0 size-full bg-[radial-gradient(#00000021_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff22_1px,transparent_1px)] [background-size:16px_16px]"></div>
             {showSelect && (
-              <div className="absolute z-10 top-4 right-4">
-                <Select onValueChange={handleSelect} defaultValue={demoComponentNames[0]} className="shadow">
+              <div className="absolute z-10 top-4 right-4 flex flex-col items-end gap-1">
+                <Select onValueChange={handleSelect} value={demoComponentNames[currentIndex]} className="shadow">
                   <SelectTrigger className="gap-2">
-                  <SelectValue />
+                    <SelectValue />
                   </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    ${demoComponentNames
-                      .map(
-                        (name) => `
-                      <SelectItem key="${name}" value="${name}">
-                        ${name.replace(/([A-Z])/g, " $1").trim()}
-                      </SelectItem>
-                      `,
-                      )
-                      .join("")}
+                  <SelectContent>
+                    <SelectGroup>
+                      ${demoComponentNames
+                        .map(
+                          (name) => `
+                        <SelectItem key="${name}" value="${name}">
+                          ${name.replace(/([A-Z])/g, " $1").trim()}
+                        </SelectItem>
+                        `,
+                        )
+                        .join("")}
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -224,6 +326,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const ThemeContext = createContext({
   theme: 'light',
   setTheme: (theme: string) => {},
+  resolvedTheme: 'light',
 });
 
 export const useTheme = () => useContext(ThemeContext);
@@ -237,8 +340,10 @@ export const ThemeProvider = ({ children, defaultTheme = 'light', enableSystem =
     root.classList.add(theme);
   }, [theme]);
 
+  const resolvedTheme = theme === 'system' ? 'light' : theme;
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, resolvedTheme }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -461,7 +566,7 @@ export {
     "/node_modules/next/index.js": `
       export { default as Image } from './image';
       export { default as Link } from './link';
-      export { useRouter, RouterProvider } from './router';
+      export { useRouter, RouterProvider, usePathname } from './router';
       export { default as Head } from './head';
       export { default as Script } from './script';
       export { default as dynamic } from './dynamic';
@@ -514,6 +619,11 @@ export {
       });
       
       export const useRouter = () => useContext(RouterContext);
+      
+      export const usePathname = () => {
+        const router = useRouter();
+        return router.pathname;
+      };
       
       export const RouterProvider = ({ children }) => {
         const router = {
@@ -574,6 +684,9 @@ export {
           </Html>
         );
       }
+    `,
+    "/node_modules/next/navigation.js": `
+      export { usePathname } from './router';
     `,
     [`${relativeImportPath}/${componentSlug}.tsx`]: code,
     "/demo.tsx": demoCode,

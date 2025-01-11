@@ -18,6 +18,7 @@ import { useQuery } from "@tanstack/react-query"
 import React, { useMemo, useState, useEffect } from "react"
 import { LoadingSpinner } from "../LoadingSpinner"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
+import { useToast } from "@/hooks/use-toast"
 
 const SandpackPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react").then((module) => ({
@@ -47,6 +48,7 @@ export function PublishComponentPreview({
   const isDebug = useDebugMode()
   const supabase = useClerkSupabaseClient()
   const [css, setCss] = useState<string | undefined>(undefined)
+  const { toast } = useToast()
 
   const {
     data: registryDependencies,
@@ -83,17 +85,27 @@ export function PublishComponentPreview({
       theme: isDarkTheme ? "dark" : "light",
       css: "",
     })
-    
+
     return Object.entries(dummyFiles)
       .filter(([key]) => /\.(tsx|jsx|ts|js)$/.test(key))
       .map(([, file]) => file)
-  }, [demoComponentNames, slugToPublish, registryToPublish, code, demoCode, isDarkTheme])
+  }, [
+    demoComponentNames,
+    slugToPublish,
+    registryToPublish,
+    code,
+    demoCode,
+    isDarkTheme,
+  ])
 
   useEffect(() => {
     if (isLoading) return
 
     fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/compile-css`, {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         code,
         demoCode,
@@ -102,16 +114,50 @@ export function PublishComponentPreview({
         customTailwindConfig,
         customGlobalCss,
         dependencies: [
-          ...Object.values(registryDependencies?.filesWithRegistry ?? {}).map(file => file.code),
-          ...shellCode
+          ...Object.values(registryDependencies?.filesWithRegistry ?? {}).map(
+            (file) => file.code,
+          ),
+          ...shellCode,
         ],
       }),
     })
       .then((res) => res.json())
       .then((data) => {
+        if (data.error) {
+          console.error("CSS compilation failed:", {
+            error: data.error,
+            details: data.details,
+            code: data.code,
+          })
+          toast({
+            title: "CSS Compilation Error",
+            description: data.details || data.error,
+            variant: "destructive",
+          })
+          throw new Error(
+            `CSS compilation failed: ${data.details || data.error}`,
+          )
+        }
         setCss(data.css)
       })
-  }, [code, demoCode, customTailwindConfig, customGlobalCss, registryDependencies, shellCode])
+      .catch((error) => {
+        console.error("Failed to compile CSS:", error)
+        toast({
+          title: "Error",
+          description:
+            "Failed to compile CSS. Please check your code and try again.",
+          variant: "destructive",
+        })
+      })
+  }, [
+    code,
+    demoCode,
+    customTailwindConfig,
+    customGlobalCss,
+    registryDependencies,
+    shellCode,
+    toast,
+  ])
 
   const sandpackDefaultFiles = useMemo(
     () =>
@@ -136,7 +182,7 @@ export function PublishComponentPreview({
       css,
       customTailwindConfig,
       customGlobalCss,
-    ]
+    ],
   )
 
   const files = useMemo(
@@ -148,7 +194,7 @@ export function PublishComponentPreview({
         ),
       ),
     }),
-    [sandpackDefaultFiles, registryDependencies?.filesWithRegistry]
+    [sandpackDefaultFiles, registryDependencies?.filesWithRegistry],
   )
 
   const dependencies = useMemo(() => {

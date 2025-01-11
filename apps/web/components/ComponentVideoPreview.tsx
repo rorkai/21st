@@ -77,7 +77,7 @@ export function ComponentVideoPreview({
           width: "calc(100% + 2px)",
           height: "calc(100% + 2px)",
           left: "-1px",
-          top: "-1px"
+          top: "-1px",
         }}
       />
     </div>

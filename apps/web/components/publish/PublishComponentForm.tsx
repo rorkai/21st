@@ -14,7 +14,6 @@ import {
   extractAmbigiousRegistryDependencies,
 } from "../../lib/parsers"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import {
   Dialog,
@@ -40,7 +39,6 @@ import { useUser } from "@clerk/nextjs"
 import { useDebugMode } from "@/hooks/use-debug-mode"
 import { Tag } from "@/types/global"
 import { PublishComponentPreview } from "./preview"
-import { Hotkey } from "../ui/hotkey"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import {
@@ -58,8 +56,8 @@ import { Input } from "@/components/ui/input"
 import { usePublishAs } from "./use-publish-as"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { HeroVideoDialog } from "@/components/ui/hero-video-dialog"
-import endent from "endent"
 import { ChevronLeftIcon } from "lucide-react"
+import { Editor } from "@monaco-editor/react"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -81,13 +79,13 @@ export default function PublishComponentForm() {
   const client = useClerkSupabaseClient()
   const router = useRouter()
   const isDebug = useDebugMode()
-  const { theme } = useTheme()
-  const isDarkTheme = theme === "dark"
+  const { resolvedTheme } = useTheme()
+  const isDarkTheme = resolvedTheme === "dark"
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false)
 
   const [formStartTime] = useState(() => Date.now())
   const [publishAttemptCount, setPublishAttemptCount] = useState(0)
-  const [completedSteps, setCompletedSteps] = useState<string[]>([])
+  const [completedSteps] = useState<string[]>([])
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -121,6 +119,38 @@ export default function PublishComponentForm() {
   const registryToPublish = form.watch("registry")
 
   const [formStep, setFormStep] = useState<FormStep>("nameSlugForm")
+  const isFirstRender = useRef(true)
+  const isNavigatingAway = useRef(false)
+
+  useEffect(() => {
+    const message = "You have unsaved changes. Are you sure you want to leave?"
+
+    if (formStep === "nameSlugForm") {
+      window.onbeforeunload = null
+      window.onpopstate = null
+      return
+    }
+
+    window.onpopstate = () => {
+      if (!isNavigatingAway.current && !window.confirm(message)) {
+        window.history.pushState(null, "", window.location.href)
+      } else {
+        isNavigatingAway.current = true
+        router.back()
+      }
+    }
+
+    // Add history entry only on the first non-nameSlugForm step
+    if (isFirstRender.current) {
+      window.history.pushState(null, "", window.location.href)
+      isFirstRender.current = false
+    }
+
+    return () => {
+      window.onpopstate = null
+    }
+  }, [formStep, router])
+
   const [parsedCode, setParsedCode] = useState<ParsedCodeData>({
     dependencies: {},
     demoDependencies: {},
@@ -160,15 +190,19 @@ export default function PublishComponentForm() {
           demoDependencies,
           componentNames,
           demoComponentNames,
-          directRegistryDependencyImports,
+          directRegistryDependencyImports: [
+            ...new Set(directRegistryDependencyImports),
+          ],
         })
 
-        const ambigiousRegistryDependencies = Object.values(
-          extractAmbigiousRegistryDependencies(code),
-        )
-        const ambigiousDemoDirectRegistryDependencies = Object.values(
-          extractAmbigiousRegistryDependencies(demoCode),
-        )
+        const ambigiousRegistryDependencies = [
+          ...new Set(Object.values(extractAmbigiousRegistryDependencies(code))),
+        ]
+        const ambigiousDemoDirectRegistryDependencies = [
+          ...new Set(
+            Object.values(extractAmbigiousRegistryDependencies(demoCode)),
+          ),
+        ]
 
         const parsedUnknownDependencies = [
           ...ambigiousRegistryDependencies,
@@ -402,7 +436,7 @@ export default function PublishComponentForm() {
             <div className={`flex gap-4 items-center h-full w-full mt-2`}>
               <div
                 className={cn(
-                  "flex flex-col scrollbar-hide items-start gap-2 py-6 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[450px]",
+                  "flex flex-col scrollbar-hide items-start gap-2 py-8 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[450px]",
                 )}
               >
                 {formStep === "nameSlugForm" && (
@@ -474,18 +508,94 @@ export default function PublishComponentForm() {
                               }}
                               transition={{ duration: 0.3 }}
                             >
-                              <Textarea
-                                ref={codeInputRef}
-                                placeholder="Paste code of your component here"
-                                value={field.value}
-                                onChange={(e) => {
-                                  field.onChange(e.target.value)
+                              <Editor
+                                defaultLanguage="typescript"
+                                defaultValue={field.value}
+                                onChange={(value) =>
+                                  field.onChange(value || "")
+                                }
+                                theme={
+                                  isDarkTheme ? "github-dark" : "github-light"
+                                }
+                                options={{
+                                  minimap: { enabled: false },
+                                  scrollBeyondLastLine: false,
+                                  fontSize: 14,
+                                  lineNumbers: "off",
+                                  folding: true,
+                                  wordWrap: "on",
+                                  automaticLayout: true,
+                                  padding: { top: 16, bottom: 16 },
+                                  scrollbar: {
+                                    vertical: "visible",
+                                    horizontal: "visible",
+                                    verticalScrollbarSize: 8,
+                                    horizontalScrollbarSize: 8,
+                                    useShadows: false,
+                                  },
+                                  overviewRulerLanes: 0,
+                                  hideCursorInOverviewRuler: true,
+                                  overviewRulerBorder: false,
+                                  renderLineHighlight: "none",
+                                  contextmenu: false,
+                                  formatOnPaste: false,
+                                  formatOnType: false,
+                                  quickSuggestions: false,
+                                  suggest: {
+                                    showKeywords: false,
+                                    showSnippets: false,
+                                  },
+                                  renderValidationDecorations: "off",
+                                  hover: { enabled: false },
+                                  inlayHints: { enabled: "off" },
+                                  occurrencesHighlight: "off",
+                                  selectionHighlight: false,
+                                }}
+                                beforeMount={(monaco) => {
+                                  monaco.editor.defineTheme("github-dark", {
+                                    base: "vs-dark",
+                                    inherit: true,
+                                    rules: [],
+                                    colors: {
+                                      "editor.background": "#00000000",
+                                      "editor.foreground": "#c9d1d9",
+                                      "editor.lineHighlightBackground":
+                                        "#161b22",
+                                      "editorLineNumber.foreground": "#6e7681",
+                                      "editor.selectionBackground": "#163356",
+                                      "scrollbarSlider.background": "#24292f40",
+                                      "scrollbarSlider.hoverBackground":
+                                        "#32383f60",
+                                      "scrollbarSlider.activeBackground":
+                                        "#424a5380",
+                                    },
+                                  })
+
+                                  monaco.editor.defineTheme("github-light", {
+                                    base: "vs",
+                                    inherit: true,
+                                    rules: [],
+                                    colors: {
+                                      "editor.background": "#00000000",
+                                      "editor.foreground": "#24292f",
+                                      "editor.lineHighlightBackground":
+                                        "#f6f8fa",
+                                      "editorLineNumber.foreground": "#8c959f",
+                                      "editor.selectionBackground": "#b6e3ff",
+                                      "scrollbarSlider.background": "#24292f20",
+                                      "scrollbarSlider.hoverBackground":
+                                        "#32383f30",
+                                      "scrollbarSlider.activeBackground":
+                                        "#424a5340",
+                                    },
+                                  })
                                 }}
                                 className={cn(
-                                  "h-full w-full flex-grow resize-none scrollbar-hide",
+                                  "h-full w-full flex-grow rounded-md overflow-hidden",
+                                  "border border-input focus-within:ring-1 focus-within:ring-ring",
                                 )}
                               />
-                              <div className="absolute flex gap-2 bottom-2 right-2 z-2 h-[36px]">
+                              <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
                                 <Button
                                   size="icon"
                                   variant="outline"
@@ -535,20 +645,98 @@ export default function PublishComponentForm() {
                                 }}
                                 transition={{ duration: 0.3 }}
                               >
-                                <Textarea
-                                  placeholder="Paste code that demonstrates usage of the component with all variants"
-                                  ref={demoCodeTextAreaRef}
-                                  value={field.value}
-                                  onChange={(e) => {
-                                    field.onChange(e.target.value)
+                                <Editor
+                                  defaultLanguage="typescript"
+                                  defaultValue={field.value}
+                                  onChange={(value) =>
+                                    field.onChange(value || "")
+                                  }
+                                  theme={
+                                    isDarkTheme ? "github-dark" : "github-light"
+                                  }
+                                  options={{
+                                    minimap: { enabled: false },
+                                    scrollBeyondLastLine: false,
+                                    fontSize: 14,
+                                    lineNumbers: "off",
+                                    folding: true,
+                                    wordWrap: "on",
+                                    automaticLayout: true,
+                                    padding: { top: 16, bottom: 16 },
+                                    scrollbar: {
+                                      vertical: "visible",
+                                      horizontal: "visible",
+                                      verticalScrollbarSize: 8,
+                                      horizontalScrollbarSize: 8,
+                                      useShadows: false,
+                                    },
+                                    overviewRulerLanes: 0,
+                                    hideCursorInOverviewRuler: true,
+                                    overviewRulerBorder: false,
+                                    renderLineHighlight: "none",
+                                    contextmenu: false,
+                                    formatOnPaste: false,
+                                    formatOnType: false,
+                                    quickSuggestions: false,
+                                    suggest: {
+                                      showKeywords: false,
+                                      showSnippets: false,
+                                    },
+                                    renderValidationDecorations: "off",
+                                    hover: { enabled: false },
+                                    inlayHints: { enabled: "off" },
+                                    occurrencesHighlight: "off",
+                                    selectionHighlight: false,
                                   }}
-                                  className="w-full h-full resize-none"
-                                  style={{
-                                    height: "100%",
-                                    minHeight: "100%",
+                                  beforeMount={(monaco) => {
+                                    monaco.editor.defineTheme("github-dark", {
+                                      base: "vs-dark",
+                                      inherit: true,
+                                      rules: [],
+                                      colors: {
+                                        "editor.background": "#00000000",
+                                        "editor.foreground": "#c9d1d9",
+                                        "editor.lineHighlightBackground":
+                                          "#161b22",
+                                        "editorLineNumber.foreground":
+                                          "#6e7681",
+                                        "editor.selectionBackground": "#163356",
+                                        "scrollbarSlider.background":
+                                          "#24292f40",
+                                        "scrollbarSlider.hoverBackground":
+                                          "#32383f60",
+                                        "scrollbarSlider.activeBackground":
+                                          "#424a5380",
+                                      },
+                                    })
+
+                                    monaco.editor.defineTheme("github-light", {
+                                      base: "vs",
+                                      inherit: true,
+                                      rules: [],
+                                      colors: {
+                                        "editor.background": "#00000000",
+                                        "editor.foreground": "#24292f",
+                                        "editor.lineHighlightBackground":
+                                          "#f6f8fa",
+                                        "editorLineNumber.foreground":
+                                          "#8c959f",
+                                        "editor.selectionBackground": "#b6e3ff",
+                                        "scrollbarSlider.background":
+                                          "#24292f20",
+                                        "scrollbarSlider.hoverBackground":
+                                          "#32383f30",
+                                        "scrollbarSlider.activeBackground":
+                                          "#424a5340",
+                                      },
+                                    })
                                   }}
+                                  className={cn(
+                                    "h-full w-full flex-grow rounded-md overflow-hidden",
+                                    "border border-input focus-within:ring-1 focus-within:ring-ring",
+                                  )}
                                 />
-                                <div className="absolute flex gap-2 bottom-2 right-2 z-2 h-[36px]">
+                                <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
                                   <Button
                                     size="icon"
                                     variant="outline"
@@ -595,7 +783,7 @@ export default function PublishComponentForm() {
                       </p>
 
                       <Tabs defaultValue="tailwind" className="w-full">
-                        <TabsList>
+                        <TabsList className="rounded-lg h-9">
                           <TabsTrigger value="tailwind">
                             tailwind.config.js
                           </TabsTrigger>
@@ -604,34 +792,58 @@ export default function PublishComponentForm() {
 
                         <TabsContent value="tailwind">
                           <div className="relative flex flex-col gap-2">
-                            <Textarea
+                            <Editor
+                              defaultLanguage="javascript"
                               value={customTailwindConfig}
-                              onChange={(e) =>
-                                setCustomTailwindConfig(e.target.value)
+                              onChange={(value) =>
+                                setCustomTailwindConfig(value || "")
                               }
-                              className="font-mono text-sm h-full w-full min-h-[500px]"
-                              placeholder={endent`
-                                  Extend the default tailwind.config.js from shadcn/ui
-                                  \n
-                                  const exampleTailwindPlugin = require('tailwindcss/plugin')
-
-                                  module.exports = {
-                                    ...extend or override default shadcn/ui export here...,
-                                    theme: {
-                                      extend: {
-                                        ...extend or override default shadcn/ui theme here...,
-                                      },
-                                    },
-                                    plugins: [
-                                      exampleTailwindPlugin,
-                                    ],
-                                  }`}
+                              theme={
+                                isDarkTheme ? "github-dark" : "github-light"
+                              }
+                              options={{
+                                minimap: { enabled: false },
+                                scrollBeyondLastLine: false,
+                                fontSize: 14,
+                                lineNumbers: "off",
+                                folding: true,
+                                wordWrap: "on",
+                                automaticLayout: true,
+                                padding: { top: 16, bottom: 16 },
+                                scrollbar: {
+                                  vertical: "visible",
+                                  horizontal: "visible",
+                                  verticalScrollbarSize: 8,
+                                  horizontalScrollbarSize: 8,
+                                  useShadows: false,
+                                },
+                                overviewRulerLanes: 0,
+                                hideCursorInOverviewRuler: true,
+                                overviewRulerBorder: false,
+                                renderLineHighlight: "none",
+                                contextmenu: false,
+                                formatOnPaste: false,
+                                formatOnType: false,
+                                quickSuggestions: false,
+                                suggest: {
+                                  showKeywords: false,
+                                  showSnippets: false,
+                                },
+                                renderValidationDecorations: "off",
+                                hover: { enabled: false },
+                                inlayHints: { enabled: "off" },
+                                occurrencesHighlight: "off",
+                                selectionHighlight: false,
+                              }}
+                              className={cn(
+                                "h-[500px] w-full rounded-md overflow-hidden",
+                                "border border-input focus-within:ring-1 focus-within:ring-ring",
+                              )}
                             />
-                            <div className="absolute flex gap-2 bottom-2 right-2 z-2 h-[36px]">
+                            <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
                               <Button
                                 size="icon"
                                 variant="outline"
-                                className="px-2"
                                 onClick={() => setFormStep("demoCode")}
                               >
                                 <ChevronLeftIcon className="w-4 h-4" />
@@ -651,22 +863,55 @@ export default function PublishComponentForm() {
 
                         <TabsContent value="css">
                           <div className="relative flex flex-col gap-2">
-                            <Textarea
+                            <Editor
+                              defaultLanguage="css"
                               value={customGlobalCss}
-                              onChange={(e) =>
-                                setCustomGlobalCss(e.target.value)
+                              onChange={(value) =>
+                                setCustomGlobalCss(value || "")
                               }
-                              className="font-mono text-sm h-full w-full min-h-[500px]"
-                              placeholder={endent`Extend or override global.css variables from shadcn/ui
-                                  \n
-                                  :root {
-                                    /* Add your light mode CSS variables here */
-                                  }
-                                  .dark {
-                                    /* Add your dark mode CSS variables here */
-                                  }`}
+                              theme={
+                                isDarkTheme ? "github-dark" : "github-light"
+                              }
+                              options={{
+                                minimap: { enabled: false },
+                                scrollBeyondLastLine: false,
+                                fontSize: 14,
+                                lineNumbers: "off",
+                                folding: true,
+                                wordWrap: "on",
+                                automaticLayout: true,
+                                padding: { top: 16, bottom: 16 },
+                                scrollbar: {
+                                  vertical: "visible",
+                                  horizontal: "visible",
+                                  verticalScrollbarSize: 8,
+                                  horizontalScrollbarSize: 8,
+                                  useShadows: false,
+                                },
+                                overviewRulerLanes: 0,
+                                hideCursorInOverviewRuler: true,
+                                overviewRulerBorder: false,
+                                renderLineHighlight: "none",
+                                contextmenu: false,
+                                formatOnPaste: false,
+                                formatOnType: false,
+                                quickSuggestions: false,
+                                suggest: {
+                                  showKeywords: false,
+                                  showSnippets: false,
+                                },
+                                renderValidationDecorations: "off",
+                                hover: { enabled: false },
+                                inlayHints: { enabled: "off" },
+                                occurrencesHighlight: "off",
+                                selectionHighlight: false,
+                              }}
+                              className={cn(
+                                "h-[500px] w-full rounded-md overflow-hidden",
+                                "border border-input focus-within:ring-1 focus-within:ring-ring",
+                              )}
                             />
-                            <div className="absolute flex gap-2 bottom-2 right-2 z-2 h-[36px]">
+                            <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
                               <Button
                                 size="icon"
                                 variant="outline"
@@ -692,6 +937,7 @@ export default function PublishComponentForm() {
                   unknownDependencies?.length > 0 && (
                     <ResolveUnknownDependenciesAlertForm
                       unknownDependencies={unknownDependencies}
+                      onBack={() => setFormStep("customization")}
                       onDependenciesResolved={(resolvedDependencies) => {
                         form.setValue(
                           "unknown_dependencies",
@@ -703,18 +949,22 @@ export default function PublishComponentForm() {
                           ),
                         )
                         form.setValue("direct_registry_dependencies", [
-                          ...form.getValues("direct_registry_dependencies"),
-                          ...resolvedDependencies
-                            .filter((d) => !d.isDemoDependency)
-                            .map((d) => `${d.username}/${d.slug}`),
+                          ...new Set([
+                            ...form.getValues("direct_registry_dependencies"),
+                            ...resolvedDependencies
+                              .filter((d) => !d.isDemoDependency)
+                              .map((d) => `${d.username}/${d.slug}`),
+                          ]),
                         ])
                         form.setValue("demo_direct_registry_dependencies", [
-                          ...form.getValues(
-                            "demo_direct_registry_dependencies",
-                          ),
-                          ...resolvedDependencies
-                            .filter((d) => d.isDemoDependency)
-                            .map((d) => `${d.username}/${d.slug}`),
+                          ...new Set([
+                            ...form.getValues(
+                              "demo_direct_registry_dependencies",
+                            ),
+                            ...resolvedDependencies
+                              .filter((d) => d.isDemoDependency)
+                              .map((d) => `${d.username}/${d.slug}`),
+                          ]),
                         ])
                       }}
                     />
@@ -778,7 +1028,7 @@ export default function PublishComponentForm() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3, delay: 0.2 }}
-                  className="w-2/3 h-full px-10 py-20"
+                  className="w-2/3 h-full px-10 flex items-center"
                 >
                   <HeroVideoDialog
                     videoSrc="https://www.youtube.com/embed/NXpSAnmleyE"
@@ -913,7 +1163,6 @@ const SuccessDialog = ({
   onGoToComponent,
 }: {
   isOpen: boolean
-  // eslint-disable-next-line no-unused-vars
   onOpenChange: (open: boolean) => void
   onAddAnother: () => void
   onGoToComponent: () => void
@@ -933,11 +1182,20 @@ const SuccessDialog = ({
         <DialogFooter>
           <Button onClick={onAddAnother} variant="outline">
             Add Another
-            <Hotkey keys={["N"]} variant="outline" />
+            <kbd className="hidden md:inline-flex h-5 items-center rounded border border-border px-1.5 ml-1.5 font-mono text-[11px] font-medium text-muted-foreground">
+              N
+            </kbd>
           </Button>
           <Button onClick={onGoToComponent} variant="default">
             View Component
-            <Hotkey keys={["⏎"]} modifier={true} variant="primary" />
+            <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border-muted-foreground/40 bg-muted-foreground/20 px-1.5 ml-1.5 font-sans  text-[11px] text-muted leading-none  opacity-100 flex">
+              <span className="text-[11px] leading-none font-sans">
+                {navigator?.platform?.toLowerCase()?.includes("mac")
+                  ? "⌘"
+                  : "Ctrl"}
+              </span>
+              ⏎
+            </kbd>
           </Button>
         </DialogFooter>
       </DialogContent>

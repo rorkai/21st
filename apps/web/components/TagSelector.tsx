@@ -1,9 +1,11 @@
 "use client"
 
 import React, { useState } from "react"
+
 import { Check, ChevronsUpDown, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+
 import { Button } from "@/components/ui/button"
 import {
   Command,
@@ -44,7 +46,7 @@ export function TagSelector<T>({
   const filteredTags = availableTags.filter(
     (tag) =>
       getLabel(tag).toLowerCase().includes(inputValue.toLowerCase()) &&
-      !selectedTags.some((selected) => getValue(selected) === getValue(tag))
+      !selectedTags.some((selected) => getValue(selected) === getValue(tag)),
   )
 
   const handleSelect = (value: string) => {
@@ -72,7 +74,7 @@ export function TagSelector<T>({
           className={cn(
             "flex flex-wrap gap-[2px] mt-1 py-[2px] pl-[2px] pr-3 h-auto w-full text-left items-center justify-start min-h-9",
             className,
-            selectedTags.length > 0 && "hover:bg-background"
+            selectedTags.length > 0 && "hover:bg-background",
           )}
         >
           {selectedTags.map((tag) => (
@@ -133,7 +135,10 @@ export function TagSelector<T>({
               ))}
             </CommandGroup>
             {inputValue.trim() !== "" &&
-              !availableTags.some((tag) => getLabel(tag).toLowerCase() === inputValue.toLowerCase()) && (
+              !availableTags.some(
+                (tag) =>
+                  getLabel(tag).toLowerCase() === inputValue.toLowerCase(),
+              ) && (
                 <CommandGroup heading="Create Tag">
                   <CommandItem value={inputValue} onSelect={handleCreate}>
                     <Check className="mr-2 h-4 w-4 opacity-100" />

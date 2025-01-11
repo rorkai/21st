@@ -32,6 +32,19 @@ const nextConfig = {
       bodySizeLimit: "5mb",
     },
   },
+  async headers() {
+    return [
+      {
+        source: "/og-image.png",
+        headers: [
+          {
+            key: "Content-Type",
+            value: "image/png",
+          },
+        ],
+      },
+    ]
+  },
 }
 
 export default nextConfig

@@ -1,40 +1,52 @@
-import React, { useState, useRef, Suspense, useMemo } from "react"
-import {
-  SandpackProvider,
-  SandpackLayout,
-  SandpackCodeViewer,
-  SandpackFileExplorer,
-} from "@codesandbox/sandpack-react"
-import { ComponentPageInfo } from "./ComponentPageInfo"
-import { SandpackProvider as SandpackProviderUnstyled } from "@codesandbox/sandpack-react/unstyled"
-import { CheckIcon, CopyIcon, Terminal } from "lucide-react"
-import styles from "./ComponentPreview.module.css"
-import { LoadingSpinner } from "./LoadingSpinner"
-import { SandpackProviderProps } from "@codesandbox/sandpack-react"
-import { motion } from "framer-motion"
-import { useDebugMode } from "@/hooks/use-debug-mode"
-import { Component, Tag, User } from "@/types/global"
-import { isShowCodeAtom } from "./ComponentPage"
+import React, { useState, useRef, Suspense, useEffect } from "react"
+import { useAnimation, motion } from "framer-motion"
 import { useAtom } from "jotai"
 import { useTheme } from "next-themes"
+import {
+  CheckIcon,
+  CopyIcon,
+  Pencil,
+  CodeXml,
+  Info,
+  ChevronDown,
+} from "lucide-react"
+
+import { ComponentPageInfo } from "./ComponentPageInfo"
+import { Icons } from "@/components/icons"
+import { LoadingSpinner } from "./LoadingSpinner"
 import { CopyCodeButton } from "./CopyCodeButton"
-import { generateSandpackFiles } from "@/lib/sandpack"
-import { toast } from "sonner"
-import { getPackageRunner } from "@/lib/utils"
-import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
+import { isShowCodeAtom } from "./ComponentPage"
+
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { TextMorph } from "@/components/ui/text-morph"
+
+import {
+  SandpackProvider,
+  SandpackLayout,
+  SandpackCodeViewer,
+  SandpackFileExplorer,
+  SandpackProviderProps,
+} from "@codesandbox/sandpack-react"
+import { SandpackProvider as SandpackProviderUnstyled } from "@codesandbox/sandpack-react/unstyled"
+
+import { useDebugMode } from "@/hooks/use-debug-mode"
 import { useCompileCss } from "@/hooks/use-compile-css"
 import { useIsMobile } from "@/hooks/use-media-query"
-import {
-  Pencil,
-  CodeXml,
-  Info,
-} from "lucide-react"
+
+import { Component, Tag, User } from "@/types/global"
+import { generateSandpackFiles } from "@/lib/sandpack"
+import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
+import { getPackageRunner, cn } from "@/lib/utils"
+import { toast } from "sonner"
+import { useUser } from "@clerk/nextjs"
+
+import styles from "./ComponentPreview.module.css"
 
 const SandpackPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react/unstyled").then((module) => ({
@@ -72,8 +84,9 @@ export function ComponentPagePreview({
   setIsEditDialogOpen: (value: boolean) => void
 }) {
   const sandpackRef = useRef<HTMLDivElement>(null)
-  const { theme } = useTheme()
-  const isDarkTheme = theme === "dark"
+  const { user } = useUser()
+  const { resolvedTheme } = useTheme()
+  const isDarkTheme = resolvedTheme === "dark"
   const [isShowCode, setIsShowCode] = useAtom(isShowCodeAtom)
   const isDebug = useDebugMode()
 
@@ -108,8 +121,6 @@ export function ComponentPagePreview({
     compiledCss,
   )
 
-  if (!css) return <LoadingSpinner />
-
   const files = {
     ...generateSandpackFiles({
       demoComponentNames,
@@ -118,7 +129,7 @@ export function ComponentPagePreview({
       code,
       demoCode,
       theme: isDarkTheme ? "dark" : "light",
-      css,
+      css: css || "",
       customTailwindConfig: tailwindConfig,
       customGlobalCss: globalCss,
     }),
@@ -133,11 +144,44 @@ export function ComponentPagePreview({
     file.endsWith(`demo.tsx`),
   )
 
+  const [activeFile, setActiveFile] = useState<string>(
+    demoComponentFile ?? mainComponentFile ?? "",
+  )
+
+  const [previewError, setPreviewError] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadingText, setLoadingText] = useState("Starting preview...")
+
+  useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => {
+        setLoadingText(
+          "Loading is taking longer than usual. You may want to refresh the page...",
+        )
+      }, 4000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [isLoading])
+
+  if (!css)
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-3 w-full">
+        <LoadingSpinner />
+        <p className="text-muted-foreground text-sm">
+          Preparing styles and dependencies...
+        </p>
+        <p className="text-muted-foreground/60 text-xs">
+          This may take a few seconds on first load
+        </p>
+      </div>
+    )
+
   const visibleFiles = [
     demoComponentFile,
     mainComponentFile,
-    ...(tailwindConfig ? ['tailwind.config.js'] : []),
-    ...(globalCss ? ['globals.css'] : []),
+    ...(tailwindConfig ? ["tailwind.config.js"] : []),
+    ...(globalCss ? ["globals.css"] : []),
     ...Object.keys(registryDependencies).filter(
       (file) => file !== mainComponentFile,
     ),
@@ -156,7 +200,6 @@ export function ComponentPagePreview({
     template: "react-ts" as const,
     files: files,
     customSetup: {
-      entry: "/index.tsx",
       dependencies: {
         react: "^18.0.0",
         "react-dom": "^18.0.0",
@@ -170,7 +213,7 @@ export function ComponentPagePreview({
       },
     },
     options: {
-      activeFile: demoComponentFile ?? mainComponentFile,
+      activeFile,
       visibleFiles,
     },
     ...({ fileLabels: customFileLabels } as any),
@@ -184,16 +227,43 @@ export function ComponentPagePreview({
           className="flex-grow h-full relative"
           transition={{ duration: 0.3 }}
         >
-          <Suspense fallback={<LoadingSpinner />}>
-            <SandpackPreview
-              showSandpackErrorOverlay={false}
-              showOpenInCodeSandbox={false}
-              showRefreshButton={false}
-            />
+          <Suspense fallback={<LoadingSpinner text="Loading preview..." />}>
+            {previewError ? (
+              <div className="flex flex-col items-center justify-center h-full gap-3">
+                <p className="text-muted-foreground text-sm">
+                  Failed to load preview
+                </p>
+                <button
+                  onClick={() => {
+                    setPreviewError(false)
+                    setIsLoading(true)
+                  }}
+                  className="text-sm underline text-muted-foreground hover:text-foreground"
+                >
+                  Try again
+                </button>
+              </div>
+            ) : (
+              <SandpackPreview
+                showSandpackErrorOverlay={false}
+                showOpenInCodeSandbox={process.env.NODE_ENV === "development"}
+                showRefreshButton={false}
+                onLoad={() => setIsLoading(false)}
+                onError={() => {
+                  setPreviewError(true)
+                  setIsLoading(false)
+                }}
+              />
+            )}
           </Suspense>
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+              <LoadingSpinner text={loadingText} />
+            </div>
+          )}
         </motion.div>
       </SandpackProviderUnstyled>
-      <div className="h-full w-full md:max-w-[30%] min-h-90vh overflow-hidden rounded-lg border border-border">
+      <div className="h-full w-full md:max-w-[30%] min-h-90vh overflow-hidden rounded-lg border border-border min-w-[350px] dark:bg-[#151515]">
         <SandpackProvider {...providerProps}>
           <div ref={sandpackRef} className="h-full w-full flex relative">
             <SandpackLayout className="flex w-full flex-row gap-4">
@@ -204,7 +274,7 @@ export function ComponentPagePreview({
                   canEdit={canEdit}
                   setIsEditDialogOpen={setIsEditDialogOpen}
                 />
-                <div className="flex w-full flex-col">
+                <div className="flex w-full h-full flex-col">
                   {isShowCode ? (
                     <>
                       <CopyCommandSection component={component} />
@@ -212,11 +282,26 @@ export function ComponentPagePreview({
                       <div
                         className={`overflow-auto ${styles.codeViewerWrapper} relative`}
                       >
-                        <CopyCodeButton />
-                        <SandpackCodeViewer
-                          showLineNumbers={true}
-                          wrapContent={true}
-                        />
+                        <CopyCodeButton component_id={component.id} user_id={user?.id} />
+                        <Tabs value={activeFile} onValueChange={setActiveFile}>
+                          <TabsList className="h-9 relative bg-muted dark:bg-background justify-start w-full gap-0.5 pb-0 before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-border px-4 overflow-x-auto flex-nowrap hide-scrollbar">
+                            {visibleFiles.map((file) => (
+                              <TabsTrigger
+                                key={file}
+                                value={file}
+                                className="overflow-hidden data-[state=active]:rounded-b-none dark:data-[state=active]:bg-muted data-[state=active]:border-x data-[state=active]:border-t data-[state=active]:border-border bg-muted dark:bg-background py-2 data-[state=active]:z-10 data-[state=active]:shadow-none flex-shrink-0 whitespace-nowrap"
+                              >
+                                {file.split("/").pop()}
+                              </TabsTrigger>
+                            ))}
+                          </TabsList>
+                          <div className="">
+                            <SandpackCodeViewer
+                              wrapContent={true}
+                              showTabs={false}
+                            />
+                          </div>
+                        </Tabs>
                       </div>
                     </>
                   ) : (
@@ -244,61 +329,112 @@ function CopyCommandSection({
 }) {
   const installUrl = `${process.env.NEXT_PUBLIC_APP_URL}/r/${component.user.username}/${component.component_slug}`
   const [copied, setCopied] = useState(false)
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [selectedPackageManager, setSelectedPackageManager] = useState(() =>
+    typeof window !== "undefined"
+      ? localStorage.getItem("preferredPackageManager") || "npm"
+      : "npm",
+  )
 
-  const copyCommand = (packageManager: string) => {
-    const command = `${getPackageRunner(packageManager)} shadcn@latest add "${installUrl}"`
+  const controls = useAnimation()
+
+  const copyCommand = () => {
+    const runner = getPackageRunner(selectedPackageManager)
+    const command = `${runner} shadcn@latest add "${installUrl}"`
     navigator?.clipboard?.writeText(command)
     setCopied(true)
     trackEvent(AMPLITUDE_EVENTS.COPY_INSTALL_COMMAND, {
       componentId: component.id,
       componentName: component.name,
-      packageManager,
-      installUrl
+      packageManager: selectedPackageManager,
+      installUrl,
     })
     setTimeout(() => setCopied(false), 1000)
     toast("Command copied to clipboard")
-    setIsDropdownOpen(false)
+  }
+
+  const handlePackageManagerChange = (pm: string) => {
+    setSelectedPackageManager(pm)
+    localStorage.setItem("preferredPackageManager", pm)
   }
 
   return (
-    <div className="p-4">
-      <p className="text-[14px] font-medium text-foreground mb-2 whitespace-nowrap overflow-hidden text-ellipsis">
-        Install component
-      </p>
-      <div className="mb-2 mt-4 p-4 h-14 rounded-lg border bg-zinc-950 dark:bg-zinc-900 flex items-center">
+    <div className="p-4 bg-muted dark:bg-background">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-[14px] font-medium text-foreground whitespace-nowrap overflow-hidden text-ellipsis">
+          Install component
+        </p>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors focus:outline-none">
+            <TextMorph className="text-sm">{selectedPackageManager}</TextMorph>
+            <ChevronDown
+              className="ml-1.5 -mr-1 opacity-70"
+              size={16}
+              strokeWidth={2}
+              aria-hidden="true"
+            />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            className="min-w-[--radix-dropdown-menu-trigger-width]"
+          >
+            <DropdownMenuItem onClick={() => handlePackageManagerChange("npm")}>
+              npm
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => handlePackageManagerChange("yarn")}
+            >
+              yarn
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => handlePackageManagerChange("pnpm")}
+            >
+              pnpm
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handlePackageManagerChange("bun")}>
+              bun
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      <div
+        className="mb-2 mt-4 p-4 h-14 rounded-lg border bg-zinc-950 dark:bg-zinc-900 flex items-center"
+        onMouseEnter={() => controls.start("hover")}
+        onMouseLeave={() => controls.start("normal")}
+      >
         <div className="flex items-center justify-center text-white w-5 h-5 mr-3">
-          <Terminal size={20} />
+          <Icons.terminal size={20} controls={controls} />
         </div>
         <div className="flex-grow overflow-scroll scrollbar-hide">
           <code className="flex items-center whitespace-nowrap font-mono text-sm">
-            <span className="mr-2 text-white">npx</span>
+            <span className="mr-2 text-white">
+              {getPackageRunner(selectedPackageManager)}
+            </span>
             <span className="text-muted-foreground">
               shadcn@latest add "{installUrl}"
             </span>
           </code>
         </div>
-        <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
-          <DropdownMenuTrigger asChild>
-            <button className="flex-shrink-0 ml-3 flex items-center justify-center p-1 hover:bg-zinc-800 text-white w-8 h-8 rounded-md">
-              {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="bottom" align="end">
-            <DropdownMenuItem onClick={() => copyCommand("npm")}>
-              npm
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => copyCommand("yarn")}>
-              yarn
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => copyCommand("pnpm")}>
-              pnpm
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => copyCommand("bun")}>
-              bun
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <button
+          onClick={copyCommand}
+          className="flex-shrink-0 ml-3 flex items-center justify-center p-1 hover:bg-zinc-800 text-white w-8 h-8 rounded-md relative"
+        >
+          <div
+            className={cn(
+              "transition-all absolute",
+              copied ? "scale-100 opacity-100" : "scale-0 opacity-0",
+            )}
+          >
+            <CheckIcon size={16} className="stroke-emerald-500" />
+          </div>
+          <div
+            className={cn(
+              "transition-all absolute",
+              copied ? "scale-0 opacity-0" : "scale-100 opacity-100",
+            )}
+          >
+            <CopyIcon size={16} />
+          </div>
+        </button>
       </div>
     </div>
   )
@@ -316,7 +452,7 @@ const MobileControls = ({
   setIsEditDialogOpen: (value: boolean) => void
 }) => {
   const isMobile = useIsMobile()
-  
+
   if (!isMobile) return null
 
   return (

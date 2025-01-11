@@ -123,6 +123,9 @@ export function extractNPMDependencies(code: string): Record<string, string> {
           !source.startsWith("@/")
         ) {
           let packageName = source
+          if (packageName === "motion/react") {
+            packageName = "motion"
+          }
           if (shouldAddDependency(packageName)) {
             dependencies[packageName] = "latest"
           }
@@ -144,6 +147,9 @@ export function extractNPMDependencies(code: string): Record<string, string> {
             !source.startsWith("@/")
           ) {
             let packageName = source
+            if (packageName === "motion/react") {
+              packageName = "motion"
+            }
             if (shouldAddDependency(packageName)) {
               dependencies[packageName] = "latest"
             }
@@ -198,7 +204,7 @@ export function extractAmbigiousRegistryDependencies(code: string) {
 }
 
 export function extractRegistryDependenciesFromImports(code: string): string[] {
-  const registryDeps = []
+  const registryDeps = new Set<string>()
 
   const importRegex =
     /import\s+(?:{\s*[\w\s,]+\s*}|\*\s+as\s+\w+|\w+)\s+from\s+['"](\+@[\w-]+\/[\w-]+)['"]/g
@@ -207,10 +213,10 @@ export function extractRegistryDependenciesFromImports(code: string): string[] {
   while ((match = importRegex.exec(code)) !== null) {
     const importPath = match[1]!
     const [, author, slug] = importPath.match(/\+@([\w-]+)\/([\w-]+)/)!
-    registryDeps.push(`${author}/${slug}`)
+    registryDeps.add(`${author}/${slug}`)
   }
 
-  return registryDeps
+  return [...registryDeps]
 }
 
 // export function replaceRegistryImports(code: string): string {
@@ -306,7 +312,10 @@ export function wrapExportInBraces(code: string): string {
   )
 }
 
-export function extractCssVars(css: string): { light: Record<string, string>; dark: Record<string, string> } {
+export function extractCssVars(css: string): {
+  light: Record<string, string>
+  dark: Record<string, string>
+} {
   const light: Record<string, string> = {}
   const dark: Record<string, string> = {}
 

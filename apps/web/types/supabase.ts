@@ -9,6 +9,59 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      component_analytics: {
+        Row: {
+          activity_type: string | null
+          component_id: number
+          created_at: string
+          id: number
+          user_id: string | null
+        }
+        Insert: {
+          activity_type?: string | null
+          component_id: number
+          created_at?: string
+          id?: number
+          user_id?: string | null
+        }
+        Update: {
+          activity_type?: string | null
+          component_id?: number
+          created_at?: string
+          id?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "component_analytics_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "component_dependencies_graph_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_analytics_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_analytics_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components_with_username"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_analytics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       component_dependencies_closure: {
         Row: {
           component_id: number
@@ -180,6 +233,7 @@ export type Database = {
           downloads_count: number
           fts: unknown | null
           global_css_extension: string | null
+          hunter_username: string | null
           id: number
           is_paid: boolean
           is_public: boolean
@@ -212,6 +266,7 @@ export type Database = {
           downloads_count?: number
           fts?: unknown | null
           global_css_extension?: string | null
+          hunter_username?: string | null
           id?: number
           is_paid?: boolean
           is_public?: boolean
@@ -244,6 +299,7 @@ export type Database = {
           downloads_count?: number
           fts?: unknown | null
           global_css_extension?: string | null
+          hunter_username?: string | null
           id?: number
           is_paid?: boolean
           is_public?: boolean
@@ -262,6 +318,34 @@ export type Database = {
           website_url?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "components_hunter_username_fkey"
+            columns: ["hunter_username"]
+            isOneToOne: false
+            referencedRelation: "component_dependencies_graph_view"
+            referencedColumns: ["source_author_username"]
+          },
+          {
+            foreignKeyName: "components_hunter_username_fkey"
+            columns: ["hunter_username"]
+            isOneToOne: false
+            referencedRelation: "component_dependencies_graph_view"
+            referencedColumns: ["dependency_author_username"]
+          },
+          {
+            foreignKeyName: "components_hunter_username_fkey"
+            columns: ["hunter_username"]
+            isOneToOne: false
+            referencedRelation: "components_with_username"
+            referencedColumns: ["username"]
+          },
+          {
+            foreignKeyName: "components_hunter_username_fkey"
+            columns: ["hunter_username"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["username"]
+          },
           {
             foreignKeyName: "components_user_id_fkey"
             columns: ["user_id"]
@@ -304,7 +388,7 @@ export type Database = {
           pro_referral_url: string | null
           twitter_url: string | null
           updated_at: string | null
-          username: string
+          username: string | null
           website_url: string | null
         }
         Insert: {
@@ -321,7 +405,7 @@ export type Database = {
           pro_referral_url?: string | null
           twitter_url?: string | null
           updated_at?: string | null
-          username: string
+          username?: string | null
           website_url?: string | null
         }
         Update: {
@@ -338,7 +422,7 @@ export type Database = {
           pro_referral_url?: string | null
           twitter_url?: string | null
           updated_at?: string | null
-          username?: string
+          username?: string | null
           website_url?: string | null
         }
         Relationships: []
@@ -428,6 +512,13 @@ export type Database = {
           },
         ]
       }
+      component_stats: {
+        Row: {
+          count: number | null
+          filter_type: string | null
+        }
+        Relationships: []
+      }
       components_with_username: {
         Row: {
           code: string | null
@@ -503,6 +594,56 @@ export type Database = {
           tags: Json
         }[]
       }
+      get_components_counts:
+        | {
+            Args: Record<PropertyKey, never>
+            Returns: {
+              filter_type: string
+              count: number
+            }[]
+          }
+        | {
+            Args: {
+              p_sort_by: string
+            }
+            Returns: {
+              filter_type: string
+              count: number
+            }[]
+          }
+      get_filtered_components: {
+        Args: {
+          p_quick_filter: string
+          p_sort_by: string
+          p_offset: number
+          p_limit: number
+        }
+        Returns: {
+          id: number
+          component_names: Json
+          description: string
+          code: string
+          demo_code: string
+          created_at: string
+          updated_at: string
+          user_id: string
+          dependencies: Json
+          is_public: boolean
+          downloads_count: number
+          likes_count: number
+          component_slug: string
+          name: string
+          demo_dependencies: Json
+          registry: string
+          direct_registry_dependencies: Json
+          demo_direct_registry_dependencies: Json
+          preview_url: string
+          video_url: string
+          license: string
+          user_data: Json
+          total_count: number
+        }[]
+      }
       get_random_components: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -520,6 +661,7 @@ export type Database = {
           downloads_count: number
           fts: unknown | null
           global_css_extension: string | null
+          hunter_username: string | null
           id: number
           is_paid: boolean
           is_public: boolean
@@ -556,6 +698,21 @@ export type Database = {
         }
         Returns: Database["public"]["CompositeTypes"]["component_with_user"][]
       }
+      search_components_preview: {
+        Args: {
+          p_search_query: string
+        }
+        Returns: {
+          id: number
+          name: string
+          description: string
+          preview_url: string
+          user_data: Json
+          downloads_count: number
+          likes_count: number
+          component_slug: string
+        }[]
+      }
       update_component_dependencies_closure:
         | {
             Args: {
@@ -569,17 +726,30 @@ export type Database = {
             }
             Returns: undefined
           }
-      update_component_with_tags: {
-        Args: {
-          p_component_id: number
-          p_name?: string
-          p_description?: string
-          p_license?: string
-          p_preview_url?: string
-          p_tags?: Json
-        }
-        Returns: undefined
-      }
+      update_component_with_tags:
+        | {
+            Args: {
+              p_component_id: number
+              p_name?: string
+              p_description?: string
+              p_license?: string
+              p_preview_url?: string
+              p_tags?: Json
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_component_id: number
+              p_name?: string
+              p_description?: string
+              p_license?: string
+              p_preview_url?: string
+              p_website_url?: string
+              p_tags?: Json
+            }
+            Returns: undefined
+          }
     }
     Enums: {
       [_ in never]: never

@@ -1,11 +1,15 @@
 "use client"
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { useEffect } from "react"
+import { usePathname } from "next/navigation"
+
 import { ClerkProvider } from "@clerk/nextjs"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/AppSidebar"
-import { usePathname } from "next/navigation"
-import { useEffect } from "react"
+import { CommandMenu } from "@/components/CommandMenu"
+
 import { initAmplitude } from "@/lib/amplitude"
 
 const queryClient = new QueryClient()
@@ -28,12 +32,11 @@ export function AppProviders({
   return (
     <QueryClientProvider client={queryClient}>
       <ClerkProvider>
+        <CommandMenu />
         {showSidebar ? (
           <SidebarProvider>
             <AppSidebar />
-            <SidebarInset>
-              {children}
-            </SidebarInset>
+            <SidebarInset>{children}</SidebarInset>
           </SidebarProvider>
         ) : (
           children

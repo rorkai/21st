@@ -1,5 +1,18 @@
 "use client"
 
+import { useEffect, useRef } from "react"
+import { usePathname } from "next/navigation"
+
+import { useAtom } from "jotai"
+import { atomWithStorage } from "jotai/utils"
+
+import { ChevronRight, Sparkles } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import {
   Sidebar,
   SidebarContent,
@@ -11,92 +24,8 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar"
-import { Dock, Box, ChevronRight, Library } from "lucide-react"
-import { usePathname } from "next/navigation"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
-import { useAtom } from "jotai"
-import { atomWithStorage } from "jotai/utils"
-import { useEffect, useRef } from "react"
-
-const landingPageSections = [
-  { title: "Announcements", href: "/s/announcement" },
-  { title: "Backgrounds", href: "/s/background" },
-  { title: "Borders", href: "/s/border" },
-  { title: "Comparison", href: "/s/comparison" },
-  { title: "Call to Action", href: "/s/call-to-action" },
-  { title: "Docks", href: "/s/dock" },
-  { title: "Features", href: "/s/features" },
-  { title: "Footer", href: "/s/footer" },
-  { title: "Hero", href: "/s/hero" },
-  { title: "Images", href: "/s/image" },
-  { title: "Maps", href: "/s/map" },
-  { title: "Navigation Menus", href: "/s/navbar-navigation" },
-  { title: "Pricing", href: "/s/pricing-section" },
-  { title: "Scroll Area", href: "/s/scroll-area" },
-  { title: "Team", href: "/s/team" },
-  { title: "Testimonials", href: "/s/testimonials" },
-  { title: "Text", href: "/s/text" },
-  { title: "Video", href: "/s/video" },
-].sort((a, b) => a.title.localeCompare(b.title))
-
-const uiComponents = [
-  { title: "Accordion", href: "/s/accordion" },
-  { title: "Alert", href: "/s/alert" },
-  { title: "Avatar", href: "/s/avatar" },
-  { title: "Badge", href: "/s/badge" },
-  { title: "Button", href: "/s/button" },
-  { title: "Card", href: "/s/card" },
-  { title: "Carousel", href: "/s/carousel" },
-  { title: "Checkbox", href: "/s/checkbox" },
-  { title: "Dialog / Modal", href: "/s/modal-dialog" },
-  { title: "Dropdown", href: "/s/dropdown" },
-  { title: "Empty State", href: "/s/empty-state" },
-  { title: "File Tree", href: "/s/file-tree" },
-  { title: "File Upload", href: "/s/upload-download" },
-  { title: "Icons", href: "/s/icons" },
-  { title: "Input", href: "/s/input" },
-  { title: "Numbers", href: "/s/number" },
-  { title: "Pagination", href: "/s/pagination" },
-  { title: "Sidebar", href: "/s/sidebar" },
-  { title: "Sign In", href: "/s/sign-in" },
-  { title: "Sign up", href: "/s/registration-signup" },
-  { title: "Select", href: "/s/select" },
-  { title: "Slider", href: "/s/slider" },
-  { title: "Tables", href: "/s/table" },
-  { title: "Tags", href: "/s/chip-tag" },
-  { title: "Tabs", href: "/s/tab" },
-  { title: "Text Area", href: "/s/textarea" },
-  { title: "Toast", href: "/s/toast" },
-  { title: "Toggle", href: "/s/toggle" },
-  { title: "Tooltip", href: "/s/tooltip" },
-].sort((a, b) => a.title.localeCompare(b.title))
-
-const sections = [
-  {
-    title: "Collections",
-    icon: Library,
-    items: [
-      { title: "Home", href: "/" },
-      { title: "Landing pages", href: "/s/landing-page" },
-      { title: "Pro Templates", href: "/pro" },
-    ],
-  },
-  {
-    title: "Landing Pages",
-    icon: Dock,
-    items: landingPageSections,
-  },
-  {
-    title: "UI elements",
-    icon: Box,
-    items: uiComponents,
-  },
-]
+import { sections } from "@/lib/navigation"
 
 type SidebarState = {
   openSections: Record<string, boolean>
@@ -104,7 +33,7 @@ type SidebarState = {
 }
 
 const sidebarStateAtom = atomWithStorage<SidebarState>("sidebarState", {
-  openSections: { "Landing Pages": true, "UI Components": true },
+  openSections: { "Landing Pages": true, "UI elements": true },
   scrollPosition: 0,
 })
 
@@ -137,13 +66,34 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarContent
-        className="pt-14"
+        className="mt-14 pb-20"
         ref={sidebarRef}
         onScroll={handleScroll}
         suppressHydrationWarning
       >
         <SidebarGroup>
           <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === "/pro"}
+                onClick={() => {
+                  trackEvent(AMPLITUDE_EVENTS.VIEW_SIDEBAR_SECTION, {
+                    sectionTitle: "Pro Components",
+                    path: "/pro",
+                  })
+                }}
+              >
+                <a href="/pro" className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  <span>Pro Components</span>
+                  <Badge className="ml-1.5 text-xs bg-[#adfa1d] text-black px-1.5 rounded-md pointer-events-none select-none">
+                    New
+                  </Badge>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+
             {sections.map((section) => (
               <Collapsible
                 key={section.title}
@@ -176,15 +126,26 @@ export function AppSidebar() {
                             asChild
                             isActive={pathname === item.href}
                             onClick={() => {
-                              trackEvent(AMPLITUDE_EVENTS.VIEW_SIDEBAR_SECTION, {
-                                sectionTitle: section.title,
-                                itemTitle: item.title,
-                                path: item.href
-                              });
+                              trackEvent(
+                                AMPLITUDE_EVENTS.VIEW_SIDEBAR_SECTION,
+                                {
+                                  sectionTitle: section.title,
+                                  itemTitle: item.title,
+                                  path: item.href,
+                                },
+                              )
                             }}
                           >
-                            <a href={item.href}>
+                            <a
+                              href={item.href}
+                              className="flex items-center justify-between w-full"
+                            >
                               <span>{item.title}</span>
+                              {item.isNew && (
+                                <Badge className="ml-1.5 text-xs bg-[#adfa1d] text-black px-1.5 rounded-md pointer-events-none select-none">
+                                  New
+                                </Badge>
+                              )}
                             </a>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
@@ -194,6 +155,26 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               </Collapsible>
             ))}
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === "/s/hook"}
+                onClick={() => {
+                  trackEvent(AMPLITUDE_EVENTS.VIEW_SIDEBAR_SECTION, {
+                    sectionTitle: "Hooks",
+                    path: "/s/hook",
+                  })
+                }}
+              >
+                <a href="/s/hook" className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  <span>Hooks</span>
+                  <Badge className="ml-1.5 text-xs bg-[#adfa1d] text-black px-1.5 rounded-md pointer-events-none select-none">
+                    New
+                  </Badge>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>

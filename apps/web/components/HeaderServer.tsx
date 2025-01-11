@@ -1,24 +1,20 @@
 import Link from "next/link"
-
 import { cn } from "@/lib/utils"
-
-import { Button } from "@/components/ui/button"
-import { GitHubStars } from "./GitHubStars"
-import { Icons } from "@/components/icons"
+import { Icons } from "./icons"
 import { ThemeToggle } from "./ThemeToggle"
+import { GitHubStars } from "./GitHubStars"
+import { Button } from "@/components/ui/button"
 import { Twitter } from "lucide-react"
-
-interface HeaderServerProps {
-  tagName?: string
-  isHomePage: boolean
-  isProPage?: boolean
-}
 
 export function HeaderServer({
   tagName,
   isHomePage,
   isProPage,
-}: HeaderServerProps) {
+}: {
+  tagName?: string
+  isHomePage: boolean
+  isProPage?: boolean
+}) {
   return (
     <div className="flex items-center">
       <Link

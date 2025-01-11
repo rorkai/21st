@@ -22,6 +22,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
+import { ShimmerButton } from "@/components/ui/shimmer-button"
 import { NavigationMenuLink } from "@/components/ui/navigation-menu"
 
 import { useIsMobile } from "@/hooks/use-media-query"
@@ -29,6 +30,7 @@ import { cn } from "@/lib/utils"
 
 import { HeaderServer } from "./HeaderServer"
 import { UserAvatar } from "./UserAvatar"
+import { PH_URL } from "./product-hunt"
 
 export const searchQueryAtom = atom("")
 
@@ -71,7 +73,17 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
           />
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
+          <ShimmerButton
+            className="min-w-24 py-2 px-4"
+            onClick={() => {
+              window.open(PH_URL, "_blank")
+            }}
+          >
+            <span className="text-sm font-medium text-white">
+              Support us on Product Hunt
+            </span>
+          </ShimmerButton>
           {!isMobile && <HeaderServer.ThemeToggle />}
           <HeaderServer.SocialIcons />
           {!isMobile && (

@@ -6,6 +6,7 @@ import { motion } from "framer-motion"
 
 import { useIsMobile } from "@/hooks/use-media-query"
 import { setCookie } from "@/lib/cookies"
+import { ProductHuntAnnouncement } from "@/components/product-hunt"
 import { AuroraBackground } from "./ui/aurora-background"
 import { Button } from "./ui/button"
 import { Icons } from "./icons"
@@ -43,6 +44,7 @@ export function HeroSection() {
 
   return (
     <AuroraBackground className="fixed inset-0 z-50">
+      <ProductHuntAnnouncement className="absolute top-0 right-0" />
       <div className="container relative z-10 pointer-events-auto px-6 md:px-8">
         <motion.div
           initial={{ opacity: 0, y: 40 }}

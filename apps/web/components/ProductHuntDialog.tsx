@@ -41,8 +41,8 @@ export function ProductHuntDialog() {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="gap-0 p-0 [&>button:last-child]:text-white">
-        <div className="relative w-full aspect-[500/405] rounded-lg overflow-hidden bg-background">
+      <DialogContent className="gap-0 p-0 [&>button:last-child]:text-white dark:bg-background dark:text-foreground rounded-lg overflow-hidden">
+        <div className="relative w-full aspect-[500/405] rounded-lg overflow-hidden bg-white">
           <iframe
             src="https://cards.producthunt.com/cards/posts/771481?v=1"
             width="500"
@@ -54,22 +54,32 @@ export function ProductHuntDialog() {
             loading="lazy"
           />
         </div>
-        <div className="space-y-6 px-6 pb-6 pt-3">
+        <div className="space-y-6 px-6 pb-6 pt-3 bg-white dark:bg-white">
           <DialogHeader>
-            <DialogTitle>We're Live on Product Hunt! 🎉</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="dark:text-black">
+              We're Live on Product Hunt! 🎉
+            </DialogTitle>
+            <DialogDescription className="dark:text-gray-600">
               We've just launched on Product Hunt and would love your support!
               Your upvote means a lot to us and helps us reach more developers.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="ghost">
+              <Button
+                type="button"
+                variant="ghost"
+                className="dark:text-black dark:hover:bg-gray-100"
+              >
                 Skip
               </Button>
             </DialogClose>
             <DialogClose asChild>
-              <Button className="group" type="button" onClick={handleSupport}>
+              <Button
+                className="group dark:bg-black dark:text-white dark:hover:bg-gray-900"
+                type="button"
+                onClick={handleSupport}
+              >
                 Support us
                 <ArrowRight
                   className="-me-1 ms-2 opacity-60 transition-transform group-hover:translate-x-0.5"

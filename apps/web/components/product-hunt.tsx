@@ -1,7 +1,7 @@
 import { ShimmerButton } from "@/components/ui/shimmer-button"
 import { cn } from "@/lib/utils"
 
-const PH_URL = "https://www.producthunt.com/posts/21st-dev"
+const PH_URL = "https://www.producthunt.com/posts/21st-dev-2"
 
 export function ProductHuntAnnouncement({ className }: { className?: string }) {
   return (
@@ -19,7 +19,9 @@ export function ProductHuntAnnouncement({ className }: { className?: string }) {
           Support 21st.dev on Product Hunt today
         </p>
         <ShimmerButton className="min-w-24 py-2 px-4">
-          <span className="text-sm font-medium text-foreground">Support us</span>
+          <span className="text-sm font-medium text-foreground">
+            Support us
+          </span>
         </ShimmerButton>
       </div>
     </a>

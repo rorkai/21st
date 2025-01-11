@@ -62,9 +62,14 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
 
   return (
     <>
-      <header className={cn("flex fixed top-0 left-0 right-0 h-14 z-50 items-center justify-between px-4 py-3 text-foreground", {
-        "border-b border-border/40 bg-background": !isPublishPage
-      })}>
+      <header
+        className={cn(
+          "flex fixed top-0 left-0 right-0 h-14 z-50 items-center justify-between px-4 py-3 text-foreground",
+          {
+            "border-b border-border/40 bg-background": !isPublishPage,
+          },
+        )}
+      >
         <div className="flex items-center gap-4">
           <HeaderServer
             tagName={tagName}
@@ -75,13 +80,13 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
 
         <div className="flex items-center gap-2">
           <ShimmerButton
-            className="min-w-24 py-2 px-4"
+            className="min-w-24 h-8 px-4"
             onClick={() => {
               window.open(PH_URL, "_blank")
             }}
           >
             <span className="text-sm font-medium text-white">
-              Support us on Product Hunt
+              We are live on Product Hunt
             </span>
           </ShimmerButton>
           {!isMobile && <HeaderServer.ThemeToggle />}

@@ -1,7 +1,7 @@
 import { ShimmerButton } from "@/components/ui/shimmer-button"
 import { cn } from "@/lib/utils"
 
-const PH_URL = "https://www.producthunt.com/posts/21st-dev-2"
+export const PH_URL = "https://www.producthunt.com/posts/21st-dev-2"
 
 export function ProductHuntAnnouncement({ className }: { className?: string }) {
   return (

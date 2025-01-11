@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils"
 
 import { HeaderServer } from "./HeaderServer"
 import { UserAvatar } from "./UserAvatar"
+import { PH_URL } from "./product-hunt"
 
 export const searchQueryAtom = atom("")
 
@@ -76,18 +77,13 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
           <ShimmerButton
             className="min-w-24 py-2 px-4"
             onClick={() => {
-              window.open(
-                "https://www.producthunt.com/posts/21st-dev",
-                "_blank",
-              )
+              window.open(PH_URL, "_blank")
             }}
           >
             <span className="text-sm font-medium text-white">
               Support us on Product Hunt
             </span>
           </ShimmerButton>
-        </div>
-        <div className="flex items-center">
           {!isMobile && <HeaderServer.ThemeToggle />}
           <HeaderServer.SocialIcons />
           {!isMobile && (

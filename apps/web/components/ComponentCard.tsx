@@ -1,7 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
-import { formatDistanceToNow } from "date-fns"
-import { Video } from "lucide-react"
+"use client"
+
+import { Video, Eye, Heart } from "lucide-react"
 import Link from "next/link"
+import { useClerkSupabaseClient } from "@/lib/clerk"
+import { useQuery } from "@tanstack/react-query"
+import { AnalyticsActivityType } from "@/types/global"
 
 import { Component, User } from "../types/global"
 import ComponentPreviewImage from "./ComponentPreviewImage"
@@ -40,6 +44,22 @@ export function ComponentCard({
   }
 
   const componentUrl = `/${component.user.username}/${component.component_slug}`
+  const supabase = useClerkSupabaseClient()
+
+  const { data: analytics } = useQuery({
+    queryKey: ["component-analytics", component.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("mv_component_analytics")
+        .select("component_id, count")
+        .eq("component_id", component.id)
+        .eq("activity_type", AnalyticsActivityType.COMPONENT_VIEW)
+      return data
+    },
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
+  })
 
   return (
     <div className="overflow-hidden">
@@ -90,12 +110,16 @@ export function ComponentCard({
               {component.name}
             </h2>
           </Link>
-          <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
-            {formatDistanceToNow(new Date(component.created_at), {
-              addSuffix: false,
-              includeSeconds: false,
-            }).replace("about ", "")}
-          </span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center text-xs text-muted-foreground whitespace-nowrap shrink-0 gap-1">
+              <Eye size={14} />
+              <span>{analytics?.[0]?.count || 0}</span>
+            </div>
+            <div className="flex items-center text-xs text-muted-foreground whitespace-nowrap shrink-0 gap-1">
+              <Heart size={14} className="text-muted-foreground" />
+              <span>{component.likes_count || 0}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

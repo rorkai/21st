@@ -11,7 +11,7 @@ export function ProductHuntAnnouncement({ className }: { className?: string }) {
       className={cn("w-full bg-muted px-4 py-3 md:py-2", className)}
     >
       <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-        <p className="text-sm text-foreground">
+        <p className="text-md text-foreground">
           <span className="font-medium">🎉</span>
           <span className="mx-1"></span>
           <span className="font-medium">Launch day</span>
@@ -19,7 +19,7 @@ export function ProductHuntAnnouncement({ className }: { className?: string }) {
           Support 21st.dev on Product Hunt today
         </p>
         <ShimmerButton className="min-w-24 py-2 px-4">
-          <span className="text-sm font-medium text-foreground">
+          <span className="text-md font-medium text-foreground">
             Support us
           </span>
         </ShimmerButton>

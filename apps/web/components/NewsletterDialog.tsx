@@ -32,7 +32,7 @@ export function NewsletterDialog() {
       if (!hasSubscribed && !hasDeclined) {
         setIsOpen(true)
       }
-    }, 10000)
+    }, 40000)
 
     return () => clearTimeout(timer)
   }, [])

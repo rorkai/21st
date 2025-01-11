@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/AppSidebar"
 import { CommandMenu } from "@/components/CommandMenu"
+import { ProductHuntDialog } from "@/components/ProductHuntDialog"
 
 import { initAmplitude } from "@/lib/amplitude"
 
@@ -33,6 +34,7 @@ export function AppProviders({
     <QueryClientProvider client={queryClient}>
       <ClerkProvider>
         <CommandMenu />
+        <ProductHuntDialog />
         {showSidebar ? (
           <SidebarProvider>
             <AppSidebar />

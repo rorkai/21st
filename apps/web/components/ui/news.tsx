@@ -1,11 +1,10 @@
 "use client"
 
-import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { useMediaQuery } from "@/hooks/use-media-query"
 import { cn } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
+import { useEffect, useRef, useState } from "react"
 
 export interface NewsArticle {
   href: string
@@ -19,13 +18,13 @@ const SCALE_FACTOR = 0.03
 const OPACITY_FACTOR = 0.1
 
 export function News({ articles }: { articles: NewsArticle[] }) {
-  const [dismissedNews, setDismissedNews] = React.useState<string[]>([])
+  const [dismissedNews, setDismissedNews] = useState<string[]>([])
   const cards = articles.filter(({ href }) => !dismissedNews.includes(href))
   const cardCount = cards.length
-  const [showCompleted, setShowCompleted] = React.useState(cardCount > 0)
+  const [showCompleted, setShowCompleted] = useState(cardCount > 0)
 
-  React.useEffect(() => {
-    let timeout: NodeJS.Timeout | undefined = undefined
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout> | undefined = undefined
     if (cardCount === 0)
       timeout = setTimeout(() => setShowCompleted(false), 2700)
     return () => clearTimeout(timeout)
@@ -37,7 +36,7 @@ export function News({ articles }: { articles: NewsArticle[] }) {
       data-active={cardCount !== 0}
     >
       <div className="relative size-full">
-        {cards.toReversed().map(({ href, title, summary, image }, idx) => (
+        {[...cards].reverse().map(({ href, title, summary, image }, idx) => (
           <div
             key={href}
             className={cn(
@@ -82,10 +81,11 @@ export function News({ articles }: { articles: NewsArticle[] }) {
             className="animate-slide-up-fade absolute inset-0 flex size-full flex-col items-center justify-center gap-3 [animation-duration:1s]"
             style={{ "--offset": "10px" } as React.CSSProperties}
           >
-            <div className="animate-fade-in absolute inset-0 rounded-lg border border-neutral-300 [animation-delay:2.3s] [animation-direction:reverse] [animation-duration:0.2s]" />
-            <span className="animate-fade-in text-xs font-medium text-muted-foreground [animation-delay:2.3s] [animation-direction:reverse] [animation-duration:0.2s]">
-              You're all caught up!
-            </span>
+            <Card className="animate-fade-in absolute inset-0 flex items-center justify-center [animation-delay:2.3s] [animation-direction:reverse] [animation-duration:0.2s]">
+              <span className="text-xs font-medium text-muted-foreground">
+                You're all caught up!
+              </span>
+            </Card>
           </div>
         )}
       </div>
@@ -110,10 +110,8 @@ function NewsCard({
   href?: string
   active?: boolean
 }) {
-  const { isMobile } = useMediaQuery()
-
-  const ref = React.useRef<HTMLDivElement>(null)
-  const drag = React.useRef<{
+  const ref = useRef<HTMLDivElement>(null)
+  const drag = useRef<{
     start: number
     delta: number
     startTime: number
@@ -124,8 +122,8 @@ function NewsCard({
     startTime: 0,
     maxDelta: 0,
   })
-  const animation = React.useRef<Animation>()
-  const [dragging, setDragging] = React.useState(false)
+  const animation = useRef<Animation>()
+  const [dragging, setDragging] = useState(false)
 
   const onDragMove = (e: PointerEvent) => {
     if (!ref.current) return
@@ -187,16 +185,24 @@ function NewsCard({
     ref.current.style.setProperty("--w", ref.current.clientWidth.toString())
   }
 
-  const onClick = () => {
-    if (!ref.current) return
+  const onClick = (e: React.MouseEvent) => {
+    // Only prevent card click if clicking dismiss button
     if (
-      isMobile &&
-      drag.current.maxDelta < ref.current.clientWidth / 10 &&
-      (!drag.current.startTime || Date.now() - drag.current.startTime < 250)
+      e.target instanceof Element &&
+      e.target.closest('button[type="button"]')
     ) {
-      // Touch user didn't drag far or for long, open the link
-      window.open(href, "_blank")
+      return
     }
+
+    if (!ref.current || !href) return
+
+    // Only prevent click if we're dragging significantly
+    if (drag.current.maxDelta > ref.current.clientWidth / 10) {
+      e.preventDefault()
+      return
+    }
+
+    window.open(href, "_blank")
   }
 
   const bindListeners = () => {
@@ -218,6 +224,7 @@ function NewsCard({
         "relative select-none gap-2 p-3 text-[0.8125rem]",
         "translate-x-[calc(var(--dx)*1px)] rotate-[calc(var(--dx)*0.05deg)] opacity-[calc(1-max(var(--dx),-1*var(--dx))/var(--w)/2)]",
         "transition-shadow data-[dragging=true]:shadow-md",
+        "hover:cursor-pointer",
       )}
       data-dragging={dragging}
       onPointerDown={onPointerDown}

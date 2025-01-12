@@ -6,7 +6,6 @@ import { useQuery } from "@tanstack/react-query"
 
 import { ComponentsList } from "@/components/ComponentsList"
 import {
-  ComponentsHeader,
   quickFilterAtom,
   sortByAtom,
 } from "@/components/ComponentsHeader"

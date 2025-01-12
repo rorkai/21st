@@ -2,7 +2,7 @@ import React from "react"
 import { Metadata } from "next"
 import { cookies } from "next/headers"
 
-import { Component, SortOption, User } from "@/types/global"
+import { Component, QuickFilterOption, SortOption, User } from "@/types/global"
 import { Tables } from "@/types/supabase"
 
 import { supabaseWithAdminAccess } from "@/lib/supabase"
@@ -75,12 +75,16 @@ export default async function HomePage() {
   const cookieStore = cookies()
   const shouldShowHero = !cookieStore.has("has_visited")
   const hasOnboarded = cookieStore.has("has_onboarded")
+  const savedSortBy = cookieStore.get("saved_sort_by")?.value as SortOption | undefined
+  const savedQuickFilter = cookieStore.get("saved_quick_filter")?.value as QuickFilterOption | undefined
+  
   // const defaultSortBy = hasOnboarded ? "likes" : "downloads"
   const defaultQuickFilter = hasOnboarded ? "last_released" : "all"
-  const defaultSortBy = "downloads"
+  const defaultSortBy: SortOption = hasOnboarded ? "date" : "downloads"
 
-  const sortByPreference: SortOption =
-    (cookieStore.get("sort_by")?.value as SortOption) ?? defaultSortBy
+  const sortByPreference: SortOption = savedSortBy?.length ? savedSortBy as SortOption : defaultSortBy
+  const quickFilterPreference: QuickFilterOption = savedQuickFilter?.length ? savedQuickFilter as QuickFilterOption : defaultQuickFilter
+
   const orderByFields: [keyof Tables<"components">, { ascending: boolean }] =
     (() => {
       switch (sortByPreference) {
@@ -94,8 +98,7 @@ export default async function HomePage() {
     })()
 
   const {
-    data: allComponents,
-    count: componentsCount,
+    data: initialComponents,
     error: componentsError,
   } = await supabaseWithAdminAccess
     .from("components")
@@ -118,19 +121,37 @@ export default async function HomePage() {
     )
   }
 
-  const initialComponents = sortComponents(
-    filterComponents(allComponents, defaultQuickFilter),
+  const initialFilteredSortedComponents = sortComponents(
+    filterComponents(initialComponents, defaultQuickFilter),
     sortByPreference,
   )
+
+  const { data: initialTabsCountsData, error: initialTabsCountsError } =
+    await supabaseWithAdminAccess.rpc("get_components_counts")
+
+  const initialTabsCounts =
+    !initialTabsCountsError && Array.isArray(initialTabsCountsData)
+      ? initialTabsCountsData.reduce(
+          (acc, item) => {
+            acc[item.filter_type as QuickFilterOption] = item.count
+            return acc
+          },
+          {} as Record<QuickFilterOption, number>,
+        )
+      : {
+          all: 0,
+          last_released: 0,
+          most_downloaded: 0,
+        }
 
   return (
     <>
       <Header page="home" />
       <HomePageClient
-        initialComponents={initialComponents}
+        initialComponents={initialFilteredSortedComponents}
         initialSortBy={sortByPreference}
-        initialQuickFilter={defaultQuickFilter}
-        componentsTotalCount={componentsCount ?? 0}
+        initialQuickFilter={quickFilterPreference}
+        initialTabsCounts={initialTabsCounts}
       />
       <NewsletterDialog />
     </>

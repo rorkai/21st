@@ -30,7 +30,7 @@ import { cn } from "@/lib/utils"
 
 import { HeaderServer } from "./HeaderServer"
 import { UserAvatar } from "./UserAvatar"
-import { PH_URL } from "./product-hunt"
+import { PH_URL } from "./ProductHuntDialog"
 
 export const searchQueryAtom = atom("")
 

@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { ArrowRight } from "lucide-react"
-import { PH_URL } from "./product-hunt"
+export const PH_URL = "https://www.producthunt.com/posts/21st-dev-2"
 
 export function ProductHuntDialog() {
   const [isOpen, setIsOpen] = useState(false)

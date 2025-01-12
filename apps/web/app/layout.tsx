@@ -25,7 +25,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn(geistSans.variable, geistMono.variable)}>
+      <body className={cn(geistSans.variable, geistMono.variable, 'overflow-x-hidden')} >
         <div className="px-4 h-full">
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <TooltipProvider>

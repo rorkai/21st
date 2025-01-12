@@ -67,7 +67,7 @@ export const CopyCodeButton = ({
   return (
     <button
       onClick={() => copyCode("button")}
-      className="absolute flex items-center gap-1 top-12 right-2 z-10 p-1 px-2 bg-background text-foreground border border-border rounded-md hover:bg-accent transition-colors md:flex h-8"
+      className="absolute flex items-center gap-1 top-12 right-2 md:right-4 z-10 p-1 px-2 bg-background text-foreground border border-border rounded-md hover:bg-accent transition-colors md:flex h-8"
     >
       {codeCopied ? (
         <>

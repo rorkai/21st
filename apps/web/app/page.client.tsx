@@ -1,11 +1,10 @@
 "use client"
 
-import React, { useEffect, useState, useCallback } from "react"
+import React, { useEffect, useLayoutEffect, useState } from "react"
 
 import { useAtom } from "jotai"
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery } from "@tanstack/react-query"
 import { motion } from "framer-motion"
-import debounce from "lodash/debounce"
 
 import {
   Component,
@@ -29,107 +28,81 @@ import {
   quickFilterAtom,
 } from "@/components/ComponentsHeader"
 import { Loader2 } from "lucide-react"
+import { useDebounce } from "@/hooks/use-debounce"
 
-const useTrackHasOnboarded = () => {
+const useSetServerUserDataCookies = () => {
   useEffect(() => {
-    setCookie({
-      name: "has_onboarded",
-      value: "true",
-      expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
-      httpOnly: true,
-      sameSite: "lax",
-    })
+    if (!document.cookie.includes("has_onboarded")) {
+      setCookie({
+        name: "has_onboarded",
+        value: "true",
+        expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        httpOnly: true,
+        sameSite: "lax",
+      })
+    }
   }, [])
 }
 
 export function HomePageClient({
-  initialComponents,
   initialSortBy,
   initialQuickFilter,
-  componentsTotalCount,
+  initialTabsCounts,
 }: {
   initialComponents: (Component & { user: User })[]
   initialSortBy: SortOption
   initialQuickFilter: QuickFilterOption
-  componentsTotalCount: number
+  initialTabsCounts: Record<QuickFilterOption, number>
 }) {
   const [searchQuery] = useAtom(searchQueryAtom)
   const supabase = useClerkSupabaseClient()
   const [sortBy, setSortBy] = useAtom(sortByAtom)
   const [quickFilter, setQuickFilter] = useAtom(quickFilterAtom)
-  const [isStorageLoaded, setIsStorageLoaded] = useState(false)
-  const [totalCount, setTotalCount] = useState<number>(0)
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery)
-  const [debouncedQuickFilter, setDebouncedQuickFilter] = useState(quickFilter)
-  const [tabCounts, setTabCounts] = useState<Record<QuickFilterOption, number>>(
-    {
-      all: initialComponents.length,
-      last_released: 0,
-      most_downloaded: 0,
-    },
-  )
+  const debouncedSearchQuery = useDebounce(searchQuery, 300)
+  const [tabCounts, setTabCounts] = useState<
+    Record<QuickFilterOption, number> | undefined
+  >(initialTabsCounts)
 
-  // Initialize atoms from localStorage or use initial values
-  useEffect(() => {
-    const storedSortBy = localStorage.getItem("components-sort-by")
-    const storedQuickFilter = localStorage.getItem("quick-filter")
-
-    if (!storedSortBy) {
+  // Important: we don't need useEffect here
+  // https://react.dev/learn/you-might-not-need-an-effect
+  if (tabCounts === undefined) {
+    setTabCounts(initialTabsCounts)
+  }
+  
+  // But we need useLayoutEffect here to avoid race conditions
+  useLayoutEffect(() => {
+    if (sortBy === undefined) {
       setSortBy(initialSortBy)
     }
-    if (!storedQuickFilter) {
+    if (quickFilter === undefined) {
       setQuickFilter(initialQuickFilter)
     }
-    setIsStorageLoaded(true)
   }, [])
 
-  const debouncedSetSearchQuery = useCallback(
-    debounce((value: string) => {
-      setDebouncedSearchQuery(value)
-    }, 300),
-    [],
-  )
-
-  const debouncedSetQuickFilter = useCallback(
-    debounce((value: QuickFilterOption) => {
-      setDebouncedQuickFilter(value)
-    }, 100),
-    [],
-  )
-
-  useEffect(() => {
-    if (isStorageLoaded) {
-      debouncedSetSearchQuery(searchQuery)
-    }
-    return () => {
-      debouncedSetSearchQuery.cancel()
-    }
-  }, [searchQuery, debouncedSetSearchQuery, isStorageLoaded])
-
-  useEffect(() => {
-    if (isStorageLoaded) {
-      debouncedSetQuickFilter(quickFilter)
-    }
-    return () => {
-      debouncedSetQuickFilter.cancel()
-    }
-  }, [quickFilter, debouncedSetQuickFilter, isStorageLoaded])
+  useSetServerUserDataCookies()
 
   const { data, isLoading, isFetching, fetchNextPage, hasNextPage } =
     useInfiniteQuery({
       queryKey: [
         "filtered-components",
-        debouncedQuickFilter,
+        quickFilter,
         sortBy,
         debouncedSearchQuery,
       ],
       queryFn: async ({ pageParam = 0 }) => {
+        if (!quickFilter || !sortBy) {
+          console.error("No quick filter or sort by")
+          return {
+            data: [],
+            total_count: 0,
+          }
+        }
         if (!debouncedSearchQuery) {
           const { data: filteredData, error } = await supabase.rpc(
             "get_filtered_components",
             {
-              p_quick_filter: debouncedQuickFilter,
-              p_sort_by: sortBy,
+              p_quick_filter: quickFilter!,
+              p_sort_by: sortBy!,
               p_offset: Number(pageParam) * 24,
               p_limit: 24,
             },
@@ -231,7 +204,7 @@ export function HomePageClient({
           total_count: components.length,
         }
       },
-      enabled: isStorageLoaded,
+      enabled: true,
       staleTime: 1000 * 60 * 5,
       gcTime: 1000 * 60 * 30,
       refetchOnWindowFocus: false,
@@ -247,57 +220,10 @@ export function HomePageClient({
       },
     })
 
-  const allComponents = data?.pages.flatMap((page) => page.data)
+  const allComponents = data?.pages?.flatMap((d) => d.data)
 
   const showSkeleton = isLoading || !data?.pages?.[0]?.data?.length
   const showSpinner = isFetching && !showSkeleton
-
-  const { data: tabCountsData } = useQuery({
-    queryKey: ["tab-counts", debouncedSearchQuery],
-    queryFn: async () => {
-      const counts: Record<QuickFilterOption, number> = {
-        all: 0,
-        last_released: 0,
-        most_downloaded: 0,
-      }
-
-      if (debouncedSearchQuery) {
-        // For search, we'll use the total count from the search results
-        return counts
-      }
-
-      const { data, error } = await supabase.rpc("get_components_counts")
-
-      if (!error && Array.isArray(data)) {
-        data.forEach((item: any) => {
-          if (
-            typeof item.filter_type === "string" &&
-            typeof item.count === "number" &&
-            item.filter_type in counts
-          ) {
-            counts[item.filter_type as QuickFilterOption] = item.count
-          }
-        })
-      }
-
-      return counts
-    },
-    enabled: isStorageLoaded,
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 30,
-    refetchOnWindowFocus: false,
-  })
-
-  useEffect(() => {
-    if (data?.pages[0]) {
-      setTotalCount(data.pages[0].total_count)
-    }
-    if (tabCountsData) {
-      setTabCounts(tabCountsData)
-    }
-  }, [data?.pages, tabCountsData])
-
-  useTrackHasOnboarded()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -324,7 +250,7 @@ export function HomePageClient({
       <div className="flex flex-col">
         <ComponentsHeader
           filtersDisabled={!!searchQuery}
-          tabCounts={tabCounts}
+          tabCounts={tabCounts!}
         />
         {showSkeleton ? (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-9 list-none pb-10">

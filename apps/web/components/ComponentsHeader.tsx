@@ -1,9 +1,8 @@
 "use client"
 
-import { useEffect, useRef, useCallback } from "react"
+import { useEffect, useRef } from "react"
 
-import { useAtom } from "jotai"
-import { atomWithStorage, createJSONStorage } from "jotai/utils"
+import { atom, useAtom } from "jotai"
 import { useMediaQuery } from "@/hooks/use-media-query"
 
 import { ArrowUpDown, CircleX } from "lucide-react"
@@ -22,25 +21,13 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { searchQueryAtom } from "@/components/Header"
 
-import type {
-  SortOption,
-  QuickFilterOption,
-  Component,
-  User,
-} from "@/types/global"
+import type { SortOption, QuickFilterOption } from "@/types/global"
 import { QUICK_FILTER_OPTIONS, SORT_OPTIONS } from "@/types/global"
+import { setCookie } from "@/lib/cookies"
 
-export const quickFilterAtom = atomWithStorage<QuickFilterOption>(
-  "quick-filter",
-  "all",
-  createJSONStorage(() => localStorage),
-)
+export const quickFilterAtom = atom<QuickFilterOption | undefined>(undefined)
 
-export const sortByAtom = atomWithStorage<SortOption>(
-  "components-sort-by",
-  "downloads",
-  createJSONStorage(() => localStorage),
-)
+export const sortByAtom = atom<SortOption | undefined>(undefined)
 
 const useTrackSearchQueries = () => {
   const lastTrackedQuery = useRef<string | null>(null)
@@ -98,20 +85,6 @@ export function ComponentsHeader({
   useTrackSearchQueries()
   useSearchHotkeys(inputRef)
 
-  const handleQuickFilterChange = useCallback(
-    (value: string) => {
-      setQuickFilter(value as QuickFilterOption)
-    },
-    [setQuickFilter],
-  )
-
-  const handleSortByChange = useCallback(
-    (value: string) => {
-      setSortBy(value as SortOption)
-    },
-    [setSortBy],
-  )
-
   const handleClearInput = () => {
     setSearchQuery("")
     inputRef.current?.focus()
@@ -143,7 +116,16 @@ export function ComponentsHeader({
         <div className="flex items-center gap-4">
           <Tabs
             value={quickFilter}
-            onValueChange={handleQuickFilterChange}
+            onValueChange={(value) => {
+              setQuickFilter(value as QuickFilterOption)
+              setCookie({
+                name: "saved_quick_filter",
+                value: value,
+                expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+                httpOnly: true,
+                sameSite: "lax",
+              })
+            }}
             className={cn("w-full md:w-auto", filtersDisabled && "opacity-50")}
           >
             <TabsList className="w-full md:w-auto h-8 -space-x-px bg-background p-0 shadow-sm shadow-black/5 rtl:space-x-reverse">
@@ -193,7 +175,19 @@ export function ComponentsHeader({
             )}
           </div>
 
-          <Select value={sortBy} onValueChange={handleSortByChange}>
+          <Select
+            value={sortBy}
+            onValueChange={(value) => {
+              setSortBy(value as SortOption)
+              setCookie({
+                name: "saved_sort_by",
+                value: value,
+                expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+                httpOnly: true,
+                sameSite: "lax",
+              })
+            }}
+          >
             <SelectTrigger
               className={`h-8 ${isDesktop ? "w-[180px]" : "w-auto min-w-[40px] px-2"}`}
             >

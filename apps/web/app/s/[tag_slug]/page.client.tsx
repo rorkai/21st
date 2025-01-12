@@ -11,20 +11,43 @@ import {
 } from "@/components/ComponentsHeader"
 import { searchQueryAtom } from "@/components/Header"
 import { sortComponents, filterComponents } from "@/lib/filters.client"
-import { Component, User } from "@/types/global"
+import { Component, QuickFilterOption, SortOption, User } from "@/types/global"
 import { TagComponentsHeader } from "@/components/TagComponentsHeader"
+import { useLayoutEffect, useState } from "react"
 
 export function TagPageContent({
   components,
   tagName,
+  initialTabCounts,
+  initialSortBy,
+  initialQuickFilter,
 }: {
   components: (Component & { user: User })[]
   tagName: string
+  initialTabCounts: Record<QuickFilterOption, number>
+  initialSortBy: SortOption
+  initialQuickFilter: QuickFilterOption
 }) {
-  const [sortBy] = useAtom(sortByAtom)
-  const [quickFilter] = useAtom(quickFilterAtom)
+  const [sortBy, setSortBy] = useAtom(sortByAtom)
+  const [quickFilter, setQuickFilter] = useAtom(quickFilterAtom)
   const [searchQuery] = useAtom(searchQueryAtom)
-  const supabase = useClerkSupabaseClient()
+  const [tabCounts, setTabCounts] = useState<Record<QuickFilterOption, number> | undefined>(undefined)
+
+  // Important: we don't need useEffect here
+  // https://react.dev/learn/you-might-not-need-an-effect
+  if (tabCounts === undefined) {
+    setTabCounts(initialTabCounts)
+  }
+
+  // But we need useLayoutEffect here to avoid race conditions
+  useLayoutEffect(() => {
+    if (sortBy === undefined) {
+      setSortBy(initialSortBy)
+    }
+    if (quickFilter === undefined) {
+      setQuickFilter(initialQuickFilter)
+    }
+  }, [])
 
   const { data: filteredComponents, isLoading } = useQuery<
     (Component & { user: User })[]

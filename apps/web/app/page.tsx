@@ -78,7 +78,6 @@ export default async function HomePage() {
   const savedSortBy = cookieStore.get("saved_sort_by")?.value as SortOption | undefined
   const savedQuickFilter = cookieStore.get("saved_quick_filter")?.value as QuickFilterOption | undefined
   
-  // const defaultSortBy = hasOnboarded ? "likes" : "downloads"
   const defaultQuickFilter = hasOnboarded ? "last_released" : "all"
   const defaultSortBy: SortOption = hasOnboarded ? "date" : "downloads"
 

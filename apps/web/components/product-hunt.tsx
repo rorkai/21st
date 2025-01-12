@@ -19,7 +19,7 @@ export function ProductHuntAnnouncement({ className }: { className?: string }) {
           Support 21st.dev on Product Hunt today
         </p>
         <ShimmerButton className="min-w-24 py-2 px-4">
-          <span className="text-md font-medium text-foreground">
+          <span className="text-md font-medium text-white">
             Support us
           </span>
         </ShimmerButton>

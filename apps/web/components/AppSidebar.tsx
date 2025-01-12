@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/sidebar"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { sections } from "@/lib/navigation"
+import { News } from "@/components/ui/news"
 
 type SidebarState = {
   openSections: Record<string, boolean>
@@ -66,7 +67,7 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarContent
-        className="mt-14 pb-20"
+        className="mt-14 pb-[400px]"
         ref={sidebarRef}
         onScroll={handleScroll}
         suppressHydrationWarning
@@ -178,6 +179,19 @@ export function AppSidebar() {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
+      <div className="fixed bottom-0 left-0 w-[240px] z-50">
+        <News
+          articles={[
+            {
+              href: "https://www.producthunt.com/posts/21st-dev-2",
+              title: "We're on Product Hunt! 🎉",
+              summary:
+                "Help us become Product of the Week by upvoting. Your support means a lot!",
+              image: "/product-of-the-day.png",
+            },
+          ]}
+        />
+      </div>
     </Sidebar>
   )
 }

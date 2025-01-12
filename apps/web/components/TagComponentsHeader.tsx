@@ -24,6 +24,7 @@ import type {
   User,
 } from "@/types/global"
 import { QUICK_FILTER_OPTIONS, SORT_OPTIONS } from "@/types/global"
+import { setCookie } from "@/lib/cookies"
 
 const getFilteredCount = (
   components: (Component & { user: User })[],
@@ -98,9 +99,16 @@ export function TagComponentsHeader({
         <div className="flex items-center gap-4">
           <Tabs
             value={quickFilter}
-            onValueChange={(value) =>
+            onValueChange={(value) => {
               setQuickFilter(value as QuickFilterOption)
-            }
+              setCookie({
+                name: "saved_quick_filter",
+                value: value,
+                expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+                httpOnly: true,
+                sameSite: "lax",
+              })
+            }}
             className={cn("w-full md:w-auto", filtersDisabled && "opacity-50")}
           >
             <TabsList className="w-full md:w-auto h-8 -space-x-px bg-background p-0 shadow-sm shadow-black/5 rtl:space-x-reverse">
@@ -167,7 +175,16 @@ export function TagComponentsHeader({
 
           <Select
             value={sortBy}
-            onValueChange={(value) => setSortBy(value as SortOption)}
+            onValueChange={(value) => {
+              setSortBy(value as SortOption)
+              setCookie({
+                name: "saved_sort_by",
+                value: value,
+                expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+                httpOnly: true,
+                sameSite: "lax",
+              })
+            }}
           >
             <SelectTrigger
               className={`h-8 ${isDesktop ? "w-[180px]" : "w-auto min-w-[40px] px-2"}`}

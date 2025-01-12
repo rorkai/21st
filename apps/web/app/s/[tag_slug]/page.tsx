@@ -7,6 +7,8 @@ import { getComponents } from "@/lib/queries"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { Database } from "@/types/supabase"
 import { TagPageContent } from "./page.client"
+import { QuickFilterOption, SortOption } from "@/types/global"
+import { cookies } from "next/headers"
 
 interface TagPageProps {
   params: {
@@ -33,11 +35,49 @@ const getTagInfo = async (
 }
 
 export default async function TagPage({ params }: TagPageProps) {
+  const cookieStore = cookies()
+  
   const tagSlug = params.tag_slug
   const [tagInfo, components] = await Promise.all([
     getTagInfo(supabaseWithAdminAccess, tagSlug),
     getComponents(supabaseWithAdminAccess, tagSlug),
   ])
+
+  const { data: initialTabsCountsData, error: initialTabsCountsError } =
+    await supabaseWithAdminAccess.rpc("get_components_counts")
+
+  const initialTabsCounts =
+    !initialTabsCountsError && Array.isArray(initialTabsCountsData)
+      ? initialTabsCountsData.reduce(
+          (acc, item) => {
+            acc[item.filter_type as QuickFilterOption] = item.count
+            return acc
+          },
+          {} as Record<QuickFilterOption, number>,
+        )
+      : {
+          all: 0,
+          last_released: 0,
+          most_downloaded: 0,
+        }
+
+  const hasOnboarded = cookieStore.has("has_onboarded")
+  const savedSortBy = cookieStore.get("saved_sort_by")?.value as
+    | SortOption
+    | undefined
+  const savedQuickFilter = cookieStore.get("saved_quick_filter")?.value as
+    | QuickFilterOption
+    | undefined
+
+  const defaultQuickFilter = hasOnboarded ? "last_released" : "all"
+  const defaultSortBy: SortOption = hasOnboarded ? "date" : "downloads"
+
+  const sortByPreference: SortOption = savedSortBy?.length
+    ? (savedSortBy as SortOption)
+    : defaultSortBy
+  const quickFilterPreference: QuickFilterOption = savedQuickFilter?.length
+    ? (savedQuickFilter as QuickFilterOption)
+    : defaultQuickFilter
 
   if (!tagInfo) {
     notFound()
@@ -47,7 +87,13 @@ export default async function TagPage({ params }: TagPageProps) {
     <div className="container mx-auto px-4">
       {tagInfo && <Header tagName={tagInfo?.name} page="components" />}
       <div className="mt-20">
-        <TagPageContent components={components} tagName={tagInfo.name} />
+        <TagPageContent
+          components={components}
+          tagName={tagInfo.name}
+          initialTabCounts={initialTabsCounts}
+          initialSortBy={sortByPreference}
+          initialQuickFilter={quickFilterPreference}
+        />
       </div>
     </div>
   )

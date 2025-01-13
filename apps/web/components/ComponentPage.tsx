@@ -7,7 +7,7 @@ import { atom, useAtom } from "jotai"
 import { useQuery } from "@tanstack/react-query"
 import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs"
 
-import { Component, Tag, User } from "@/types/global"
+import { Component, Demo, Tag, User } from "@/types/global"
 import { PromptType, PROMPT_TYPES } from "@/types/global"
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import { useUpdateComponentWithTags } from "@/lib/queries"
@@ -248,6 +248,7 @@ const copyToClipboard = async (text: string) => {
 
 export default function ComponentPage({
   component: initialComponent,
+  demo: initialDemo,
   code,
   demoCode,
   dependencies,
@@ -260,6 +261,7 @@ export default function ComponentPage({
   compiledCss,
 }: {
   component: Component & { user: User } & { tags: Tag[] }
+  demo: Demo
   code: string
   demoCode: string
   dependencies: Record<string, string>
@@ -272,6 +274,7 @@ export default function ComponentPage({
   compiledCss?: string
 }) {
   const [component, setComponent] = useState(initialComponent)
+  const [demo, setDemo] = useState(initialDemo)
   const { user } = useUser()
   const supabase = useClerkSupabaseClient()
   const { theme } = useTheme()

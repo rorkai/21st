@@ -1,4 +1,12 @@
-import { Component, DemoWithComponent, QuickFilterOption, SortOption, Tag, User } from "@/types/global"
+import {
+  Component,
+  Demo,
+  DemoWithComponent,
+  QuickFilterOption,
+  SortOption,
+  Tag,
+  User,
+} from "@/types/global"
 import {
   UseMutationResult,
   useMutation,
@@ -473,4 +481,82 @@ export async function getFilteredDemos(
   }
 
   return data
+}
+
+export async function getComponentWithDemo(
+  supabase: SupabaseClient<Database>,
+  username: string,
+  componentSlug: string,
+  demoId?: number,
+): Promise<{
+  data: {
+    component: Component & { user: User }
+    demo: Demo & { tags: Tag[] }
+  } | null
+  error: Error | null
+}> {
+  try {
+    const { data: componentData, error: componentError } = await supabase
+      .from("components")
+      .select(
+        `
+        *,
+        user:users!components_user_id_fkey(*),
+        demos(*)
+      `,
+      )
+      .eq("component_slug", componentSlug)
+      .eq("user.username", username)
+      .eq("is_public", true)
+      .not("user", "is", null)
+      .single()
+
+    if (componentError) {
+      console.error("Error fetching component:", componentError)
+      return { data: null, error: new Error(componentError.message) }
+    }
+
+    if (!componentData || !componentData.demos?.length) {
+      return { data: null, error: new Error("Component or demos not found") }
+    }
+
+    const targetDemoId =
+      demoId || Math.min(...componentData.demos.map((d) => d.id))
+
+    const { data: demoData, error: demoError } = await supabase
+      .from("demos")
+      .select(
+        `
+        *,
+        tags:demo_tags(
+          tag:tags(*)
+        )
+      `,
+      )
+      .eq("id", targetDemoId)
+      .single()
+
+    if (demoError) {
+      console.error("Error fetching demo:", demoError)
+      return { data: null, error: new Error(demoError.message) }
+    }
+
+    return {
+      data: {
+        component: componentData as Component & { user: User },
+        demo: {
+          ...demoData,
+          tags: demoData.tags.map((tagRelation: any) => tagRelation.tag),
+        },
+      },
+      error: null,
+    }
+  } catch (error) {
+    console.error("Error in getComponentWithDemo:", error)
+    return {
+      data: null,
+      error:
+        error instanceof Error ? error : new Error("Unknown error occurred"),
+    }
+  }
 }

@@ -66,7 +66,7 @@ export const useCompileCss = (
             return
           }
 
-          const fileName = `${component.component_slug}.${demoId}.compiled.css`
+          const fileName = `${component.component_slug}/${demoId}.compiled.css`
           const url = await uploadToR2({
             file: {
               name: fileName,

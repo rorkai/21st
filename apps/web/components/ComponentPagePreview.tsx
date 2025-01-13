@@ -39,7 +39,7 @@ import { useDebugMode } from "@/hooks/use-debug-mode"
 import { useCompileCss } from "@/hooks/use-compile-css"
 import { useIsMobile } from "@/hooks/use-media-query"
 
-import { Component, Tag, User } from "@/types/global"
+import { Component, Tag, User, Demo } from "@/types/global"
 import { generateSandpackFiles } from "@/lib/sandpack"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { getPackageRunner, cn } from "@/lib/utils"
@@ -65,9 +65,10 @@ export function ComponentPagePreview({
   npmDependenciesOfRegistryDependencies,
   tailwindConfig,
   globalCss,
-  compiledCss,
   canEdit,
   setIsEditDialogOpen,
+  demo,
+  compiledCss,
 }: {
   component: Component & { user: User } & { tags: Tag[] }
   code: string
@@ -79,9 +80,10 @@ export function ComponentPagePreview({
   npmDependenciesOfRegistryDependencies: Record<string, string>
   tailwindConfig?: string
   globalCss?: string
-  compiledCss?: string
+  compiledCss?: string | null
   canEdit: boolean
   setIsEditDialogOpen: (value: boolean) => void
+  demo: Demo
 }) {
   const sandpackRef = useRef<HTMLDivElement>(null)
   const { user } = useUser()
@@ -116,6 +118,7 @@ export function ComponentPagePreview({
     registryDependencies,
     component,
     shellCode,
+    demo.id,
     tailwindConfig,
     globalCss,
     compiledCss,
@@ -282,7 +285,10 @@ export function ComponentPagePreview({
                       <div
                         className={`overflow-auto ${styles.codeViewerWrapper} relative`}
                       >
-                        <CopyCodeButton component_id={component.id} user_id={user?.id} />
+                        <CopyCodeButton
+                          component_id={component.id}
+                          user_id={user?.id}
+                        />
                         <Tabs value={activeFile} onValueChange={setActiveFile}>
                           <TabsList className="h-9 relative bg-muted dark:bg-background justify-start w-full gap-0.5 pb-0 before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-border px-4 overflow-x-auto flex-nowrap hide-scrollbar">
                             {visibleFiles.map((file) => (

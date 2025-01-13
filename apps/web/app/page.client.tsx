@@ -160,9 +160,8 @@ export function HomePageClient({
           }
         }
 
-        // Преобразуем результаты поиска компонентов в формат DemoWithComponent
         const demos = searchResults.map((result) => ({
-          id: result.id, // используем id компонента как id демо
+          id: result.id,
           name: result.name,
           demo_code: result.demo_code,
           preview_url: result.preview_url,
@@ -170,7 +169,7 @@ export function HomePageClient({
           compiled_css: result.compiled_css,
           demo_dependencies: result.demo_dependencies,
           demo_direct_registry_dependencies:
-            result.demo_direct_registry_dependencies,
+          result.demo_direct_registry_dependencies,
           pro_preview_image_url: result.pro_preview_image_url,
           created_at: result.created_at,
           updated_at: result.updated_at,

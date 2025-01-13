@@ -6,7 +6,6 @@ import { getComponent, getComponentWithDemo, getUserData } from "@/lib/queries"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 import { extractDemoComponentNames } from "@/lib/parsers"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
-import { Component, Tag, User } from "@/types/global"
 
 const ComponentPage = dynamic(() => import("@/components/ComponentPage"), {
   ssr: false,

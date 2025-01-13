@@ -763,9 +763,10 @@ export default function ComponentPage({
           }
           tailwindConfig={tailwindConfig}
           globalCss={globalCss}
-          compiledCss={compiledCss}
+          compiledCss={compiledCss ?? undefined}
           canEdit={canEdit}
           setIsEditDialogOpen={setIsEditDialogOpen}
+          demo={demo}
         />
       </div>
       <EditComponentDialog

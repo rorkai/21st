@@ -14,14 +14,18 @@ import { UseFormReturn } from "react-hook-form"
 import { FormData } from "../utils"
 import { editorThemes, editorOptions } from "../editor-themes"
 
-type EditorFieldName = keyof Pick<FormData, "code" | "demo_code">
+type EditorFieldName = keyof Pick<
+  FormData,
+  "code" | "demo_code" | "tailwind_config" | "globals_css"
+>
 
 interface EditorStepProps {
   form: UseFormReturn<FormData>
   isDarkTheme: boolean
   fieldName: EditorFieldName
   value: string
-  onChange?: (value: string) => void
+  onChange: (value: string) => void
+  language?: string
 }
 
 export function EditorStep({
@@ -30,6 +34,7 @@ export function EditorStep({
   fieldName,
   value,
   onChange,
+  language = "typescript",
 }: EditorStepProps) {
   return (
     <FormField
@@ -39,10 +44,10 @@ export function EditorStep({
         <FormItem className="h-full">
           <FormControl>
             <Editor
-              defaultLanguage="typescript"
+              defaultLanguage={language}
               value={value}
               onChange={(value) => {
-                onChange?.(value || "")
+                onChange(value || "")
                 field.onChange(value || "")
               }}
               theme={isDarkTheme ? "vs-dark" : "light"}

@@ -14,6 +14,8 @@ export const formSchema = z.object({
   demo_code: z.string().min(1, {
     message: "Demo code is required.",
   }),
+  tailwind_config: z.string().optional(),
+  globals_css: z.string().optional(),
   registry: z.string().default("ui"),
   publish_as_username: z.string().optional(),
   description: z.string().optional(),

@@ -61,12 +61,7 @@ export interface ParsedCodeData {
   demoComponentNames: string[]
 }
 
-type FormStep =
-  | "nameSlugForm"
-  | "code"
-  | "demoCode"
-  | "customization"
-  | "detailedForm"
+type FormStep = "nameSlugForm" | "code" | "demoCode" | "detailedForm"
 
 export default function PublishComponentForm() {
   const { user } = useUser()
@@ -422,16 +417,49 @@ export default function PublishComponentForm() {
     formStep === "detailedForm",
   )
 
+  const [activeCodeTab, setActiveCodeTab] = useState<
+    "component" | "tailwind" | "globals"
+  >("component")
+
+  const [tailwindConfig, setTailwindConfig] = useState("")
+  const [globalsCSS, setGlobalsCSS] = useState("")
+
   return (
     <>
       <Form {...form}>
         {formStep === "code" && (
           <div className="flex flex-col h-screen w-full absolute left-0 right-0">
-            <div className="flex items-center justify-between px-4 h-14 border-b bg-background z-50 pointer-events-auto">
-              <div className="rounded-full w-8 h-8 bg-foreground" />
-              <div className="flex-1" />
-              <div className="text-center font-medium mr-8">{componentSlug}.tsx</div>
-              <div className="flex items-center gap-2 flex-1 justify-end">
+            <div className="flex items-center justify-between h-12 border-b bg-background z-50 pointer-events-auto">
+              <div className="px-4 flex-1">
+                <Tabs
+                  value={activeCodeTab}
+                  onValueChange={(v) =>
+                    setActiveCodeTab(v as typeof activeCodeTab)
+                  }
+                >
+                  <TabsList className="h-auto gap-2 rounded-none bg-transparent px-0 py-1 text-foreground">
+                    <TabsTrigger
+                      value="component"
+                      className="relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-2 after:h-0.5 hover:bg-accent hover:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent"
+                    >
+                      {componentSlug}.tsx
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="tailwind"
+                      className="relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-2 after:h-0.5 hover:bg-accent hover:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent"
+                    >
+                      tailwind.config.js
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="globals"
+                      className="relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-2 after:h-0.5 hover:bg-accent hover:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent"
+                    >
+                      globals.css
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+              <div className="flex items-center gap-2 px-4">
                 <Button
                   size="icon"
                   variant="outline"
@@ -439,28 +467,99 @@ export default function PublishComponentForm() {
                 >
                   <ChevronLeftIcon className="w-4 h-4" />
                 </Button>
-                <Button
-                  size="sm"
-                  disabled={!code?.length || !parsedCode.componentNames?.length}
-                  onClick={() => setFormStep("demoCode")}
-                >
+                <Button size="sm" onClick={() => setFormStep("demoCode")}>
                   Continue
                 </Button>
               </div>
             </div>
 
-            <div className="flex h-[calc(100vh-3.5rem)]">
+            <div className="flex h-[calc(100vh-3rem)]">
               <div className="w-1/2 border-r pointer-events-auto">
-                <EditorStep
-                  form={form}
-                  isDarkTheme={isDarkTheme}
-                  fieldName="code"
-                  value={code}
-                  onChange={(value) => form.setValue("code", value)}
-                />
+                {activeCodeTab === "component" && (
+                  <div className="h-full">
+                    <EditorStep
+                      form={form}
+                      isDarkTheme={isDarkTheme}
+                      fieldName="code"
+                      value={code}
+                      onChange={(value) => form.setValue("code", value)}
+                    />
+                  </div>
+                )}
+                {activeCodeTab === "tailwind" && (
+                  <div className="h-full">
+                    <EditorStep
+                      form={form}
+                      isDarkTheme={isDarkTheme}
+                      fieldName="tailwind_config"
+                      value={tailwindConfig}
+                      onChange={setTailwindConfig}
+                      language="javascript"
+                    />
+                  </div>
+                )}
+                {activeCodeTab === "globals" && (
+                  <div className="h-full">
+                    <EditorStep
+                      form={form}
+                      isDarkTheme={isDarkTheme}
+                      fieldName="globals_css"
+                      value={globalsCSS}
+                      onChange={setGlobalsCSS}
+                      language="css"
+                    />
+                  </div>
+                )}
               </div>
-              <div className="w-1/2 p-8 pointer-events-auto">
-                <CodeGuidelinesAlert />
+              <div className="w-1/2 pointer-events-auto">
+                {isPreviewReady ? (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="h-full p-8"
+                  >
+                    <React.Suspense fallback={<LoadingSpinner />}>
+                      <PublishComponentPreview
+                        code={code}
+                        demoCode={demoCode}
+                        slugToPublish={componentSlug}
+                        registryToPublish={registryToPublish}
+                        directRegistryDependencies={[
+                          ...directRegistryDependencies,
+                          ...demoDirectRegistryDependencies,
+                        ]}
+                        isDarkTheme={isDarkTheme}
+                        customTailwindConfig={customTailwindConfig}
+                        customGlobalCss={customGlobalCss}
+                      />
+                    </React.Suspense>
+                  </motion.div>
+                ) : (
+                  <div className="p-8">
+                    {activeCodeTab === "component" && <CodeGuidelinesAlert />}
+                    {activeCodeTab === "tailwind" && (
+                      <div className="prose dark:prose-invert max-w-none">
+                        <h2>Tailwind Configuration</h2>
+                        <p>
+                          Customize your component's appearance by extending the
+                          default Tailwind configuration. This is optional but
+                          can be useful for specific styling needs.
+                        </p>
+                      </div>
+                    )}
+                    {activeCodeTab === "globals" && (
+                      <div className="prose dark:prose-invert max-w-none">
+                        <h2>Global CSS</h2>
+                        <p>
+                          Add any global CSS styles that your component needs.
+                          This is optional and should be used sparingly.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -482,7 +581,7 @@ export default function PublishComponentForm() {
                 >
                   <ChevronLeftIcon className="w-4 h-4" />
                 </Button>
-                <Button size="sm" onClick={() => setFormStep("customization")}>
+                <Button size="sm" onClick={() => setFormStep("detailedForm")}>
                   Continue
                 </Button>
               </div>
@@ -498,14 +597,42 @@ export default function PublishComponentForm() {
                   onChange={(value) => form.setValue("demo_code", value)}
                 />
               </div>
-              <div className="w-1/2 p-8 pointer-events-auto">
-                <DemoComponentGuidelinesAlert
-                  mainComponentName={
-                    parsedCode.componentNames[0] ?? "MyComponent"
-                  }
-                  componentSlug={componentSlug}
-                  registryToPublish={registryToPublish}
-                />
+              <div className="w-1/2 pointer-events-auto">
+                {isPreviewReady ? (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="h-full p-8"
+                  >
+                    <React.Suspense fallback={<LoadingSpinner />}>
+                      <PublishComponentPreview
+                        code={code}
+                        demoCode={demoCode}
+                        slugToPublish={componentSlug}
+                        registryToPublish={registryToPublish}
+                        directRegistryDependencies={[
+                          ...directRegistryDependencies,
+                          ...demoDirectRegistryDependencies,
+                        ]}
+                        isDarkTheme={isDarkTheme}
+                        customTailwindConfig={customTailwindConfig}
+                        customGlobalCss={customGlobalCss}
+                      />
+                    </React.Suspense>
+                  </motion.div>
+                ) : (
+                  <div className="p-8">
+                    <DemoComponentGuidelinesAlert
+                      mainComponentName={
+                        parsedCode.componentNames[0] ?? "MyComponent"
+                      }
+                      componentSlug={componentSlug}
+                      registryToPublish={registryToPublish}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -530,168 +657,10 @@ export default function PublishComponentForm() {
           </div>
         )}
 
-        {formStep === "customization" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.3 }}
-            className="w-full"
-          >
-            <div className="flex flex-col gap-4">
-              <h2 className="text-3xl font-bold mt-10">
-                Tailwind styles (optional)
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Optionally extend shadcn/ui Tailwind theme to customize your
-                component
-              </p>
-
-              <Tabs defaultValue="tailwind" className="w-full">
-                <TabsList className="rounded-lg h-9">
-                  <TabsTrigger value="tailwind">tailwind.config.js</TabsTrigger>
-                  <TabsTrigger value="css">globals.css</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="tailwind">
-                  <div className="relative flex flex-col gap-2">
-                    <Editor
-                      defaultLanguage="javascript"
-                      value={customTailwindConfig}
-                      onChange={(value) => setCustomTailwindConfig(value || "")}
-                      theme={isDarkTheme ? "github-dark" : "github-light"}
-                      options={{
-                        minimap: { enabled: false },
-                        scrollBeyondLastLine: false,
-                        fontSize: 14,
-                        lineNumbers: "off",
-                        folding: true,
-                        wordWrap: "on",
-                        automaticLayout: true,
-                        padding: { top: 16, bottom: 16 },
-                        scrollbar: {
-                          vertical: "visible",
-                          horizontal: "visible",
-                          verticalScrollbarSize: 8,
-                          horizontalScrollbarSize: 8,
-                          useShadows: false,
-                        },
-                        overviewRulerLanes: 0,
-                        hideCursorInOverviewRuler: true,
-                        overviewRulerBorder: false,
-                        renderLineHighlight: "none",
-                        contextmenu: false,
-                        formatOnPaste: false,
-                        formatOnType: false,
-                        quickSuggestions: false,
-                        suggest: {
-                          showKeywords: false,
-                          showSnippets: false,
-                        },
-                        renderValidationDecorations: "off",
-                        hover: { enabled: false },
-                        inlayHints: { enabled: "off" },
-                        occurrencesHighlight: "off",
-                        selectionHighlight: false,
-                      }}
-                      className={cn(
-                        "h-[500px] w-full rounded-md overflow-hidden",
-                        "border border-input focus-within:ring-1 focus-within:ring-ring",
-                      )}
-                    />
-                    <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        onClick={() => setFormStep("demoCode")}
-                      >
-                        <ChevronLeftIcon className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => setFormStep("detailedForm")}
-                      >
-                        {(customTailwindConfig?.length ?? 0) > 0 ||
-                        (customGlobalCss?.length ?? 0) > 0
-                          ? "Continue"
-                          : "Skip"}
-                      </Button>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="css">
-                  <div className="relative flex flex-col gap-2">
-                    <Editor
-                      defaultLanguage="css"
-                      value={customGlobalCss}
-                      onChange={(value) => setCustomGlobalCss(value || "")}
-                      theme={isDarkTheme ? "github-dark" : "github-light"}
-                      options={{
-                        minimap: { enabled: false },
-                        scrollBeyondLastLine: false,
-                        fontSize: 14,
-                        lineNumbers: "off",
-                        folding: true,
-                        wordWrap: "on",
-                        automaticLayout: true,
-                        padding: { top: 16, bottom: 16 },
-                        scrollbar: {
-                          vertical: "visible",
-                          horizontal: "visible",
-                          verticalScrollbarSize: 8,
-                          horizontalScrollbarSize: 8,
-                          useShadows: false,
-                        },
-                        overviewRulerLanes: 0,
-                        hideCursorInOverviewRuler: true,
-                        overviewRulerBorder: false,
-                        renderLineHighlight: "none",
-                        contextmenu: false,
-                        formatOnPaste: false,
-                        formatOnType: false,
-                        quickSuggestions: false,
-                        suggest: {
-                          showKeywords: false,
-                          showSnippets: false,
-                        },
-                        renderValidationDecorations: "off",
-                        hover: { enabled: false },
-                        inlayHints: { enabled: "off" },
-                        occurrencesHighlight: "off",
-                        selectionHighlight: false,
-                      }}
-                      className={cn(
-                        "h-[500px] w-full rounded-md overflow-hidden",
-                        "border border-input focus-within:ring-1 focus-within:ring-ring",
-                      )}
-                    />
-                    <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        onClick={() => setFormStep("demoCode")}
-                      >
-                        <ChevronLeftIcon className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => setFormStep("detailedForm")}
-                      >
-                        Continue
-                      </Button>
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </div>
-          </motion.div>
-        )}
-
         {formStep === "detailedForm" && unknownDependencies?.length > 0 && (
           <ResolveUnknownDependenciesAlertForm
             unknownDependencies={unknownDependencies}
-            onBack={() => setFormStep("customization")}
+            onBack={() => setFormStep("demoCode")}
             onDependenciesResolved={(resolvedDependencies) => {
               form.setValue(
                 "unknown_dependencies",
@@ -754,7 +723,10 @@ export default function PublishComponentForm() {
               iconSrc={isDarkTheme ? "/css-file-dark.svg" : "/css-file.svg"}
               mainText="Custom styles"
               subText="Tailwind config and globals.css"
-              onEditClick={() => setFormStep("customization")}
+              onEditClick={() => {
+                setFormStep("code")
+                setActiveCodeTab("tailwind")
+              }}
             />
             <ComponentDetailsForm
               isEditMode={false}

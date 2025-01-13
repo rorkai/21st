@@ -14,7 +14,6 @@ import {
   extractAmbigiousRegistryDependencies,
 } from "../../lib/parsers"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogContent,
@@ -23,15 +22,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form"
+import { Form } from "@/components/ui/form"
 import { addTagsToComponent } from "@/lib/queries"
-import { ComponentDetailsForm, NameSlugForm } from "./ComponentDetailsForm"
+import { ComponentDetailsForm } from "./ComponentDetailsForm"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { useClerkSupabaseClient } from "@/lib/clerk"
@@ -52,12 +45,13 @@ import { LoadingSpinner } from "../LoadingSpinner"
 import { useSuccessDialogHotkeys } from "./hotkeys"
 import { toast } from "sonner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
 import { usePublishAs } from "./use-publish-as"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { HeroVideoDialog } from "@/components/ui/hero-video-dialog"
 import { ChevronLeftIcon } from "lucide-react"
 import { Editor } from "@monaco-editor/react"
+import { NameSlugStep } from "./steps/name-slug-step"
+import { EditorStep } from "./steps/editor-step"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -433,336 +427,52 @@ export default function PublishComponentForm() {
       <Form {...form}>
         <div className="flex w-full h-full items-center justify-center">
           <AnimatePresence>
-            <div className={`flex gap-4 items-center h-full w-full mt-2`}>
+            <div className={`flex gap-4 items-center justify-center h-full w-full mt-2`}>
               <div
                 className={cn(
                   "flex flex-col scrollbar-hide items-start gap-2 py-8 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[450px]",
                 )}
               >
                 {formStep === "nameSlugForm" && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="flex flex-col justify-center w-full"
-                  >
-                    <h2 className="text-3xl font-bold mb-4">
-                      Publish your component
-                    </h2>
-                    {isAdmin && (
-                      <div className="flex flex-col gap-2 mb-4">
-                        <Label
-                          htmlFor="publish-as"
-                          className="block text-sm font-medium"
-                        >
-                          Publish as (admin only)
-                        </Label>
-                        <Input
-                          id="publish-as"
-                          placeholder="Enter username"
-                          value={publishAsUsername}
-                          onChange={(e) =>
-                            form.setValue("publish_as_username", e.target.value)
-                          }
-                        />
-                      </div>
-                    )}
-                    <NameSlugForm
-                      form={form}
-                      publishAsUserId={publishAsUser?.id}
-                      isSlugReadOnly={false}
-                      placeholderName={"Button"}
-                    />
-                    <Button
-                      className="mt-4"
-                      disabled={
-                        !form.watch("name") || !form.watch("slug_available")
-                      }
-                      size="lg"
-                      onClick={() => setFormStep("code")}
-                    >
-                      Continue
-                    </Button>
-                  </motion.div>
+                  <NameSlugStep
+                    form={form}
+                    isAdmin={isAdmin}
+                    publishAsUsername={publishAsUsername}
+                    publishAsUser={publishAsUser}
+                    onContinue={() => setFormStep("code")}
+                    onPublishAsChange={(username) =>
+                      form.setValue("publish_as_username", username)
+                    }
+                  />
                 )}
                 {formStep === "code" && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.3, delay: 0.3 }}
-                    className="w-full"
-                  >
-                    <FormField
-                      control={form.control}
-                      name="code"
-                      render={({ field }) => (
-                        <FormItem className="h-full w-full">
-                          <Label>Component code</Label>
-                          <FormControl>
-                            <motion.div
-                              className="flex flex-col relative w-full"
-                              animate={{
-                                height: "70vh",
-                              }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <Editor
-                                defaultLanguage="typescript"
-                                defaultValue={field.value}
-                                onChange={(value) =>
-                                  field.onChange(value || "")
-                                }
-                                theme={
-                                  isDarkTheme ? "github-dark" : "github-light"
-                                }
-                                options={{
-                                  minimap: { enabled: false },
-                                  scrollBeyondLastLine: false,
-                                  fontSize: 14,
-                                  lineNumbers: "off",
-                                  folding: true,
-                                  wordWrap: "on",
-                                  automaticLayout: true,
-                                  padding: { top: 16, bottom: 16 },
-                                  scrollbar: {
-                                    vertical: "visible",
-                                    horizontal: "visible",
-                                    verticalScrollbarSize: 8,
-                                    horizontalScrollbarSize: 8,
-                                    useShadows: false,
-                                  },
-                                  overviewRulerLanes: 0,
-                                  hideCursorInOverviewRuler: true,
-                                  overviewRulerBorder: false,
-                                  renderLineHighlight: "none",
-                                  contextmenu: false,
-                                  formatOnPaste: false,
-                                  formatOnType: false,
-                                  quickSuggestions: false,
-                                  suggest: {
-                                    showKeywords: false,
-                                    showSnippets: false,
-                                  },
-                                  renderValidationDecorations: "off",
-                                  hover: { enabled: false },
-                                  inlayHints: { enabled: "off" },
-                                  occurrencesHighlight: "off",
-                                  selectionHighlight: false,
-                                }}
-                                beforeMount={(monaco) => {
-                                  monaco.editor.defineTheme("github-dark", {
-                                    base: "vs-dark",
-                                    inherit: true,
-                                    rules: [],
-                                    colors: {
-                                      "editor.background": "#00000000",
-                                      "editor.foreground": "#c9d1d9",
-                                      "editor.lineHighlightBackground":
-                                        "#161b22",
-                                      "editorLineNumber.foreground": "#6e7681",
-                                      "editor.selectionBackground": "#163356",
-                                      "scrollbarSlider.background": "#24292f40",
-                                      "scrollbarSlider.hoverBackground":
-                                        "#32383f60",
-                                      "scrollbarSlider.activeBackground":
-                                        "#424a5380",
-                                    },
-                                  })
-
-                                  monaco.editor.defineTheme("github-light", {
-                                    base: "vs",
-                                    inherit: true,
-                                    rules: [],
-                                    colors: {
-                                      "editor.background": "#00000000",
-                                      "editor.foreground": "#24292f",
-                                      "editor.lineHighlightBackground":
-                                        "#f6f8fa",
-                                      "editorLineNumber.foreground": "#8c959f",
-                                      "editor.selectionBackground": "#b6e3ff",
-                                      "scrollbarSlider.background": "#24292f20",
-                                      "scrollbarSlider.hoverBackground":
-                                        "#32383f30",
-                                      "scrollbarSlider.activeBackground":
-                                        "#424a5340",
-                                    },
-                                  })
-                                }}
-                                className={cn(
-                                  "h-full w-full flex-grow rounded-md overflow-hidden",
-                                  "border border-input focus-within:ring-1 focus-within:ring-ring",
-                                )}
-                              />
-                              <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
-                                <Button
-                                  size="icon"
-                                  variant="outline"
-                                  onClick={() => setFormStep("nameSlugForm")}
-                                >
-                                  <ChevronLeftIcon className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  disabled={
-                                    !code?.length ||
-                                    !parsedCode.componentNames?.length
-                                  }
-                                  onClick={() => setFormStep("demoCode")}
-                                >
-                                  Continue
-                                </Button>
-                              </div>
-                            </motion.div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </motion.div>
+                  <EditorStep
+                    form={form}
+                    isDarkTheme={isDarkTheme}
+                    fieldName="code"
+                    label="Component code"
+                    value={code}
+                    isValid={
+                      !!code?.length && !!parsedCode.componentNames?.length
+                    }
+                    onBack={() => setFormStep("nameSlugForm")}
+                    onContinue={() => setFormStep("demoCode")}
+                  />
                 )}
                 {formStep === "demoCode" && (
-                  <>
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 20 }}
-                      transition={{ duration: 0.3, delay: 0.3 }}
-                      className="w-full"
-                    >
-                      <FormField
-                        control={form.control}
-                        name="demo_code"
-                        render={({ field }) => (
-                          <FormItem className="w-full relative">
-                            <Label>Demo code</Label>
-                            <FormControl>
-                              <motion.div
-                                className="relative"
-                                animate={{
-                                  height: "70vh",
-                                }}
-                                transition={{ duration: 0.3 }}
-                              >
-                                <Editor
-                                  defaultLanguage="typescript"
-                                  defaultValue={field.value}
-                                  onChange={(value) =>
-                                    field.onChange(value || "")
-                                  }
-                                  theme={
-                                    isDarkTheme ? "github-dark" : "github-light"
-                                  }
-                                  options={{
-                                    minimap: { enabled: false },
-                                    scrollBeyondLastLine: false,
-                                    fontSize: 14,
-                                    lineNumbers: "off",
-                                    folding: true,
-                                    wordWrap: "on",
-                                    automaticLayout: true,
-                                    padding: { top: 16, bottom: 16 },
-                                    scrollbar: {
-                                      vertical: "visible",
-                                      horizontal: "visible",
-                                      verticalScrollbarSize: 8,
-                                      horizontalScrollbarSize: 8,
-                                      useShadows: false,
-                                    },
-                                    overviewRulerLanes: 0,
-                                    hideCursorInOverviewRuler: true,
-                                    overviewRulerBorder: false,
-                                    renderLineHighlight: "none",
-                                    contextmenu: false,
-                                    formatOnPaste: false,
-                                    formatOnType: false,
-                                    quickSuggestions: false,
-                                    suggest: {
-                                      showKeywords: false,
-                                      showSnippets: false,
-                                    },
-                                    renderValidationDecorations: "off",
-                                    hover: { enabled: false },
-                                    inlayHints: { enabled: "off" },
-                                    occurrencesHighlight: "off",
-                                    selectionHighlight: false,
-                                  }}
-                                  beforeMount={(monaco) => {
-                                    monaco.editor.defineTheme("github-dark", {
-                                      base: "vs-dark",
-                                      inherit: true,
-                                      rules: [],
-                                      colors: {
-                                        "editor.background": "#00000000",
-                                        "editor.foreground": "#c9d1d9",
-                                        "editor.lineHighlightBackground":
-                                          "#161b22",
-                                        "editorLineNumber.foreground":
-                                          "#6e7681",
-                                        "editor.selectionBackground": "#163356",
-                                        "scrollbarSlider.background":
-                                          "#24292f40",
-                                        "scrollbarSlider.hoverBackground":
-                                          "#32383f60",
-                                        "scrollbarSlider.activeBackground":
-                                          "#424a5380",
-                                      },
-                                    })
-
-                                    monaco.editor.defineTheme("github-light", {
-                                      base: "vs",
-                                      inherit: true,
-                                      rules: [],
-                                      colors: {
-                                        "editor.background": "#00000000",
-                                        "editor.foreground": "#24292f",
-                                        "editor.lineHighlightBackground":
-                                          "#f6f8fa",
-                                        "editorLineNumber.foreground":
-                                          "#8c959f",
-                                        "editor.selectionBackground": "#b6e3ff",
-                                        "scrollbarSlider.background":
-                                          "#24292f20",
-                                        "scrollbarSlider.hoverBackground":
-                                          "#32383f30",
-                                        "scrollbarSlider.activeBackground":
-                                          "#424a5340",
-                                      },
-                                    })
-                                  }}
-                                  className={cn(
-                                    "h-full w-full flex-grow rounded-md overflow-hidden",
-                                    "border border-input focus-within:ring-1 focus-within:ring-ring",
-                                  )}
-                                />
-                                <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
-                                  <Button
-                                    size="icon"
-                                    variant="outline"
-                                    onClick={() => setFormStep("code")}
-                                  >
-                                    <ChevronLeftIcon className="w-4 h-4" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    disabled={
-                                      !demoCode?.length ||
-                                      !parsedCode.demoComponentNames?.length
-                                    }
-                                    onClick={() => setFormStep("customization")}
-                                  >
-                                    Continue
-                                  </Button>
-                                </div>
-                              </motion.div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </motion.div>
-                  </>
+                  <EditorStep
+                    form={form}
+                    isDarkTheme={isDarkTheme}
+                    fieldName="demo_code"
+                    label="Demo code"
+                    value={demoCode}
+                    isValid={
+                      !!demoCode?.length &&
+                      !!parsedCode.demoComponentNames?.length
+                    }
+                    onBack={() => setFormStep("code")}
+                    onContinue={() => setFormStep("customization")}
+                  />
                 )}
 
                 {formStep === "customization" && (
@@ -1021,24 +731,6 @@ export default function PublishComponentForm() {
                     </motion.div>
                   )}
               </div>
-
-              {formStep === "nameSlugForm" && (
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3, delay: 0.2 }}
-                  className="w-2/3 h-full px-10 flex items-center"
-                >
-                  <HeroVideoDialog
-                    videoSrc="https://www.youtube.com/embed/NXpSAnmleyE"
-                    thumbnailSrc="/tutorial-thumbnail.png"
-                    thumbnailAlt="Tutorial: How to publish components"
-                    animationStyle="from-right"
-                    className="w-full"
-                  />
-                </motion.div>
-              )}
 
               {formStep === "detailedForm" && isPreviewReady && (
                 <motion.div

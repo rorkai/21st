@@ -567,25 +567,71 @@ const NameSlugForm: React.FC<{
 
   return (
     <div className="flex flex-col gap-4 w-full">
-      <div className="w-full">
-        <Label htmlFor="name" className="block text-sm font-medium">
-          Name
-        </Label>
-        <Input
-          id="name"
-          ref={(e) => {
-            nameField.ref(e)
-            nameInputRef.current = e
-          }}
-          placeholder={`e.g. "${placeholderName.replace(/([a-z])([A-Z])/g, "$1 $2")}"`}
-          value={nameField.value}
-          onChange={(e) => {
-            nameField.onChange(e)
-          }}
-          onBlur={nameField.onBlur}
-          className="mt-1 w-full text-foreground"
-        />
+      <div className="flex gap-4 w-full">
+        <div className="flex-1">
+          <Label htmlFor="name" className="block text-sm font-medium">
+            Name
+          </Label>
+          <Input
+            id="name"
+            ref={(e) => {
+              nameField.ref(e)
+              nameInputRef.current = e
+            }}
+            placeholder={`e.g. "${placeholderName.replace(/([a-z])([A-Z])/g, "$1 $2")}"`}
+            value={nameField.value}
+            onChange={(e) => {
+              nameField.onChange(e)
+            }}
+            onBlur={nameField.onBlur}
+            className="mt-1 w-full text-foreground"
+          />
+        </div>
+
+        <div className="flex-1">
+          <Label htmlFor="component_slug" className="block text-sm font-medium">
+            Slug
+          </Label>
+          <Input
+            id="component_slug"
+            {...form.register("component_slug", { required: true })}
+            className="mt-1 w-full"
+            placeholder={`e.g. "${makeSlugFromName(placeholderName)}"`}
+            disabled={
+              isSlugReadOnly || (isSlugChecking && !isSlugManuallyEdited)
+            }
+            onChange={(e) => {
+              setIsSlugManuallyEdited(true)
+              form.setValue("component_slug", e.target.value)
+            }}
+          />
+        </div>
       </div>
+
+      {!slug && (
+        <p className="text-muted-foreground text-sm">
+          Slug is used in the URL of your component and file imports, and can't
+          be changed later
+        </p>
+      )}
+
+      {slugError && <p className="text-red-500 text-sm">{slugError.message}</p>}
+
+      {slug?.length > 0 && !slugError && isSlugManuallyEdited && (
+        <>
+          {isSlugChecking ? (
+            <p className="text-muted-foreground text-sm">
+              Checking slug availability...
+            </p>
+          ) : slugAvailable === true ? (
+            <p className="text-green-500 text-sm">This slug is available</p>
+          ) : (
+            <p className="text-red-500 text-sm">
+              You already have a component with this slug
+            </p>
+          )}
+        </>
+      )}
 
       <div className="w-full">
         <Label htmlFor="registry" className="block text-sm font-medium">
@@ -614,52 +660,6 @@ const NameSlugForm: React.FC<{
             </Select>
           )}
         />
-      </div>
-
-      <div className="w-full">
-        <Label htmlFor="component_slug" className="block text-sm font-medium">
-          Slug
-        </Label>
-        <Input
-          id="component_slug"
-          {...form.register("component_slug", { required: true })}
-          className="mt-1 w-full"
-          placeholder={`e.g. "${makeSlugFromName(placeholderName)}"`}
-          disabled={isSlugReadOnly || (isSlugChecking && !isSlugManuallyEdited)}
-          onChange={(e) => {
-            setIsSlugManuallyEdited(true)
-            form.setValue("component_slug", e.target.value)
-          }}
-        />
-
-        {!slug && (
-          <p className="text-muted-foreground text-sm mt-1">
-            Slug is used in the URL of your component and file imports, and
-            can't be changed later
-          </p>
-        )}
-
-        {slugError && (
-          <p className="text-red-500 text-sm mt-1">{slugError.message}</p>
-        )}
-
-        {slug?.length > 0 && !slugError && isSlugManuallyEdited && (
-          <>
-            {isSlugChecking ? (
-              <p className="text-muted-foreground text-sm mt-1">
-                Checking slug availability...
-              </p>
-            ) : slugAvailable === true ? (
-              <p className="text-green-500 text-sm mt-1">
-                This slug is available
-              </p>
-            ) : (
-              <p className="text-red-500 text-sm mt-1">
-                You already have a component with this slug
-              </p>
-            )}
-          </>
-        )}
       </div>
     </div>
   )

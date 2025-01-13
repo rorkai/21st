@@ -62,7 +62,7 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
     <>
       <header
         className={cn(
-          "flex fixed top-0 left-0 right-0 h-14 z-50 items-center justify-between px-4 py-3 text-foreground",
+          "flex fixed top-0 left-0 right-0 h-14 z-40 items-center justify-between px-4 py-3 text-foreground",
           {
             "border-b border-border/40 bg-background": !isPublishPage,
           },

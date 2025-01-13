@@ -4,7 +4,7 @@ export const editorThemes = {
     inherit: true,
     rules: [],
     colors: {
-      "editor.background": "#00000000",
+      "editor.background": "#1c1c1c",
       "editor.foreground": "#c9d1d9",
       "editor.lineHighlightBackground": "#161b22",
       "editorLineNumber.foreground": "#6e7681",
@@ -19,7 +19,7 @@ export const editorThemes = {
     inherit: true,
     rules: [],
     colors: {
-      "editor.background": "#00000000",
+      "editor.background": "#f5f5f5",
       "editor.foreground": "#24292f",
       "editor.lineHighlightBackground": "#f6f8fa",
       "editorLineNumber.foreground": "#8c959f",

@@ -26,8 +26,8 @@ export function NameSlugStep({
   onPublishAsChange,
 }: NameSlugStepProps) {
   return (
-    <div className="absolute inset-x-0 top-0 bg-background">
-      <Card className="w-[800px] mx-auto mt-20 p-8">
+    <div className="absolute inset-x-0 top-0 bg-background px-2 sm:px-4 md:px-4">
+      <Card className="w-full max-w-[800px] mx-auto mt-4 sm:mt-20 md:mt-20 p-4 sm:p-6 md:p-8">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

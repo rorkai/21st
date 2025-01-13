@@ -425,340 +425,80 @@ export default function PublishComponentForm() {
   return (
     <>
       <Form {...form}>
-        <div className="flex w-full h-full items-center justify-center">
-          <AnimatePresence>
-            <div className={`flex gap-4 items-center justify-center h-full w-full mt-2`}>
-              <div
-                className={cn(
-                  "flex flex-col scrollbar-hide items-start gap-2 py-8 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[450px]",
-                )}
-              >
-                {formStep === "nameSlugForm" && (
-                  <NameSlugStep
-                    form={form}
-                    isAdmin={isAdmin}
-                    publishAsUsername={publishAsUsername}
-                    publishAsUser={publishAsUser}
-                    onContinue={() => setFormStep("code")}
-                    onPublishAsChange={(username) =>
-                      form.setValue("publish_as_username", username)
-                    }
-                  />
-                )}
-                {formStep === "code" && (
-                  <EditorStep
-                    form={form}
-                    isDarkTheme={isDarkTheme}
-                    fieldName="code"
-                    label="Component code"
-                    value={code}
-                    isValid={
-                      !!code?.length && !!parsedCode.componentNames?.length
-                    }
-                    onBack={() => setFormStep("nameSlugForm")}
-                    onContinue={() => setFormStep("demoCode")}
-                  />
-                )}
-                {formStep === "demoCode" && (
-                  <EditorStep
-                    form={form}
-                    isDarkTheme={isDarkTheme}
-                    fieldName="demo_code"
-                    label="Demo code"
-                    value={demoCode}
-                    isValid={
-                      !!demoCode?.length &&
-                      !!parsedCode.demoComponentNames?.length
-                    }
-                    onBack={() => setFormStep("code")}
-                    onContinue={() => setFormStep("customization")}
-                  />
-                )}
-
-                {formStep === "customization" && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.3 }}
-                    className="w-full"
-                  >
-                    <div className="flex flex-col gap-4">
-                      <h2 className="text-3xl font-bold mt-10">
-                        Tailwind styles (optional)
-                      </h2>
-                      <p className="text-sm text-muted-foreground">
-                        Optionally extend shadcn/ui Tailwind theme to customize
-                        your component
-                      </p>
-
-                      <Tabs defaultValue="tailwind" className="w-full">
-                        <TabsList className="rounded-lg h-9">
-                          <TabsTrigger value="tailwind">
-                            tailwind.config.js
-                          </TabsTrigger>
-                          <TabsTrigger value="css">globals.css</TabsTrigger>
-                        </TabsList>
-
-                        <TabsContent value="tailwind">
-                          <div className="relative flex flex-col gap-2">
-                            <Editor
-                              defaultLanguage="javascript"
-                              value={customTailwindConfig}
-                              onChange={(value) =>
-                                setCustomTailwindConfig(value || "")
-                              }
-                              theme={
-                                isDarkTheme ? "github-dark" : "github-light"
-                              }
-                              options={{
-                                minimap: { enabled: false },
-                                scrollBeyondLastLine: false,
-                                fontSize: 14,
-                                lineNumbers: "off",
-                                folding: true,
-                                wordWrap: "on",
-                                automaticLayout: true,
-                                padding: { top: 16, bottom: 16 },
-                                scrollbar: {
-                                  vertical: "visible",
-                                  horizontal: "visible",
-                                  verticalScrollbarSize: 8,
-                                  horizontalScrollbarSize: 8,
-                                  useShadows: false,
-                                },
-                                overviewRulerLanes: 0,
-                                hideCursorInOverviewRuler: true,
-                                overviewRulerBorder: false,
-                                renderLineHighlight: "none",
-                                contextmenu: false,
-                                formatOnPaste: false,
-                                formatOnType: false,
-                                quickSuggestions: false,
-                                suggest: {
-                                  showKeywords: false,
-                                  showSnippets: false,
-                                },
-                                renderValidationDecorations: "off",
-                                hover: { enabled: false },
-                                inlayHints: { enabled: "off" },
-                                occurrencesHighlight: "off",
-                                selectionHighlight: false,
-                              }}
-                              className={cn(
-                                "h-[500px] w-full rounded-md overflow-hidden",
-                                "border border-input focus-within:ring-1 focus-within:ring-ring",
-                              )}
-                            />
-                            <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
-                              <Button
-                                size="icon"
-                                variant="outline"
-                                onClick={() => setFormStep("demoCode")}
-                              >
-                                <ChevronLeftIcon className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => setFormStep("detailedForm")}
-                              >
-                                {(customTailwindConfig?.length ?? 0) > 0 ||
-                                (customGlobalCss?.length ?? 0) > 0
-                                  ? "Continue"
-                                  : "Skip"}
-                              </Button>
-                            </div>
-                          </div>
-                        </TabsContent>
-
-                        <TabsContent value="css">
-                          <div className="relative flex flex-col gap-2">
-                            <Editor
-                              defaultLanguage="css"
-                              value={customGlobalCss}
-                              onChange={(value) =>
-                                setCustomGlobalCss(value || "")
-                              }
-                              theme={
-                                isDarkTheme ? "github-dark" : "github-light"
-                              }
-                              options={{
-                                minimap: { enabled: false },
-                                scrollBeyondLastLine: false,
-                                fontSize: 14,
-                                lineNumbers: "off",
-                                folding: true,
-                                wordWrap: "on",
-                                automaticLayout: true,
-                                padding: { top: 16, bottom: 16 },
-                                scrollbar: {
-                                  vertical: "visible",
-                                  horizontal: "visible",
-                                  verticalScrollbarSize: 8,
-                                  horizontalScrollbarSize: 8,
-                                  useShadows: false,
-                                },
-                                overviewRulerLanes: 0,
-                                hideCursorInOverviewRuler: true,
-                                overviewRulerBorder: false,
-                                renderLineHighlight: "none",
-                                contextmenu: false,
-                                formatOnPaste: false,
-                                formatOnType: false,
-                                quickSuggestions: false,
-                                suggest: {
-                                  showKeywords: false,
-                                  showSnippets: false,
-                                },
-                                renderValidationDecorations: "off",
-                                hover: { enabled: false },
-                                inlayHints: { enabled: "off" },
-                                occurrencesHighlight: "off",
-                                selectionHighlight: false,
-                              }}
-                              className={cn(
-                                "h-[500px] w-full rounded-md overflow-hidden",
-                                "border border-input focus-within:ring-1 focus-within:ring-ring",
-                              )}
-                            />
-                            <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
-                              <Button
-                                size="icon"
-                                variant="outline"
-                                onClick={() => setFormStep("demoCode")}
-                              >
-                                <ChevronLeftIcon className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => setFormStep("detailedForm")}
-                              >
-                                Continue
-                              </Button>
-                            </div>
-                          </div>
-                        </TabsContent>
-                      </Tabs>
-                    </div>
-                  </motion.div>
-                )}
-
-                {formStep === "detailedForm" &&
-                  unknownDependencies?.length > 0 && (
-                    <ResolveUnknownDependenciesAlertForm
-                      unknownDependencies={unknownDependencies}
-                      onBack={() => setFormStep("customization")}
-                      onDependenciesResolved={(resolvedDependencies) => {
-                        form.setValue(
-                          "unknown_dependencies",
-                          unknownDependencies.filter(
-                            (dependency) =>
-                              !resolvedDependencies
-                                .map((d) => d.slug)
-                                .includes(dependency.slugWithUsername),
-                          ),
-                        )
-                        form.setValue("direct_registry_dependencies", [
-                          ...new Set([
-                            ...form.getValues("direct_registry_dependencies"),
-                            ...resolvedDependencies
-                              .filter((d) => !d.isDemoDependency)
-                              .map((d) => `${d.username}/${d.slug}`),
-                          ]),
-                        ])
-                        form.setValue("demo_direct_registry_dependencies", [
-                          ...new Set([
-                            ...form.getValues(
-                              "demo_direct_registry_dependencies",
-                            ),
-                            ...resolvedDependencies
-                              .filter((d) => d.isDemoDependency)
-                              .map((d) => `${d.username}/${d.slug}`),
-                          ]),
-                        ])
-                      }}
-                    />
-                  )}
-
-                {formStep === "detailedForm" &&
-                  unknownDependencies?.length === 0 && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.3, delay: 0.3 }}
-                      className="w-full flex flex-col gap-4"
-                    >
-                      <EditCodeFileCard
-                        iconSrc={
-                          isDarkTheme ? "/tsx-file-dark.svg" : "/tsx-file.svg"
-                        }
-                        mainText={`${form.getValues("name")} code`}
-                        subText={`${parsedCode.componentNames.slice(0, 2).join(", ")}${parsedCode.componentNames.length > 2 ? ` +${parsedCode.componentNames.length - 2}` : ""}`}
-                        onEditClick={() => {
-                          setFormStep("code")
-                          codeInputRef.current?.focus()
-                        }}
-                      />
-                      <EditCodeFileCard
-                        iconSrc={
-                          isDarkTheme ? "/demo-file-dark.svg" : "/demo-file.svg"
-                        }
-                        mainText="Demo code"
-                        subText={`${parsedCode.demoComponentNames.slice(0, 2).join(", ")}${parsedCode.demoComponentNames.length > 2 ? ` +${parsedCode.demoComponentNames.length - 2}` : ""}`}
-                        onEditClick={() => {
-                          setFormStep("demoCode")
-                          setTimeout(() => {
-                            demoCodeTextAreaRef.current?.focus()
-                          }, 0)
-                        }}
-                      />
-                      <EditCodeFileCard
-                        iconSrc={
-                          isDarkTheme ? "/css-file-dark.svg" : "/css-file.svg"
-                        }
-                        mainText="Custom styles"
-                        subText="Tailwind config and globals.css"
-                        onEditClick={() => setFormStep("customization")}
-                      />
-                      <ComponentDetailsForm
-                        isEditMode={false}
-                        form={form}
-                        handleSubmit={handleSubmit}
-                        isSubmitting={isSubmitting}
-                        hotkeysEnabled={!isSuccessDialogOpen}
-                      />
-                    </motion.div>
-                  )}
-              </div>
-
-              {formStep === "detailedForm" && isPreviewReady && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3, delay: 3 }}
-                  className="w-2/3 h-full py-4"
+        {formStep === "code" && (
+          <div className="flex flex-col h-screen w-full absolute left-0 right-0">
+            <div className="flex items-center justify-between px-4 h-14 border-b bg-background z-50 pointer-events-auto">
+              <div className="rounded-full w-8 h-8 bg-foreground" />
+              <div className="flex-1" />
+              <div className="text-center font-medium mr-8">{componentSlug}.tsx</div>
+              <div className="flex items-center gap-2 flex-1 justify-end">
+                <Button
+                  size="icon"
+                  variant="outline"
+                  onClick={() => setFormStep("nameSlugForm")}
                 >
-                  <React.Suspense fallback={<LoadingSpinner />}>
-                    <PublishComponentPreview
-                      code={code}
-                      demoCode={demoCode}
-                      slugToPublish={componentSlug}
-                      registryToPublish={registryToPublish}
-                      directRegistryDependencies={[
-                        ...directRegistryDependencies,
-                        ...demoDirectRegistryDependencies,
-                      ]}
-                      isDarkTheme={isDarkTheme}
-                      customTailwindConfig={customTailwindConfig}
-                      customGlobalCss={customGlobalCss}
-                    />
-                  </React.Suspense>
-                </motion.div>
-              )}
-              {formStep === "code" && <CodeGuidelinesAlert />}
-              {formStep === "demoCode" && (
+                  <ChevronLeftIcon className="w-4 h-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={!code?.length || !parsedCode.componentNames?.length}
+                  onClick={() => setFormStep("demoCode")}
+                >
+                  Continue
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex h-[calc(100vh-3.5rem)]">
+              <div className="w-1/2 border-r pointer-events-auto">
+                <EditorStep
+                  form={form}
+                  isDarkTheme={isDarkTheme}
+                  fieldName="code"
+                  value={code}
+                  onChange={(value) => form.setValue("code", value)}
+                />
+              </div>
+              <div className="w-1/2 p-8 pointer-events-auto">
+                <CodeGuidelinesAlert />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {formStep === "demoCode" && (
+          <div className="flex flex-col h-screen w-full absolute left-0 right-0">
+            <div className="flex items-center justify-between px-4 h-14 border-b bg-background z-50 pointer-events-auto">
+              <div className="rounded-full w-8 h-8 bg-foreground" />
+              <div className="flex-1" />
+              <div className="text-center font-medium mr-8">
+                {componentSlug}.demo.tsx
+              </div>
+              <div className="flex items-center gap-2 flex-1 justify-end">
+                <Button
+                  size="icon"
+                  variant="outline"
+                  onClick={() => setFormStep("code")}
+                >
+                  <ChevronLeftIcon className="w-4 h-4" />
+                </Button>
+                <Button size="sm" onClick={() => setFormStep("customization")}>
+                  Continue
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex h-[calc(100vh-3.5rem)]">
+              <div className="w-1/2 border-r pointer-events-auto">
+                <EditorStep
+                  form={form}
+                  isDarkTheme={isDarkTheme}
+                  fieldName="demo_code"
+                  value={demoCode}
+                  onChange={(value) => form.setValue("demo_code", value)}
+                />
+              </div>
+              <div className="w-1/2 p-8 pointer-events-auto">
                 <DemoComponentGuidelinesAlert
                   mainComponentName={
                     parsedCode.componentNames[0] ?? "MyComponent"
@@ -766,10 +506,265 @@ export default function PublishComponentForm() {
                   componentSlug={componentSlug}
                   registryToPublish={registryToPublish}
                 />
-              )}
+              </div>
             </div>
-          </AnimatePresence>
-        </div>
+          </div>
+        )}
+
+        {formStep === "nameSlugForm" && (
+          <div
+            className={cn(
+              "flex flex-col scrollbar-hide items-start gap-2 py-8 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[450px]",
+            )}
+          >
+            <NameSlugStep
+              form={form}
+              isAdmin={isAdmin}
+              publishAsUsername={publishAsUsername}
+              publishAsUser={publishAsUser}
+              onContinue={() => setFormStep("code")}
+              onPublishAsChange={(username) =>
+                form.setValue("publish_as_username", username)
+              }
+            />
+          </div>
+        )}
+
+        {formStep === "customization" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+            className="w-full"
+          >
+            <div className="flex flex-col gap-4">
+              <h2 className="text-3xl font-bold mt-10">
+                Tailwind styles (optional)
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Optionally extend shadcn/ui Tailwind theme to customize your
+                component
+              </p>
+
+              <Tabs defaultValue="tailwind" className="w-full">
+                <TabsList className="rounded-lg h-9">
+                  <TabsTrigger value="tailwind">tailwind.config.js</TabsTrigger>
+                  <TabsTrigger value="css">globals.css</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="tailwind">
+                  <div className="relative flex flex-col gap-2">
+                    <Editor
+                      defaultLanguage="javascript"
+                      value={customTailwindConfig}
+                      onChange={(value) => setCustomTailwindConfig(value || "")}
+                      theme={isDarkTheme ? "github-dark" : "github-light"}
+                      options={{
+                        minimap: { enabled: false },
+                        scrollBeyondLastLine: false,
+                        fontSize: 14,
+                        lineNumbers: "off",
+                        folding: true,
+                        wordWrap: "on",
+                        automaticLayout: true,
+                        padding: { top: 16, bottom: 16 },
+                        scrollbar: {
+                          vertical: "visible",
+                          horizontal: "visible",
+                          verticalScrollbarSize: 8,
+                          horizontalScrollbarSize: 8,
+                          useShadows: false,
+                        },
+                        overviewRulerLanes: 0,
+                        hideCursorInOverviewRuler: true,
+                        overviewRulerBorder: false,
+                        renderLineHighlight: "none",
+                        contextmenu: false,
+                        formatOnPaste: false,
+                        formatOnType: false,
+                        quickSuggestions: false,
+                        suggest: {
+                          showKeywords: false,
+                          showSnippets: false,
+                        },
+                        renderValidationDecorations: "off",
+                        hover: { enabled: false },
+                        inlayHints: { enabled: "off" },
+                        occurrencesHighlight: "off",
+                        selectionHighlight: false,
+                      }}
+                      className={cn(
+                        "h-[500px] w-full rounded-md overflow-hidden",
+                        "border border-input focus-within:ring-1 focus-within:ring-ring",
+                      )}
+                    />
+                    <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => setFormStep("demoCode")}
+                      >
+                        <ChevronLeftIcon className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => setFormStep("detailedForm")}
+                      >
+                        {(customTailwindConfig?.length ?? 0) > 0 ||
+                        (customGlobalCss?.length ?? 0) > 0
+                          ? "Continue"
+                          : "Skip"}
+                      </Button>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="css">
+                  <div className="relative flex flex-col gap-2">
+                    <Editor
+                      defaultLanguage="css"
+                      value={customGlobalCss}
+                      onChange={(value) => setCustomGlobalCss(value || "")}
+                      theme={isDarkTheme ? "github-dark" : "github-light"}
+                      options={{
+                        minimap: { enabled: false },
+                        scrollBeyondLastLine: false,
+                        fontSize: 14,
+                        lineNumbers: "off",
+                        folding: true,
+                        wordWrap: "on",
+                        automaticLayout: true,
+                        padding: { top: 16, bottom: 16 },
+                        scrollbar: {
+                          vertical: "visible",
+                          horizontal: "visible",
+                          verticalScrollbarSize: 8,
+                          horizontalScrollbarSize: 8,
+                          useShadows: false,
+                        },
+                        overviewRulerLanes: 0,
+                        hideCursorInOverviewRuler: true,
+                        overviewRulerBorder: false,
+                        renderLineHighlight: "none",
+                        contextmenu: false,
+                        formatOnPaste: false,
+                        formatOnType: false,
+                        quickSuggestions: false,
+                        suggest: {
+                          showKeywords: false,
+                          showSnippets: false,
+                        },
+                        renderValidationDecorations: "off",
+                        hover: { enabled: false },
+                        inlayHints: { enabled: "off" },
+                        occurrencesHighlight: "off",
+                        selectionHighlight: false,
+                      }}
+                      className={cn(
+                        "h-[500px] w-full rounded-md overflow-hidden",
+                        "border border-input focus-within:ring-1 focus-within:ring-ring",
+                      )}
+                    />
+                    <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => setFormStep("demoCode")}
+                      >
+                        <ChevronLeftIcon className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => setFormStep("detailedForm")}
+                      >
+                        Continue
+                      </Button>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </motion.div>
+        )}
+
+        {formStep === "detailedForm" && unknownDependencies?.length > 0 && (
+          <ResolveUnknownDependenciesAlertForm
+            unknownDependencies={unknownDependencies}
+            onBack={() => setFormStep("customization")}
+            onDependenciesResolved={(resolvedDependencies) => {
+              form.setValue(
+                "unknown_dependencies",
+                unknownDependencies.filter(
+                  (dependency) =>
+                    !resolvedDependencies
+                      .map((d) => d.slug)
+                      .includes(dependency.slugWithUsername),
+                ),
+              )
+              form.setValue("direct_registry_dependencies", [
+                ...new Set([
+                  ...form.getValues("direct_registry_dependencies"),
+                  ...resolvedDependencies
+                    .filter((d) => !d.isDemoDependency)
+                    .map((d) => `${d.username}/${d.slug}`),
+                ]),
+              ])
+              form.setValue("demo_direct_registry_dependencies", [
+                ...new Set([
+                  ...form.getValues("demo_direct_registry_dependencies"),
+                  ...resolvedDependencies
+                    .filter((d) => d.isDemoDependency)
+                    .map((d) => `${d.username}/${d.slug}`),
+                ]),
+              ])
+            }}
+          />
+        )}
+
+        {formStep === "detailedForm" && unknownDependencies?.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, delay: 0.3 }}
+            className="w-full flex flex-col gap-4"
+          >
+            <EditCodeFileCard
+              iconSrc={isDarkTheme ? "/tsx-file-dark.svg" : "/tsx-file.svg"}
+              mainText={`${form.getValues("name")} code`}
+              subText={`${parsedCode.componentNames.slice(0, 2).join(", ")}${parsedCode.componentNames.length > 2 ? ` +${parsedCode.componentNames.length - 2}` : ""}`}
+              onEditClick={() => {
+                setFormStep("code")
+                codeInputRef.current?.focus()
+              }}
+            />
+            <EditCodeFileCard
+              iconSrc={isDarkTheme ? "/demo-file-dark.svg" : "/demo-file.svg"}
+              mainText="Demo code"
+              subText={`${parsedCode.demoComponentNames.slice(0, 2).join(", ")}${parsedCode.demoComponentNames.length > 2 ? ` +${parsedCode.demoComponentNames.length - 2}` : ""}`}
+              onEditClick={() => {
+                setFormStep("demoCode")
+                setTimeout(() => {
+                  demoCodeTextAreaRef.current?.focus()
+                }, 0)
+              }}
+            />
+            <EditCodeFileCard
+              iconSrc={isDarkTheme ? "/css-file-dark.svg" : "/css-file.svg"}
+              mainText="Custom styles"
+              subText="Tailwind config and globals.css"
+              onEditClick={() => setFormStep("customization")}
+            />
+            <ComponentDetailsForm
+              isEditMode={false}
+              form={form}
+              handleSubmit={handleSubmit}
+              isSubmitting={isSubmitting}
+              hotkeysEnabled={!isSuccessDialogOpen}
+            />
+          </motion.div>
+        )}
       </Form>
       {isDebug && (
         <DebugInfoDisplay

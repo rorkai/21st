@@ -20,88 +20,73 @@ interface EditorStepProps {
   form: UseFormReturn<FormData>
   isDarkTheme: boolean
   fieldName: EditorFieldName
-  label: string
   value: string
-  isValid: boolean
-  onBack: () => void
-  onContinue: () => void
-  height?: string
-  language?: string
   onChange?: (value: string) => void
-  continueButtonText?: string
 }
 
 export function EditorStep({
   form,
   isDarkTheme,
   fieldName,
-  label,
   value,
-  isValid,
-  onBack,
-  onContinue,
-  height = "70vh",
-  language = "typescript",
   onChange,
-  continueButtonText = "Continue",
 }: EditorStepProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-      transition={{ duration: 0.3, delay: 0.3 }}
-      className="w-full"
-    >
-      <FormField
-        control={form.control}
-        name={fieldName}
-        render={({ field }) => (
-          <FormItem className="w-full relative">
-            {label && <Label>{label}</Label>}
-            <FormControl>
-              <motion.div
-                className="relative"
-                animate={{
-                  height,
-                }}
-                transition={{ duration: 0.3 }}
-              >
-                <Editor
-                  defaultLanguage={language}
-                  value={value}
-                  onChange={(value) => {
-                    onChange?.(value || "")
-                    field.onChange(value || "")
-                  }}
-                  theme={isDarkTheme ? "github-dark" : "github-light"}
-                  options={editorOptions}
-                  beforeMount={(monaco) => {
-                    monaco.editor.defineTheme("github-dark", editorThemes.dark)
-                    monaco.editor.defineTheme(
-                      "github-light",
-                      editorThemes.light,
-                    )
-                  }}
-                  className={cn(
-                    "h-full w-full flex-grow rounded-md overflow-hidden",
-                    "border border-input focus-within:ring-1 focus-within:ring-ring",
-                  )}
-                />
-                <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
-                  <Button size="icon" variant="outline" onClick={onBack}>
-                    <ChevronLeftIcon className="w-4 h-4" />
-                  </Button>
-                  <Button size="sm" disabled={!isValid} onClick={onContinue}>
-                    {continueButtonText}
-                  </Button>
-                </div>
-              </motion.div>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    </motion.div>
+    <FormField
+      control={form.control}
+      name={fieldName}
+      render={({ field }) => (
+        <FormItem className="h-full">
+          <FormControl>
+            <Editor
+              defaultLanguage="typescript"
+              value={value}
+              onChange={(value) => {
+                onChange?.(value || "")
+                field.onChange(value || "")
+              }}
+              theme={isDarkTheme ? "vs-dark" : "light"}
+              options={{
+                ...editorOptions,
+                roundedSelection: false,
+                minimap: { enabled: false },
+                lineNumbers: "on",
+                lineNumbersMinChars: 3,
+                scrollbar: {
+                  vertical: "visible",
+                  horizontal: "visible",
+                  verticalScrollbarSize: 8,
+                  horizontalScrollbarSize: 8,
+                  useShadows: false,
+                },
+                padding: { top: 16, bottom: 16 },
+                glyphMargin: false,
+                folding: true,
+                lineDecorationsWidth: 0,
+              }}
+              className="h-full w-full bg-muted"
+              beforeMount={(monaco) => {
+                monaco.editor.defineTheme("vs-dark", {
+                  base: "vs-dark",
+                  inherit: true,
+                  rules: [],
+                  colors: {
+                    "editor.background": "#1c1c1c", // --muted в dark режиме
+                  },
+                })
+                monaco.editor.defineTheme("light", {
+                  base: "vs",
+                  inherit: true,
+                  rules: [],
+                  colors: {
+                    "editor.background": "#f5f5f5", // --muted в light режиме
+                  },
+                })
+              }}
+            />
+          </FormControl>
+        </FormItem>
+      )}
+    />
   )
 }

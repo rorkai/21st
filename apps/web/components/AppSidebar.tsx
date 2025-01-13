@@ -186,7 +186,7 @@ export function AppSidebar() {
               href: "https://www.producthunt.com/posts/21st-dev-2",
               title: "We're on Product Hunt! 🎉",
               summary:
-                "Help us become Product of the Week by upvoting. Your support means a lot!",
+                "Help us become Product of the Month by upvoting. Your support means a lot!",
               image: "/product-of-the-day.png",
             },
           ]}

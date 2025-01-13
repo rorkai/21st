@@ -57,7 +57,7 @@ export function ProductHuntDialog() {
         <div className="space-y-6 px-6 pb-6 pt-3 bg-white dark:bg-white">
           <DialogHeader>
             <DialogTitle className="dark:text-black">
-              Help us become Product of the Week!
+              Help us become Product of the Month!
             </DialogTitle>
             <DialogDescription className="dark:text-gray-600">
               We are live on Product Hunt and would love your support!

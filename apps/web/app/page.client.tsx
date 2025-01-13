@@ -11,7 +11,8 @@ import {
   QuickFilterOption,
   SortOption,
   User,
-  ComponentWithUser,
+  DemoWithComponent,
+  Tag,
 } from "@/types/global"
 
 import { useClerkSupabaseClient } from "@/lib/clerk"
@@ -68,7 +69,7 @@ export function HomePageClient({
   if (tabCounts === undefined) {
     setTabCounts(initialTabsCounts)
   }
-  
+
   // But we need useLayoutEffect here to avoid race conditions
   useLayoutEffect(() => {
     if (sortBy === undefined) {
@@ -82,34 +83,29 @@ export function HomePageClient({
   useSetServerUserDataCookies()
 
   const { data, isLoading, isFetching, fetchNextPage, hasNextPage } =
-    useInfiniteQuery({
-      queryKey: [
-        "filtered-components",
-        quickFilter,
-        sortBy,
-        debouncedSearchQuery,
-      ],
+    useInfiniteQuery<{ data: DemoWithComponent[]; total_count: number }>({
+      queryKey: ["filtered-demos", quickFilter, sortBy, debouncedSearchQuery],
       queryFn: async ({ pageParam = 0 }) => {
         if (!quickFilter || !sortBy) {
-          console.error("No quick filter or sort by")
           return {
             data: [],
             total_count: 0,
           }
         }
+
         if (!debouncedSearchQuery) {
           const { data: filteredData, error } = await supabase.rpc(
-            "get_filtered_components",
+            "get_filtered_demos",
             {
-              p_quick_filter: quickFilter!,
-              p_sort_by: sortBy!,
+              p_quick_filter: quickFilter,
+              p_sort_by: sortBy,
               p_offset: Number(pageParam) * 24,
               p_limit: 24,
             },
           )
 
           if (error) {
-            throw new Error(error.message || `HTTP error: ${status}`)
+            throw new Error(error.message)
           }
 
           const data = filteredData || []
@@ -120,24 +116,27 @@ export function HomePageClient({
             }
           }
 
-          const components = data.map((item) => ({
-            ...item,
+          const demos = data.map((item) => ({
+            id: item.id,
+            name: item.name,
+            demo_code: item.demo_code,
+            preview_url: item.preview_url,
+            video_url: item.video_url,
+            compiled_css: item.compiled_css,
+            demo_dependencies: item.demo_dependencies,
+            demo_direct_registry_dependencies:
+              item.demo_direct_registry_dependencies,
+            pro_preview_image_url: item.pro_preview_image_url,
+            created_at: item.created_at,
+            updated_at: item.updated_at,
+            component_id: item.component_id,
+            component: item.component_data as Component,
             user: item.user_data as User,
-            compiled_css: null,
-            fts: null,
-            global_css_extension: null,
-            hunter_username: null,
-            is_paid: false,
-            payment_url: null,
-            price: 0,
-            pro_preview_image_url: null,
-            website_url: null,
-            tailwind_config_extension: null,
-            video_url: item.video_url || null,
-          })) as ComponentWithUser[]
+            tags: item.tags as Tag[],
+          })) as DemoWithComponent[]
 
           return {
-            data: components,
+            data: demos,
             total_count: data[0]?.total_count ?? 0,
           }
         }
@@ -161,47 +160,38 @@ export function HomePageClient({
           }
         }
 
-        const components = searchResults.map((result) => {
-          const userData = result.user_data as Record<string, unknown>
-          return {
+        // Преобразуем результаты поиска компонентов в формат DemoWithComponent
+        const demos = searchResults.map((result) => ({
+          id: result.id, // используем id компонента как id демо
+          name: result.name,
+          demo_code: result.demo_code,
+          preview_url: result.preview_url,
+          video_url: result.video_url,
+          compiled_css: result.compiled_css,
+          demo_dependencies: result.demo_dependencies,
+          demo_direct_registry_dependencies:
+            result.demo_direct_registry_dependencies,
+          pro_preview_image_url: result.pro_preview_image_url,
+          created_at: result.created_at,
+          updated_at: result.updated_at,
+          component_id: result.id,
+          component: {
             id: result.id,
-            component_names: result.component_names,
-            description: result.description,
-            code: result.code,
-            demo_code: result.demo_code,
-            created_at: result.created_at,
-            updated_at: result.updated_at,
-            user_id: result.user_id,
-            dependencies: result.dependencies,
-            is_public: result.is_public,
+            name: result.name,
+            component_slug: result.component_slug,
             downloads_count: result.downloads_count || 0,
             likes_count: result.likes_count,
-            component_slug: result.component_slug,
-            name: result.name,
-            demo_dependencies: result.demo_dependencies,
-            registry: result.registry,
-            direct_registry_dependencies: result.direct_registry_dependencies,
-            demo_direct_registry_dependencies:
-              result.demo_direct_registry_dependencies,
-            preview_url: result.preview_url,
             license: result.license,
-            compiled_css: null,
-            global_css_extension: null,
-            hunter_username: null,
-            is_paid: false,
-            payment_url: null,
-            price: 0,
-            pro_preview_image_url: null,
-            video_url: result.video_url,
-            website_url: null,
-            user: userData as User,
-            fts: null,
-          }
-        }) as ComponentWithUser[]
+            is_public: result.is_public,
+            user_id: result.user_id,
+          } as Component,
+          user: result.user_data as User,
+          tags: [],
+        })) as DemoWithComponent[]
 
         return {
-          data: components,
-          total_count: components.length,
+          data: demos,
+          total_count: demos.length,
         }
       },
       enabled: true,
@@ -220,7 +210,7 @@ export function HomePageClient({
       },
     })
 
-  const allComponents = data?.pages?.flatMap((d) => d.data)
+  const allDemos = data?.pages?.flatMap((d) => d.data)
 
   const showSkeleton = isLoading || !data?.pages?.[0]?.data?.length
   const showSpinner = isFetching && !showSkeleton
@@ -260,12 +250,8 @@ export function HomePageClient({
           </div>
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-9 list-none pb-10">
-            {allComponents?.map((component) => (
-              <ComponentCard
-                key={component.id}
-                component={component}
-                isLoading={false}
-              />
+            {allDemos?.map((demo) => (
+              <ComponentCard key={demo.id} demo={demo} isLoading={false} />
             ))}
           </div>
         )}

@@ -7,7 +7,7 @@ import { useClerkSupabaseClient } from "@/lib/clerk"
 import { useQuery } from "@tanstack/react-query"
 import { AnalyticsActivityType } from "@/types/global"
 
-import { Component, User } from "../types/global"
+import { Component, User, DemoWithComponent } from "../types/global"
 import ComponentPreviewImage from "./ComponentPreviewImage"
 import { ComponentVideoPreview } from "./ComponentVideoPreview"
 import { CopyComponentButton } from "./CopyComponentButton"
@@ -34,25 +34,30 @@ export function ComponentCardSkeleton() {
 
 export function ComponentCard({
   component,
+  demo,
   isLoading,
 }: {
   component?: Component & { user: User }
+  demo?: DemoWithComponent
   isLoading?: boolean
 }) {
-  if (isLoading || !component) {
+  if (isLoading || (!component && !demo)) {
     return <ComponentCardSkeleton />
   }
 
-  const componentUrl = `/${component.user.username}/${component.component_slug}`
+  const componentData = demo ? demo.component : component!
+  const userData = demo ? demo.user : component!.user
+
+  const componentUrl = `/${userData.username}/${componentData.component_slug}${demo ? `/${demo.id}` : ""}`
   const supabase = useClerkSupabaseClient()
 
   const { data: analytics } = useQuery({
-    queryKey: ["component-analytics", component.id],
+    queryKey: ["component-analytics", componentData.id],
     queryFn: async () => {
       const { data } = await supabase
         .from("mv_component_analytics")
         .select("component_id, count")
-        .eq("component_id", component.id)
+        .eq("component_id", componentData.id)
         .eq("activity_type", AnalyticsActivityType.COMPONENT_VIEW)
       return data
     },
@@ -65,40 +70,49 @@ export function ComponentCard({
     <div className="overflow-hidden">
       <Link href={componentUrl} className="block cursor-pointer">
         <div className="relative aspect-[4/3] mb-3 group">
-          <CopyComponentButton codeUrl={component.code} component={component} />
+          <CopyComponentButton
+            codeUrl={componentData.code}
+            component={{ ...componentData, user: userData }}
+          />
           <div className="absolute inset-0 rounded-lg overflow-hidden">
             <div className="relative w-full h-full">
               <div className="absolute inset-0" style={{ margin: "-1px" }}>
                 <ComponentPreviewImage
-                  src={component.preview_url || "/placeholder.svg"}
-                  alt={component.name}
+                  src={
+                    demo?.preview_url ||
+                    componentData.preview_url ||
+                    "/placeholder.svg"
+                  }
+                  alt={demo?.name || componentData.name}
                   fallbackSrc="/placeholder.svg"
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="absolute inset-0 bg-gradient-to-b from-foreground/0 to-foreground/5" />
             </div>
-            {component.video_url && (
-              <ComponentVideoPreview component={component} />
+            {(demo?.video_url || componentData.video_url) && (
+              <ComponentVideoPreview
+                component={{ ...componentData, user: userData }}
+                demo={demo}
+              />
             )}
           </div>
-          {component.video_url && (
+          {(demo?.video_url || componentData.video_url) && (
             <div
               className="absolute top-2 left-2 z-20 bg-background/90 backdrop-blur rounded-md px-2 py-1 pointer-events-none"
-              data-video-icon={`${component.id}`}
+              data-video-icon={`${componentData.id}`}
             >
               <Video size={16} className="text-foreground" />
             </div>
           )}
-          <CopyComponentButton codeUrl={component.code} component={component} />
         </div>
       </Link>
       <div className="flex items-center space-x-3">
         <UserAvatar
-          src={component.user.image_url || "/placeholder.svg"}
-          alt={component.user.name}
+          src={userData.image_url || "/placeholder.svg"}
+          alt={userData.name}
           size={24}
-          user={component.user}
+          user={userData}
           isClickable
         />
         <div className="flex items-center justify-between flex-grow min-w-0">
@@ -107,7 +121,7 @@ export function ComponentCard({
             className="block cursor-pointer min-w-0 flex-1 mr-3"
           >
             <h2 className="text-sm font-medium text-foreground truncate">
-              {component.name}
+              {demo?.name || componentData.name}
             </h2>
           </Link>
           <div className="flex items-center gap-3">
@@ -117,7 +131,7 @@ export function ComponentCard({
             </div>
             <div className="flex items-center text-xs text-muted-foreground whitespace-nowrap shrink-0 gap-1">
               <Heart size={14} className="text-muted-foreground" />
-              <span>{component.likes_count || 0}</span>
+              <span>{componentData.likes_count || 0}</span>
             </div>
           </div>
         </div>

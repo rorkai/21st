@@ -355,6 +355,109 @@ export type Database = {
           },
         ]
       }
+      demo_tags: {
+        Row: {
+          created_at: string | null
+          demo_id: number | null
+          id: number
+          tag_id: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          demo_id?: number | null
+          id?: never
+          tag_id?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          demo_id?: number | null
+          id?: never
+          tag_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demo_tags_demo_id_fkey"
+            columns: ["demo_id"]
+            isOneToOne: false
+            referencedRelation: "demos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demo_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demos: {
+        Row: {
+          compiled_css: string | null
+          component_id: number | null
+          created_at: string | null
+          demo_code: string
+          demo_dependencies: Json | null
+          demo_direct_registry_dependencies: Json | null
+          id: number
+          name: string | null
+          preview_url: string | null
+          pro_preview_image_url: string | null
+          updated_at: string | null
+          video_url: string | null
+        }
+        Insert: {
+          compiled_css?: string | null
+          component_id?: number | null
+          created_at?: string | null
+          demo_code: string
+          demo_dependencies?: Json | null
+          demo_direct_registry_dependencies?: Json | null
+          id?: never
+          name?: string | null
+          preview_url?: string | null
+          pro_preview_image_url?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          compiled_css?: string | null
+          component_id?: number | null
+          created_at?: string | null
+          demo_code?: string
+          demo_dependencies?: Json | null
+          demo_direct_registry_dependencies?: Json | null
+          id?: never
+          name?: string | null
+          preview_url?: string | null
+          pro_preview_image_url?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demos_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "component_dependencies_graph_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demos_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demos_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components_with_username"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tags: {
         Row: {
           id: number
@@ -671,6 +774,32 @@ export type Database = {
           video_url: string
           license: string
           user_data: Json
+          total_count: number
+        }[]
+      }
+      get_filtered_demos: {
+        Args: {
+          p_quick_filter: string
+          p_sort_by: string
+          p_offset: number
+          p_limit: number
+        }
+        Returns: {
+          id: number
+          name: string
+          demo_code: string
+          preview_url: string
+          video_url: string
+          compiled_css: string
+          demo_dependencies: Json
+          demo_direct_registry_dependencies: Json
+          pro_preview_image_url: string
+          created_at: string
+          updated_at: string
+          component_id: number
+          component_data: Json
+          user_data: Json
+          tags: Json
           total_count: number
         }[]
       }

@@ -1,4 +1,4 @@
-import { Component, Tag, User } from "@/types/global"
+import { Component, DemoWithComponent, QuickFilterOption, SortOption, Tag, User } from "@/types/global"
 import {
   UseMutationResult,
   useMutation,
@@ -13,6 +13,12 @@ import { Database } from "@/types/supabase"
 export const componentReadableDbFields = `
   *,
   user:users!user_id (*)
+`
+
+export const demoReadableDbFields = `
+  *,
+  component:components!component_id (*),
+  user:components!component_id(users!user_id(*))
 `
 
 export async function getComponent(
@@ -443,4 +449,28 @@ export function useHuntedComponents(username: string) {
     queryFn: () => getHuntedComponents(supabase, username),
     staleTime: Infinity,
   })
+}
+
+export async function getFilteredDemos(
+  supabase: SupabaseClient<Database>,
+  quickFilter: QuickFilterOption,
+  sortBy: SortOption,
+  offset: number,
+  limit: number = 24,
+) {
+  const { data, error } = await supabase
+    .rpc("get_filtered_demos", {
+      p_quick_filter: quickFilter,
+      p_sort_by: sortBy,
+      p_offset: offset,
+      p_limit: limit,
+    })
+    .returns<DemoWithComponent[]>()
+
+  if (error) {
+    console.error("Error fetching demos:", error)
+    throw error
+  }
+
+  return data
 }

@@ -9,6 +9,7 @@ import { setCookie } from "@/lib/cookies"
 import { AuroraBackground } from "./ui/aurora-background"
 import { Button } from "./ui/button"
 import { Icons } from "./icons"
+import { ProductHuntBadge, ProductOfTheDayBadge } from "./product-hunt.client"
 
 export function HeroSection() {
   const router = useRouter()
@@ -104,6 +105,11 @@ export function HeroSection() {
                 </span>
               </a>
             </Button>
+          </div>
+
+          <div className="flex flex-row gap-4 mt-24">
+            <ProductHuntBadge />
+            <ProductOfTheDayBadge />
           </div>
         </motion.div>
       </div>

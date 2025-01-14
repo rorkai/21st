@@ -55,6 +55,8 @@ import { Button } from "@/components/ui/button"
 import { useAtom } from "jotai"
 import { currentDemoIndexAtom, openAccordionAtom } from "@/atoms/publish"
 import { LoadingDialog } from "../LoadingDialog"
+import { DeleteDemoDialog } from "./delete-demo-dialog"
+import { Trash2 } from "lucide-react"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -643,13 +645,33 @@ export default function PublishComponentForm() {
     )
   }
 
+  const [demoToDelete, setDemoToDelete] = useState<{
+    index: number
+    name: string
+  } | null>(null)
+
   const handleDeleteDemo = (index: number) => {
     const demos = form.getValues().demos
     const newDemos = demos.filter((_, i) => i !== index)
-    form.setValue("demos", newDemos)
-    if (currentDemoIndex >= index) {
+
+    // If we're deleting the currently open demo, switch to the previous one
+    if (
+      openAccordion === `demo-${index}` ||
+      (index === 0 && openAccordion === "demo-info")
+    ) {
+      const newIndex = Math.max(0, index - 1)
+      setCurrentDemoIndex(newIndex)
+      setOpenAccordion(newIndex === 0 ? "demo-info" : `demo-${newIndex}`)
+    } else if (currentDemoIndex >= index) {
+      // If we're deleting a demo before the current one, update the index
       setCurrentDemoIndex(Math.max(0, currentDemoIndex - 1))
     }
+
+    // Update form after state changes
+    setTimeout(() => {
+      form.setValue("demos", newDemos)
+      setDemoToDelete(null)
+    }, 0)
   }
 
   useEffect(() => {
@@ -1098,27 +1120,17 @@ export default function PublishComponentForm() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity -mr-2 h-8 w-8"
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 ml-auto mr-1"
                                   onClick={(e) => {
                                     e.stopPropagation()
-                                    handleDeleteDemo(index)
+                                    const demo = form.getValues().demos[index]
+                                    setDemoToDelete({
+                                      index,
+                                      name: demo?.name || `Demo ${index + 1}`,
+                                    })
                                   }}
                                 >
-                                  <svg
-                                    width="15"
-                                    height="15"
-                                    viewBox="0 0 15 15"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="text-muted-foreground hover:text-destructive transition-colors"
-                                  >
-                                    <path
-                                      d="M5.5 1C5.22386 1 5 1.22386 5 1.5C5 1.77614 5.22386 2 5.5 2H9.5C9.77614 2 10 1.77614 10 1.5C10 1.22386 9.77614 1 9.5 1H5.5ZM3 3.5C3 3.22386 3.22386 3 3.5 3H11.5C11.7761 3 12 3.22386 12 3.5C12 3.77614 11.7761 4 11.5 4H3.5C3.22386 4 3 3.77614 3 3.5ZM3 5.5C3 5.22386 3.22386 5 3.5 5H11.5C11.7761 5 12 5.22386 12 5.5C12 5.77614 11.7761 6 11.5 6H3.5C3.22386 6 3 5.77614 3 5.5ZM3.5 7C3.22386 7 3 7.22386 3 7.5C3 7.77614 3.22386 8 3.5 8H11.5C11.7761 8 12 7.77614 12 7.5C12 7.22386 11.7761 7 11.5 7H3.5ZM3 9.5C3 9.22386 3.22386 9 3.5 9H11.5C11.7761 9 12 9.22386 12 9.5C12 9.77614 11.7761 10 11.5 10H3.5C3.22386 10 3 9.77614 3 9.5Z"
-                                      fill="currentColor"
-                                      fillRule="evenodd"
-                                      clipRule="evenodd"
-                                    />
-                                  </svg>
+                                  <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive transition-colors" />
                                 </Button>
                               </div>
                             </AccordionTrigger>
@@ -1199,6 +1211,12 @@ export default function PublishComponentForm() {
         onGoToComponent={handleGoToComponent}
       />
       <LoadingDialog isOpen={isLoadingDialogOpen} message={publishProgress} />
+      <DeleteDemoDialog
+        isOpen={!!demoToDelete}
+        onOpenChange={(open) => !open && setDemoToDelete(null)}
+        onConfirm={() => demoToDelete && handleDeleteDemo(demoToDelete.index)}
+        demoName={demoToDelete?.name || ""}
+      />
     </>
   )
 }

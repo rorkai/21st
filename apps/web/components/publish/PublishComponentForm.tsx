@@ -45,6 +45,13 @@ import { useCodeInputsAutoFocus } from "./hooks/use-code-inputs-auto-focus"
 import { DemoDetailsForm } from "./DemoDetailsForm"
 import { PublishHeader } from "./PublishHeader"
 import { FormStep } from "@/types/global"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -469,6 +476,26 @@ export default function PublishComponentForm() {
     setActiveCodeTab(value as CodeTab)
   }, [])
 
+  const isComponentInfoComplete = useCallback(() => {
+    const { description, tags, license } = form.getValues()
+    return !!description && tags.length > 0 && !!license
+  }, [form])
+
+  const isDemoInfoComplete = useCallback(() => {
+    const { demo_name } = form.getValues()
+    return !!demo_name && !!demoCode
+  }, [form, demoCode])
+
+  const [openAccordion, setOpenAccordion] = useState<string | undefined>(
+    "component-info",
+  )
+
+  useEffect(() => {
+    if (isComponentInfoComplete()) {
+      setOpenAccordion("demo-info")
+    }
+  }, [isComponentInfoComplete])
+
   return (
     <>
       <Form {...form}>
@@ -699,62 +726,145 @@ export default function PublishComponentForm() {
                 transition={{ duration: 0.3, delay: 0.3 }}
                 className="w-1/3 flex flex-col gap-4 overflow-y-auto p-4"
               >
-                <div className="space-y-4 sticky top-0 bg-background pt-4 z-10">
-                  <h2 className="text-lg font-semibold">Component</h2>
-                </div>
+                <div className="space-y-4">
+                  <Accordion
+                    type="single"
+                    value={openAccordion}
+                    onValueChange={setOpenAccordion}
+                    collapsible
+                    className="w-full"
+                  >
+                    <AccordionItem
+                      value="component-info"
+                      className="bg-background border-none"
+                    >
+                      <AccordionTrigger className="py-2 text-[15px] leading-6 hover:no-underline hover:bg-muted/50 rounded-md data-[state=open]:rounded-b-none transition-all duration-200 ease-in-out -mx-2 px-2">
+                        <div className="flex items-center gap-2">
+                          Component info
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "gap-1.5 text-xs font-medium",
+                              isComponentInfoComplete()
+                                ? "border-emerald-500/20"
+                                : "border-amber-500/20",
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "size-1.5 rounded-full",
+                                isComponentInfoComplete()
+                                  ? "bg-emerald-500"
+                                  : "bg-amber-500",
+                              )}
+                              aria-hidden="true"
+                            />
+                            {isComponentInfoComplete()
+                              ? "Complete"
+                              : "Required"}
+                          </Badge>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground">
+                        <div className="text-foreground">
+                          <ComponentDetailsForm
+                            form={form}
+                            handleSubmit={handleSubmit}
+                            isSubmitting={isSubmitting}
+                            hotkeysEnabled={!isSuccessDialogOpen}
+                          />
 
-                <div className="space-y-8">
-                  <ComponentDetailsForm
-                    form={form}
-                    handleSubmit={handleSubmit}
-                    isSubmitting={isSubmitting}
-                    hotkeysEnabled={!isSuccessDialogOpen}
-                  />
+                          <div className="space-y-3 mt-6">
+                            <EditCodeFileCard
+                              iconSrc={
+                                isDarkTheme
+                                  ? "/tsx-file-dark.svg"
+                                  : "/tsx-file.svg"
+                              }
+                              mainText={`${form.getValues("name")} code`}
+                              subText={`${parsedCode.componentNames.slice(0, 2).join(", ")}${parsedCode.componentNames.length > 2 ? ` +${parsedCode.componentNames.length - 2}` : ""}`}
+                              onEditClick={() => {
+                                handleStepChange("code")
+                                codeInputRef.current?.focus()
+                              }}
+                            />
+                            <EditCodeFileCard
+                              iconSrc={
+                                isDarkTheme
+                                  ? "/css-file-dark.svg"
+                                  : "/css-file.svg"
+                              }
+                              mainText="Custom styles"
+                              subText="Tailwind config and globals.css"
+                              onEditClick={() => {
+                                handleStepChange("code")
+                                setActiveCodeTab("tailwind")
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
 
-                  <div className="space-y-4">
-                    <EditCodeFileCard
-                      iconSrc={
-                        isDarkTheme ? "/tsx-file-dark.svg" : "/tsx-file.svg"
-                      }
-                      mainText={`${form.getValues("name")} code`}
-                      subText={`${parsedCode.componentNames.slice(0, 2).join(", ")}${parsedCode.componentNames.length > 2 ? ` +${parsedCode.componentNames.length - 2}` : ""}`}
-                      onEditClick={() => {
-                        handleStepChange("code")
-                        codeInputRef.current?.focus()
-                      }}
-                    />
-                    <EditCodeFileCard
-                      iconSrc={
-                        isDarkTheme ? "/css-file-dark.svg" : "/css-file.svg"
-                      }
-                      mainText="Custom styles"
-                      subText="Tailwind config and globals.css"
-                      onEditClick={() => {
-                        handleStepChange("code")
-                        setActiveCodeTab("tailwind")
-                      }}
-                    />
-                  </div>
-
-                  <div className="h-px bg-border" />
-
-                  <div className="space-y-4">
-                    <h2 className="text-lg font-semibold">Demo</h2>
-                    <EditCodeFileCard
-                      iconSrc={
-                        isDarkTheme ? "/demo-file-dark.svg" : "/demo-file.svg"
-                      }
-                      mainText="Demo code"
-                      subText={`${parsedCode.demoComponentNames.slice(0, 2).join(", ")}${parsedCode.demoComponentNames.length > 2 ? ` +${parsedCode.demoComponentNames.length - 2}` : ""}`}
-                      onEditClick={() => {
-                        handleStepChange("demoCode")
-                        setTimeout(() => {
-                          demoCodeTextAreaRef.current?.focus()
-                        }, 0)
-                      }}
-                    />
-                    <DemoDetailsForm form={form} />
-                  </div>
+                  <Accordion
+                    type="single"
+                    value={openAccordion}
+                    onValueChange={setOpenAccordion}
+                    collapsible
+                    className="w-full"
+                  >
+                    <AccordionItem
+                      value="demo-info"
+                      className="bg-background border-none"
+                    >
+                      <AccordionTrigger className="py-2 text-[15px] leading-6 hover:no-underline hover:bg-muted/50 rounded-md data-[state=open]:rounded-b-none transition-all duration-200 ease-in-out -mx-2 px-2">
+                        <div className="flex items-center gap-2">
+                          Demo
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "gap-1.5 text-xs font-medium",
+                              isDemoInfoComplete()
+                                ? "border-emerald-500/20"
+                                : "border-amber-500/20",
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "size-1.5 rounded-full",
+                                isDemoInfoComplete()
+                                  ? "bg-emerald-500"
+                                  : "bg-amber-500",
+                              )}
+                              aria-hidden="true"
+                            />
+                            {isDemoInfoComplete() ? "Complete" : "Required"}
+                          </Badge>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground">
+                        <div className="text-foreground space-y-4">
+                          <DemoDetailsForm form={form} />
+                          <EditCodeFileCard
+                            iconSrc={
+                              isDarkTheme
+                                ? "/demo-file-dark.svg"
+                                : "/demo-file.svg"
+                            }
+                            mainText="Demo code"
+                            subText={`${parsedCode.demoComponentNames.slice(0, 2).join(", ")}${parsedCode.demoComponentNames.length > 2 ? ` +${parsedCode.demoComponentNames.length - 2}` : ""}`}
+                            onEditClick={() => {
+                              handleStepChange("demoCode")
+                              setTimeout(() => {
+                                demoCodeTextAreaRef.current?.focus()
+                              }, 0)
+                            }}
+                          />
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                 </div>
               </motion.div>
 

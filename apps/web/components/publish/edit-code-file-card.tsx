@@ -20,7 +20,7 @@ export function EditCodeFileCard({
   return (
     <div
       className={cn(
-        "group relative flex items-center gap-4 p-3 pr-24",
+        "group relative flex items-center gap-4 p-2 pr-24",
         "border rounded-lg bg-card hover:bg-accent/5",
         "transition-all duration-200 ease-in-out",
         "hover:shadow-[0_2px_4px_rgba(0,0,0,0.02)] hover:border-border/80",

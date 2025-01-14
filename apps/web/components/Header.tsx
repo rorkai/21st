@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 
 import { atom } from "jotai"
 import {
@@ -40,6 +41,8 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
   const isMobile = useIsMobile()
   const { user, signOut } = useClerk()
   const [showUserProfile, setShowUserProfile] = useState(false)
+  const searchParams = useSearchParams()
+  const step = searchParams.get("step")
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -57,6 +60,10 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
       document.removeEventListener("keydown", handleKeyDown)
     }
   }, [])
+
+  if (isPublishPage && step) {
+    return null
+  }
 
   return (
     <>
@@ -82,11 +89,9 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
           {!isMobile && (
             <>
               <SignedIn>
-                {!isPublishPage && (
-                  <Button asChild className="ml-2">
-                    <Link href="/publish">Publish component</Link>
-                  </Button>
-                )}
+                <Button asChild className="ml-2">
+                  <Link href="/publish">Publish component</Link>
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger className="cursor-pointer rounded-full ml-2">
                     <UserAvatar

@@ -1,4 +1,5 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ChevronLeftIcon } from "lucide-react"
 import { FormStep } from "@/types/global"
@@ -26,7 +27,7 @@ export function PublishHeader({
 }: PublishHeaderProps) {
   if (formStep === "code") {
     return (
-      <div className="flex items-center justify-between min-h-12 border-b bg-background z-50 pointer-events-auto px-4">
+      <div className="flex items-center justify-between min-h-12 border-b bg-background z-50 pointer-events-auto px-4 sticky top-0">
         <div className="flex-1">
           <Tabs value={activeCodeTab} onValueChange={setActiveCodeTab}>
             <TabsList className="h-auto gap-2 rounded-none bg-transparent px-0 py-1 text-foreground">
@@ -51,7 +52,7 @@ export function PublishHeader({
             </TabsList>
           </Tabs>
         </div>
-        <div className="flex items-center gap-2 px-4">
+        <div className="flex items-center gap-2">
           <Button
             size="icon"
             variant="outline"
@@ -69,30 +70,33 @@ export function PublishHeader({
 
   if (formStep === "demoCode" || formStep === "demoDetails") {
     return (
-      <div className="flex items-center justify-between min-h-12 border-b bg-background z-50 pointer-events-auto px-4">
-        <div className="rounded-full w-7 h-7 bg-foreground" />
+      <div className="flex items-center justify-between min-h-12 border-b bg-background z-50 pointer-events-auto px-4 sticky top-0">
+        <Link
+          href="/"
+          className="flex items-center justify-center w-7 h-7 rounded-full cursor-pointer bg-foreground"
+        />
         <div className="flex-1" />
         <div className="text-center font-medium mr-8">
           {componentSlug}.demo.tsx
         </div>
         <div className="flex items-center gap-2 flex-1 justify-end">
-                  <div className="flex items-center gap-2 px-4">
-          <Button
-            size="icon"
-            variant="outline"
-            onClick={() => setFormStep("code")}
-          >
-            <ChevronLeftIcon className="w-4 h-4" />
-          </Button>
-          <Button
-            size="sm"
-            onClick={() =>
-              setFormStep(
-                formStep === "demoCode" ? "demoDetails" : "detailedForm",
-              )
-            }
-          >
-            Continue
+          <div className="flex items-center gap-2">
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={() => setFormStep("code")}
+            >
+              <ChevronLeftIcon className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              onClick={() =>
+                setFormStep(
+                  formStep === "demoCode" ? "demoDetails" : "detailedForm",
+                )
+              }
+            >
+              Continue
             </Button>
           </div>
         </div>
@@ -102,12 +106,15 @@ export function PublishHeader({
 
   if (formStep === "detailedForm") {
     return (
-      <div className="flex items-center justify-between min-h-12 border-b bg-background z-50 pointer-events-auto px-4">
-        <div className="rounded-full w-7 h-7 bg-foreground" />
+      <div className="flex items-center justify-between min-h-12 border-b bg-background z-50 pointer-events-auto px-4 sticky top-0">
+        <Link
+          href="/"
+          className="flex items-center justify-center w-7 h-7 rounded-full cursor-pointer bg-foreground"
+        />
         <div className="flex-1" />
         <div className="text-center font-medium mr-8">{componentSlug}.tsx</div>
         <div className="flex items-center gap-2 flex-1 justify-end">
-          <div className="flex items-center px-4">
+          <div className="flex items-center">
             <Button
               size="sm"
               onClick={handleSubmit}

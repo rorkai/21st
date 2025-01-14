@@ -27,7 +27,10 @@ import { cn } from "@/lib/utils"
 import {
   DebugInfoDisplay,
   DemoComponentGuidelinesAlert,
+  CodeGuidelinesAlert,
   ResolveUnknownDependenciesAlertForm,
+  GlobalStylesGuidelinesAlert,
+  TailwindGuidelinesAlert,
 } from "./alerts"
 import { Tables } from "@/types/supabase"
 import { LoadingSpinner } from "../LoadingSpinner"
@@ -493,6 +496,28 @@ export default function PublishComponentForm() {
                     />
                   </div>
                 )}
+                {activeCodeTab === "tailwind" && (
+                  <div className="h-full">
+                    <EditorStep
+                      form={form}
+                      isDarkTheme={isDarkTheme}
+                      fieldName="tailwind_config"
+                      value={customTailwindConfig || ""}
+                      onChange={(value) => setCustomTailwindConfig(value)}
+                    />
+                  </div>
+                )}
+                {activeCodeTab === "globals" && (
+                  <div className="h-full">
+                    <EditorStep
+                      form={form}
+                      isDarkTheme={isDarkTheme}
+                      fieldName="globals_css"
+                      value={customGlobalCss || ""}
+                      onChange={(value) => setCustomGlobalCss(value)}
+                    />
+                  </div>
+                )}
               </div>
               <div className="w-1/2 pointer-events-auto">
                 {isPreviewReady ? (
@@ -520,14 +545,14 @@ export default function PublishComponentForm() {
                     </React.Suspense>
                   </motion.div>
                 ) : (
-                  <div className="p-8">
-                    <DemoComponentGuidelinesAlert
-                      mainComponentName={
-                        parsedCode.componentNames[0] ?? "MyComponent"
-                      }
-                      componentSlug={componentSlug}
-                      registryToPublish={registryToPublish}
-                    />
+                  <div className="h-full p-8" >
+                    {activeCodeTab === "component" && <CodeGuidelinesAlert />}
+                    {activeCodeTab === "tailwind" && (
+                      <TailwindGuidelinesAlert />
+                    )}
+                    {activeCodeTab === "globals" && (
+                      <GlobalStylesGuidelinesAlert />
+                    )}
                   </div>
                 )}
               </div>
@@ -671,7 +696,7 @@ export default function PublishComponentForm() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3, delay: 0.3 }}
-                className="w-1/2 flex flex-col gap-4 max-h-[calc(100vh-2rem)] overflow-y-auto px-4"
+                className="w-1/2 flex flex-col gap-4 max-h-[calc(100vh-2rem)] overflow-y-auto p-4"
               >
                 <div className="space-y-4 sticky top-0 bg-background pt-4 z-10">
                   <h2 className="text-lg font-semibold">Component</h2>

@@ -25,7 +25,7 @@ export function HeaderServer({ text }: { text?: string }) {
 
 HeaderServer.SocialIcons = function SocialIcons() {
   return (
-    <div className="flex items-center">
+    <div className="flex items-center gap-1">
       <Link href="https://x.com/serafimcloud" target="_blank" rel="noreferrer">
         <Button
           variant="ghost"

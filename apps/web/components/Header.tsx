@@ -75,7 +75,7 @@ export function Header({
           <HeaderServer text={text} />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {!isMobile && <HeaderServer.ThemeToggle />}
           <HeaderServer.SocialIcons />
           {!isMobile && (

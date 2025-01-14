@@ -12,7 +12,7 @@ export default function PublishPage() {
         <title>Publish New Component | Component Library</title>
       </Head>
       <SignedIn>
-        <Header page="publish" />
+        <Header variant="publish" />
         <div className="flex flex-row items-center h-screen w-full py-4">
           <PublishComponentForm />
         </div>

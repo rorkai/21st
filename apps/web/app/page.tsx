@@ -145,7 +145,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <Header page="home" />
+      <Header variant="default" />
       <HomePageClient
         initialComponents={initialFilteredSortedComponents}
         initialSortBy={sortByPreference}

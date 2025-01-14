@@ -85,7 +85,7 @@ export default async function TagPage({ params }: TagPageProps) {
 
   return (
     <div className="container mx-auto px-4">
-      {tagInfo && <Header tagName={tagInfo?.name} page="components" />}
+      {tagInfo && <Header text={tagInfo?.name} />}
       <div className="mt-20">
         <TagPageContent
           components={components}

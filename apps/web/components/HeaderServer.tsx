@@ -6,27 +6,17 @@ import { GitHubStars } from "./GitHubStars"
 import { Button } from "@/components/ui/button"
 import { Twitter } from "lucide-react"
 
-export function HeaderServer({
-  tagName,
-  isHomePage,
-  isProPage,
-}: {
-  tagName?: string
-  isHomePage: boolean
-  isProPage?: boolean
-}) {
+export function HeaderServer({ text }: { text?: string }) {
   return (
     <div className="flex items-center">
       <Link
         href="/"
         className="flex items-center justify-center w-7 h-7 rounded-full cursor-pointer bg-foreground"
       />
-      {!isHomePage && (tagName || isProPage) && (
+      {text && (
         <>
           <span className="mx-2 text-muted-foreground">/</span>
-          <span className="text-[14px] font-medium">
-            {isProPage ? "Pro templates" : tagName}
-          </span>
+          <span className="text-[14px] font-medium">{text}</span>
         </>
       )}
     </div>

@@ -32,10 +32,13 @@ import { UserAvatar } from "./UserAvatar"
 
 export const searchQueryAtom = atom("")
 
-export function Header({ tagName, page }: { tagName?: string; page?: string }) {
-  const isHomePage = page === "home"
-  const isPublishPage = page === "publish"
-  const isProPage = page === "pro"
+export function Header({
+  text,
+  variant = "default",
+}: {
+  text?: string
+  variant?: "default" | "publish"
+}) {
   const inputRef = React.useRef<HTMLInputElement>(null)
   const isMobile = useIsMobile()
   const { user, signOut } = useClerk()
@@ -64,16 +67,12 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
         className={cn(
           "flex fixed top-0 left-0 right-0 h-14 z-50 items-center justify-between px-4 py-3 text-foreground",
           {
-            "border-b border-border/40 bg-background": !isPublishPage,
+            "border-b border-border/40 bg-background": variant !== "publish",
           },
         )}
       >
         <div className="flex items-center gap-4">
-          <HeaderServer
-            tagName={tagName}
-            isHomePage={isHomePage}
-            isProPage={isProPage}
-          />
+          <HeaderServer text={text} />
         </div>
 
         <div className="flex items-center gap-2">
@@ -82,7 +81,7 @@ export function Header({ tagName, page }: { tagName?: string; page?: string }) {
           {!isMobile && (
             <>
               <SignedIn>
-                {!isPublishPage && (
+                {variant !== "publish" && (
                   <Button asChild className="ml-2">
                     <Link href="/publish">Publish component</Link>
                   </Button>

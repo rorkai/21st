@@ -26,7 +26,7 @@ export function UserProfileClient({
 }: UserProfileClientProps) {
   return (
     <>
-      <Header page="profile" />
+      <Header />
       <UserProfileAnalytics
         username={user.username || ""}
         isManuallyAdded={user.manually_added}

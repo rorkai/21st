@@ -26,8 +26,7 @@ export default async function AuthorsPage() {
       )
     `,
     )
-    .not("username", "is", null)
-    .limit(100)
+    .limit(1000)
 
   if (error) {
     console.error(error)

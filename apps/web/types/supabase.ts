@@ -224,7 +224,7 @@ export type Database = {
           component_names: Json
           component_slug: string
           created_at: string
-          demo_code: string
+          demo_code: string | null
           demo_dependencies: Json | null
           demo_direct_registry_dependencies: Json
           dependencies: Json | null
@@ -257,7 +257,7 @@ export type Database = {
           component_names: Json
           component_slug: string
           created_at?: string
-          demo_code: string
+          demo_code?: string | null
           demo_dependencies?: Json | null
           demo_direct_registry_dependencies?: Json
           dependencies?: Json | null
@@ -290,7 +290,7 @@ export type Database = {
           component_names?: Json
           component_slug?: string
           created_at?: string
-          demo_code?: string
+          demo_code?: string | null
           demo_dependencies?: Json | null
           demo_direct_registry_dependencies?: Json
           dependencies?: Json | null
@@ -821,7 +821,7 @@ export type Database = {
           component_names: Json
           component_slug: string
           created_at: string
-          demo_code: string
+          demo_code: string | null
           demo_dependencies: Json | null
           demo_direct_registry_dependencies: Json
           dependencies: Json | null

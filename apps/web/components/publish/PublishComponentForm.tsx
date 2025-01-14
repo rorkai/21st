@@ -55,6 +55,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useAtom } from "jotai"
 import { currentDemoIndexAtom } from "@/atoms/publish"
+import { LoadingDialog } from "../LoadingDialog"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -280,29 +281,36 @@ export default function PublishComponentForm() {
     parseDependenciesFromCode()
   }, [code, demoCode])
 
+  const [publishProgress, setPublishProgress] = useState<string>("")
+  const [isLoadingDialogOpen, setIsLoadingDialogOpen] = useState(false)
+
   const onSubmit = async (data: FormData) => {
     console.log("Starting onSubmit with data:", {
       componentSlug: data.component_slug,
       demoCount: data.demos?.length,
       hasCode: !!data.code,
       userId: publishAsUser?.id,
+      demoData: data.demos.map((demo) => ({
+        hasName: !!demo.name,
+        hasDemoCode: !!demo.demo_code,
+        hasPreviewImage: !!demo.preview_image_file,
+        hasPreviewVideo: !!demo.preview_video_file,
+      })),
     })
 
     setPublishAttemptCount((count) => count + 1)
     setIsSubmitting(true)
+    setIsLoadingDialogOpen(true)
     try {
+      setPublishProgress("Uploading component files...")
       const baseFolder = `${publishAsUser?.id}/${data.component_slug}`
-      const currentDemo = data.demos[0]
 
-      console.log("Processing demo data:", {
-        hasCurrentDemo: !!currentDemo,
-        demoCode: !!currentDemo?.demo_code,
-        baseFolder,
-      })
+      if (!data.code) throw new Error("Component code is required")
+      if (!data.demos.length) throw new Error("At least one demo is required")
+      if (data.demos.some((demo) => !demo.demo_code))
+        throw new Error("Demo code is required for all demos")
 
-      if (!currentDemo) throw new Error("No demo data")
 
-      // Загружаем основные файлы компонента
       const [codeUrl, tailwindConfigUrl, globalCssUrl] = await Promise.all([
         uploadToR2({
           file: {
@@ -337,6 +345,13 @@ export default function PublishComponentForm() {
           : Promise.resolve(null),
       ])
 
+      console.log("Files uploaded successfully:", {
+        codeUrl,
+        hasTailwindConfig: !!tailwindConfigUrl,
+        hasGlobalCss: !!globalCssUrl,
+      })
+
+      setPublishProgress("Creating component...")
       const componentData = {
         name: data.name,
         component_names: parsedCode.componentNames,
@@ -354,15 +369,7 @@ export default function PublishComponentForm() {
         registry: data.registry,
         license: data.license,
         website_url: data.website_url,
-        demo_code: currentDemo.demo_code || "", // Adding demo_code here to satisfy the not-null constraint
       } as Tables<"components">
-
-      console.log("Preparing to insert component with data:", {
-        name: componentData.name,
-        hasCode: !!componentData.code,
-        hasDemoCode: !!componentData.demo_code,
-        userId: componentData.user_id,
-      })
 
       const { data: insertedComponent, error } = await client
         .from("components")
@@ -375,111 +382,133 @@ export default function PublishComponentForm() {
         throw error
       }
 
-      console.log("Successfully inserted component:", {
-        componentId: insertedComponent.id,
-        proceeding: "to demo creation",
-      })
-
-      // Create initial demo record in database
       if (!publishAsUser?.id) {
         throw new Error("User ID is required")
       }
 
-      const demoData: Omit<Tables<"demos">, "id"> = {
-        component_id: insertedComponent.id,
-        demo_code: "", // Will update after file upload
-        demo_dependencies: parsedCode.demoDependencies || {},
-        preview_url: "",
-        video_url: "",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        compiled_css: null,
-        pro_preview_image_url: null,
-        name: currentDemo.name,
-        demo_direct_registry_dependencies: null,
-        user_id: publishAsUser.id,
-      }
 
-      const { data: insertedDemo, error: demoError } = await client
-        .from("demos")
-        .insert(demoData)
-        .select()
-        .single()
-
-      if (demoError) throw demoError
-
-      // Теперь используем ID из базы данных для создания папки
-      const demoFolder = `${baseFolder}/${insertedDemo.id}`
-
-      // Загружаем файлы демо
-      const [demoCodeUrl, previewImageR2Url, videoR2Url] = await Promise.all([
-        uploadToR2({
-          file: {
-            name: "code.demo.tsx",
-            type: "text/plain",
-            textContent: currentDemo.demo_code,
-          },
-          fileKey: `${demoFolder}/code.demo.tsx`,
-          bucketName: "components-code",
-        }),
-        currentDemo.preview_image_file
-          ? uploadToR2({
-              file: {
-                name: "preview.png",
-                type: currentDemo.preview_image_file.type,
-                encodedContent: Buffer.from(
-                  await currentDemo.preview_image_file.arrayBuffer(),
-                ).toString("base64"),
-              },
-              fileKey: `${demoFolder}/preview.png`,
-              bucketName: "components-code",
-              contentType: currentDemo.preview_image_file.type,
-            })
-          : Promise.resolve(null),
-        currentDemo.preview_video_file
-          ? uploadToR2({
-              file: {
-                name: "video.mp4",
-                type: "video/mp4",
-                encodedContent: Buffer.from(
-                  await currentDemo.preview_video_file.arrayBuffer(),
-                ).toString("base64"),
-              },
-              fileKey: `${demoFolder}/video.mp4`,
-              bucketName: "components-code",
-              contentType: "video/mp4",
-            })
-          : Promise.resolve(null),
-      ])
-
-      // Обновляем запись демо с URL-ами файлов
-      const { error: updateError } = await client
-        .from("demos")
-        .update({
-          demo_code: demoCodeUrl,
-          preview_url: previewImageR2Url,
-          video_url: videoR2Url,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", insertedDemo.id)
-
-      if (updateError) throw updateError
-
-      if (validTags) {
-        await addTagsToComponent(
-          client,
-          insertedDemo.id,
-          validTags.filter((tag) => !!tag.slug) as Tag[],
+      for (const demo of data.demos) {
+        const demoIndex = data.demos.indexOf(demo)
+        setPublishProgress(
+          `Publishing demo ${demoIndex + 1} of ${data.demos.length}...`,
         )
+
+        const demoData: Omit<Tables<"demos">, "id"> = {
+          component_id: insertedComponent.id,
+          demo_code: "", // Will update after file upload
+          demo_dependencies: parsedCode.demoDependencies || {},
+          preview_url: "",
+          video_url: "",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          compiled_css: null,
+          pro_preview_image_url: null,
+          name: demo.name,
+          demo_direct_registry_dependencies:
+            demo.demo_direct_registry_dependencies || null,
+          user_id: publishAsUser.id,
+        }
+
+        const { data: insertedDemo, error: demoError } = await client
+          .from("demos")
+          .insert(demoData)
+          .select()
+          .single()
+
+        if (demoError) throw demoError
+
+        const demoFolder = `${baseFolder}/${insertedDemo.id}`
+
+        console.log(`Uploading files for demo ${demoIndex + 1}:`, {
+          hasDemoCode: !!demo.demo_code,
+          hasPreviewImage: !!demo.preview_image_file,
+          hasPreviewVideo: !!demo.preview_video_file,
+          demoFolder,
+        })
+
+
+        const [demoCodeUrl, previewImageR2Url, videoR2Url] = await Promise.all([
+          uploadToR2({
+            file: {
+              name: "code.demo.tsx",
+              type: "text/plain",
+              textContent: demo.demo_code,
+            },
+            fileKey: `${demoFolder}/code.demo.tsx`,
+            bucketName: "components-code",
+          }),
+          demo.preview_image_file &&
+          demo.preview_image_file.size > 0 &&
+          demo.preview_image_data_url
+            ? uploadToR2({
+                file: {
+                  name: "preview.png",
+                  type: demo.preview_image_file.type,
+                  encodedContent: demo.preview_image_data_url.replace(
+                    /^data:image\/(png|jpeg|jpg);base64,/,
+                    "",
+                  ),
+                },
+                fileKey: `${demoFolder}/preview.png`,
+                bucketName: "components-code",
+                contentType: demo.preview_image_file.type,
+              })
+            : Promise.resolve(null),
+          demo.preview_video_file &&
+          demo.preview_video_file.size > 0 &&
+          demo.preview_video_data_url
+            ? uploadToR2({
+                file: {
+                  name: "video.mp4",
+                  type: "video/mp4",
+                  encodedContent: demo.preview_video_data_url.replace(
+                    /^data:video\/mp4;base64,/,
+                    "",
+                  ),
+                },
+                fileKey: `${demoFolder}/video.mp4`,
+                bucketName: "components-code",
+                contentType: "video/mp4",
+              })
+            : Promise.resolve(null),
+        ])
+
+        console.log(`Demo ${demoIndex + 1} files uploaded:`, {
+          demoCodeUrl,
+          hasPreviewImage: !!previewImageR2Url,
+          hasPreviewVideo: !!videoR2Url,
+        })
+
+
+        const { error: updateDemoError } = await client
+          .from("demos")
+          .update({
+            demo_code: demoCodeUrl,
+            preview_url: previewImageR2Url,
+            video_url: videoR2Url,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", insertedDemo.id)
+
+        if (updateDemoError) throw updateDemoError
+
+        if (demo.tags?.length) {
+          await addTagsToComponent(
+            client,
+            insertedDemo.id,
+            demo.tags.filter((tag) => !!tag.slug) as Tag[],
+          )
+        }
       }
 
+      setPublishProgress("Done!")
       setIsSuccessDialogOpen(true)
       trackEvent(AMPLITUDE_EVENTS.PUBLISH_COMPONENT, {
         componentName: data.name,
         componentSlug: data.component_slug,
         userId: user?.id,
         hasDemo: true,
-        tagsCount: validTags?.length || 0,
+        demosCount: data.demos.length,
         timeSpentEditing: Date.now() - formStartTime,
         publishAttempts: publishAttemptCount,
       })
@@ -490,6 +519,8 @@ export default function PublishComponentForm() {
       )
     } finally {
       setIsSubmitting(false)
+      setPublishProgress("")
+      setIsLoadingDialogOpen(false)
     }
   }
 
@@ -616,6 +647,25 @@ export default function PublishComponentForm() {
     handleStepChange("demoCode")
   }
 
+  const isDemoComplete = (demoIndex: number) => {
+    const demo = form.getValues().demos[demoIndex]
+    return !!(
+      demo?.name &&
+      demo?.demo_code &&
+      demo?.tags?.length > 0 &&
+      demo?.preview_image_data_url
+    )
+  }
+
+  const handleDeleteDemo = (index: number) => {
+    const demos = form.getValues().demos
+    const newDemos = demos.filter((_, i) => i !== index)
+    form.setValue("demos", newDemos)
+    if (currentDemoIndex >= index) {
+      setCurrentDemoIndex(Math.max(0, currentDemoIndex - 1))
+    }
+  }
+
   return (
     <>
       <Form {...form}>
@@ -631,6 +681,7 @@ export default function PublishComponentForm() {
               isSubmitting={isSubmitting}
               isFormValid={isFormValid(form)}
               form={form}
+              publishProgress={publishProgress}
             />
             <div className="flex h-[calc(100vh-3rem)]">
               <div className="w-1/2 border-r pointer-events-auto">
@@ -719,6 +770,7 @@ export default function PublishComponentForm() {
               isSubmitting={isSubmitting}
               isFormValid={isFormValid(form)}
               form={form}
+              publishProgress={publishProgress}
             />
             <div className="flex h-[calc(100vh-3.5rem)]">
               <div className="w-1/2 border-r pointer-events-auto">
@@ -824,6 +876,8 @@ export default function PublishComponentForm() {
               isSubmitting={isSubmitting}
               isFormValid={isFormValid(form)}
               form={form}
+              publishProgress={publishProgress}
+              onAddDemo={handleAddNewDemo}
             />
             <div className="flex gap-8 w-full h-[calc(100vh-3rem)] overflow-hidden">
               <motion.div
@@ -982,11 +1036,60 @@ export default function PublishComponentForm() {
                           <AccordionItem
                             key={index}
                             value={`demo-${index}`}
-                            className="bg-background border-none"
+                            className="bg-background border-none group"
                           >
                             <AccordionTrigger className="py-2 text-[15px] leading-6 hover:no-underline hover:bg-muted/50 rounded-md data-[state=open]:rounded-b-none transition-all duration-200 ease-in-out -mx-2 px-2">
-                              <div className="flex items-center gap-2">
-                                Demo {index + 1}
+                              <div className="flex items-center gap-2 w-full">
+                                <div className="flex items-center gap-2 flex-1">
+                                  Demo {index + 1}
+                                  <Badge
+                                    variant="outline"
+                                    className={cn(
+                                      "gap-1.5 text-xs font-medium",
+                                      isDemoComplete(index)
+                                        ? "border-emerald-500/20"
+                                        : "border-amber-500/20",
+                                    )}
+                                  >
+                                    <span
+                                      className={cn(
+                                        "size-1.5 rounded-full",
+                                        isDemoComplete(index)
+                                          ? "bg-emerald-500"
+                                          : "bg-amber-500",
+                                      )}
+                                      aria-hidden="true"
+                                    />
+                                    {isDemoComplete(index)
+                                      ? "Complete"
+                                      : "Required"}
+                                  </Badge>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity -mr-2 h-8 w-8"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleDeleteDemo(index)
+                                  }}
+                                >
+                                  <svg
+                                    width="15"
+                                    height="15"
+                                    viewBox="0 0 15 15"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="text-muted-foreground hover:text-destructive transition-colors"
+                                  >
+                                    <path
+                                      d="M5.5 1C5.22386 1 5 1.22386 5 1.5C5 1.77614 5.22386 2 5.5 2H9.5C9.77614 2 10 1.77614 10 1.5C10 1.22386 9.77614 1 9.5 1H5.5ZM3 3.5C3 3.22386 3.22386 3 3.5 3H11.5C11.7761 3 12 3.22386 12 3.5C12 3.77614 11.7761 4 11.5 4H3.5C3.22386 4 3 3.77614 3 3.5ZM3 5.5C3 5.22386 3.22386 5 3.5 5H11.5C11.7761 5 12 5.22386 12 5.5C12 5.77614 11.7761 6 11.5 6H3.5C3.22386 6 3 5.77614 3 5.5ZM3.5 7C3.22386 7 3 7.22386 3 7.5C3 7.77614 3.22386 8 3.5 8H11.5C11.7761 8 12 7.77614 12 7.5C12 7.22386 11.7761 7 11.5 7H3.5ZM3 9.5C3 9.22386 3.22386 9 3.5 9H11.5C11.7761 9 12 9.22386 12 9.5C12 9.77614 11.7761 10 11.5 10H3.5C3.22386 10 3 9.77614 3 9.5Z"
+                                      fill="currentColor"
+                                      fillRule="evenodd"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                </Button>
                               </div>
                             </AccordionTrigger>
                             <AccordionContent>
@@ -1010,14 +1113,6 @@ export default function PublishComponentForm() {
                         ),
                     )}
                   </Accordion>
-
-                  <Button
-                    variant="outline"
-                    className="mt-4 w-full"
-                    onClick={handleAddNewDemo}
-                  >
-                    Add new demo
-                  </Button>
                 </div>
               </motion.div>
 
@@ -1072,6 +1167,7 @@ export default function PublishComponentForm() {
         onAddAnother={handleAddAnother}
         onGoToComponent={handleGoToComponent}
       />
+      <LoadingDialog isOpen={isLoadingDialogOpen} message={publishProgress} />
     </>
   )
 }

@@ -1,7 +1,7 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ChevronLeftIcon, Codepen } from "lucide-react"
+import { ChevronLeftIcon } from "lucide-react"
 import { FormStep } from "@/types/global"
 import { UseFormReturn } from "react-hook-form"
 import { FormData } from "./utils"
@@ -16,6 +16,7 @@ import { useState, useEffect } from "react"
 import { Icons } from "../icons"
 import { useAtom } from "jotai"
 import { currentDemoIndexAtom } from "@/atoms/publish"
+import { LoadingSpinner } from "../LoadingSpinner"
 
 interface PublishHeaderProps {
   formStep: FormStep
@@ -27,6 +28,8 @@ interface PublishHeaderProps {
   isSubmitting?: boolean
   isFormValid: boolean
   form?: UseFormReturn<FormData>
+  publishProgress: string
+  onAddDemo?: () => void
 }
 
 export function PublishHeader({
@@ -39,10 +42,12 @@ export function PublishHeader({
   isSubmitting,
   isFormValid,
   form,
+  publishProgress,
+  onAddDemo,
 }: PublishHeaderProps) {
   const [showDependenciesModal, setShowDependenciesModal] = useState(false)
   const [currentDemoIndex, setCurrentDemoIndex] = useAtom(currentDemoIndexAtom)
-  
+
   useEffect(() => {
     const demos = form?.getValues().demos || []
     if (currentDemoIndex >= demos.length) {
@@ -71,7 +76,7 @@ export function PublishHeader({
         if (!match?.[1]) return null
         const slug = match[1].replace(/\.tsx$/, "")
 
-        // Пропускаем текущий компонент и уже разрешенные зависимости
+
         if (
           slug === componentSlugToPublish ||
           currentDemoDeps.includes(`ui/${slug}`)
@@ -106,9 +111,8 @@ export function PublishHeader({
     const currentDemo = form.watch(`demos.${currentDemoIndex}`)
     const currentDemoCode = currentDemo?.demo_code || ""
 
-    // Проверяем, есть ли код
-    if (!currentDemoCode?.trim()) {
 
+    if (!currentDemoCode?.trim()) {
       return
     }
 
@@ -126,7 +130,7 @@ export function PublishHeader({
   }
 
   const handleStepChange = (newStep: FormStep) => {
-    // При переходе на demoCode и если это новое демо - очищаем его данные
+
     if (newStep === "demoCode") {
       const demos = form?.getValues("demos") || []
       const currentDemo = demos[currentDemoIndex]
@@ -141,7 +145,7 @@ export function PublishHeader({
           preview_video_file: new File([], "placeholder"),
           demo_direct_registry_dependencies: [],
         })
-        // Очищаем неизвестные зависимости при переходе к новому демо
+
         form?.setValue("unknown_dependencies", [])
       }
     }
@@ -153,7 +157,7 @@ export function PublishHeader({
     if (!form) return
 
     try {
-      // Фильтруем зависимости на общие и демо
+
       const nonDemoDependencies = resolvedDependencies.filter(
         (d) => !d.isDemoDependency,
       )
@@ -161,7 +165,7 @@ export function PublishHeader({
         (d) => d.isDemoDependency,
       )
 
-      // Обновляем общие зависимости компонента
+
       const currentDirectDeps =
         form.getValues("direct_registry_dependencies") || []
       const newDirectDeps = [
@@ -172,7 +176,7 @@ export function PublishHeader({
       ]
       form.setValue("direct_registry_dependencies", newDirectDeps)
 
-      // Обновляем зависимости текущего демо
+
       const currentDemoDeps =
         form.getValues(
           `demos.${currentDemoIndex}.demo_direct_registry_dependencies`,
@@ -188,10 +192,10 @@ export function PublishHeader({
         newDemoDeps,
       )
 
-      // Очищаем неизвестные зависимости
+
       form.setValue("unknown_dependencies", [])
 
-      // Закрываем модалку и переходим к деталям демо
+
       setShowDependenciesModal(false)
       setFormStep("demoDetails")
     } catch (error) {
@@ -338,22 +342,44 @@ export function PublishHeader({
         <div className="flex-1" />
         <div className="text-center font-medium mr-8">Create component</div>
         <div className="flex items-center gap-2 flex-1 justify-end">
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             <Button
+              variant="outline"
               size="sm"
-              onClick={handleSubmit}
-              disabled={isSubmitting || !isFormValid}
+              onClick={onAddDemo}
+              className="gap-2"
             >
-              {isSubmitting ? "Saving..." : "Add component"}
-              {!isSubmitting && isFormValid && (
-                <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border-muted-foreground/40 bg-muted-foreground/20 px-1.5 ml-1.5 font-sans text-[11px] text-muted leading-none opacity-100 flex">
-                  <span className="text-[11px] leading-none font-sans">
-                    {navigator?.platform?.toLowerCase()?.includes("mac")
-                      ? "⌘"
-                      : "Ctrl"}
-                  </span>
-                  ⏎
-                </kbd>
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 15 15"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="text-foreground"
+              >
+                <path
+                  d="M8 2.75C8 2.47386 7.77614 2.25 7.5 2.25C7.22386 2.25 7 2.47386 7 2.75V7H2.75C2.47386 7 2.25 7.22386 2.25 7.5C2.25 7.77614 2.47386 8 2.75 8H7V12.25C7 12.5261 7.22386 12.75 7.5 12.75C7.77614 12.75 8 12.5261 8 12.25V8H12.25C12.5261 8 12.75 7.77614 12.75 7.5C12.75 7.22386 12.5261 7 12.25 7H8V2.75Z"
+                  fill="currentColor"
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                />
+              </svg>
+              Add demo
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={!isFormValid || isSubmitting}
+              onClick={handleSubmit}
+              className="relative"
+            >
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <LoadingSpinner />
+                  <span>Publishing...</span>
+                </div>
+              ) : (
+                "Publish"
               )}
             </Button>
           </div>

@@ -67,7 +67,7 @@ export function EditorStep({
                   inherit: true,
                   rules: [],
                   colors: {
-                    "editor.background": "#1c1c1c", // --muted в dark режиме
+                    "editor.background": "#1c1c1c", 
                   },
                 })
                 monaco.editor.defineTheme("light", {
@@ -75,7 +75,7 @@ export function EditorStep({
                   inherit: true,
                   rules: [],
                   colors: {
-                    "editor.background": "#f5f5f5", // --muted в light режиме
+                    "editor.background": "#f5f5f5", 
                   },
                 })
               }}

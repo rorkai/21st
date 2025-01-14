@@ -5,6 +5,8 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
 import { useEffect, useRef, useState } from "react"
+import { atomWithStorage } from "jotai/utils"
+import { useAtom } from "jotai"
 
 export interface NewsArticle {
   href: string
@@ -13,12 +15,20 @@ export interface NewsArticle {
   image: string
 }
 
+const dismissedNewsAtom = atomWithStorage<string[]>("dismissedNews", [])
+
 const OFFSET_FACTOR = 4
 const SCALE_FACTOR = 0.03
 const OPACITY_FACTOR = 0.1
 
-export function News({ articles }: { articles: NewsArticle[] }) {
-  const [dismissedNews, setDismissedNews] = useState<string[]>([])
+export function News({
+  articles,
+  enableShowCompleted = false,
+}: {
+  articles: NewsArticle[]
+  enableShowCompleted?: boolean
+}) {
+  const [dismissedNews, setDismissedNews] = useAtom(dismissedNewsAtom)
   const cards = articles.filter(({ href }) => !dismissedNews.includes(href))
   const cardCount = cards.length
   const [showCompleted, setShowCompleted] = useState(cardCount > 0)
@@ -30,16 +40,22 @@ export function News({ articles }: { articles: NewsArticle[] }) {
     return () => clearTimeout(timeout)
   }, [cardCount])
 
-  return cards.length || showCompleted ? (
+  const isServer = typeof window === "undefined"
+  if (isServer) return null
+
+  return cards.length || (enableShowCompleted && showCompleted) ? (
     <div
       className="group overflow-hidden px-3 pb-3 pt-8"
       data-active={cardCount !== 0}
     >
       <div className="relative size-full">
-        {[...cards].reverse().map(({ href, title, summary, image }, idx) => (
-          <div
-            key={href}
-            className={cn(
+        {[...cards]
+          .filter(({ href }) => !dismissedNews.includes(href))
+          .reverse()
+          .map(({ href, title, summary, image }, idx) => (
+            <div
+              key={href}
+              className={cn(
               "absolute left-0 top-0 size-full scale-[var(--scale)] transition-[opacity,transform] duration-200",
               cardCount - idx > 3
                 ? [
@@ -73,10 +89,10 @@ export function News({ articles }: { articles: NewsArticle[] }) {
             />
           </div>
         ))}
-        <div className="pointer-events-none invisible" aria-hidden>
+        {/* <div className="pointer-events-none invisible" aria-hidden>
           <NewsCard title="Title" description="Description" />
-        </div>
-        {showCompleted && !cardCount && (
+        </div> */}
+        {enableShowCompleted && showCompleted && !cardCount && (
           <div
             className="animate-slide-up-fade absolute inset-0 flex size-full flex-col items-center justify-center gap-3 [animation-duration:1s]"
             style={{ "--offset": "10px" } as React.CSSProperties}

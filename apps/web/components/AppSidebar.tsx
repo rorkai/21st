@@ -201,6 +201,7 @@ export function AppSidebar() {
       </SidebarContent>
       <div className="fixed bottom-0 left-0 w-[240px] z-50">
         <News
+          enableShowCompleted={false}
           articles={[
             {
               href: "https://www.producthunt.com/posts/21st-dev-2",

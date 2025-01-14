@@ -57,3 +57,10 @@ export enum AnalyticsActivityType {
   COMPONENT_PROMPT_COPY = "component_prompt_copy",
   COMPONENT_CLI_DOWNLOAD = "component_cli_download",
 }
+
+export type FormStep =
+  | "nameSlugForm"
+  | "code"
+  | "demoCode"
+  | "demoDetails"
+  | "detailedForm"

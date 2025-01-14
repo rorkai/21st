@@ -1,9 +1,9 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef, useCallback } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { uploadToR2 } from "@/lib/r2"
 import { formSchema, FormData, isFormValid } from "./utils"
 import {
@@ -13,20 +13,10 @@ import {
   extractRegistryDependenciesFromImports,
   extractAmbigiousRegistryDependencies,
 } from "../../lib/parsers"
-import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { Form } from "@/components/ui/form"
 import { addTagsToComponent } from "@/lib/queries"
 import { ComponentDetailsForm } from "./ComponentDetailsForm"
-import { motion, AnimatePresence } from "framer-motion"
-import Image from "next/image"
+import { motion } from "framer-motion"
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import { useUser } from "@clerk/nextjs"
 import { useDebugMode } from "@/hooks/use-debug-mode"
@@ -35,7 +25,6 @@ import { PublishComponentPreview } from "./preview"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import {
-  CodeGuidelinesAlert,
   DebugInfoDisplay,
   DemoComponentGuidelinesAlert,
   ResolveUnknownDependenciesAlertForm,
@@ -43,18 +32,16 @@ import {
 import { Tables } from "@/types/supabase"
 import { LoadingSpinner } from "../LoadingSpinner"
 import { toast } from "sonner"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { usePublishAs } from "./hooks/use-publish-as"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
-import { HeroVideoDialog } from "@/components/ui/hero-video-dialog"
-import { ChevronLeftIcon } from "lucide-react"
-import { Editor } from "@monaco-editor/react"
 import { NameSlugStep } from "./steps/name-slug-step"
 import { EditorStep } from "./steps/editor-step"
 import { SuccessDialog } from "./success-dialog"
 import { EditCodeFileCard } from "./edit-code-file-card"
 import { useCodeInputsAutoFocus } from "./hooks/use-code-inputs-auto-focus"
 import { DemoDetailsForm } from "./DemoDetailsForm"
+import { PublishHeader } from "./PublishHeader"
+import { FormStep } from "@/types/global"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -64,17 +51,14 @@ export interface ParsedCodeData {
   demoComponentNames: string[]
 }
 
-type FormStep =
-  | "nameSlugForm"
-  | "code"
-  | "demoCode"
-  | "demoDetails"
-  | "detailedForm"
+type CodeTab = "component" | "tailwind" | "globals"
 
 export default function PublishComponentForm() {
   const { user } = useUser()
   const client = useClerkSupabaseClient()
   const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const isDebug = useDebugMode()
   const { resolvedTheme } = useTheme()
   const isDarkTheme = resolvedTheme === "dark"
@@ -115,38 +99,48 @@ export default function PublishComponentForm() {
   )
   const registryToPublish = form.watch("registry")
 
-  const [formStep, setFormStep] = useState<FormStep>("nameSlugForm")
   const isFirstRender = useRef(true)
-  const isNavigatingAway = useRef(false)
+  const [isNavigatingAway, setIsNavigatingAway] = useState(false)
+  const stepFromUrl = searchParams.get("step") as FormStep | null
+  const [formStep, setFormStep] = useState<FormStep>(
+    stepFromUrl || "nameSlugForm",
+  )
 
-  useEffect(() => {
-    const message = "You have unsaved changes. Are you sure you want to leave?"
-
-    if (formStep === "nameSlugForm") {
-      window.onbeforeunload = null
-      window.onpopstate = null
-      return
-    }
-
-    window.onpopstate = () => {
-      if (!isNavigatingAway.current && !window.confirm(message)) {
-        window.history.pushState(null, "", window.location.href)
+  const updateStepInUrl = useCallback(
+    (newStep: FormStep) => {
+      const params = new URLSearchParams(searchParams)
+      if (newStep === "nameSlugForm") {
+        params.delete("step")
       } else {
-        isNavigatingAway.current = true
-        router.back()
+        params.set("step", newStep)
       }
-    }
 
-    // Add history entry only on the first non-nameSlugForm step
-    if (isFirstRender.current) {
-      window.history.pushState(null, "", window.location.href)
-      isFirstRender.current = false
-    }
+      if (isFirstRender.current) {
+        window.history.pushState(null, "", window.location.href)
+        isFirstRender.current = false
+      }
 
-    return () => {
-      window.onpopstate = null
-    }
-  }, [formStep, router])
+      setIsNavigatingAway(true)
+
+      if (newStep === "nameSlugForm") {
+        router.replace(pathname)
+      } else {
+        router.push(`${pathname}?${params.toString()}`)
+      }
+
+      setIsNavigatingAway(false)
+    },
+    [pathname, router, searchParams],
+  )
+
+  const handleStepChange = useCallback(
+    (newStep: FormStep) => {
+      if (isNavigatingAway) return
+      setFormStep(newStep)
+      updateStepInUrl(newStep)
+    },
+    [updateStepInUrl, isNavigatingAway],
+  )
 
   const [parsedCode, setParsedCode] = useState<ParsedCodeData>({
     dependencies: {},
@@ -170,6 +164,35 @@ export default function PublishComponentForm() {
   const { isAdmin, user: publishAsUser } = usePublishAs({
     username: publishAsUsername ?? "",
   })
+
+  useEffect(() => {
+    const message = "You have unsaved changes. Are you sure you want to leave?"
+
+    if (formStep === "nameSlugForm") {
+      window.onbeforeunload = null
+      window.onpopstate = null
+      return
+    }
+
+    window.onpopstate = () => {
+      if (!isNavigatingAway && !window.confirm(message)) {
+        window.history.pushState(null, "", window.location.href)
+      } else {
+        setIsNavigatingAway(true)
+        router.back()
+      }
+    }
+
+    // Add history entry only on the first non-nameSlugForm step
+    if (isFirstRender.current) {
+      window.history.pushState(null, "", window.location.href)
+      isFirstRender.current = false
+    }
+
+    return () => {
+      window.onpopstate = null
+    }
+  }, [formStep, router])
 
   useEffect(() => {
     const parseDependenciesFromCode = () => {
@@ -436,62 +459,27 @@ export default function PublishComponentForm() {
     formStep === "detailedForm",
   )
 
-  const [activeCodeTab, setActiveCodeTab] = useState<
-    "component" | "tailwind" | "globals"
-  >("component")
+  const [activeCodeTab, setActiveCodeTab] = useState<CodeTab>("component")
 
-  const [tailwindConfig, setTailwindConfig] = useState("")
-  const [globalsCSS, setGlobalsCSS] = useState("")
+  const handleCodeTabChange = useCallback((value: string) => {
+    setActiveCodeTab(value as CodeTab)
+  }, [])
 
   return (
     <>
       <Form {...form}>
         {formStep === "code" && (
           <div className="flex flex-col h-screen w-full absolute left-0 right-0">
-            <div className="flex items-center justify-between h-12 border-b bg-background z-50 pointer-events-auto">
-              <div className="px-4 flex-1">
-                <Tabs
-                  value={activeCodeTab}
-                  onValueChange={(v) =>
-                    setActiveCodeTab(v as typeof activeCodeTab)
-                  }
-                >
-                  <TabsList className="h-auto gap-2 rounded-none bg-transparent px-0 py-1 text-foreground">
-                    <TabsTrigger
-                      value="component"
-                      className="relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-2 after:h-0.5 hover:bg-accent hover:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent"
-                    >
-                      {componentSlug}.tsx
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="tailwind"
-                      className="relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-2 after:h-0.5 hover:bg-accent hover:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent"
-                    >
-                      tailwind.config.js
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="globals"
-                      className="relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-2 after:h-0.5 hover:bg-accent hover:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent"
-                    >
-                      globals.css
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-              <div className="flex items-center gap-2 px-4">
-                <Button
-                  size="icon"
-                  variant="outline"
-                  onClick={() => setFormStep("nameSlugForm")}
-                >
-                  <ChevronLeftIcon className="w-4 h-4" />
-                </Button>
-                <Button size="sm" onClick={() => setFormStep("demoCode")}>
-                  Continue
-                </Button>
-              </div>
-            </div>
-
+            <PublishHeader
+              formStep={formStep}
+              componentSlug={componentSlug}
+              activeCodeTab={activeCodeTab}
+              setActiveCodeTab={handleCodeTabChange}
+              setFormStep={handleStepChange}
+              handleSubmit={handleSubmit}
+              isSubmitting={isSubmitting}
+              isFormValid={isFormValid(form)}
+            />
             <div className="flex h-[calc(100vh-3rem)]">
               <div className="w-1/2 border-r pointer-events-auto">
                 {activeCodeTab === "component" && (
@@ -502,30 +490,6 @@ export default function PublishComponentForm() {
                       fieldName="code"
                       value={code}
                       onChange={(value) => form.setValue("code", value)}
-                    />
-                  </div>
-                )}
-                {activeCodeTab === "tailwind" && (
-                  <div className="h-full">
-                    <EditorStep
-                      form={form}
-                      isDarkTheme={isDarkTheme}
-                      fieldName="tailwind_config"
-                      value={tailwindConfig}
-                      onChange={setTailwindConfig}
-                      language="javascript"
-                    />
-                  </div>
-                )}
-                {activeCodeTab === "globals" && (
-                  <div className="h-full">
-                    <EditorStep
-                      form={form}
-                      isDarkTheme={isDarkTheme}
-                      fieldName="globals_css"
-                      value={globalsCSS}
-                      onChange={setGlobalsCSS}
-                      language="css"
                     />
                   </div>
                 )}
@@ -557,26 +521,13 @@ export default function PublishComponentForm() {
                   </motion.div>
                 ) : (
                   <div className="p-8">
-                    {activeCodeTab === "component" && <CodeGuidelinesAlert />}
-                    {activeCodeTab === "tailwind" && (
-                      <div className="prose dark:prose-invert max-w-none">
-                        <h2>Tailwind Configuration</h2>
-                        <p>
-                          Customize your component's appearance by extending the
-                          default Tailwind configuration. This is optional but
-                          can be useful for specific styling needs.
-                        </p>
-                      </div>
-                    )}
-                    {activeCodeTab === "globals" && (
-                      <div className="prose dark:prose-invert max-w-none">
-                        <h2>Global CSS</h2>
-                        <p>
-                          Add any global CSS styles that your component needs.
-                          This is optional and should be used sparingly.
-                        </p>
-                      </div>
-                    )}
+                    <DemoComponentGuidelinesAlert
+                      mainComponentName={
+                        parsedCode.componentNames[0] ?? "MyComponent"
+                      }
+                      componentSlug={componentSlug}
+                      registryToPublish={registryToPublish}
+                    />
                   </div>
                 )}
               </div>
@@ -586,29 +537,14 @@ export default function PublishComponentForm() {
 
         {(formStep === "demoCode" || formStep === "demoDetails") && (
           <div className="flex flex-col h-screen w-full absolute left-0 right-0">
-            <div className="flex items-center justify-between px-4 h-14 border-b bg-background z-50 pointer-events-auto">
-              <div className="rounded-full w-8 h-8 bg-foreground" />
-              <div className="flex-1" />
-              <div className="text-center font-medium mr-8">
-                {componentSlug}.demo.tsx
-              </div>
-              <div className="flex items-center gap-2 flex-1 justify-end">
-                <Button
-                  size="icon"
-                  variant="outline"
-                  onClick={() => setFormStep("code")}
-                >
-                  <ChevronLeftIcon className="w-4 h-4" />
-                </Button>
-                <Button 
-                  size="sm" 
-                  onClick={() => setFormStep(formStep === "demoCode" ? "demoDetails" : "detailedForm")}
-                >
-                  Continue
-                </Button>
-              </div>
-            </div>
-
+            <PublishHeader
+              formStep={formStep}
+              componentSlug={componentSlug}
+              setFormStep={handleStepChange}
+              handleSubmit={handleSubmit}
+              isSubmitting={isSubmitting}
+              isFormValid={isFormValid(form)}
+            />
             <div className="flex h-[calc(100vh-3.5rem)]">
               <div className="w-1/2 border-r pointer-events-auto">
                 {formStep === "demoCode" ? (
@@ -677,7 +613,7 @@ export default function PublishComponentForm() {
               isAdmin={isAdmin}
               publishAsUsername={publishAsUsername}
               publishAsUser={publishAsUser}
-              onContinue={() => setFormStep("code")}
+              onContinue={() => handleStepChange("code")}
               onPublishAsChange={(username) =>
                 form.setValue("publish_as_username", username)
               }
@@ -688,7 +624,7 @@ export default function PublishComponentForm() {
         {formStep === "detailedForm" && unknownDependencies?.length > 0 && (
           <ResolveUnknownDependenciesAlertForm
             unknownDependencies={unknownDependencies}
-            onBack={() => setFormStep("demoCode")}
+            onBack={() => handleStepChange("demoCode")}
             onDependenciesResolved={(resolvedDependencies) => {
               form.setValue(
                 "unknown_dependencies",
@@ -720,117 +656,108 @@ export default function PublishComponentForm() {
         )}
 
         {formStep === "detailedForm" && unknownDependencies?.length === 0 && (
-          <div className="flex gap-8 w-full">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3, delay: 0.3 }}
-              className="w-1/2 flex flex-col gap-4 max-h-[calc(100vh-2rem)] overflow-y-auto pr-4"
-            >
-              <div className="space-y-4 sticky top-0 bg-background pt-4 z-10">
-                <h2 className="text-lg font-semibold">Component</h2>
-              </div>
-
-              <div className="space-y-8">
-                <ComponentDetailsForm
-                  form={form}
-                  handleSubmit={handleSubmit}
-                  isSubmitting={isSubmitting}
-                  hotkeysEnabled={!isSuccessDialogOpen}
-                />
-
-                <div className="space-y-4">
-                  <EditCodeFileCard
-                    iconSrc={
-                      isDarkTheme ? "/tsx-file-dark.svg" : "/tsx-file.svg"
-                    }
-                    mainText={`${form.getValues("name")} code`}
-                    subText={`${parsedCode.componentNames.slice(0, 2).join(", ")}${parsedCode.componentNames.length > 2 ? ` +${parsedCode.componentNames.length - 2}` : ""}`}
-                    onEditClick={() => {
-                      setFormStep("code")
-                      codeInputRef.current?.focus()
-                    }}
-                  />
-                  <EditCodeFileCard
-                    iconSrc={
-                      isDarkTheme ? "/css-file-dark.svg" : "/css-file.svg"
-                    }
-                    mainText="Custom styles"
-                    subText="Tailwind config and globals.css"
-                    onEditClick={() => {
-                      setFormStep("code")
-                      setActiveCodeTab("tailwind")
-                    }}
-                  />
-                </div>
-
-                <div className="h-px bg-border" />
-
-                <div className="space-y-4">
-                  <h2 className="text-lg font-semibold">Demo</h2>
-                  <EditCodeFileCard
-                    iconSrc={
-                      isDarkTheme ? "/demo-file-dark.svg" : "/demo-file.svg"
-                    }
-                    mainText="Demo code"
-                    subText={`${parsedCode.demoComponentNames.slice(0, 2).join(", ")}${parsedCode.demoComponentNames.length > 2 ? ` +${parsedCode.demoComponentNames.length - 2}` : ""}`}
-                    onEditClick={() => {
-                      setFormStep("demoCode")
-                      setTimeout(() => {
-                        demoCodeTextAreaRef.current?.focus()
-                      }, 0)
-                    }}
-                  />
-                  <DemoDetailsForm form={form} />
-                </div>
-
-                <Button
-                  onClick={handleSubmit}
-                  size="lg"
-                  disabled={isSubmitting || !isFormValid(form)}
-                  className="w-full"
-                >
-                  {isSubmitting ? "Saving..." : "Add component"}
-                  {!isSubmitting && isFormValid(form) && (
-                    <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border-muted-foreground/40 bg-muted-foreground/20 px-1.5 ml-1.5 font-sans text-[11px] text-muted leading-none opacity-100 flex">
-                      <span className="text-[11px] leading-none font-sans">
-                        {navigator?.platform?.toLowerCase()?.includes("mac")
-                          ? "⌘"
-                          : "Ctrl"}
-                      </span>
-                      ⏎
-                    </kbd>
-                  )}
-                </Button>
-              </div>
-            </motion.div>
-
-            {isPreviewReady && (
+          <div className="flex flex-col h-screen w-full absolute left-0 right-0">
+            <PublishHeader
+              formStep={formStep}
+              componentSlug={componentSlug}
+              setFormStep={handleStepChange}
+              handleSubmit={handleSubmit}
+              isSubmitting={isSubmitting}
+              isFormValid={isFormValid(form)}
+            />
+            <div className="flex gap-8 w-full">
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="w-1/2 h-full"
+                transition={{ duration: 0.3, delay: 0.3 }}
+                className="w-1/2 flex flex-col gap-4 max-h-[calc(100vh-2rem)] overflow-y-auto px-4"
               >
-                <React.Suspense fallback={<LoadingSpinner />}>
-                  <PublishComponentPreview
-                    code={code}
-                    demoCode={demoCode}
-                    slugToPublish={componentSlug}
-                    registryToPublish={registryToPublish}
-                    directRegistryDependencies={[
-                      ...directRegistryDependencies,
-                      ...demoDirectRegistryDependencies,
-                    ]}
-                    isDarkTheme={isDarkTheme}
-                    customTailwindConfig={customTailwindConfig}
-                    customGlobalCss={customGlobalCss}
+                <div className="space-y-4 sticky top-0 bg-background pt-4 z-10">
+                  <h2 className="text-lg font-semibold">Component</h2>
+                </div>
+
+                <div className="space-y-8">
+                  <ComponentDetailsForm
+                    form={form}
+                    handleSubmit={handleSubmit}
+                    isSubmitting={isSubmitting}
+                    hotkeysEnabled={!isSuccessDialogOpen}
                   />
-                </React.Suspense>
+
+                  <div className="space-y-4">
+                    <EditCodeFileCard
+                      iconSrc={
+                        isDarkTheme ? "/tsx-file-dark.svg" : "/tsx-file.svg"
+                      }
+                      mainText={`${form.getValues("name")} code`}
+                      subText={`${parsedCode.componentNames.slice(0, 2).join(", ")}${parsedCode.componentNames.length > 2 ? ` +${parsedCode.componentNames.length - 2}` : ""}`}
+                      onEditClick={() => {
+                        handleStepChange("code")
+                        codeInputRef.current?.focus()
+                      }}
+                    />
+                    <EditCodeFileCard
+                      iconSrc={
+                        isDarkTheme ? "/css-file-dark.svg" : "/css-file.svg"
+                      }
+                      mainText="Custom styles"
+                      subText="Tailwind config and globals.css"
+                      onEditClick={() => {
+                        handleStepChange("code")
+                        setActiveCodeTab("tailwind")
+                      }}
+                    />
+                  </div>
+
+                  <div className="h-px bg-border" />
+
+                  <div className="space-y-4">
+                    <h2 className="text-lg font-semibold">Demo</h2>
+                    <EditCodeFileCard
+                      iconSrc={
+                        isDarkTheme ? "/demo-file-dark.svg" : "/demo-file.svg"
+                      }
+                      mainText="Demo code"
+                      subText={`${parsedCode.demoComponentNames.slice(0, 2).join(", ")}${parsedCode.demoComponentNames.length > 2 ? ` +${parsedCode.demoComponentNames.length - 2}` : ""}`}
+                      onEditClick={() => {
+                        handleStepChange("demoCode")
+                        setTimeout(() => {
+                          demoCodeTextAreaRef.current?.focus()
+                        }, 0)
+                      }}
+                    />
+                    <DemoDetailsForm form={form} />
+                  </div>
+                </div>
               </motion.div>
-            )}
+
+              {isPreviewReady && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-1/2 h-full"
+                >
+                  <React.Suspense fallback={<LoadingSpinner />}>
+                    <PublishComponentPreview
+                      code={code}
+                      demoCode={demoCode}
+                      slugToPublish={componentSlug}
+                      registryToPublish={registryToPublish}
+                      directRegistryDependencies={[
+                        ...directRegistryDependencies,
+                        ...demoDirectRegistryDependencies,
+                      ]}
+                      isDarkTheme={isDarkTheme}
+                      customTailwindConfig={customTailwindConfig}
+                      customGlobalCss={customGlobalCss}
+                    />
+                  </React.Suspense>
+                </motion.div>
+              )}
+            </div>
           </div>
         )}
       </Form>

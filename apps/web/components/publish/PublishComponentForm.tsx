@@ -682,7 +682,7 @@ export default function PublishComponentForm() {
         )}
 
         {formStep === "detailedForm" && unknownDependencies?.length === 0 && (
-          <div className="flex flex-col h-screen w-full absolute left-0 right-0">
+          <div className="flex flex-col h-[100vh] w-full absolute left-0 right-0 overflow-hidden">
             <PublishHeader
               formStep={formStep}
               componentSlug={componentSlug}
@@ -691,13 +691,13 @@ export default function PublishComponentForm() {
               isSubmitting={isSubmitting}
               isFormValid={isFormValid(form)}
             />
-            <div className="flex gap-8 w-full">
+            <div className="flex gap-8 w-full h-[calc(100vh-3rem)] overflow-hidden">
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3, delay: 0.3 }}
-                className="w-1/3 flex flex-col gap-4 max-h-[calc(100vh-2rem)] overflow-y-auto p-4"
+                className="w-1/3 flex flex-col gap-4 overflow-y-auto p-4"
               >
                 <div className="space-y-4 sticky top-0 bg-background pt-4 z-10">
                   <h2 className="text-lg font-semibold">Component</h2>

@@ -190,30 +190,38 @@ export const ComponentDetailsForm = ({
             <Label htmlFor={descriptionId}>
               Description <span className="text-destructive">*</span>
             </Label>
-            <Textarea
-              id={descriptionId}
-              {...form.register("description", {
-                onChange: (e) => handleTextareaInput(e),
-                required: true,
-              })}
-              placeholder="Add some description to help others discover your component"
-              ref={(e) => {
-                if (e) {
-                  const style = window.getComputedStyle(e)
-                  const lineHeight = parseInt(style.lineHeight)
-                  const borderHeight =
-                    parseInt(style.borderTopWidth) +
-                    parseInt(style.borderBottomWidth)
-                  const paddingHeight =
-                    parseInt(style.paddingTop) + parseInt(style.paddingBottom)
-                  const initialHeight =
-                    lineHeight * defaultRows + borderHeight + paddingHeight
-                  e.style.height = `${initialHeight}px`
-                }
-              }}
-              rows={defaultRows}
-              className="min-h-[none] resize-none"
-              required
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <Textarea
+                  id={descriptionId}
+                  placeholder="Add some description to help others discover your component"
+                  className="min-h-[none] resize-none"
+                  rows={defaultRows}
+                  required
+                  {...field}
+                  onChange={(e) => {
+                    field.onChange(e)
+                    handleTextareaInput(e)
+                  }}
+                  ref={(e) => {
+                    if (e) {
+                      const style = window.getComputedStyle(e)
+                      const lineHeight = parseInt(style.lineHeight)
+                      const borderHeight =
+                        parseInt(style.borderTopWidth) +
+                        parseInt(style.borderBottomWidth)
+                      const paddingHeight =
+                        parseInt(style.paddingTop) +
+                        parseInt(style.paddingBottom)
+                      const initialHeight =
+                        lineHeight * defaultRows + borderHeight + paddingHeight
+                      e.style.height = `${initialHeight}px`
+                    }
+                  }}
+                />
+              )}
             />
             <p
               className="text-xs text-muted-foreground"

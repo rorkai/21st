@@ -477,8 +477,11 @@ export default function PublishComponentForm() {
   }, [])
 
   const isComponentInfoComplete = useCallback(() => {
-    const { description, tags, license } = form.getValues()
-    return !!description && tags.length > 0 && !!license
+    const { description, license, name, component_slug, registry } =
+      form.getValues()
+    return (
+      !!description && !!license && !!name && !!component_slug && !!registry
+    )
   }, [form])
 
   const isDemoInfoComplete = useCallback(() => {

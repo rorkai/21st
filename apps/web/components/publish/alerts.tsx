@@ -16,8 +16,6 @@ const pageStyles = {
   wrapper: cn(
     "bg-background/95",
     "rounded-xl border border-border/40",
-    "shadow-[0_2px_14px_rgba(0,0,0,0.04)]",
-    "dark:shadow-[0_2px_14px_rgba(0,0,0,0.15)]",
     "dark:bg-background/95 dark:border-border/30",
     "relative",
     "w-full",

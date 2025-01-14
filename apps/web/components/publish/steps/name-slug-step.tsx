@@ -29,6 +29,13 @@ export function NameSlugStep({
 }: NameSlugStepProps) {
   const controls = useAnimation()
 
+  const handleContinue = () => {
+    // Save form values before continuing
+    const formValues = form.getValues()
+    form.reset(formValues)
+    onContinue()
+  }
+
   return (
     <div className="absolute inset-x-0 top-0 bg-background px-2 sm:px-4 md:px-0">
       <Card className="w-full max-w-[800px] mx-auto mt-4 sm:mt-20 md:mt-20 p-4 sm:p-6 md:p-8">
@@ -88,7 +95,7 @@ export function NameSlugStep({
               className="mt-4"
               disabled={!form.watch("name") || !form.watch("slug_available")}
               size="lg"
-              onClick={onContinue}
+              onClick={handleContinue}
             >
               Continue
             </Button>

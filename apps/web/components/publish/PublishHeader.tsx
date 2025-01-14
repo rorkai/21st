@@ -84,7 +84,9 @@ export function PublishHeader({
             <Button
               size="icon"
               variant="outline"
-              onClick={() => setFormStep("code")}
+              onClick={() =>
+                setFormStep(formStep === "demoCode" ? "code" : "demoCode")
+              }
             >
               <ChevronLeftIcon className="w-4 h-4" />
             </Button>

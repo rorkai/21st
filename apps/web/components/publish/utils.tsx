@@ -70,24 +70,34 @@ export const formatComponentName = (name: string): string => {
   return name.replace(/([A-Z])/g, " $1").trim()
 }
 
-export const isFormValid = (form: UseFormReturn<FormData>) => {
+export const isFormValid = (form: UseFormReturn<FormData>): boolean => {
   const {
     name,
     component_slug,
     code,
     demo_code,
     demo_name,
+    description,
+    registry,
+    license,
+    tags,
+    preview_image_data_url,
     slug_available,
     unknown_dependencies,
   } = form.getValues()
 
-  return (
-    name.length >= 2 &&
-    component_slug.length >= 2 &&
-    code.length > 0 &&
-    demo_code.length > 0 &&
-    demo_name.length >= 2 &&
-    unknown_dependencies?.length === 0 &&
-    slug_available === true
+  return Boolean(
+    name?.length >= 2 &&
+      component_slug?.length >= 2 &&
+      code?.length > 0 &&
+      demo_code?.length > 0 &&
+      demo_name?.length >= 2 &&
+      description?.length >= 20 &&
+      registry &&
+      license &&
+      tags?.length > 0 &&
+      preview_image_data_url &&
+      unknown_dependencies?.length === 0 &&
+      slug_available === true,
   )
 }

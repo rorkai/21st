@@ -93,7 +93,11 @@ export function NameSlugStep({
             />
             <Button
               className="mt-4"
-              disabled={!form.watch("name") || !form.watch("slug_available")}
+              disabled={
+                !form.watch("name") ||
+                !form.watch("description") ||
+                !form.watch("slug_available")
+              }
               size="lg"
               onClick={handleContinue}
             >

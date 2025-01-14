@@ -3,6 +3,8 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ChevronLeftIcon } from "lucide-react"
 import { FormStep } from "@/types/global"
+import { UseFormReturn } from "react-hook-form"
+import { FormData } from "./utils"
 
 interface PublishHeaderProps {
   formStep: FormStep
@@ -12,7 +14,8 @@ interface PublishHeaderProps {
   setFormStep: (step: FormStep) => void
   handleSubmit?: (event: React.FormEvent) => void
   isSubmitting?: boolean
-  isFormValid?: boolean
+  isFormValid: boolean
+  form?: UseFormReturn<FormData>
 }
 
 export function PublishHeader({
@@ -24,7 +27,18 @@ export function PublishHeader({
   handleSubmit,
   isSubmitting,
   isFormValid,
+  form,
 }: PublishHeaderProps) {
+  const isDemoDetailsValid = () => {
+    if (!form || formStep !== "demoDetails") return true
+    const values = form.getValues()
+    return !!(
+      values.demo_name &&
+      values.tags?.length > 0 &&
+      values.preview_image_data_url
+    )
+  }
+
   if (formStep === "code") {
     return (
       <div className="flex items-center justify-between min-h-12 border-b bg-background z-50 pointer-events-auto px-4 sticky top-0">
@@ -77,7 +91,7 @@ export function PublishHeader({
         />
         <div className="flex-1" />
         <div className="text-center font-medium mr-8">
-          {componentSlug}.demo.tsx
+          Create demo for {form?.getValues().name}
         </div>
         <div className="flex items-center gap-2 flex-1 justify-end">
           <div className="flex items-center gap-2">
@@ -97,8 +111,9 @@ export function PublishHeader({
                   formStep === "demoCode" ? "demoDetails" : "detailedForm",
                 )
               }
+              disabled={formStep === "demoDetails" && !isDemoDetailsValid()}
             >
-              Continue
+              {formStep === "demoCode" ? "Continue" : "Save demo"}
             </Button>
           </div>
         </div>
@@ -114,7 +129,7 @@ export function PublishHeader({
           className="flex items-center justify-center w-7 h-7 rounded-full cursor-pointer bg-foreground"
         />
         <div className="flex-1" />
-        <div className="text-center font-medium mr-8">{componentSlug}.tsx</div>
+        <div className="text-center font-medium mr-8">Create component</div>
         <div className="flex items-center gap-2 flex-1 justify-end">
           <div className="flex items-center">
             <Button

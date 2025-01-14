@@ -513,6 +513,7 @@ export default function PublishComponentForm() {
               handleSubmit={handleSubmit}
               isSubmitting={isSubmitting}
               isFormValid={isFormValid(form)}
+              form={form}
             />
             <div className="flex h-[calc(100vh-3rem)]">
               <div className="w-1/2 border-r pointer-events-auto">
@@ -600,6 +601,7 @@ export default function PublishComponentForm() {
               handleSubmit={handleSubmit}
               isSubmitting={isSubmitting}
               isFormValid={isFormValid(form)}
+              form={form}
             />
             <div className="flex h-[calc(100vh-3.5rem)]">
               <div className="w-1/2 border-r pointer-events-auto">
@@ -720,6 +722,7 @@ export default function PublishComponentForm() {
               handleSubmit={handleSubmit}
               isSubmitting={isSubmitting}
               isFormValid={isFormValid(form)}
+              form={form}
             />
             <div className="flex gap-8 w-full h-[calc(100vh-3rem)] overflow-hidden">
               <motion.div
@@ -729,7 +732,7 @@ export default function PublishComponentForm() {
                 transition={{ duration: 0.3, delay: 0.3 }}
                 className="w-1/3 flex flex-col gap-4 overflow-y-auto p-4"
               >
-                <div className="space-y-4">
+                <div className="space-y-4 p-[2px]">
                   <Accordion
                     type="single"
                     value={openAccordion}

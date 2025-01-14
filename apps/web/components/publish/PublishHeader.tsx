@@ -76,7 +76,6 @@ export function PublishHeader({
         if (!match?.[1]) return null
         const slug = match[1].replace(/\.tsx$/, "")
 
-
         if (
           slug === componentSlugToPublish ||
           currentDemoDeps.includes(`ui/${slug}`)
@@ -111,7 +110,6 @@ export function PublishHeader({
     const currentDemo = form.watch(`demos.${currentDemoIndex}`)
     const currentDemoCode = currentDemo?.demo_code || ""
 
-
     if (!currentDemoCode?.trim()) {
       return
     }
@@ -130,7 +128,6 @@ export function PublishHeader({
   }
 
   const handleStepChange = (newStep: FormStep) => {
-
     if (newStep === "demoCode") {
       const demos = form?.getValues("demos") || []
       const currentDemo = demos[currentDemoIndex]
@@ -157,14 +154,12 @@ export function PublishHeader({
     if (!form) return
 
     try {
-
       const nonDemoDependencies = resolvedDependencies.filter(
         (d) => !d.isDemoDependency,
       )
       const demoDependencies = resolvedDependencies.filter(
         (d) => d.isDemoDependency,
       )
-
 
       const currentDirectDeps =
         form.getValues("direct_registry_dependencies") || []
@@ -175,7 +170,6 @@ export function PublishHeader({
         ]),
       ]
       form.setValue("direct_registry_dependencies", newDirectDeps)
-
 
       const currentDemoDeps =
         form.getValues(
@@ -192,9 +186,7 @@ export function PublishHeader({
         newDemoDeps,
       )
 
-
       form.setValue("unknown_dependencies", [])
-
 
       setShowDependenciesModal(false)
       setFormStep("demoDetails")
@@ -317,7 +309,7 @@ export function PublishHeader({
                 form?.watch("unknown_dependencies") || []
               ).map((dep) => ({
                 slugWithUsername: dep,
-                registry: "npm",
+                registry: "ui",
                 isDemoDependency: true,
               }))}
               onBack={() => {

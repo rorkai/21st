@@ -1156,7 +1156,7 @@ export default function PublishComponentForm() {
           }
           unknownDependencies={unknownDependencies.map((dep) => ({
             slugWithUsername: dep,
-            registry: "npm",
+            registry: "ui",
             isDemoDependency: false,
           }))}
         />

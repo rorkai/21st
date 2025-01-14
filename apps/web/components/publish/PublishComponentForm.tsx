@@ -281,11 +281,25 @@ export default function PublishComponentForm() {
   }, [code, demoCode])
 
   const onSubmit = async (data: FormData) => {
+    console.log("Starting onSubmit with data:", {
+      componentSlug: data.component_slug,
+      demoCount: data.demos?.length,
+      hasCode: !!data.code,
+      userId: publishAsUser?.id,
+    })
+
     setPublishAttemptCount((count) => count + 1)
     setIsSubmitting(true)
     try {
       const baseFolder = `${publishAsUser?.id}/${data.component_slug}`
       const currentDemo = data.demos[0]
+
+      console.log("Processing demo data:", {
+        hasCurrentDemo: !!currentDemo,
+        demoCode: !!currentDemo?.demo_code,
+        baseFolder,
+      })
+
       if (!currentDemo) throw new Error("No demo data")
 
       // Загружаем основные файлы компонента
@@ -340,7 +354,15 @@ export default function PublishComponentForm() {
         registry: data.registry,
         license: data.license,
         website_url: data.website_url,
+        demo_code: currentDemo.demo_code || "", // Adding demo_code here to satisfy the not-null constraint
       } as Tables<"components">
+
+      console.log("Preparing to insert component with data:", {
+        name: componentData.name,
+        hasCode: !!componentData.code,
+        hasDemoCode: !!componentData.demo_code,
+        userId: componentData.user_id,
+      })
 
       const { data: insertedComponent, error } = await client
         .from("components")
@@ -348,9 +370,21 @@ export default function PublishComponentForm() {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error("Error inserting component:", error)
+        throw error
+      }
+
+      console.log("Successfully inserted component:", {
+        componentId: insertedComponent.id,
+        proceeding: "to demo creation",
+      })
 
       // Create initial demo record in database
+      if (!publishAsUser?.id) {
+        throw new Error("User ID is required")
+      }
+
       const demoData: Omit<Tables<"demos">, "id"> = {
         component_id: insertedComponent.id,
         demo_code: "", // Will update after file upload
@@ -363,6 +397,7 @@ export default function PublishComponentForm() {
         pro_preview_image_url: null,
         name: currentDemo.name,
         demo_direct_registry_dependencies: null,
+        user_id: publishAsUser.id,
       }
 
       const { data: insertedDemo, error: demoError } = await client
@@ -478,7 +513,6 @@ export default function PublishComponentForm() {
   }
 
   const isPreviewReady = useMemo(() => {
-
     return (
       unknownDependencies?.length === 0 &&
       typeof code === "string" &&
@@ -959,7 +993,11 @@ export default function PublishComponentForm() {
                               <div className="text-foreground space-y-4">
                                 <DemoDetailsForm form={form} />
                                 <EditCodeFileCard
-                                  iconSrc={isDarkTheme ? "/demo-file-dark.svg" : "/demo-file.svg"}
+                                  iconSrc={
+                                    isDarkTheme
+                                      ? "/demo-file-dark.svg"
+                                      : "/demo-file.svg"
+                                  }
                                   mainText={`Demo ${index + 1} code`}
                                   onEditClick={() => {
                                     handleStepChange("demoCode")

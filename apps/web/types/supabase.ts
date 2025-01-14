@@ -404,6 +404,7 @@ export type Database = {
           preview_url: string | null
           pro_preview_image_url: string | null
           updated_at: string | null
+          user_id: string
           video_url: string | null
         }
         Insert: {
@@ -418,6 +419,7 @@ export type Database = {
           preview_url?: string | null
           pro_preview_image_url?: string | null
           updated_at?: string | null
+          user_id: string
           video_url?: string | null
         }
         Update: {
@@ -432,6 +434,7 @@ export type Database = {
           preview_url?: string | null
           pro_preview_image_url?: string | null
           updated_at?: string | null
+          user_id?: string
           video_url?: string | null
         }
         Relationships: [
@@ -454,6 +457,13 @@ export type Database = {
             columns: ["component_id"]
             isOneToOne: false
             referencedRelation: "components_with_username"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demos_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]

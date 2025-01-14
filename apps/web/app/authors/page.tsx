@@ -2,9 +2,14 @@ import Link from "next/link"
 import Image from "next/image"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { Header } from "@/components/Header"
-import { Download, Eye, Sparkles } from "lucide-react"
+import { Download, Eye } from "lucide-react"
+import { Metadata } from "next"
 
 export const dynamic = "force-dynamic"
+
+export const metadata: Metadata = {
+  title: "Top authors | 21st.dev",
+}
 
 export default async function AuthorsPage() {
   const { data: authors, error } = await supabaseWithAdminAccess

@@ -941,36 +941,37 @@ export default function PublishComponentForm() {
                         </div>
                       </AccordionContent>
                     </AccordionItem>
-                  </Accordion>
 
-                  {form.getValues().demos?.map(
-                    (_, index) =>
-                      index > 0 && (
-                        <AccordionItem
-                          key={index}
-                          value={`demo-${index}`}
-                          className="bg-background border-none"
-                        >
-                          <AccordionContent>
-                            <div className="text-foreground space-y-4">
-                              <DemoDetailsForm form={form} />
-                              <EditCodeFileCard
-                                iconSrc={
-                                  isDarkTheme
-                                    ? "/demo-file-dark.svg"
-                                    : "/demo-file.svg"
-                                }
-                                mainText={`Demo ${index + 1} code`}
-                                onEditClick={() => {
-                                  handleStepChange("demoCode")
-                                  setCurrentDemoIndex(index)
-                                }}
-                              />
-                            </div>
-                          </AccordionContent>
-                        </AccordionItem>
-                      ),
-                  )}
+                    {form.getValues().demos?.map(
+                      (_, index) =>
+                        index > 0 && (
+                          <AccordionItem
+                            key={index}
+                            value={`demo-${index}`}
+                            className="bg-background border-none"
+                          >
+                            <AccordionTrigger className="py-2 text-[15px] leading-6 hover:no-underline hover:bg-muted/50 rounded-md data-[state=open]:rounded-b-none transition-all duration-200 ease-in-out -mx-2 px-2">
+                              <div className="flex items-center gap-2">
+                                Demo {index + 1}
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="text-foreground space-y-4">
+                                <DemoDetailsForm form={form} />
+                                <EditCodeFileCard
+                                  iconSrc={isDarkTheme ? "/demo-file-dark.svg" : "/demo-file.svg"}
+                                  mainText={`Demo ${index + 1} code`}
+                                  onEditClick={() => {
+                                    handleStepChange("demoCode")
+                                    setCurrentDemoIndex(index)
+                                  }}
+                                />
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        ),
+                    )}
+                  </Accordion>
 
                   <Button
                     variant="outline"

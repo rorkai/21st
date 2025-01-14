@@ -694,50 +694,78 @@ export default function PublishComponentForm() {
         )}
 
         {formStep === "detailedForm" && unknownDependencies?.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3, delay: 0.3 }}
-            className="w-full flex flex-col gap-4"
-          >
-            <EditCodeFileCard
-              iconSrc={isDarkTheme ? "/tsx-file-dark.svg" : "/tsx-file.svg"}
-              mainText={`${form.getValues("name")} code`}
-              subText={`${parsedCode.componentNames.slice(0, 2).join(", ")}${parsedCode.componentNames.length > 2 ? ` +${parsedCode.componentNames.length - 2}` : ""}`}
-              onEditClick={() => {
-                setFormStep("code")
-                codeInputRef.current?.focus()
-              }}
-            />
-            <EditCodeFileCard
-              iconSrc={isDarkTheme ? "/demo-file-dark.svg" : "/demo-file.svg"}
-              mainText="Demo code"
-              subText={`${parsedCode.demoComponentNames.slice(0, 2).join(", ")}${parsedCode.demoComponentNames.length > 2 ? ` +${parsedCode.demoComponentNames.length - 2}` : ""}`}
-              onEditClick={() => {
-                setFormStep("demoCode")
-                setTimeout(() => {
-                  demoCodeTextAreaRef.current?.focus()
-                }, 0)
-              }}
-            />
-            <EditCodeFileCard
-              iconSrc={isDarkTheme ? "/css-file-dark.svg" : "/css-file.svg"}
-              mainText="Custom styles"
-              subText="Tailwind config and globals.css"
-              onEditClick={() => {
-                setFormStep("code")
-                setActiveCodeTab("tailwind")
-              }}
-            />
-            <ComponentDetailsForm
-              isEditMode={false}
-              form={form}
-              handleSubmit={handleSubmit}
-              isSubmitting={isSubmitting}
-              hotkeysEnabled={!isSuccessDialogOpen}
-            />
-          </motion.div>
+          <div className="flex gap-8 w-full">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, delay: 0.3 }}
+              className="w-1/2 flex flex-col gap-4"
+            >
+              <EditCodeFileCard
+                iconSrc={isDarkTheme ? "/tsx-file-dark.svg" : "/tsx-file.svg"}
+                mainText={`${form.getValues("name")} code`}
+                subText={`${parsedCode.componentNames.slice(0, 2).join(", ")}${parsedCode.componentNames.length > 2 ? ` +${parsedCode.componentNames.length - 2}` : ""}`}
+                onEditClick={() => {
+                  setFormStep("code")
+                  codeInputRef.current?.focus()
+                }}
+              />
+              <EditCodeFileCard
+                iconSrc={isDarkTheme ? "/demo-file-dark.svg" : "/demo-file.svg"}
+                mainText="Demo code"
+                subText={`${parsedCode.demoComponentNames.slice(0, 2).join(", ")}${parsedCode.demoComponentNames.length > 2 ? ` +${parsedCode.demoComponentNames.length - 2}` : ""}`}
+                onEditClick={() => {
+                  setFormStep("demoCode")
+                  setTimeout(() => {
+                    demoCodeTextAreaRef.current?.focus()
+                  }, 0)
+                }}
+              />
+              <EditCodeFileCard
+                iconSrc={isDarkTheme ? "/css-file-dark.svg" : "/css-file.svg"}
+                mainText="Custom styles"
+                subText="Tailwind config and globals.css"
+                onEditClick={() => {
+                  setFormStep("code")
+                  setActiveCodeTab("tailwind")
+                }}
+              />
+              <ComponentDetailsForm
+                isEditMode={false}
+                form={form}
+                handleSubmit={handleSubmit}
+                isSubmitting={isSubmitting}
+                hotkeysEnabled={!isSuccessDialogOpen}
+              />
+            </motion.div>
+
+            {isPreviewReady && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="w-1/2 h-full"
+              >
+                <React.Suspense fallback={<LoadingSpinner />}>
+                  <PublishComponentPreview
+                    code={code}
+                    demoCode={demoCode}
+                    slugToPublish={componentSlug}
+                    registryToPublish={registryToPublish}
+                    directRegistryDependencies={[
+                      ...directRegistryDependencies,
+                      ...demoDirectRegistryDependencies,
+                    ]}
+                    isDarkTheme={isDarkTheme}
+                    customTailwindConfig={customTailwindConfig}
+                    customGlobalCss={customGlobalCss}
+                  />
+                </React.Suspense>
+              </motion.div>
+            )}
+          </div>
         )}
       </Form>
       {isDebug && (

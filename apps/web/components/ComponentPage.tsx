@@ -46,7 +46,7 @@ import { LikeButton } from "./LikeButton"
 import { ThemeToggle } from "./ThemeToggle"
 import { ComponentPagePreview } from "./ComponentPagePreview"
 import { EditComponentDialog } from "./EditComponentDialog"
-import { usePublishAs } from "./publish/use-publish-as"
+import { usePublishAs } from "./publish/hooks/use-publish-as"
 import { Icons } from "@/components/icons"
 
 import {

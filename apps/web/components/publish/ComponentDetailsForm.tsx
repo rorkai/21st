@@ -8,7 +8,7 @@ import {
   makeSlugFromName,
   generateUniqueSlug,
   useIsCheckSlugAvailable,
-} from "./use-is-check-slug-available"
+} from "./hooks/use-is-check-slug-available"
 import { FormData, isFormValid } from "./utils"
 import { useDropzone } from "react-dropzone"
 import UploadIcon from "@/components/UploadIcon"
@@ -46,7 +46,7 @@ import {
 } from "@/components/ui/select"
 import { FormField } from "../ui/form"
 import { Textarea } from "../ui/textarea"
-import { useVideoDropzone } from "./use-video-dropzone"
+import { useVideoDropzone } from "./hooks/use-video-dropzone"
 
 const ComponentDetailsForm = ({
   isEditMode,

@@ -42,16 +42,18 @@ import {
 } from "./alerts"
 import { Tables } from "@/types/supabase"
 import { LoadingSpinner } from "../LoadingSpinner"
-import { useSuccessDialogHotkeys } from "./hotkeys"
 import { toast } from "sonner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { usePublishAs } from "./use-publish-as"
+import { usePublishAs } from "./hooks/use-publish-as"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { HeroVideoDialog } from "@/components/ui/hero-video-dialog"
 import { ChevronLeftIcon } from "lucide-react"
 import { Editor } from "@monaco-editor/react"
 import { NameSlugStep } from "./steps/name-slug-step"
 import { EditorStep } from "./steps/editor-step"
+import { SuccessDialog } from "./success-dialog"
+import { EditCodeFileCard } from "./edit-code-file-card"
+import { useCodeInputsAutoFocus } from "./hooks/use-code-inputs-auto-focus"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -757,107 +759,5 @@ export default function PublishComponentForm() {
         onGoToComponent={handleGoToComponent}
       />
     </>
-  )
-}
-
-const EditCodeFileCard = ({
-  iconSrc,
-  mainText,
-  subText,
-  onEditClick,
-}: {
-  iconSrc: string
-  mainText: string
-  subText: string
-  onEditClick: () => void
-}) => (
-  <div className="p-2 border rounded-md bg-background text-foreground bg-opacity-80 backdrop-blur-sm flex items-center justify-start">
-    <div className="flex items-center gap-2 w-full">
-      <div className="flex items-center justify-between w-full">
-        <div className="flex items-center">
-          <div className="w-10 h-10 relative mr-2 items-center justify-center">
-            <Image
-              src={iconSrc}
-              width={40}
-              height={40}
-              alt={`${mainText} File`}
-            />
-          </div>
-          <div className="flex flex-col items-start h-10">
-            <p className="font-semibold text-[14px]">{mainText}</p>
-            <p className="text-sm text-muted-foreground text-[12px]">
-              {subText}
-            </p>
-          </div>
-        </div>
-        <Button size="sm" onClick={onEditClick}>
-          Edit
-        </Button>
-      </div>
-    </div>
-  </div>
-)
-
-const useCodeInputsAutoFocus = (showDetailedForm: boolean) => {
-  const demoCodeTextAreaRef = useRef<HTMLTextAreaElement>(null)
-  const codeInputRef = useRef<HTMLTextAreaElement>(null)
-
-  useEffect(() => {
-    if (showDetailedForm) return
-
-    if (codeInputRef.current) {
-      codeInputRef.current?.focus?.()
-    } else if (demoCodeTextAreaRef.current) {
-      demoCodeTextAreaRef.current?.focus()
-    }
-  }, [showDetailedForm])
-
-  return { codeInputRef, demoCodeTextAreaRef }
-}
-
-const SuccessDialog = ({
-  isOpen,
-  onOpenChange,
-  onAddAnother,
-  onGoToComponent,
-}: {
-  isOpen: boolean
-  onOpenChange: (open: boolean) => void
-  onAddAnother: () => void
-  onGoToComponent: () => void
-}) => {
-  useSuccessDialogHotkeys({ isOpen, onAddAnother, onGoToComponent })
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Component Added Successfully</DialogTitle>
-          <DialogDescription className="break-words">
-            Your new component has been successfully added. What would you like
-            to do next?
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button onClick={onAddAnother} variant="outline">
-            Add Another
-            <kbd className="hidden md:inline-flex h-5 items-center rounded border border-border px-1.5 ml-1.5 font-mono text-[11px] font-medium text-muted-foreground">
-              N
-            </kbd>
-          </Button>
-          <Button onClick={onGoToComponent} variant="default">
-            View Component
-            <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border-muted-foreground/40 bg-muted-foreground/20 px-1.5 ml-1.5 font-sans  text-[11px] text-muted leading-none  opacity-100 flex">
-              <span className="text-[11px] leading-none font-sans">
-                {navigator?.platform?.toLowerCase()?.includes("mac")
-                  ? "⌘"
-                  : "Ctrl"}
-              </span>
-              ⏎
-            </kbd>
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   )
 }

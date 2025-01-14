@@ -3,6 +3,7 @@ import { LovableLogo } from "./lovable"
 import { SitebrewLogo } from "./sitebrew"
 import { TerminalIcon } from "./terminal"
 import { ClapIcon } from "./clap"
+import { WorkflowIcon } from "./workslow"
 export type Icon = LucideIcon
 
 export const Icons = {
@@ -38,6 +39,7 @@ export const Icons = {
   ),
   lovableLogo: LovableLogo,
   sitebrewLogo: SitebrewLogo,
+  workflowIcon: WorkflowIcon,
   boltLogo: (props: LucideProps) => (
     <svg
       {...props}

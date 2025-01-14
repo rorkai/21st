@@ -1,23 +1,14 @@
-import { motion } from "framer-motion"
 import { Editor } from "@monaco-editor/react"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import {
-  FormField,
-  FormItem,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form"
-import { ChevronLeftIcon } from "lucide-react"
-import { cn } from "@/lib/utils"
+
+import { FormField, FormItem, FormControl } from "@/components/ui/form"
+
 import { UseFormReturn } from "react-hook-form"
 import { FormData } from "../utils"
-import { editorThemes, editorOptions } from "../editor-themes"
+import { editorOptions } from "../editor-themes"
 
-type EditorFieldName = keyof Pick<
-  FormData,
-  "code" | "demo_code" | "tailwind_config" | "globals_css"
->
+type EditorFieldName =
+  | keyof Pick<FormData, "code" | "tailwind_config" | "globals_css">
+  | `demos.${number}.demo_code`
 
 interface EditorStepProps {
   form: UseFormReturn<FormData>

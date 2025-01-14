@@ -99,7 +99,6 @@ export const ResolveUnknownDependenciesAlertForm = ({
     isDemoDependency: boolean
   }[]
   onDependenciesResolved: (
-    // eslint-disable-next-line no-unused-vars
     deps: {
       username: string
       slug: string
@@ -159,54 +158,38 @@ export const ResolveUnknownDependenciesAlertForm = ({
   }
 
   return (
-    <div className="w-full relative h-[70vh]">
-      <div className={pageStyles.wrapper}>
-        <div className={pageStyles.header}>
-          <Codepen className={pageStyles.icon} />
-          Unknown Dependencies
-        </div>
-        <div className={pageStyles.content}>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {unknownDependencies.map(
-              ({ slugWithUsername, registry }, index) => (
-                <div key={slugWithUsername} className={pageStyles.form.field}>
-                  <Label className={pageStyles.form.label}>
-                    Enter the link to{" "}
-                    <span className="font-semibold">
-                      {registry ? `${registry}/` : ""}
-                      {slugWithUsername}
-                    </span>
-                  </Label>
-                  <Input
-                    name={slugWithUsername}
-                    placeholder='e.g. "https://21st.dev/shadcn/button"'
-                    className="mt-1 w-full"
-                  />
-                  {errors[slugWithUsername] && (
-                    <span className={pageStyles.form.error}>
-                      {errors[slugWithUsername]}
-                    </span>
-                  )}
-                </div>
-              ),
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-4">
+        {unknownDependencies.map(({ slugWithUsername, registry }) => (
+          <div key={slugWithUsername} className="space-y-2">
+            <Label>
+              Enter the link to{" "}
+              <span className="font-semibold">
+                {registry ? `${registry}/` : ""}
+                {slugWithUsername}
+              </span>
+            </Label>
+            <Input
+              name={slugWithUsername}
+              placeholder='e.g. "https://21st.dev/shadcn/button"'
+              className="w-full"
+            />
+            {errors[slugWithUsername] && (
+              <p className="text-sm text-destructive">
+                {errors[slugWithUsername]}
+              </p>
             )}
-            <div className={pageStyles.actions.container}>
-              <Button
-                size="icon"
-                variant="outline"
-                onClick={onBack}
-                type="button"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <Button type="submit" size="sm">
-                Continue
-              </Button>
-            </div>
-          </form>
-        </div>
+          </div>
+        ))}
       </div>
-    </div>
+
+      <div className="flex items-center justify-between">
+        <Button type="button" variant="outline" size="icon" onClick={onBack}>
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <Button type="submit">Continue</Button>
+      </div>
+    </form>
   )
 }
 

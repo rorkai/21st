@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 interface EditCodeFileCardProps {
   iconSrc: string
   mainText: string
-  subText: string
+  subText?: string
   onEditClick: () => void
   className?: string
 }
@@ -41,9 +41,11 @@ export function EditCodeFileCard({
         <p className="text-sm font-medium truncate text-foreground">
           {mainText}
         </p>
-        <p className="text-xs text-muted-foreground truncate mt-0.5">
-          {subText}
-        </p>
+        {subText && (
+          <p className="text-xs text-muted-foreground truncate mt-0.5">
+            {subText}
+          </p>
+        )}
       </div>
       <div className="absolute right-3 top-1/2 -translate-y-1/2">
         <Button

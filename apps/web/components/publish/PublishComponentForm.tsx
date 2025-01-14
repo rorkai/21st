@@ -1,11 +1,11 @@
 "use client"
 
-import React, { useState, useEffect, useRef, useCallback } from "react"
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { uploadToR2 } from "@/lib/r2"
-import { formSchema, FormData, isFormValid } from "./utils"
+import { formSchema, FormData, isFormValid, DemoFormData } from "./utils"
 import {
   extractComponentNames,
   extractNPMDependencies,
@@ -52,6 +52,9 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { useAtom } from "jotai"
+import { currentDemoIndexAtom } from "@/atoms/publish"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -73,6 +76,7 @@ export default function PublishComponentForm() {
   const { resolvedTheme } = useTheme()
   const isDarkTheme = resolvedTheme === "dark"
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false)
+  const [currentDemoIndex, setCurrentDemoIndex] = useAtom(currentDemoIndexAtom)
 
   const [formStartTime] = useState(() => Date.now())
   const [publishAttemptCount, setPublishAttemptCount] = useState(0)
@@ -87,26 +91,34 @@ export default function PublishComponentForm() {
       publish_as_username: user?.username ?? undefined,
       unknown_dependencies: [],
       direct_registry_dependencies: [],
-      demo_direct_registry_dependencies: [],
       code: "",
-      demo_code: "",
-      demo_name: "",
+      demos: [
+        {
+          name: "",
+          demo_code: "",
+          preview_image_data_url: "",
+          preview_image_file: undefined,
+          preview_video_data_url: "",
+          preview_video_file: undefined,
+          demo_direct_registry_dependencies: [],
+          tags: [],
+        },
+      ],
       description: "",
-      tags: [],
       license: "mit",
       website_url: "",
+      is_public: true,
     },
   })
-  const {
-    component_slug: componentSlug,
-    code,
-    demo_code: demoCode,
-    tags: validTags,
-  } = form.getValues()
-  const unknownDependencies = form.watch("unknown_dependencies")
+
+  const { component_slug: componentSlug, code, demos } = form.getValues()
+  const currentDemo = demos?.[currentDemoIndex]
+  const demoCode = currentDemo?.demo_code || ""
+  const validTags = currentDemo?.tags || []
+  const unknownDependencies = form.watch("unknown_dependencies") || []
   const directRegistryDependencies = form.watch("direct_registry_dependencies")
   const demoDirectRegistryDependencies = form.watch(
-    "demo_direct_registry_dependencies",
+    `demos.${currentDemoIndex}.demo_direct_registry_dependencies`,
   )
   const registryToPublish = form.watch("registry")
 
@@ -256,7 +268,10 @@ export default function PublishComponentForm() {
               ).includes(d.slugWithUsername),
           )
 
-        form.setValue("unknown_dependencies", parsedUnknownDependencies)
+        form.setValue(
+          "unknown_dependencies",
+          parsedUnknownDependencies.map((d) => d.slugWithUsername),
+        )
       } catch (error) {
         console.error("Error parsing dependencies from code:", error)
       }
@@ -270,6 +285,8 @@ export default function PublishComponentForm() {
     setIsSubmitting(true)
     try {
       const baseFolder = `${publishAsUser?.id}/${data.component_slug}`
+      const currentDemo = data.demos[0]
+      if (!currentDemo) throw new Error("No demo data")
 
       // Загружаем основные файлы компонента
       const [codeUrl, tailwindConfigUrl, globalCssUrl] = await Promise.all([
@@ -311,7 +328,6 @@ export default function PublishComponentForm() {
         component_names: parsedCode.componentNames,
         component_slug: data.component_slug,
         code: codeUrl,
-        demo_code: "",
         tailwind_config_extension: tailwindConfigUrl,
         global_css_extension: globalCssUrl,
         description: data.description ?? null,
@@ -319,8 +335,6 @@ export default function PublishComponentForm() {
         dependencies: parsedCode.dependencies,
         demo_dependencies: parsedCode.demoDependencies,
         direct_registry_dependencies: data.direct_registry_dependencies,
-        demo_direct_registry_dependencies:
-          data.demo_direct_registry_dependencies,
         preview_url: "",
         video_url: "",
         registry: data.registry,
@@ -335,20 +349,20 @@ export default function PublishComponentForm() {
         .single()
 
       if (error) throw error
+
       // Create initial demo record in database
       const demoData: Omit<Tables<"demos">, "id"> = {
         component_id: insertedComponent.id,
         demo_code: "", // Will update after file upload
-        demo_dependencies: parsedCode.demoDependencies,
-        demo_direct_registry_dependencies:
-          data.demo_direct_registry_dependencies,
+        demo_dependencies: parsedCode.demoDependencies || {},
         preview_url: "",
         video_url: "",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         compiled_css: null,
         pro_preview_image_url: null,
-        name: data.demo_name,
+        name: currentDemo.name,
+        demo_direct_registry_dependencies: null,
       }
 
       const { data: insertedDemo, error: demoError } = await client
@@ -368,32 +382,32 @@ export default function PublishComponentForm() {
           file: {
             name: "code.demo.tsx",
             type: "text/plain",
-            textContent: demoCode,
+            textContent: currentDemo.demo_code,
           },
           fileKey: `${demoFolder}/code.demo.tsx`,
           bucketName: "components-code",
         }),
-        data.preview_image_file
+        currentDemo.preview_image_file
           ? uploadToR2({
               file: {
                 name: "preview.png",
-                type: data.preview_image_file.type,
+                type: currentDemo.preview_image_file.type,
                 encodedContent: Buffer.from(
-                  await data.preview_image_file.arrayBuffer(),
+                  await currentDemo.preview_image_file.arrayBuffer(),
                 ).toString("base64"),
               },
               fileKey: `${demoFolder}/preview.png`,
               bucketName: "components-code",
-              contentType: data.preview_image_file.type,
+              contentType: currentDemo.preview_image_file.type,
             })
           : Promise.resolve(null),
-        data.preview_video_file
+        currentDemo.preview_video_file
           ? uploadToR2({
               file: {
                 name: "video.mp4",
                 type: "video/mp4",
                 encodedContent: Buffer.from(
-                  await data.preview_video_file.arrayBuffer(),
+                  await currentDemo.preview_video_file.arrayBuffer(),
                 ).toString("base64"),
               },
               fileKey: `${demoFolder}/video.mp4`,
@@ -430,7 +444,7 @@ export default function PublishComponentForm() {
         componentSlug: data.component_slug,
         userId: user?.id,
         hasDemo: true,
-        tagsCount: data.tags?.length || 0,
+        tagsCount: validTags?.length || 0,
         timeSpentEditing: Date.now() - formStartTime,
         publishAttempts: publishAttemptCount,
       })
@@ -463,8 +477,16 @@ export default function PublishComponentForm() {
     onSubmit(formData)
   }
 
-  const isPreviewReady =
-    unknownDependencies?.length === 0 && !!code.length && !!demoCode.length
+  const isPreviewReady = useMemo(() => {
+
+    return (
+      unknownDependencies?.length === 0 &&
+      typeof code === "string" &&
+      code.length > 0 &&
+      typeof demoCode === "string" &&
+      demoCode.length > 0
+    )
+  }, [unknownDependencies, code, demoCode])
 
   const { demoCodeTextAreaRef, codeInputRef } = useCodeInputsAutoFocus(
     formStep === "detailedForm",
@@ -485,8 +507,9 @@ export default function PublishComponentForm() {
   }, [form])
 
   const isDemoInfoComplete = useCallback(() => {
-    const { demo_name } = form.getValues()
-    return !!demo_name && !!demoCode
+    const values = form.getValues()
+    const currentDemo = values.demos[0]
+    return !!(currentDemo?.name && demoCode)
   }, [form, demoCode])
 
   const [openAccordion, setOpenAccordion] = useState<string | undefined>(
@@ -498,6 +521,66 @@ export default function PublishComponentForm() {
       setOpenAccordion("demo-info")
     }
   }, [isComponentInfoComplete])
+
+  const handleFileChange = (event: { target: { files: File[] } }) => {
+    const file = event.target.files[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("File is too large. Maximum size is 5 MB.")
+        return
+      }
+
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const demos = form.getValues("demos")
+        if (!demos[0]) return
+        const updatedDemo: DemoFormData = {
+          ...demos[0],
+          name: demos[0].name || "",
+          demo_code: demos[0].demo_code || "",
+          preview_image_data_url: (e.target?.result as string) || "",
+          preview_image_file: file,
+          tags: demos[0].tags || [],
+        }
+        demos[0] = updatedDemo
+        form.setValue("demos", demos)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const isDemoDetailsValid = () => {
+    if (!form || formStep !== "demoDetails") return true
+    const values = form.getValues()
+    const currentDemo = values.demos[currentDemoIndex]
+    return !!(
+      currentDemo?.name &&
+      currentDemo?.tags?.length > 0 &&
+      currentDemo?.preview_image_data_url
+    )
+  }
+
+  const handleAddNewDemo = () => {
+    const demos = form.getValues().demos || []
+    const newDemoIndex = demos.length
+
+    form.setValue("demos", [
+      ...demos,
+      {
+        name: "",
+        demo_code: "",
+        tags: [],
+        preview_image_data_url: "",
+        preview_image_file: new File([], "placeholder"),
+        preview_video_data_url: "",
+        preview_video_file: new File([], "placeholder"),
+        demo_direct_registry_dependencies: [],
+      },
+    ])
+
+    setCurrentDemoIndex(newDemoIndex)
+    handleStepChange("demoCode")
+  }
 
   return (
     <>
@@ -609,9 +692,27 @@ export default function PublishComponentForm() {
                   <EditorStep
                     form={form}
                     isDarkTheme={isDarkTheme}
-                    fieldName="demo_code"
+                    fieldName={`demos.${currentDemoIndex}.demo_code`}
                     value={demoCode}
-                    onChange={(value) => form.setValue("demo_code", value)}
+                    onChange={(value) => {
+                      const demos = form.getValues("demos")
+                      if (!demos[currentDemoIndex]) return
+
+                      const updatedDemo = {
+                        ...demos[currentDemoIndex],
+                        name: demos[currentDemoIndex].name || "",
+                        demo_code: value || "",
+                        preview_image_data_url:
+                          demos[currentDemoIndex].preview_image_data_url || "",
+                        preview_image_file:
+                          demos[currentDemoIndex].preview_image_file ||
+                          new File([], "placeholder"),
+                        tags: demos[currentDemoIndex].tags || [],
+                      }
+
+                      demos[currentDemoIndex] = updatedDemo
+                      form.setValue("demos", demos)
+                    }}
                   />
                 ) : (
                   <div className="p-8">
@@ -677,40 +778,6 @@ export default function PublishComponentForm() {
               }
             />
           </div>
-        )}
-
-        {formStep === "detailedForm" && unknownDependencies?.length > 0 && (
-          <ResolveUnknownDependenciesAlertForm
-            unknownDependencies={unknownDependencies}
-            onBack={() => handleStepChange("demoCode")}
-            onDependenciesResolved={(resolvedDependencies) => {
-              form.setValue(
-                "unknown_dependencies",
-                unknownDependencies.filter(
-                  (dependency) =>
-                    !resolvedDependencies
-                      .map((d) => d.slug)
-                      .includes(dependency.slugWithUsername),
-                ),
-              )
-              form.setValue("direct_registry_dependencies", [
-                ...new Set([
-                  ...form.getValues("direct_registry_dependencies"),
-                  ...resolvedDependencies
-                    .filter((d) => !d.isDemoDependency)
-                    .map((d) => `${d.username}/${d.slug}`),
-                ]),
-              ])
-              form.setValue("demo_direct_registry_dependencies", [
-                ...new Set([
-                  ...form.getValues("demo_direct_registry_dependencies"),
-                  ...resolvedDependencies
-                    .filter((d) => d.isDemoDependency)
-                    .map((d) => `${d.username}/${d.slug}`),
-                ]),
-              ])
-            }}
-          />
         )}
 
         {formStep === "detailedForm" && unknownDependencies?.length === 0 && (
@@ -859,7 +926,11 @@ export default function PublishComponentForm() {
                                 : "/demo-file.svg"
                             }
                             mainText="Demo code"
-                            subText={`${parsedCode.demoComponentNames.slice(0, 2).join(", ")}${parsedCode.demoComponentNames.length > 2 ? ` +${parsedCode.demoComponentNames.length - 2}` : ""}`}
+                            subText={`${parsedCode.demoComponentNames.slice(0, 2).join(", ")}${
+                              parsedCode.demoComponentNames.length > 2
+                                ? ` +${parsedCode.demoComponentNames.length - 2}`
+                                : ""
+                            }`}
                             onEditClick={() => {
                               handleStepChange("demoCode")
                               setTimeout(() => {
@@ -871,6 +942,43 @@ export default function PublishComponentForm() {
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>
+
+                  {form.getValues().demos?.map(
+                    (_, index) =>
+                      index > 0 && (
+                        <AccordionItem
+                          key={index}
+                          value={`demo-${index}`}
+                          className="bg-background border-none"
+                        >
+                          <AccordionContent>
+                            <div className="text-foreground space-y-4">
+                              <DemoDetailsForm form={form} />
+                              <EditCodeFileCard
+                                iconSrc={
+                                  isDarkTheme
+                                    ? "/demo-file-dark.svg"
+                                    : "/demo-file.svg"
+                                }
+                                mainText={`Demo ${index + 1} code`}
+                                onEditClick={() => {
+                                  handleStepChange("demoCode")
+                                  setCurrentDemoIndex(index)
+                                }}
+                              />
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ),
+                  )}
+
+                  <Button
+                    variant="outline"
+                    className="mt-4 w-full"
+                    onClick={handleAddNewDemo}
+                  >
+                    Add new demo
+                  </Button>
                 </div>
               </motion.div>
 
@@ -912,7 +1020,11 @@ export default function PublishComponentForm() {
           directRegistryDependencyImports={
             parsedCode.directRegistryDependencyImports
           }
-          unknownDependencies={unknownDependencies}
+          unknownDependencies={unknownDependencies.map((dep) => ({
+            slugWithUsername: dep,
+            registry: "npm",
+            isDemoDependency: false,
+          }))}
         />
       )}
       <SuccessDialog

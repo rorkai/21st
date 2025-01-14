@@ -12,6 +12,8 @@ import { useAvailableTags } from "@/lib/queries"
 import MultipleSelector, { Option } from "@/components/ui/multiselect"
 import { Input } from "@/components/ui/input"
 import { FormField } from "@/components/ui/form"
+import { useAtom } from "jotai"
+import { currentDemoIndexAtom } from "@/atoms/publish"
 
 export const DemoDetailsForm = ({
   form,
@@ -20,7 +22,11 @@ export const DemoDetailsForm = ({
 }) => {
   const { resolvedTheme } = useTheme()
   const isDarkTheme = resolvedTheme === "dark"
-  const previewImageDataUrl = form.watch("preview_image_data_url")
+  const [currentDemoIndex] = useAtom(currentDemoIndexAtom)
+  const previewImageDataUrl = form.watch(
+    `demos.${currentDemoIndex}.preview_image_data_url`,
+  )
+
   const { data: availableTags = [] } = useAvailableTags()
   const tagsId = useId()
   const previewImageId = useId()
@@ -53,10 +59,13 @@ export const DemoDetailsForm = ({
 
       const reader = new FileReader()
       reader.onload = (e) => {
-        form.setValue("preview_image_data_url", e.target?.result as string)
+        form.setValue(
+          `demos.${currentDemoIndex}.preview_image_data_url`,
+          e.target?.result as string,
+        )
       }
       reader.readAsDataURL(file)
-      form.setValue("preview_image_file", file)
+      form.setValue(`demos.${currentDemoIndex}.preview_image_file`, file)
     }
   }
 
@@ -86,7 +95,7 @@ export const DemoDetailsForm = ({
           </Label>
           <FormField
             control={form.control}
-            name="demo_name"
+            name={`demos.${currentDemoIndex}.name`}
             render={({ field }) => (
               <Input id={demoNameId} placeholder="Enter demo name" {...field} />
             )}
@@ -106,13 +115,15 @@ export const DemoDetailsForm = ({
           </Label>
           <div>
             <MultipleSelector
-              value={form.watch("tags")?.map((tag) => ({
-                value: tag.slug,
-                label: tag.name,
-              }))}
+              value={form
+                .watch(`demos.${currentDemoIndex}.tags`)
+                ?.map((tag) => ({
+                  value: tag.slug,
+                  label: tag.name,
+                }))}
               onChange={(options) => {
                 form.setValue(
-                  "tags",
+                  `demos.${currentDemoIndex}.tags`,
                   options.map((option) => ({
                     name: option.label,
                     slug: option.value,
@@ -285,7 +296,7 @@ export const DemoDetailsForm = ({
             >
               <div className="w-40 h-32 relative">
                 <video
-                  src={previewVideoDataUrl}
+                  src={previewVideoDataUrl || ""}
                   controls
                   style={{
                     width: "100%",

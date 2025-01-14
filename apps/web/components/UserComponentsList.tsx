@@ -6,28 +6,26 @@ import { searchQueryAtom } from "@/components/Header"
 import { userComponentsTabAtom } from "@/components/UserComponentsHeader"
 import { Component, User } from "@/types/global"
 import { useQuery } from "@tanstack/react-query"
-import { useClerkSupabaseClient } from "@/lib/clerk"
-
-interface UserComponentsListProps {
-  publishedComponents?: (Component & { user: User })[]
-  huntedComponents?: (Component & { user: User })[]
-}
 
 export function UserComponentsList({
+  user,
   publishedComponents = [],
   huntedComponents = [],
-}: UserComponentsListProps) {
+}: {
+  user: User
+  publishedComponents?: (Component & { user: User })[]
+  huntedComponents?: (Component & { user: User })[]
+}) {
   const activeTab = useAtomValue(userComponentsTabAtom)
   const [searchQuery] = useAtom(searchQueryAtom)
-  const supabase = useClerkSupabaseClient()
+  const baseComponents =
+    activeTab === "published" ? publishedComponents : huntedComponents
 
   const { data: components, isLoading } = useQuery<
     (Component & { user: User })[]
   >({
-    queryKey: ["user-components", activeTab, searchQuery],
+    queryKey: ["user-components", user.id, activeTab, searchQuery],
     queryFn: async () => {
-      const baseComponents =
-        activeTab === "published" ? publishedComponents : huntedComponents
       if (!searchQuery) return baseComponents
 
       const query = searchQuery.toLowerCase()
@@ -41,9 +39,7 @@ export function UserComponentsList({
         )
       })
     },
-    initialData: undefined,
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 30,
+    initialData: baseComponents,
     refetchOnWindowFocus: false,
   })
 

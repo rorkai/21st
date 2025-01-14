@@ -14,7 +14,6 @@ import { NameSlugForm } from "./forms/NameSlugForm"
 import { FormData } from "./utils"
 import { licenses } from "@/lib/licenses"
 import { useSubmitFormHotkeys } from "./hotkeys"
-import { useAvailableTags } from "@/lib/queries"
 import { useTheme } from "next-themes"
 
 export const ComponentDetailsForm = ({
@@ -29,7 +28,6 @@ export const ComponentDetailsForm = ({
   hotkeysEnabled?: boolean
 }) => {
   useSubmitFormHotkeys(form, handleSubmit, hotkeysEnabled)
-  const { data: availableTags = [] } = useAvailableTags()
   const { resolvedTheme } = useTheme()
   const isDarkTheme = resolvedTheme === "dark"
   const [open, setOpen] = useState(false)

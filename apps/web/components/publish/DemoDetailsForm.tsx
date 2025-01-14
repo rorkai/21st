@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button"
 import UploadIcon from "@/components/UploadIcon"
 import { cn } from "@/lib/utils"
 import { useTheme } from "next-themes"
+import { useAvailableTags } from "@/lib/queries"
+import MultipleSelector, { Option } from "@/components/ui/multiselect"
+import { Separator } from "@/components/ui/separator"
 
 export const DemoDetailsForm = ({
   form,
@@ -17,6 +20,13 @@ export const DemoDetailsForm = ({
   const { resolvedTheme } = useTheme()
   const isDarkTheme = resolvedTheme === "dark"
   const previewImageDataUrl = form.watch("preview_image_data_url")
+  const { data: availableTags = [] } = useAvailableTags()
+
+  // Convert tags to MultipleSelector options format
+  const tagOptions: Option[] = availableTags.map((tag) => ({
+    value: tag.slug,
+    label: tag.name,
+  }))
 
   const {
     previewVideoDataUrl,
@@ -65,6 +75,48 @@ export const DemoDetailsForm = ({
   return (
     <div className="flex flex-col gap-8 w-full">
       <div className="space-y-6">
+        <div className="w-full">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="tags" className="text-sm font-medium">
+              Tags
+            </Label>
+          </div>
+          <div className="mt-1">
+            <MultipleSelector
+              value={form.watch("tags")?.map((tag) => ({
+                value: tag.slug,
+                label: tag.name,
+              }))}
+              onChange={(options) => {
+                form.setValue(
+                  "tags",
+                  options.map((option) => ({
+                    name: option.label,
+                    slug: option.value,
+                  })),
+                )
+              }}
+              defaultOptions={tagOptions}
+              options={tagOptions}
+              placeholder="Search tags..."
+              creatable={true}
+              emptyIndicator={
+                <p className="text-center text-sm">No tags found</p>
+              }
+              onSearchSync={(search) => {
+                if (!search) return tagOptions
+                return tagOptions.filter(
+                  (option) =>
+                    option.label.toLowerCase().includes(search.toLowerCase()) ||
+                    option.value.toLowerCase().includes(search.toLowerCase()),
+                )
+              }}
+            />
+          </div>
+        </div>
+
+        <Separator />
+
         <div className="w-full">
           <Label htmlFor="preview_image" className="block text-sm font-medium">
             Cover Image (1200x900 recommended)

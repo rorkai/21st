@@ -234,7 +234,7 @@ export function useLikeMutation(
 
 export async function addTagsToComponent(
   supabase: SupabaseClient<Database>,
-  componentId: number,
+  demoId: number,
   tags: Tag[],
 ) {
   for (const tag of tags) {
@@ -275,11 +275,11 @@ export async function addTagsToComponent(
     }
 
     const { error: linkError } = await supabase
-      .from("component_tags")
-      .insert({ component_id: componentId, tag_id: tagId })
+      .from("demo_tags")
+      .insert({ demo_id: demoId, tag_id: tagId })
 
     if (linkError) {
-      console.error("Error linking tag to component:", linkError)
+      console.error("Error linking tag to demo:", linkError)
     }
   }
 }

@@ -411,7 +411,7 @@ export default function PublishComponentForm() {
       if (validTags) {
         await addTagsToComponent(
           client,
-          insertedComponent.id,
+          insertedDemo.id,
           validTags.filter((tag) => !!tag.slug) as Tag[],
         )
       }
@@ -545,7 +545,7 @@ export default function PublishComponentForm() {
                     </React.Suspense>
                   </motion.div>
                 ) : (
-                  <div className="h-full p-8" >
+                  <div className="h-full p-8">
                     {activeCodeTab === "component" && <CodeGuidelinesAlert />}
                     {activeCodeTab === "tailwind" && (
                       <TailwindGuidelinesAlert />

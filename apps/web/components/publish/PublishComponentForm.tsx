@@ -310,7 +310,6 @@ export default function PublishComponentForm() {
       if (data.demos.some((demo) => !demo.demo_code))
         throw new Error("Demo code is required for all demos")
 
-
       const [codeUrl, tailwindConfigUrl, globalCssUrl] = await Promise.all([
         uploadToR2({
           file: {
@@ -386,7 +385,6 @@ export default function PublishComponentForm() {
         throw new Error("User ID is required")
       }
 
-
       for (const demo of data.demos) {
         const demoIndex = data.demos.indexOf(demo)
         setPublishProgress(
@@ -425,7 +423,6 @@ export default function PublishComponentForm() {
           hasPreviewVideo: !!demo.preview_video_file,
           demoFolder,
         })
-
 
         const [demoCodeUrl, previewImageR2Url, videoR2Url] = await Promise.all([
           uploadToR2({
@@ -478,7 +475,6 @@ export default function PublishComponentForm() {
           hasPreviewImage: !!previewImageR2Url,
           hasPreviewVideo: !!videoR2Url,
         })
-
 
         const { error: updateDemoError } = await client
           .from("demos")
@@ -535,6 +531,7 @@ export default function PublishComponentForm() {
     form.reset()
     setIsSuccessDialogOpen(false)
     setFormStep("nameSlugForm")
+    router.replace(pathname)
   }
 
   const handleSubmit = (event: React.FormEvent) => {

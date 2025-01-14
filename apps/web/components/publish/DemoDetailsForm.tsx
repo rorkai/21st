@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils"
 import { useTheme } from "next-themes"
 import { useAvailableTags } from "@/lib/queries"
 import MultipleSelector, { Option } from "@/components/ui/multiselect"
-import { Separator } from "@/components/ui/separator"
 
 export const DemoDetailsForm = ({
   form,
@@ -114,8 +113,6 @@ export const DemoDetailsForm = ({
             />
           </div>
         </div>
-
-        <Separator />
 
         <div className="w-full">
           <Label htmlFor="preview_image" className="block text-sm font-medium">

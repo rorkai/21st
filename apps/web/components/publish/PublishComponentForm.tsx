@@ -696,7 +696,7 @@ export default function PublishComponentForm() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3, delay: 0.3 }}
-                className="w-1/2 flex flex-col gap-4 max-h-[calc(100vh-2rem)] overflow-y-auto p-4"
+                className="w-1/3 flex flex-col gap-4 max-h-[calc(100vh-2rem)] overflow-y-auto p-4"
               >
                 <div className="space-y-4 sticky top-0 bg-background pt-4 z-10">
                   <h2 className="text-lg font-semibold">Component</h2>

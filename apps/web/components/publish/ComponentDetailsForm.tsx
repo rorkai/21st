@@ -41,11 +41,13 @@ export const ComponentDetailsForm = ({
 
   return (
     <div className="flex flex-col gap-8 w-full">
-      <NameSlugForm
-        form={form}
-        isSlugReadOnly={true}
-        placeholderName={form.getValues("name")}
-      />
+      <div className="w-full">
+        <NameSlugForm
+          form={form}
+          isSlugReadOnly={true}
+          placeholderName={form.getValues("name")}
+        />
+      </div>
 
       <div className="space-y-6">
         <div className="w-full">
@@ -58,49 +60,51 @@ export const ComponentDetailsForm = ({
           />
         </div>
 
-        <div className="w-full">
-          <Label htmlFor="registry">Registry</Label>
-          <FormField
-            control={form.control}
-            name="registry"
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a registry" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ui">ui</SelectItem>
-                  <SelectItem value="components">components</SelectItem>
-                  <SelectItem value="hooks">hooks</SelectItem>
-                  <SelectItem value="icons">icons</SelectItem>
-                  <SelectItem value="blocks">blocks</SelectItem>
-                  <SelectItem value="pages">pages</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="registry">Registry</Label>
+            <FormField
+              control={form.control}
+              name="registry"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a registry" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ui">ui</SelectItem>
+                    <SelectItem value="components">components</SelectItem>
+                    <SelectItem value="hooks">hooks</SelectItem>
+                    <SelectItem value="icons">icons</SelectItem>
+                    <SelectItem value="blocks">blocks</SelectItem>
+                    <SelectItem value="pages">pages</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
 
-        <div className="w-full">
-          <Label htmlFor="license">License</Label>
-          <FormField
-            control={form.control}
-            name="license"
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a license" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(licenses).map(([key, license]) => (
-                    <SelectItem key={key} value={key}>
-                      {license.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
+          <div>
+            <Label htmlFor="license">License</Label>
+            <FormField
+              control={form.control}
+              name="license"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a license" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(licenses).map(([key, license]) => (
+                      <SelectItem key={key} value={key}>
+                        {license.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
         </div>
 
         <div className="w-full">

@@ -83,6 +83,7 @@ export default function PublishComponentForm() {
       demo_direct_registry_dependencies: [],
       code: "",
       demo_code: "",
+      demo_name: "",
       description: "",
       tags: [],
       license: "mit",
@@ -340,7 +341,7 @@ export default function PublishComponentForm() {
         updated_at: new Date().toISOString(),
         compiled_css: null,
         pro_preview_image_url: null,
-        name: "", // Required field
+        name: data.demo_name,
       }
 
       const { data: insertedDemo, error: demoError } = await client
@@ -763,7 +764,7 @@ export default function PublishComponentForm() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="w-1/2 h-full"
+                  className="w-2/3 h-full"
                 >
                   <React.Suspense fallback={<LoadingSpinner />}>
                     <PublishComponentPreview

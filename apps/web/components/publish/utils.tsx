@@ -14,6 +14,9 @@ export const formSchema = z.object({
   demo_code: z.string().min(1, {
     message: "Demo code is required.",
   }),
+  demo_name: z.string().min(2, {
+    message: "Demo name must be at least 2 characters.",
+  }),
   tailwind_config: z.string().optional(),
   globals_css: z.string().optional(),
   registry: z.string().default("ui"),
@@ -66,6 +69,7 @@ export const isFormValid = (form: UseFormReturn<FormData>) => {
     component_slug,
     code,
     demo_code,
+    demo_name,
     slug_available,
     unknown_dependencies,
   } = form.getValues()
@@ -75,6 +79,7 @@ export const isFormValid = (form: UseFormReturn<FormData>) => {
     component_slug.length >= 2 &&
     code.length > 0 &&
     demo_code.length > 0 &&
+    demo_name.length >= 2 &&
     unknown_dependencies?.length === 0 &&
     slug_available === true
   )

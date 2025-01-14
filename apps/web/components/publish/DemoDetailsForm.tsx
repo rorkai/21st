@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useId } from "react"
 import { UseFormReturn } from "react-hook-form"
 import { Label } from "@/components/ui/label"
 import { FormData } from "./utils"
@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils"
 import { useTheme } from "next-themes"
 import { useAvailableTags } from "@/lib/queries"
 import MultipleSelector, { Option } from "@/components/ui/multiselect"
+import { Input } from "@/components/ui/input"
+import { FormField } from "@/components/ui/form"
 
 export const DemoDetailsForm = ({
   form,
@@ -20,6 +22,10 @@ export const DemoDetailsForm = ({
   const isDarkTheme = resolvedTheme === "dark"
   const previewImageDataUrl = form.watch("preview_image_data_url")
   const { data: availableTags = [] } = useAvailableTags()
+  const tagsId = useId()
+  const previewImageId = useId()
+  const previewVideoId = useId()
+  const demoNameId = useId()
 
   // Convert tags to MultipleSelector options format
   const tagOptions: Option[] = availableTags.map((tag) => ({
@@ -74,13 +80,31 @@ export const DemoDetailsForm = ({
   return (
     <div className="flex flex-col gap-8 w-full">
       <div className="space-y-6">
-        <div className="w-full">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="tags" className="text-sm font-medium">
-              Tags
-            </Label>
-          </div>
-          <div className="mt-1">
+        <div className="space-y-2">
+          <Label htmlFor={demoNameId}>
+            Demo Name <span className="text-destructive">*</span>
+          </Label>
+          <FormField
+            control={form.control}
+            name="demo_name"
+            render={({ field }) => (
+              <Input id={demoNameId} placeholder="Enter demo name" {...field} />
+            )}
+          />
+          <p
+            className="text-xs text-muted-foreground"
+            role="region"
+            aria-live="polite"
+          >
+            A name that describes this demo implementation
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor={tagsId}>
+            Tags <span className="text-destructive">*</span>
+          </Label>
+          <div>
             <MultipleSelector
               value={form.watch("tags")?.map((tag) => ({
                 value: tag.slug,
@@ -112,20 +136,27 @@ export const DemoDetailsForm = ({
               }}
             />
           </div>
+          <p
+            className="text-xs text-muted-foreground"
+            role="region"
+            aria-live="polite"
+          >
+            Add tags to help others discover your component
+          </p>
         </div>
 
-        <div className="w-full">
-          <Label htmlFor="preview_image" className="block text-sm font-medium">
-            Cover Image (1200x900 recommended)
+        <div className="space-y-2">
+          <Label htmlFor={previewImageId}>
+            Cover Image <span className="text-destructive">*</span>
           </Label>
           {!previewImageDataUrl ? (
             <div
               {...getImageRootProps()}
-              className={`flex flex-col !justify-between mt-1 w-full border border-dashed bg-background rounded-md p-8 text-center cursor-pointer hover:border-gray-400 transition-colors relative`}
+              className={`flex flex-col !justify-between w-full border border-dashed bg-background rounded-md p-8 text-center cursor-pointer hover:border-gray-400 transition-colors relative`}
             >
-              <input {...getImageInputProps()} id="preview_image" />
+              <input {...getImageInputProps()} id={previewImageId} />
               <UploadIcon />
-              <p className="mt-2 text-sm font-medium">
+              <p className="mt-2 text-xs font-medium">
                 Click to upload&nbsp;
                 <span className="text-muted-foreground font-normal">
                   or drag and drop
@@ -136,7 +167,7 @@ export const DemoDetailsForm = ({
               </p>
               {isImageDragActive && (
                 <div className="absolute inset-0 bg-background bg-opacity-90 flex items-center justify-center rounded-md">
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Drop image here
                   </p>
                 </div>
@@ -145,11 +176,11 @@ export const DemoDetailsForm = ({
           ) : (
             <div
               {...getImageRootProps()}
-              className={`mt-1 w-full border ${
+              className={`w-full border ${
                 isDarkTheme ? "border-gray-600" : "border-gray-300"
               } rounded-md p-2 flex items-center gap-2 relative`}
             >
-              <input {...getImageInputProps()} id="preview_image" />
+              <input {...getImageInputProps()} id={previewImageId} />
               <div className="w-40 h-32 relative">
                 <img
                   src={previewImageDataUrl}
@@ -192,30 +223,36 @@ export const DemoDetailsForm = ({
               </div>
               {isImageDragActive && (
                 <div className="absolute inset-0 bg-background bg-opacity-90 flex items-center justify-center">
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Drop new image here
                   </p>
                 </div>
               )}
             </div>
           )}
+          <p
+            className="text-xs text-muted-foreground"
+            role="region"
+            aria-live="polite"
+          >
+            A preview image that represents your component (1200x900
+            recommended)
+          </p>
         </div>
 
-        <div className="w-full">
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="preview_video" className="text-sm font-medium">
-              Video Preview
-            </Label>
-            <span className="text-sm text-muted-foreground">Optional</span>
+            <Label htmlFor={previewVideoId}>Video Preview</Label>
+            <span className="text-xs text-muted-foreground">Optional</span>
           </div>
           {!previewVideoDataUrl ? (
             <div
               {...getVideoRootProps()}
-              className={`flex flex-col !justify-between mt-1 w-full border border-dashed bg-background rounded-md p-8 text-center cursor-pointer hover:border-gray-400 transition-colors relative`}
+              className={`flex flex-col !justify-between w-full border border-dashed bg-background rounded-md p-8 text-center cursor-pointer hover:border-gray-400 transition-colors relative`}
             >
-              <input {...getVideoInputProps()} id="preview_video" />
+              <input {...getVideoInputProps()} id={previewVideoId} />
               <UploadIcon />
-              <p className="mt-2 text-sm font-medium">
+              <p className="mt-2 text-xs font-medium">
                 Click to upload&nbsp;
                 <span className="text-muted-foreground font-normal">
                   or drag and drop
@@ -226,14 +263,14 @@ export const DemoDetailsForm = ({
               </p>
               {isProcessingVideo && (
                 <div className="absolute inset-0 bg-background bg-opacity-90 flex items-center justify-center rounded-md">
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Processing video...
                   </p>
                 </div>
               )}
               {isVideoDragActive && (
                 <div className="absolute inset-0 bg-background bg-opacity-90 flex items-center justify-center rounded-md">
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Drop video here
                   </p>
                 </div>
@@ -242,7 +279,7 @@ export const DemoDetailsForm = ({
           ) : (
             <div
               className={cn(
-                "mt-1 w-full border rounded-md p-2 flex items-center gap-2 relative",
+                "w-full border rounded-md p-2 flex items-center gap-2 relative",
                 isDarkTheme ? "border-gray-600" : "border-gray-300",
               )}
             >
@@ -270,6 +307,14 @@ export const DemoDetailsForm = ({
               </div>
             </div>
           )}
+          <p
+            className="text-xs text-muted-foreground"
+            role="region"
+            aria-live="polite"
+          >
+            A short video demonstrating animation or interaction with your
+            component
+          </p>
         </div>
       </div>
     </div>

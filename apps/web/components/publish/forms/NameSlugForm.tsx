@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react"
+import React, { useState, useRef, useId } from "react"
 import { useController, UseFormReturn } from "react-hook-form"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -28,6 +28,8 @@ export function NameSlugForm({
   const slug = form.watch("component_slug")
   const userId = publishAsUserId ?? currentUser?.id
   const nameInputRef = useRef<HTMLInputElement | null>(null)
+  const nameId = useId()
+  const slugId = useId()
 
   const {
     isAvailable: slugAvailable,
@@ -62,10 +64,12 @@ export function NameSlugForm({
   return (
     <div className="flex flex-col w-full">
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="name">Name</Label>
+        <div className="space-y-2">
+          <Label htmlFor={nameId}>
+            Name <span className="text-destructive">*</span>
+          </Label>
           <Input
-            id="name"
+            id={nameId}
             ref={(e) => {
               nameField.ref(e)
               nameInputRef.current = e
@@ -74,16 +78,26 @@ export function NameSlugForm({
             value={nameField.value}
             onChange={nameField.onChange}
             onBlur={nameField.onBlur}
-            className="mt-1 w-full text-foreground"
+            className="w-full text-foreground"
+            required
           />
+          <p
+            className="text-xs text-muted-foreground"
+            role="region"
+            aria-live="polite"
+          >
+            The display name of your component
+          </p>
         </div>
 
-        <div>
-          <Label htmlFor="component_slug">Slug</Label>
+        <div className="space-y-2">
+          <Label htmlFor={slugId}>
+            Slug <span className="text-destructive">*</span>
+          </Label>
           <Input
-            id="component_slug"
+            id={slugId}
             {...form.register("component_slug", { required: true })}
-            className="mt-1 w-full"
+            className="w-full"
             placeholder={`e.g. "${makeSlugFromName(placeholderName)}"`}
             disabled={
               isSlugReadOnly || (isSlugChecking && !isSlugManuallyEdited)
@@ -92,16 +106,17 @@ export function NameSlugForm({
               setIsSlugManuallyEdited(true)
               form.setValue("component_slug", e.target.value)
             }}
+            required
           />
+          <p
+            className="text-xs text-muted-foreground"
+            role="region"
+            aria-live="polite"
+          >
+            Used in the URL and imports, can't be changed later
+          </p>
         </div>
       </div>
-
-      {!slug && (
-        <p className="text-muted-foreground text-sm mt-2">
-          Slug is used in the URL of your component and file imports, and can't
-          be changed later
-        </p>
-      )}
 
       {slugError && (
         <p className="text-red-500 text-sm mt-2">{slugError.message}</p>

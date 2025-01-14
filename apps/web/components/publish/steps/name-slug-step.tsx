@@ -2,11 +2,13 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { NameSlugForm } from "../forms/NameSlugForm"
 import { UseFormReturn } from "react-hook-form"
 import { FormData } from "../utils"
 import { Card } from "@/components/ui/card"
-import { HeroVideoDialog } from "@/components/ui/hero-video-dialog"
+import { ComponentDetailsForm } from "../ComponentDetailsForm"
+import { Icons } from "@/components/icons"
+import { LinkPreview } from "@/components/ui/link-preview"
+import { useAnimation } from "framer-motion"
 
 interface NameSlugStepProps {
   form: UseFormReturn<FormData>
@@ -25,6 +27,8 @@ export function NameSlugStep({
   onContinue,
   onPublishAsChange,
 }: NameSlugStepProps) {
+  const controls = useAnimation()
+
   return (
     <div className="absolute inset-x-0 top-0 bg-background px-2 sm:px-4 md:px-0">
       <Card className="w-full max-w-[800px] mx-auto mt-4 sm:mt-20 md:mt-20 p-4 sm:p-6 md:p-8">
@@ -35,35 +39,29 @@ export function NameSlugStep({
           transition={{ duration: 0.3 }}
           className="flex flex-col justify-center w-full gap-6"
         >
-          <h2 className="text-2xl font-medium">New component</h2>
-
-          <div className="bg-muted rounded-lg p-4 flex gap-6">
-            <div className="relative w-[224px] h-[126px] bg-background rounded-md overflow-hidden">
-              <HeroVideoDialog
-                videoSrc="https://www.youtube.com/embed/NXpSAnmleyE"
-                thumbnailSrc="/tutorial-thumbnail.png"
-                thumbnailAlt="Tutorial: How to publish components"
-                animationStyle="from-right"
-                className="w-full h-full"
-              />
-            </div>
-            <div className="flex flex-col justify-between flex-1 py-1">
-              <div>
-                <h3 className="text-lg font-medium">
-                  How to publish components
-                </h3>
-                <p className="text-muted-foreground mt-2 text-sm">
-                  Learn how to publish and share your components with the
-                  community
-                </p>
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-medium">New component</h2>
+            <LinkPreview
+              url="https://www.youtube.com/watch?v=NXpSAnmleyE"
+              imageSrc="/tutorial-thumbnail.png"
+              isStatic
+              width={160}
+              height={90}
+            >
+              <div
+                className="flex items-center gap-1.5 rounded-full border border-border/40 bg-background/50 px-2.5 h-8 text-xs font-medium text-muted-foreground hover:text-accent-foreground"
+                onMouseEnter={() => controls.start("animate")}
+                onMouseLeave={() => controls.start("normal")}
+              >
+                <div className="flex items-center justify-center">
+                  <Icons.clap size={18} controls={controls} />
+                </div>
+                Watch Tutorial
               </div>
-              <div className="text-sm text-muted-foreground/80">
-                Watch the guide on YouTube
-              </div>
-            </div>
+            </LinkPreview>
           </div>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col">
             {isAdmin && (
               <div className="flex flex-col gap-2 mb-4">
                 <Label
@@ -80,11 +78,11 @@ export function NameSlugStep({
                 />
               </div>
             )}
-            <NameSlugForm
+            <ComponentDetailsForm
               form={form}
-              publishAsUserId={publishAsUser?.id}
               isSlugReadOnly={false}
-              placeholderName={"Button"}
+              publishAsUserId={publishAsUser?.id}
+              placeholderName="Button"
             />
             <Button
               className="mt-4"

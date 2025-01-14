@@ -2,7 +2,7 @@ import { LucideProps, Moon, SunMedium, type LucideIcon } from "lucide-react"
 import { LovableLogo } from "./lovable"
 import { SitebrewLogo } from "./sitebrew"
 import { TerminalIcon } from "./terminal"
-
+import { ClapIcon } from "./clap"
 export type Icon = LucideIcon
 
 export const Icons = {
@@ -65,6 +65,7 @@ export const Icons = {
     </svg>
   ),
   terminal: TerminalIcon,
+  clap: ClapIcon,
   discord: (props: LucideProps) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"

@@ -21,7 +21,9 @@ export const formSchema = z.object({
   globals_css: z.string().optional(),
   registry: z.string().default("ui"),
   publish_as_username: z.string().optional(),
-  description: z.string().optional(),
+  description: z.string().min(20, {
+    message: "Description must be at least 20 characters.",
+  }),
   tags: z
     .array(
       z.object({
@@ -30,14 +32,19 @@ export const formSchema = z.object({
         slug: z.string(),
       }),
     )
-    .optional()
-    .default([]),
+    .min(1, {
+      message: "At least one tag is required.",
+    }),
   is_public: z.boolean().default(true),
-  preview_image_data_url: z.string().optional(),
-  preview_image_file: z.instanceof(File).optional(),
+  preview_image_data_url: z.string({
+    required_error: "Preview image is required.",
+  }),
+  preview_image_file: z.instanceof(File, {
+    message: "Preview image file is required.",
+  }),
   preview_video_data_url: z.string().optional(),
   preview_video_file: z.instanceof(File).optional(),
-  license: z.string().optional(),
+  license: z.string().default("mit"),
   unknown_dependencies: z.array(
     z.object({
       slugWithUsername: z.string(),

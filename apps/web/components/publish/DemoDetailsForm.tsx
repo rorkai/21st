@@ -78,7 +78,7 @@ export const DemoDetailsForm = ({
   })
 
   return (
-    <div className="flex flex-col gap-8 w-full">
+    <div className="flex flex-col gap-4 w-full">
       <div className="space-y-6">
         <div className="space-y-2">
           <Label htmlFor={demoNameId}>

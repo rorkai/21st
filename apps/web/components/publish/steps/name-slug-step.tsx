@@ -2,7 +2,7 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { NameSlugForm } from "../ComponentDetailsForm"
+import { NameSlugForm } from "../forms/NameSlugForm"
 import { UseFormReturn } from "react-hook-form"
 import { FormData } from "../utils"
 import { Card } from "@/components/ui/card"
@@ -26,7 +26,7 @@ export function NameSlugStep({
   onPublishAsChange,
 }: NameSlugStepProps) {
   return (
-    <div className="absolute inset-x-0 top-0 bg-background px-2 sm:px-4 md:px-4">
+    <div className="absolute inset-x-0 top-0 bg-background px-2 sm:px-4 md:px-0">
       <Card className="w-full max-w-[800px] mx-auto mt-4 sm:mt-20 md:mt-20 p-4 sm:p-6 md:p-8">
         <motion.div
           initial={{ opacity: 0 }}
@@ -66,7 +66,10 @@ export function NameSlugStep({
           <div className="flex flex-col gap-1">
             {isAdmin && (
               <div className="flex flex-col gap-2 mb-4">
-                <Label htmlFor="publish-as" className="block text-sm font-medium">
+                <Label
+                  htmlFor="publish-as"
+                  className="block text-sm font-medium"
+                >
                   Publish as (admin only)
                 </Label>
                 <Input

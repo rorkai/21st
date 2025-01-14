@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useDropzone } from "react-dropzone"
 import { UseFormReturn } from "react-hook-form"
-import { type FormData } from "./utils"
+import { type FormData } from "../utils"
 
 async function convertVideoToMP4(file: File): Promise<File> {
   const formData = new FormData()

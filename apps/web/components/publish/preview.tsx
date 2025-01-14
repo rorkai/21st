@@ -19,6 +19,10 @@ import React, { useMemo, useState, useEffect } from "react"
 import { LoadingSpinner } from "../LoadingSpinner"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 import { useToast } from "@/hooks/use-toast"
+import { useAtom } from "jotai"
+import { currentDemoIndexAtom } from "@/atoms/publish"
+import { UseFormReturn } from "react-hook-form"
+import type { FormData } from "./utils"
 
 const SandpackPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react").then((module) => ({
@@ -35,6 +39,7 @@ export function PublishComponentPreview({
   isDarkTheme,
   customTailwindConfig,
   customGlobalCss,
+  form,
 }: {
   code: string
   demoCode: string
@@ -44,11 +49,32 @@ export function PublishComponentPreview({
   isDarkTheme: boolean
   customTailwindConfig?: string
   customGlobalCss?: string
+  form: UseFormReturn<FormData>
 }) {
   const isDebug = useDebugMode()
   const supabase = useClerkSupabaseClient()
   const [css, setCss] = useState<string | undefined>(undefined)
   const { toast } = useToast()
+  const [currentDemoIndex] = useAtom(currentDemoIndexAtom)
+  const demos = form.watch("demos")
+
+  useEffect(() => {
+    setCss(undefined)
+  }, [currentDemoIndex])
+
+  const currentDemoCode = useMemo(() => {
+    console.log("Updating demo code for index:", currentDemoIndex, {
+      demoCount: demos?.length,
+      currentDemo: demos?.[currentDemoIndex],
+    })
+    const currentDemo = demos?.[currentDemoIndex]
+    if (!currentDemo) {
+      console.log("No demo found, using fallback")
+      return demoCode
+    }
+    console.log("Using demo code from index", currentDemoIndex)
+    return currentDemo.demo_code || demoCode
+  }, [currentDemoIndex, demos, demoCode])
 
   const {
     data: registryDependencies,
@@ -71,8 +97,8 @@ export function PublishComponentPreview({
   })
 
   const demoComponentNames = useMemo(
-    () => extractDemoComponentNames(demoCode),
-    [demoCode],
+    () => extractDemoComponentNames(currentDemoCode),
+    [currentDemoCode],
   )
 
   const shellCode = useMemo(() => {
@@ -81,7 +107,7 @@ export function PublishComponentPreview({
       componentSlug: slugToPublish,
       relativeImportPath: `/components/${registryToPublish}`,
       code,
-      demoCode,
+      demoCode: currentDemoCode,
       theme: isDarkTheme ? "dark" : "light",
       css: "",
     })
@@ -94,7 +120,7 @@ export function PublishComponentPreview({
     slugToPublish,
     registryToPublish,
     code,
-    demoCode,
+    currentDemoCode,
     isDarkTheme,
   ])
 
@@ -108,7 +134,7 @@ export function PublishComponentPreview({
       },
       body: JSON.stringify({
         code,
-        demoCode,
+        demoCode: currentDemoCode,
         baseTailwindConfig: defaultTailwindConfig,
         baseGlobalCss: defaultGlobalCss,
         customTailwindConfig,
@@ -151,7 +177,7 @@ export function PublishComponentPreview({
       })
   }, [
     code,
-    demoCode,
+    currentDemoCode,
     customTailwindConfig,
     customGlobalCss,
     registryDependencies,
@@ -166,7 +192,7 @@ export function PublishComponentPreview({
         componentSlug: slugToPublish,
         relativeImportPath: `/components/${registryToPublish}`,
         code,
-        demoCode,
+        demoCode: currentDemoCode,
         theme: isDarkTheme ? "dark" : "light",
         css: css ?? "",
         customTailwindConfig,
@@ -177,7 +203,7 @@ export function PublishComponentPreview({
       slugToPublish,
       registryToPublish,
       code,
-      demoCode,
+      currentDemoCode,
       isDarkTheme,
       css,
       customTailwindConfig,
@@ -200,10 +226,10 @@ export function PublishComponentPreview({
   const dependencies = useMemo(() => {
     return {
       ...extractNPMDependencies(code),
-      ...extractNPMDependencies(demoCode),
+      ...extractNPMDependencies(currentDemoCode),
       ...(registryDependencies?.npmDependencies || {}),
     }
-  }, [code, demoCode, registryDependencies?.npmDependencies])
+  }, [code, currentDemoCode, registryDependencies?.npmDependencies])
 
   const providerProps = {
     template: "react-ts" as const,

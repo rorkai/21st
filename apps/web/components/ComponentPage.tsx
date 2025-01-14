@@ -403,7 +403,7 @@ export default function ComponentPage({
       const prompt = getComponentInstallPrompt({
         promptType: selectedPromptType as PromptType,
         codeFileName: component.code.split("/").slice(-1)[0]!,
-        demoCodeFileName: component.demo_code.split("/").slice(-1)[0]!,
+        demoCodeFileName: demo.demo_code.split("/").slice(-1)[0]!,
         code,
         demoCode,
         registryDependencies,

@@ -28,7 +28,6 @@ import {
   DebugInfoDisplay,
   DemoComponentGuidelinesAlert,
   CodeGuidelinesAlert,
-  ResolveUnknownDependenciesAlertForm,
   GlobalStylesGuidelinesAlert,
   TailwindGuidelinesAlert,
 } from "./alerts"
@@ -54,7 +53,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useAtom } from "jotai"
-import { currentDemoIndexAtom } from "@/atoms/publish"
+import { currentDemoIndexAtom, openAccordionAtom } from "@/atoms/publish"
 import { LoadingDialog } from "../LoadingDialog"
 
 export interface ParsedCodeData {
@@ -78,10 +77,10 @@ export default function PublishComponentForm() {
   const isDarkTheme = resolvedTheme === "dark"
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false)
   const [currentDemoIndex, setCurrentDemoIndex] = useAtom(currentDemoIndexAtom)
+  const [openAccordion, setOpenAccordion] = useAtom(openAccordionAtom)
 
   const [formStartTime] = useState(() => Date.now())
   const [publishAttemptCount, setPublishAttemptCount] = useState(0)
-  const [completedSteps] = useState<string[]>([])
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -115,7 +114,6 @@ export default function PublishComponentForm() {
   const { component_slug: componentSlug, code, demos } = form.getValues()
   const currentDemo = demos?.[currentDemoIndex]
   const demoCode = currentDemo?.demo_code || ""
-  const validTags = currentDemo?.tags || []
   const unknownDependencies = form.watch("unknown_dependencies") || []
   const directRegistryDependencies = form.watch("direct_registry_dependencies")
   const demoDirectRegistryDependencies = form.watch(
@@ -574,16 +572,6 @@ export default function PublishComponentForm() {
     return !!(currentDemo?.name && demoCode)
   }, [form, demoCode])
 
-  const [openAccordion, setOpenAccordion] = useState<string | undefined>(
-    "component-info",
-  )
-
-  useEffect(() => {
-    if (isComponentInfoComplete()) {
-      setOpenAccordion("demo-info")
-    }
-  }, [isComponentInfoComplete])
-
   const handleFileChange = (event: { target: { files: File[] } }) => {
     const file = event.target.files[0]
     if (file) {
@@ -641,6 +629,7 @@ export default function PublishComponentForm() {
     ])
 
     setCurrentDemoIndex(newDemoIndex)
+    setOpenAccordion(`demo-${newDemoIndex}`)
     handleStepChange("demoCode")
   }
 
@@ -662,6 +651,56 @@ export default function PublishComponentForm() {
       setCurrentDemoIndex(Math.max(0, currentDemoIndex - 1))
     }
   }
+
+  useEffect(() => {
+    if (isComponentInfoComplete()) {
+      setOpenAccordion("demo-info")
+    }
+  }, [isComponentInfoComplete])
+
+  useEffect(() => {
+    const demos = form.watch("demos")
+    const currentDemo = demos[currentDemoIndex]
+    if (currentDemo?.demo_code) {
+      setOpenAccordion(
+        currentDemoIndex === 0 ? "demo-info" : `demo-${currentDemoIndex}`,
+      )
+    }
+  }, [currentDemoIndex, form.watch("demos")])
+
+  const handleAccordionChange = useCallback(
+    (value: string | undefined) => {
+      console.log("Accordion change:", { value, currentDemoIndex })
+
+      // First update the accordion
+      setOpenAccordion(value || "")
+
+      // Then update the demo index after a small delay
+      setTimeout(() => {
+        if (value === "demo-info") {
+          console.log("Setting demo index to 0")
+          setCurrentDemoIndex(0)
+        } else if (value?.startsWith("demo-")) {
+          const index = parseInt(value.replace("demo-", ""))
+          if (!isNaN(index)) {
+            console.log("Setting demo index to", index)
+            setCurrentDemoIndex(index)
+          }
+        }
+      }, 0)
+
+      console.log("New state:", {
+        openAccordion: value,
+        currentDemoIndex:
+          value === "demo-info"
+            ? 0
+            : value?.startsWith("demo-")
+              ? parseInt(value.replace("demo-", ""))
+              : currentDemoIndex,
+      })
+    },
+    [setOpenAccordion, setCurrentDemoIndex, currentDemoIndex],
+  )
 
   return (
     <>
@@ -738,6 +777,7 @@ export default function PublishComponentForm() {
                         isDarkTheme={isDarkTheme}
                         customTailwindConfig={customTailwindConfig}
                         customGlobalCss={customGlobalCss}
+                        form={form}
                       />
                     </React.Suspense>
                   </motion.div>
@@ -825,6 +865,7 @@ export default function PublishComponentForm() {
                         isDarkTheme={isDarkTheme}
                         customTailwindConfig={customTailwindConfig}
                         customGlobalCss={customGlobalCss}
+                        form={form}
                       />
                     </React.Suspense>
                   </motion.div>
@@ -888,7 +929,7 @@ export default function PublishComponentForm() {
                   <Accordion
                     type="single"
                     value={openAccordion}
-                    onValueChange={setOpenAccordion}
+                    onValueChange={handleAccordionChange}
                     collapsible
                     className="w-full"
                   >
@@ -963,15 +1004,7 @@ export default function PublishComponentForm() {
                         </div>
                       </AccordionContent>
                     </AccordionItem>
-                  </Accordion>
 
-                  <Accordion
-                    type="single"
-                    value={openAccordion}
-                    onValueChange={setOpenAccordion}
-                    collapsible
-                    className="w-full"
-                  >
                     <AccordionItem
                       value="demo-info"
                       className="bg-background border-none"
@@ -1027,7 +1060,7 @@ export default function PublishComponentForm() {
                       </AccordionContent>
                     </AccordionItem>
 
-                    {form.getValues().demos?.map(
+                    {demos?.map(
                       (_, index) =>
                         index > 0 && (
                           <AccordionItem
@@ -1134,6 +1167,7 @@ export default function PublishComponentForm() {
                       isDarkTheme={isDarkTheme}
                       customTailwindConfig={customTailwindConfig}
                       customGlobalCss={customGlobalCss}
+                      form={form}
                     />
                   </React.Suspense>
                 </motion.div>

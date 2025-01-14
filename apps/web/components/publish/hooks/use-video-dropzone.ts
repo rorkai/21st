@@ -1,19 +1,19 @@
+import { useState } from "react"
 import { useDropzone } from "react-dropzone"
 import { UseFormReturn } from "react-hook-form"
 import { useAtom } from "jotai"
 import { currentDemoIndexAtom } from "@/atoms/publish"
 import type { FormData } from "../utils"
-import { useState } from "react"
 
 async function convertVideoToMP4(file: File): Promise<File> {
-  const formData = new FormData()
-  formData.append("video", file)
+  const videoFormData = new FormData()
+  videoFormData.append("video", file)
 
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_BACKEND_URL}/convert`,
     {
       method: "POST",
-      body: formData,
+      body: videoFormData,
     },
   )
 
@@ -32,11 +32,7 @@ async function convertVideoToMP4(file: File): Promise<File> {
   )
 }
 
-export const useVideoDropzone = ({
-  form,
-}: {
-  form: UseFormReturn<FormData>
-}) => {
+export function useVideoDropzone({ form }: { form: UseFormReturn<FormData> }) {
   const [currentDemoIndex] = useAtom(currentDemoIndexAtom)
   const [isProcessingVideo, setIsProcessingVideo] = useState(false)
   const previewVideoDataUrl = form.watch(
@@ -65,11 +61,11 @@ export const useVideoDropzone = ({
     } catch (error) {
       console.error("Error processing video:", error)
       alert("Error processing video. Please try again.")
-      form.setValue(`demos.${currentDemoIndex}.preview_video_data_url`, "")
       form.setValue(
-        `demos.${currentDemoIndex}.preview_video_file`,
-        new File([], "placeholder"),
+        `demos.${currentDemoIndex}.preview_video_data_url`,
+        undefined,
       )
+      form.setValue(`demos.${currentDemoIndex}.preview_video_file`, undefined)
     } finally {
       setIsProcessingVideo(false)
     }
@@ -82,11 +78,8 @@ export const useVideoDropzone = ({
     if (videoUrl) {
       URL.revokeObjectURL(videoUrl)
     }
-    form.setValue(`demos.${currentDemoIndex}.preview_video_data_url`, "")
-    form.setValue(
-      `demos.${currentDemoIndex}.preview_video_file`,
-      new File([], "placeholder"),
-    )
+    form.setValue(`demos.${currentDemoIndex}.preview_video_data_url`, undefined)
+    form.setValue(`demos.${currentDemoIndex}.preview_video_file`, undefined)
   }
 
   const {
@@ -121,12 +114,12 @@ export const useVideoDropzone = ({
 
   return {
     previewVideoDataUrl,
+    isProcessingVideo,
     isVideoDragActive,
     getVideoRootProps,
     getVideoInputProps,
     handleVideoChange,
     removeVideo,
     openFileDialog,
-    isProcessingVideo,
   }
 }

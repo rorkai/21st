@@ -24,7 +24,8 @@ export function AppProviders({
   const isHomePage = pathname === "/"
   const isTagPage = pathname.startsWith("/s/")
   const isProPage = pathname.startsWith("/pro")
-  const showSidebar = isHomePage || isTagPage || isProPage
+  const isAuthorsPage = pathname.startsWith("/authors")
+  const showSidebar = isHomePage || isTagPage || isProPage || isAuthorsPage
 
   useEffect(() => {
     initAmplitude()

@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation"
 import { useAtom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 
-import { ChevronRight, Sparkles } from "lucide-react"
+import { ChevronRight, Sparkles, UsersRound } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import {
   Collapsible,
@@ -88,6 +88,26 @@ export function AppSidebar() {
                 <a href="/pro" className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
                   <span>Pro Components</span>
+                  <Badge className="ml-1.5 text-xs bg-[#adfa1d] text-black px-1.5 rounded-md pointer-events-none select-none">
+                    New
+                  </Badge>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === "/authors"}
+                onClick={() => {
+                  trackEvent(AMPLITUDE_EVENTS.VIEW_SIDEBAR_SECTION, {
+                    sectionTitle: "Authors",
+                    path: "/authors",
+                  })
+                }}
+              >
+                <a href="/authors" className="flex items-center gap-2">
+                  <UsersRound className="w-4 h-4" />
+                  <span>Top Authors</span>
                   <Badge className="ml-1.5 text-xs bg-[#adfa1d] text-black px-1.5 rounded-md pointer-events-none select-none">
                     New
                   </Badge>

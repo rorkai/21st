@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils"
 import { getComponentInstallPrompt } from "@/lib/prompts"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 
-import { Component, User } from "@/types/global"
+import { Component, DemoWithComponent, User } from "@/types/global"
 import { PROMPT_TYPES } from "@/types/global"
 
 const commandSearchQueryAtom = atomWithStorage("commandMenuSearch", "")
@@ -58,7 +58,7 @@ const useKeyboardShortcuts = ({
   setOpen,
   handleGeneratePrompt,
 }: {
-  selectedComponent: (Component & { user: User }) | undefined | null
+  selectedComponent: DemoWithComponent | undefined | null
   setIsCopying: Dispatch<SetStateAction<boolean>>
   setOpen: Dispatch<SetStateAction<boolean>>
   handleGeneratePrompt: () => void
@@ -92,7 +92,7 @@ const useKeyboardShortcuts = ({
 
       try {
         setIsCopying(true)
-        const response = await fetch(selectedComponent.code)
+        const response = await fetch(selectedComponent.component.code)
         const code = await response.text()
 
         await navigator.clipboard.writeText(code)
@@ -127,7 +127,7 @@ export function CommandMenu() {
 
   const supabase = useClerkSupabaseClient()
 
-  const { data: components } = useQuery<(Component & { user: User })[]>({
+  const { data: components } = useQuery<DemoWithComponent[]>({
     queryKey: ["command-menu-components", searchQuery],
     queryFn: async () => {
       if (!searchQuery) return []
@@ -141,17 +141,36 @@ export function CommandMenu() {
 
       if (error) throw new Error(error.message)
 
-      return searchResults.map((result) => {
-        const component = result as unknown as Component
-        return {
-          ...component,
-          user: result.user_data as User,
-          fts: undefined,
-        }
-      })
+      return searchResults.map((result) => ({
+        id: result.id,
+        name: result.name,
+        demo_code: result.demo_code,
+        preview_url: result.preview_url,
+        video_url: result.video_url,
+        compiled_css: result.compiled_css,
+        demo_dependencies: result.demo_dependencies,
+        demo_direct_registry_dependencies:
+          result.demo_direct_registry_dependencies,
+        pro_preview_image_url: result.pro_preview_image_url,
+        created_at: result.created_at,
+        updated_at: result.updated_at,
+        component_id: result.id,
+        component: {
+          id: result.id,
+          name: result.name,
+          component_slug: result.component_slug,
+          code: result.code,
+          demo_code: result.demo_code,
+          downloads_count: result.downloads_count || 0,
+          likes_count: result.likes_count,
+          license: result.license,
+          is_public: result.is_public,
+          user_id: result.user_id,
+        } as Component,
+        user: result.user_data as User,
+        user_id: result.user_id,
+      })) as DemoWithComponent[]
     },
-    refetchOnWindowFocus: false,
-    retry: false,
   })
 
   const { data: users } = useQuery<User[]>({
@@ -188,7 +207,7 @@ export function CommandMenu() {
     if (!value.startsWith("component-")) return null
     const [userId, componentSlug] = value.replace("component-", "").split("/")
     return components?.find(
-      (c) => c.user_id === userId && c.component_slug === componentSlug,
+      (c) => c.user_id === userId && c.component.component_slug === componentSlug,
     )
   }, [components, value])
 
@@ -209,13 +228,13 @@ export function CommandMenu() {
     setIsGenerating(true)
     try {
       const componentAndDemoCodePromises = [
-        fetchFileTextContent(selectedComponent.code),
+        fetchFileTextContent(selectedComponent.component.code),
         fetchFileTextContent(selectedComponent.demo_code),
-        selectedComponent.tailwind_config_extension
-          ? fetchFileTextContent(selectedComponent.tailwind_config_extension)
+        selectedComponent.component.tailwind_config_extension
+          ? fetchFileTextContent(selectedComponent.component.tailwind_config_extension)
           : Promise.resolve({ data: null, error: null }),
-        selectedComponent.global_css_extension
-          ? fetchFileTextContent(selectedComponent.global_css_extension)
+        selectedComponent.component.compiled_css
+          ? fetchFileTextContent(selectedComponent.component.compiled_css)
           : Promise.resolve({ data: null, error: null }),
       ]
 
@@ -230,7 +249,7 @@ export function CommandMenu() {
         resolveRegistryDependencyTree({
           supabase: supabase,
           sourceDependencySlugs: [
-            `${selectedComponent.user.username}/${selectedComponent.component_slug}`,
+            `${selectedComponent.user.username}/${selectedComponent.component.component_slug}`,
           ],
           withDemoDependencies: false,
         }),
@@ -258,12 +277,12 @@ export function CommandMenu() {
 
       const prompt = getComponentInstallPrompt({
         promptType: PROMPT_TYPES.BASIC,
-        codeFileName: selectedComponent.code.split("/").slice(-1)[0]!,
+        codeFileName: selectedComponent.component.code.split("/").slice(-1)[0]!,
         demoCodeFileName: selectedComponent.demo_code.split("/").slice(-1)[0]!,
         code: codeResult.data as string,
         demoCode: demoResult!.data as string,
         registryDependencies: registryDependenciesFiles,
-        npmDependencies: (selectedComponent.dependencies ?? {}) as Record<
+        npmDependencies: (selectedComponent.component.dependencies ?? {}) as Record<
           string,
           string
         >,
@@ -294,7 +313,7 @@ export function CommandMenu() {
   const handleOpen = () => {
     if (value.startsWith("component-") && selectedComponent) {
       router.push(
-        `/${selectedComponent.user.username}/${selectedComponent.component_slug}`,
+        `/${selectedComponent.user.username}/${selectedComponent.component.component_slug}`,
       )
     } else if (value.startsWith("section-")) {
       const section = filteredSections
@@ -411,10 +430,10 @@ export function CommandMenu() {
                     {components.map((component) => (
                       <CommandItem
                         key={component.id}
-                        value={`component-${component.user_id}/${component.component_slug}`}
+                        value={`component-${component.user_id}/${component.component.component_slug}`}
                         onSelect={() => {
                           router.push(
-                            `/${component.user.username}/${component.component_slug}`,
+                            `/${component.user.username}/${component.component.component_slug}`,
                           )
                           setSearchQuery("")
                           setValue("")
@@ -442,7 +461,7 @@ export function CommandMenu() {
                     {selectedComponent.name}
                   </h3>
                   <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                    {selectedComponent.description}
+                    {selectedComponent.component.description}
                   </p>
                   <div className="relative aspect-video rounded-md overflow-hidden">
                     <Image
@@ -496,7 +515,7 @@ export function CommandMenu() {
             </div>
 
             <div className="flex items-center">
-              {selectedComponent?.code && (
+              {selectedComponent?.component.code && (
                 <>
                   <div className="flex items-center gap-2">
                     <div
@@ -550,7 +569,9 @@ export function CommandMenu() {
                         onClick={async () => {
                           try {
                             setIsCopying(true)
-                            const response = await fetch(selectedComponent.code)
+                            const response = await fetch(
+                              selectedComponent.component.code,
+                            )
                             const code = await response.text()
                             await navigator.clipboard.writeText(code)
                             trackEvent(AMPLITUDE_EVENTS.COPY_CODE, {

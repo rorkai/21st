@@ -29,6 +29,8 @@ export const ComponentDetailsForm = ({
   publishAsUserId,
   showOptionalFields = true,
   placeholderName = "",
+  isEditMode = false,
+  isSubmitting = false,
 }: {
   form: UseFormReturn<FormData>
   handleSubmit?: (event: React.FormEvent) => void
@@ -38,6 +40,7 @@ export const ComponentDetailsForm = ({
   publishAsUserId?: string
   showOptionalFields?: boolean
   placeholderName?: string
+  isEditMode?: boolean
 }) => {
   const { user: currentUser } = useUser()
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false)

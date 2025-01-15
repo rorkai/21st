@@ -14,14 +14,14 @@ import {
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { useSupabaseAnalytics } from "@/hooks/use-analytics"
-import { AnalyticsActivityType, Component, User } from "@/types/global"
+import { AnalyticsActivityType, DemoWithComponent } from "@/types/global"
 
 export function CopyComponentButton({
   codeUrl,
   component,
 }: {
   codeUrl: string
-  component: Component & { user: User }
+  component: DemoWithComponent
 }) {
   const [copied, setCopied] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -42,7 +42,7 @@ export function CopyComponentButton({
       capture(
         component.id,
         AnalyticsActivityType.COMPONENT_CODE_COPY,
-        component.user.id,
+        component.user_id,
       )
     } catch (err) {
       console.error("Failed to copy code:", err)

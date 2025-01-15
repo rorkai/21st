@@ -1,7 +1,7 @@
 import React from "react"
 import { cn } from "@/lib/utils"
-import { DemoWithComponent } from "../types/global"
 import { ComponentCard, ComponentCardSkeleton } from "./ComponentCard"
+import { Component, DemoWithComponent, User } from "@/types/global"
 
 export function ComponentsList({
   components,
@@ -9,7 +9,7 @@ export function ComponentsList({
   className,
   skeletonCount = 12,
 }: {
-  components?: DemoWithComponent[] | null
+  components?: DemoWithComponent[] | (Component & { user: User })[] | null
   isLoading?: boolean
   className?: string
   skeletonCount?: number

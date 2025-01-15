@@ -4,7 +4,7 @@ import { useRef, useState } from "react"
 import { Component, User, DemoWithComponent } from "../types/global"
 
 interface ComponentVideoPreviewProps {
-  component: Component & { user: User }
+  component: Component
   demo?: DemoWithComponent
 }
 

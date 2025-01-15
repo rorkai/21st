@@ -129,6 +129,7 @@ export function HomePageClient({
             component: item.component_data as Component,
             user: item.user_data as User,
             tags: item.tags as Tag[],
+            user_id: (item.component_data as Component).user_id,
           })) as DemoWithComponent[]
 
           return {
@@ -165,7 +166,7 @@ export function HomePageClient({
           compiled_css: result.compiled_css,
           demo_dependencies: result.demo_dependencies,
           demo_direct_registry_dependencies:
-          result.demo_direct_registry_dependencies,
+            result.demo_direct_registry_dependencies,
           pro_preview_image_url: result.pro_preview_image_url,
           created_at: result.created_at,
           updated_at: result.updated_at,
@@ -182,6 +183,7 @@ export function HomePageClient({
           } as Component,
           user: result.user_data as User,
           tags: [],
+          user_id: result.user_id,
         })) as DemoWithComponent[]
 
         return {
@@ -237,10 +239,7 @@ export function HomePageClient({
           filtersDisabled={!!searchQuery}
           tabCounts={tabCounts!}
         />
-        <ComponentsList
-          components={allDemos}
-          isLoading={isLoading}
-        />
+        <ComponentsList components={allDemos} isLoading={isLoading} />
         {showSpinner && (
           <div className="col-span-full flex justify-center py-4">
             <Loader2 className="h-8 w-8 animate-spin text-foreground/20" />

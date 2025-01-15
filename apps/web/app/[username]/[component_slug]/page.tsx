@@ -160,6 +160,14 @@ export default async function ComponentPageServer({
         : Promise.resolve({ data: null, error: null }),
     ]
 
+    const demoRegistryDeps = Array.isArray(
+      demo.demo_direct_registry_dependencies,
+    )
+      ? demo.demo_direct_registry_dependencies.filter(
+          (dep): dep is string => typeof dep === "string",
+        )
+      : []
+
     const [
       codeResult,
       demoResult,
@@ -173,7 +181,7 @@ export default async function ComponentPageServer({
         supabase: supabaseWithAdminAccess,
         sourceDependencySlugs: [
           `${username}/${component_slug}`,
-          ...(demo.demo_direct_registry_dependencies || []),
+          ...demoRegistryDeps,
         ],
         withDemoDependencies: true,
       }),

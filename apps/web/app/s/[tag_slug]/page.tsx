@@ -3,11 +3,16 @@ import { notFound } from "next/navigation"
 import { SupabaseClient } from "@supabase/supabase-js"
 
 import { Header } from "@/components/Header"
-import { getDemos } from "@/lib/queries"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { Database } from "@/types/supabase"
 import { TagPageContent } from "./page.client"
-import { QuickFilterOption, SortOption } from "@/types/global"
+import {
+  Component,
+  QuickFilterOption,
+  SortOption,
+  DemoWithComponent,
+  User,
+} from "@/types/global"
 import { cookies } from "next/headers"
 
 interface TagPageProps {
@@ -35,31 +40,19 @@ const getTagInfo = async (
 }
 
 export default async function TagPage({ params }: TagPageProps) {
+  console.log("Server: Starting TagPage render")
   const cookieStore = cookies()
-
   const tagSlug = params.tag_slug
-  const [tagInfo, demos] = await Promise.all([
-    getTagInfo(supabaseWithAdminAccess, tagSlug),
-    getDemos(supabaseWithAdminAccess, tagSlug),
-  ])
 
-  const { data: initialTabsCountsData, error: initialTabsCountsError } =
-    await supabaseWithAdminAccess.rpc("get_demos_counts")
+  console.log("Server: Tag slug:", tagSlug)
 
-  const initialTabsCounts =
-    !initialTabsCountsError && Array.isArray(initialTabsCountsData)
-      ? initialTabsCountsData.reduce(
-          (acc, item) => {
-            acc[item.filter_type as QuickFilterOption] = item.count
-            return acc
-          },
-          {} as Record<QuickFilterOption, number>,
-        )
-      : {
-          all: 0,
-          last_released: 0,
-          most_downloaded: 0,
-        }
+  const tagInfo = await getTagInfo(supabaseWithAdminAccess, tagSlug)
+  console.log("Server: Tag info:", tagInfo)
+
+  if (!tagInfo) {
+    console.log("Server: Tag not found")
+    notFound()
+  }
 
   const hasOnboarded = cookieStore.has("has_onboarded")
   const savedSortBy = cookieStore.get("saved_sort_by")?.value as
@@ -79,16 +72,78 @@ export default async function TagPage({ params }: TagPageProps) {
     ? (savedQuickFilter as QuickFilterOption)
     : defaultQuickFilter
 
-  if (!tagInfo) {
-    notFound()
+  const filteredDemos = await supabaseWithAdminAccess.rpc(
+    "get_filtered_demos",
+    {
+      p_quick_filter: quickFilterPreference,
+      p_sort_by: sortByPreference,
+      p_offset: 0,
+      p_limit: 40,
+      p_tag_slug: tagSlug,
+    },
+  )
+
+  console.log("Server: Full filtered demos data:", {
+    firstItem: filteredDemos.data?.[0],
+    debug: filteredDemos.data?.[0]?.debug_info,
+    error: filteredDemos.error,
+  })
+
+  if (filteredDemos.error) {
+    console.error("Filtered demos error:", filteredDemos.error)
+    return null
   }
+
+  const initialFilteredSortedDemos = (filteredDemos.data || []).map(
+    (result) => ({
+      id: result.id,
+      name: result.name,
+      demo_code: result.demo_code,
+      preview_url: result.preview_url,
+      video_url: result.video_url,
+      compiled_css: result.compiled_css,
+      demo_dependencies: result.demo_dependencies,
+      demo_direct_registry_dependencies:
+        result.demo_direct_registry_dependencies,
+      demo_slug: result.demo_slug,
+      component: {
+        ...(result.component_data as Component),
+        user: result.user_data,
+      } as Component & { user: User },
+      created_at: result.created_at,
+      updated_at: result.updated_at,
+    }),
+  ) as DemoWithComponent[]
+
+  const { data: initialTabsCountsData, error: initialTabsCountsError } =
+    await supabaseWithAdminAccess.rpc("get_components_counts", {
+      p_tag_slug: tagSlug,
+    })
+
+  const initialTabsCounts =
+    !initialTabsCountsError && Array.isArray(initialTabsCountsData)
+      ? initialTabsCountsData.reduce(
+          (acc, item) => {
+            acc[item.filter_type as QuickFilterOption] = item.count
+            return acc
+          },
+          {} as Record<QuickFilterOption, number>,
+        )
+      : {
+          all: 0,
+          last_released: 0,
+          most_downloaded: 0,
+        }
+
+  console.log("Server: Initial tabs counts:", initialTabsCounts)
 
   return (
     <>
       {tagInfo && <Header text={tagInfo?.name} />}
       <TagPageContent
-        demos={demos}
+        initialComponents={initialFilteredSortedDemos}
         tagName={tagInfo.name}
+        tagSlug={tagSlug}
         initialTabCounts={initialTabsCounts}
         initialSortBy={sortByPreference}
         initialQuickFilter={quickFilterPreference}

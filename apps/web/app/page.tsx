@@ -7,13 +7,10 @@ import {
   QuickFilterOption,
   SortOption,
   User,
-  Demo,
   DemoWithComponent,
 } from "@/types/global"
-import { Tables } from "@/types/supabase"
 
 import { supabaseWithAdminAccess } from "@/lib/supabase"
-import { filterComponents, sortComponents } from "@/lib/filters.client"
 
 import { Header } from "../components/Header"
 import { HeroSection } from "@/components/HeroSection"
@@ -89,8 +86,8 @@ export default async function HomePage() {
     | QuickFilterOption
     | undefined
 
-  const defaultQuickFilter = hasOnboarded ? "last_released" : "all"
-  const defaultSortBy: SortOption = hasOnboarded ? "date" : "downloads"
+  const defaultQuickFilter = savedQuickFilter || "all"
+  const defaultSortBy: SortOption = savedSortBy || "downloads"
 
   const sortByPreference: SortOption = savedSortBy?.length
     ? (savedSortBy as SortOption)
@@ -117,33 +114,50 @@ export default async function HomePage() {
         "*, component:components!demos_component_id_fkey(*, user:users!user_id(*))",
       )
       .limit(40)
+      .eq("component.is_public", true)
       .order(orderByFields[0], { ascending: orderByFields[1] === "desc" })
       .returns<DemoWithComponent[]>()
-
-  console.log("Initial demos:", initialDemos)
 
   if (demosError) {
     console.error("Demos error:", demosError)
     return null
   }
 
-  const initialFilteredSortedDemos = sortComponents(
-    filterComponents(
-      initialDemos.map((demo) => ({
-        ...demo.component,
-        user: demo.component.user,
-      })),
-      defaultQuickFilter,
-    ),
-    sortByPreference,
-  ).map((comp) => {
-    const demo = initialDemos.find((d) => d.component_id === comp.id)
-    return {
-      ...demo,
-      component: comp,
-      user: demo?.component.user,
-    }
-  }) as DemoWithComponent[]
+  const filteredDemos = await supabaseWithAdminAccess.rpc(
+    "get_filtered_demos",
+    {
+      p_quick_filter: quickFilterPreference,
+      p_sort_by: sortByPreference,
+      p_offset: 0,
+      p_limit: 40,
+    },
+  )
+
+  if (filteredDemos.error) {
+    console.error("Filtered demos error:", filteredDemos.error)
+    return null
+  }
+
+  const initialFilteredSortedDemos = (filteredDemos.data || []).map(
+    (result) => ({
+      id: result.id,
+      name: result.name,
+      demo_code: result.demo_code,
+      preview_url: result.preview_url,
+      video_url: result.video_url,
+      compiled_css: result.compiled_css,
+      demo_dependencies: result.demo_dependencies,
+      demo_direct_registry_dependencies:
+        result.demo_direct_registry_dependencies,
+      demo_slug: result.demo_slug,
+      component: {
+        ...(result.component_data as Component),
+        user: result.user_data,
+      } as Component & { user: User },
+      created_at: result.created_at,
+      updated_at: result.updated_at,
+    }),
+  ) as DemoWithComponent[]
 
   const { data: initialTabsCountsData, error: initialTabsCountsError } =
     await supabaseWithAdminAccess.rpc("get_components_counts")

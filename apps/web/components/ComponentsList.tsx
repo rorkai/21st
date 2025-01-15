@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { ComponentCard, ComponentCardSkeleton } from "./ComponentCard"
 import { DemoWithComponent, User, Component } from "@/types/global"
@@ -15,7 +15,11 @@ export function ComponentsList({
   isLoading?: boolean
   className?: string
   skeletonCount?: number
-  }) {
+}) {
+  useEffect(() => {
+    console.log("Components list updated:", components?.length)
+    console.log("Sample component:", components?.[0])
+  }, [components])
 
   return (
     <div
@@ -32,7 +36,10 @@ export function ComponentsList({
         </>
       ) : (
         components?.map((component) => (
-          <ComponentCard key={component.id} component={component} />
+          <ComponentCard
+            key={`${component.id}-${component.updated_at}`}
+            component={component}
+          />
         ))
       )}
     </div>

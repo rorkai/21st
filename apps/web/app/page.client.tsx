@@ -3,7 +3,7 @@
 import React, { useEffect, useLayoutEffect, useState } from "react"
 
 import { useAtom } from "jotai"
-import { useInfiniteQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query"
 import { motion } from "framer-motion"
 
 import {
@@ -60,6 +60,7 @@ export function HomePageClient({
   const [tabCounts, setTabCounts] = useState<
     Record<QuickFilterOption, number> | undefined
   >(initialTabsCounts)
+  const queryClient = useQueryClient()
 
   // Important: we don't need useEffect here
   // https://react.dev/learn/you-might-not-need-an-effect
@@ -156,11 +157,12 @@ export function HomePageClient({
         pageParams: [0],
       },
       enabled: true,
-      staleTime: 1000 * 60 * 5,
+      staleTime: 0,
       gcTime: 1000 * 60 * 30,
       refetchOnWindowFocus: false,
       retry: false,
       initialPageParam: 0,
+      refetchOnMount: true,
       getNextPageParam: (lastPage, allPages) => {
         if (!lastPage?.data || lastPage.data.length === 0) return undefined
         const loadedCount = allPages.reduce(
@@ -170,7 +172,7 @@ export function HomePageClient({
         return loadedCount < lastPage.total_count ? allPages.length : undefined
       },
     })
-
+  console.log("Initial components:", initialComponents)
   const allDemos = data?.pages?.flatMap((d) => d.data)
 
   const showSkeleton = isLoading || !data?.pages?.[0]?.data?.length
@@ -191,6 +193,21 @@ export function HomePageClient({
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [isLoading, hasNextPage, fetchNextPage])
+
+  // Добавляем эффект для сброса кэша при изменении сортировки или фильтра
+  useEffect(() => {
+    if (sortBy !== undefined && quickFilter !== undefined) {
+      async function refetchData() {
+        await queryClient.invalidateQueries({
+          queryKey: ["filtered-demos", quickFilter, sortBy],
+        })
+        await queryClient.refetchQueries({
+          queryKey: ["filtered-demos", quickFilter, sortBy],
+        })
+      }
+      refetchData()
+    }
+  }, [sortBy, quickFilter, queryClient])
 
   return (
     <motion.div

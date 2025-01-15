@@ -743,23 +743,15 @@ export type Database = {
           tags: Json
         }[]
       }
-      get_components_counts:
-        | {
-            Args: Record<PropertyKey, never>
-            Returns: {
-              filter_type: string
-              count: number
-            }[]
-          }
-        | {
-            Args: {
-              p_sort_by: string
-            }
-            Returns: {
-              filter_type: string
-              count: number
-            }[]
-          }
+      get_components_counts: {
+        Args: {
+          p_tag_slug?: string
+        }
+        Returns: {
+          filter_type: string
+          count: number
+        }[]
+      }
       get_demos: {
         Args: {
           p_tag_slug?: string
@@ -837,6 +829,7 @@ export type Database = {
           p_sort_by: string
           p_offset: number
           p_limit: number
+          p_tag_slug?: string
         }
         Returns: {
           id: number
@@ -857,6 +850,7 @@ export type Database = {
           total_count: number
           fts: unknown
           demo_slug: string
+          debug_info: Json
         }[]
       }
       get_random_components: {

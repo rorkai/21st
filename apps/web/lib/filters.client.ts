@@ -15,6 +15,9 @@ export function filterComponents(
   items: FilterableComponent[],
   quickFilter: QuickFilterOption,
 ) {
+  console.log("Filter type:", quickFilter)
+  console.log("Items before filtering:", items.length)
+
   let filtered = [...items]
 
   switch (quickFilter) {
@@ -39,6 +42,7 @@ export function filterComponents(
       break
   }
 
+  console.log("Items after filtering:", filtered.length)
   return filtered
 }
 
@@ -46,6 +50,8 @@ export function sortComponents(
   items: FilterableComponent[],
   sortBy: SortOption,
 ) {
+  console.log("Sorting by:", sortBy)
+
   return [...items].sort((a, b) => {
     const componentA = isDemoWithComponent(a) ? a.component : a
     const componentB = isDemoWithComponent(b) ? b.component : b
@@ -58,10 +64,9 @@ export function sortComponents(
       case "likes":
         return (componentB.likes_count || 0) - (componentA.likes_count || 0)
       case "date":
-        return (
-          new Date(componentB.created_at).getTime() -
-          new Date(componentA.created_at).getTime()
-        )
+        const dateA = new Date(componentA.created_at).getTime()
+        const dateB = new Date(componentB.created_at).getTime()
+        return dateB - dateA
       default:
         return (
           (componentB.downloads_count || 0) - (componentA.downloads_count || 0)

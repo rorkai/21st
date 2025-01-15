@@ -29,6 +29,7 @@ import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 
 import { Component, DemoWithComponent, User } from "@/types/global"
 import { PROMPT_TYPES } from "@/types/global"
+import { Icons } from "./icons"
 
 const commandSearchQueryAtom = atomWithStorage("commandMenuSearch", "")
 
@@ -592,7 +593,7 @@ export function CommandMenu() {
               >
                 <span>Open</span>
                 <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 text-[11px] leading-none font-sans opacity-100 flex">
-                  ⏎
+                  <Icons.enter className="h-3 w-3" />
                 </kbd>
               </button>
             </div>

@@ -13,6 +13,19 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: [
+          "var(--font-geist-sans)",
+          "Geist",
+          "Geist Fallback",
+          "Arial",
+          "Apple Color Emoji",
+          "Segoe UI Emoji",
+          "Segoe UI Symbol",
+        ],
+        mono: ["var(--font-geist-mono)"],
+        arial: ["Arial", "sans-serif"],
+      },
       zIndex: {
         9999: "9999",
       },

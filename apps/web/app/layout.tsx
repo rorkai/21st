@@ -1,5 +1,6 @@
 import { GoogleAnalytics } from "@next/third-parties/google"
-import localFont from "next/font/local"
+import { GeistSans } from "geist/font/sans"
+import { GeistMono } from "geist/font/mono"
 
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -9,15 +10,6 @@ import { AppProviders } from "./providers"
 
 import "./globals.css"
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-})
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-})
-
 export default function RootLayout({
   children,
 }: {
@@ -25,7 +17,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn(geistSans.variable, geistMono.variable)}>
+      <body className={cn(GeistSans.variable, GeistMono.variable, "font-sans")}>
         <div className="px-4 h-full">
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <TooltipProvider>

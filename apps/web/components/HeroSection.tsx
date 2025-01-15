@@ -79,8 +79,8 @@ export function HeroSection() {
             <Button size="lg" variant="default" onClick={onEnterWebsite}>
               Browse components
               {!isMobile && (
-                <kbd className="-me-1 ms-3 inline-flex h-5 max-h-full items-center rounded border border-muted-foreground/70 bg-muted-foreground/10 px-1.5 font-[inherit] text-[0.625rem] font-medium text-background/70">
-                  ⏎
+                <kbd className="-me-1 ms-3 inline-flex h-5 max-h-full items-center rounded border border-muted-foreground/70 bg-muted-foreground/10 px-1.5 text-[0.625rem] font-medium text-background/70">
+                  <Icons.enter className="h-3 w-3" />
                 </kbd>
               )}
             </Button>

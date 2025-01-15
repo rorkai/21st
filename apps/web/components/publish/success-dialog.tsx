@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { useSuccessDialogHotkeys } from "./hotkeys"
+import { Icons } from "../icons"
 
 interface SuccessDialogProps {
   isOpen: boolean
@@ -49,7 +50,7 @@ export function SuccessDialog({
                   ? "⌘"
                   : "Ctrl"}
               </span>
-              ⏎
+              <Icons.enter className="h-3 w-3" />
             </kbd>
           </Button>
         </DialogFooter>

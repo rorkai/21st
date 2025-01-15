@@ -88,9 +88,6 @@ export function AppSidebar() {
                 <a href="/pro" className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
                   <span>Pro Components</span>
-                  <Badge className="ml-1.5 text-xs bg-[#adfa1d] text-black px-1.5 rounded-md pointer-events-none select-none">
-                    New
-                  </Badge>
                 </a>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -190,9 +187,6 @@ export function AppSidebar() {
                 <a href="/s/hook" className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
                   <span>Hooks</span>
-                  <Badge className="ml-1.5 text-xs bg-[#adfa1d] text-black px-1.5 rounded-md pointer-events-none select-none">
-                    New
-                  </Badge>
                 </a>
               </SidebarMenuButton>
             </SidebarMenuItem>

@@ -92,7 +92,7 @@ export default async function AuthorsPage() {
             <Link
               href={`/${author.username}`}
               key={author.id}
-              className="block p-6 rounded-lg border border-border/40 transition-colors"
+              className="block p-6 rounded-lg border border-border/40 dark:border-border/40 transition-colors"
             >
               <div className="flex items-start gap-4">
                 {author.image_url && (

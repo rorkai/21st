@@ -73,19 +73,13 @@ export function TagPageContent({
   })
 
   return (
-    <>
-      <div className="flex flex-col">
-        <TagComponentsHeader
-          filtersDisabled={!!searchQuery}
-          components={components}
-          currentSection={`${tagName} components`}
-        />
-      </div>
-      <ComponentsList
-        components={filteredComponents}
-        isLoading={isLoading}
-        className="mt-6"
+    <div className="container mx-auto mt-20">
+      <TagComponentsHeader
+        filtersDisabled={!!searchQuery}
+        components={components}
+        currentSection={tagName}
       />
-    </>
+      <ComponentsList components={filteredComponents} isLoading={isLoading} />
+    </div>
   )
 }

@@ -84,18 +84,16 @@ export default async function TagPage({ params }: TagPageProps) {
   }
 
   return (
-    <div className="container mx-auto px-4">
+    <>
       {tagInfo && <Header text={tagInfo?.name} />}
-      <div className="mt-20">
-        <TagPageContent
-          components={components}
-          tagName={tagInfo.name}
-          initialTabCounts={initialTabsCounts}
-          initialSortBy={sortByPreference}
-          initialQuickFilter={quickFilterPreference}
-        />
-      </div>
-    </div>
+      <TagPageContent
+        components={components}
+        tagName={tagInfo.name}
+        initialTabCounts={initialTabsCounts}
+        initialSortBy={sortByPreference}
+        initialQuickFilter={quickFilterPreference}
+      />
+    </>
   )
 }
 

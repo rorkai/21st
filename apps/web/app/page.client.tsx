@@ -16,11 +16,6 @@ import {
 
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import { setCookie } from "@/lib/cookies"
-
-import {
-  ComponentCard,
-  ComponentCardSkeleton,
-} from "@/components/ComponentCard"
 import { searchQueryAtom } from "@/components/Header"
 import {
   ComponentsHeader,
@@ -29,6 +24,7 @@ import {
 } from "@/components/ComponentsHeader"
 import { Loader2 } from "lucide-react"
 import { useDebounce } from "@/hooks/use-debounce"
+import ComponentsList from "@/components/ComponentsList"
 
 const useSetServerUserDataCookies = () => {
   useEffect(() => {
@@ -252,23 +248,10 @@ export function HomePageClient({
           filtersDisabled={!!searchQuery}
           tabCounts={tabCounts!}
         />
-        {showSkeleton ? (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-9 list-none pb-10">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <ComponentCardSkeleton key={i} />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-9 list-none pb-10">
-            {allComponents?.map((component) => (
-              <ComponentCard
-                key={component.id}
-                component={component}
-                isLoading={false}
-              />
-            ))}
-          </div>
-        )}
+        <ComponentsList
+          components={allComponents}
+          isLoading={isLoading}
+        />
         {showSpinner && (
           <div className="col-span-full flex justify-center py-4">
             <Loader2 className="h-8 w-8 animate-spin text-foreground/20" />

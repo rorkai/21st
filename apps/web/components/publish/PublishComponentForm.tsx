@@ -403,8 +403,9 @@ export default function PublishComponentForm() {
           pro_preview_image_url: null,
           name: demo.name,
           demo_direct_registry_dependencies:
-            demo.demo_direct_registry_dependencies || null,
+          demo.demo_direct_registry_dependencies || null,
           user_id: publishAsUser.id,
+          fts: null,
         }
 
         const { data: insertedDemo, error: demoError } = await client

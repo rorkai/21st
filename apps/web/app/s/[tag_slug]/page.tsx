@@ -3,7 +3,7 @@ import { notFound } from "next/navigation"
 import { SupabaseClient } from "@supabase/supabase-js"
 
 import { Header } from "@/components/Header"
-import { getComponents } from "@/lib/queries"
+import { getComponents, getDemos } from "@/lib/queries"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { Database } from "@/types/supabase"
 import { TagPageContent } from "./page.client"
@@ -36,15 +36,15 @@ const getTagInfo = async (
 
 export default async function TagPage({ params }: TagPageProps) {
   const cookieStore = cookies()
-  
+
   const tagSlug = params.tag_slug
-  const [tagInfo, components] = await Promise.all([
+  const [tagInfo, demos] = await Promise.all([
     getTagInfo(supabaseWithAdminAccess, tagSlug),
-    getComponents(supabaseWithAdminAccess, tagSlug),
+    getDemos(supabaseWithAdminAccess, tagSlug),
   ])
 
   const { data: initialTabsCountsData, error: initialTabsCountsError } =
-    await supabaseWithAdminAccess.rpc("get_components_counts")
+    await supabaseWithAdminAccess.rpc("get_demos_counts")
 
   const initialTabsCounts =
     !initialTabsCountsError && Array.isArray(initialTabsCountsData)
@@ -87,7 +87,7 @@ export default async function TagPage({ params }: TagPageProps) {
     <>
       {tagInfo && <Header text={tagInfo?.name} />}
       <TagPageContent
-        components={components}
+        demos={demos}
         tagName={tagInfo.name}
         initialTabCounts={initialTabsCounts}
         initialSortBy={sortByPreference}

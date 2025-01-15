@@ -560,3 +560,47 @@ export async function getComponentWithDemo(
     }
   }
 }
+
+export async function getDemos(
+  supabase: SupabaseClient<Database>,
+  tagSlug?: string,
+) {
+  const { data, error } = await supabase.rpc("get_demos", {
+    p_tag_slug: tagSlug || undefined,
+  })
+
+  if (error) {
+    console.error("Error fetching demos:", error)
+    return []
+  }
+
+  return (data || []).map((result) => ({
+    id: result.id,
+    name: result.name,
+    demo_code: result.demo_code,
+    preview_url: result.preview_url,
+    video_url: result.video_url,
+    compiled_css: result.compiled_css,
+    demo_dependencies: result.demo_dependencies,
+    demo_direct_registry_dependencies: result.demo_direct_registry_dependencies,
+    pro_preview_image_url: result.pro_preview_image_url,
+    created_at: result.created_at,
+    updated_at: result.updated_at,
+    component_id: result.component_id,
+    component: result.component_data as Component,
+    user: result.user_data as User,
+    user_id: (result.component_data as Component).user_id,
+    fts: result.fts || null,
+  })) as DemoWithComponent[]
+}
+
+export async function getDemosCounts(supabase: SupabaseClient<Database>) {
+  const { data, error } = await supabase.rpc("get_demos_counts")
+
+  if (error) {
+    console.error("Error fetching demos counts:", error)
+    return null
+  }
+
+  return data
+}

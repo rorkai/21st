@@ -22,21 +22,25 @@ import type {
   QuickFilterOption,
   Component,
   User,
+  DemoWithComponent,
 } from "@/types/global"
 import { QUICK_FILTER_OPTIONS, SORT_OPTIONS } from "@/types/global"
 import { setCookie } from "@/lib/cookies"
 
 const getFilteredCount = (
-  components: (Component & { user: User })[],
+  demos: DemoWithComponent[],
   filter: QuickFilterOption,
 ) => {
-  if (!components) return 0
-  return filterComponents(components, filter).length
+  if (!demos) return 0
+  return filterComponents(
+    demos.map((d) => ({ ...d.component, user: d.user })),
+    filter,
+  ).length
 }
 
 interface TagComponentsHeaderProps {
   filtersDisabled: boolean
-  components?: (Component & { user: User })[]
+  demos?: DemoWithComponent[]
   currentSection?: string
 }
 
@@ -61,7 +65,7 @@ const useSearchHotkeys = (inputRef: React.RefObject<HTMLInputElement>) => {
 
 export function TagComponentsHeader({
   filtersDisabled,
-  components,
+  demos,
   currentSection,
 }: TagComponentsHeaderProps) {
   const [quickFilter, setQuickFilter] = useAtom(quickFilterAtom)
@@ -117,11 +121,9 @@ export function TagComponentsHeader({
                   key={value}
                   value={value}
                   disabled={
-                    components
-                      ? getFilteredCount(
-                          components,
-                          value as QuickFilterOption,
-                        ) === 0
+                    demos
+                      ? getFilteredCount(demos, value as QuickFilterOption) ===
+                        0
                       : false
                   }
                   className="flex-1 md:flex-initial relative overflow-hidden rounded-none border border-border h-8 px-4 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 first:rounded-s last:rounded-e data-[state=active]:bg-muted data-[state=active]:after:bg-primary disabled:opacity-50 disabled:cursor-not-allowed"
@@ -129,11 +131,8 @@ export function TagComponentsHeader({
                   <div className="flex items-center gap-2">
                     <span className="truncate">{getFilterLabel(label)}</span>
                     <span className="text-xs text-muted-foreground tabular-nums">
-                      {components
-                        ? getFilteredCount(
-                            components,
-                            value as QuickFilterOption,
-                          )
+                      {demos
+                        ? getFilteredCount(demos, value as QuickFilterOption)
                         : 0}
                     </span>
                   </div>

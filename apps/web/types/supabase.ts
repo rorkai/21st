@@ -757,6 +757,43 @@ export type Database = {
               count: number
             }[]
           }
+      get_demos: {
+        Args: {
+          p_tag_slug?: string
+        }
+        Returns: {
+          id: number
+          component_id: number
+          name: string
+          demo_code: string
+          created_at: string
+          updated_at: string
+          user_id: string
+          demo_dependencies: Json
+          demo_direct_registry_dependencies: Json
+          preview_url: string
+          video_url: string
+          compiled_css: string
+          pro_preview_image_url: string
+          component_data: Json
+          user_data: Json
+          is_paid: boolean
+          payment_url: string
+          price: number
+          license: string
+          website_url: string
+          downloads_count: number
+          likes_count: number
+          fts: unknown
+        }[]
+      }
+      get_demos_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          filter_type: string
+          count: number
+        }[]
+      }
       get_filtered_components: {
         Args: {
           p_quick_filter: string

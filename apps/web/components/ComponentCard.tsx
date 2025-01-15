@@ -46,7 +46,7 @@ export function ComponentCard({
   const componentData = component! as DemoWithComponent
   const userData = componentData.user
 
-  const componentUrl = `/${userData.username}/${componentData.component.component_slug}`
+  const componentUrl = `/${userData.username}/${componentData.component.component_slug}/${componentData.id}`
 
   const supabase = useClerkSupabaseClient()
 

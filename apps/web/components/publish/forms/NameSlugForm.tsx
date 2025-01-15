@@ -37,6 +37,7 @@ export function NameSlugForm({
     error: slugError,
   } = useIsCheckSlugAvailable({
     slug,
+    type: "component",
     userId: userId ?? "",
     enabled: !isSlugReadOnly,
   })

@@ -1,8 +1,8 @@
 import React, { useId } from "react"
 import { UseFormReturn } from "react-hook-form"
 import { Label } from "@/components/ui/label"
-import { FormData } from "./utils"
-import { useVideoDropzone } from "./hooks/use-video-dropzone"
+import { FormData } from "../utils"
+import { useVideoDropzone } from "../hooks/use-video-dropzone"
 import { useDropzone } from "react-dropzone"
 import { Button } from "@/components/ui/button"
 import UploadIcon from "@/components/UploadIcon"
@@ -12,6 +12,7 @@ import { useAvailableTags } from "@/lib/queries"
 import MultipleSelector, { Option } from "@/components/ui/multiselect"
 import { Input } from "@/components/ui/input"
 import { FormField } from "@/components/ui/form"
+import { makeSlugFromName } from "../hooks/use-is-check-slug-available"
 
 export const DemoDetailsForm = ({
   form,
@@ -31,6 +32,15 @@ export const DemoDetailsForm = ({
   const previewImageId = useId()
   const previewVideoId = useId()
   const demoNameId = useId()
+
+  React.useEffect(() => {
+    if (demoIndex === 0) {
+      const currentName = form.getValues(`demos.${demoIndex}.name`)
+      if (!currentName) {
+        handleDemoNameChange("Default")
+      }
+    }
+  }, [demoIndex, form])
 
   // Convert tags to MultipleSelector options format
   const tagOptions: Option[] = availableTags.map((tag) => ({
@@ -85,6 +95,12 @@ export const DemoDetailsForm = ({
     multiple: false,
   })
 
+  const handleDemoNameChange = (name: string) => {
+    const demoSlug = makeSlugFromName(name)
+    form.setValue(`demos.${demoIndex}.name`, name)
+    form.setValue(`demos.${demoIndex}.demo_slug`, demoSlug)
+  }
+
   return (
     <div className="flex flex-col gap-4 w-full">
       <div className="space-y-6">
@@ -96,7 +112,14 @@ export const DemoDetailsForm = ({
             control={form.control}
             name={`demos.${demoIndex}.name`}
             render={({ field }) => (
-              <Input id={demoNameId} placeholder="Enter demo name" {...field} />
+              <Input
+                id={demoNameId}
+                placeholder="Enter demo name"
+                {...field}
+                onChange={(e) => {
+                  handleDemoNameChange(e.target.value)
+                }}
+              />
             )}
           />
           <p

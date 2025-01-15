@@ -136,6 +136,7 @@ export function PublishHeader({
       if (!currentDemo?.demo_code) {
         form?.setValue(`demos.${currentDemoIndex}`, {
           name: "",
+          demo_slug: "",
           demo_code: "",
           tags: [],
           preview_image_data_url: "",

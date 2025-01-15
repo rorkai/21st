@@ -44,8 +44,8 @@ import { FormStep } from "@/types/global"
 import { Tables } from "@/types/supabase"
 import { formSchema, FormData, isFormValid } from "./utils"
 
-import { ComponentDetailsForm } from "./ComponentDetailsForm"
-import { DemoDetailsForm } from "./DemoDetailsForm"
+import { ComponentDetailsForm } from "./forms/ComponentDetailsForm"
+import { DemoDetailsForm } from "./forms/DemoDetailsForm"
 import { PublishHeader } from "./PublishHeader"
 import { PublishComponentPreview } from "./preview"
 import { DemoPreviewTabs } from "./DemoPreviewTabs"
@@ -391,6 +391,7 @@ export default function PublishComponentForm() {
             demo.demo_direct_registry_dependencies || null,
           user_id: publishAsUser.id,
           fts: null,
+          demo_slug: "default",
         }
 
         const { data: insertedDemo, error: demoError } = await client
@@ -401,7 +402,7 @@ export default function PublishComponentForm() {
 
         if (demoError) throw demoError
 
-        const demoFolder = `${baseFolder}/${insertedDemo.id}`
+        const demoFolder = `${baseFolder}/${insertedDemo.demo_slug}`
 
         const [demoCodeUrl, previewImageR2Url, videoR2Url] = await Promise.all([
           uploadToR2({
@@ -538,7 +539,7 @@ export default function PublishComponentForm() {
       !!description && !!license && !!name && !!component_slug && !!registry
     )
   }, [form])
-
+  console.log(form.getValues())
   const handleAddNewDemo = () => {
     const demos = form.getValues().demos || []
     const newDemoIndex = demos.length
@@ -547,6 +548,7 @@ export default function PublishComponentForm() {
       ...demos,
       {
         name: "",
+        demo_slug: "",
         demo_code: "",
         tags: [],
         preview_image_data_url: "",

@@ -57,17 +57,19 @@ export function DemoPreviewTabs({
         onValueChange={setActiveTab}
         className="flex flex-col h-full"
       >
-        <TabsList className="h-auto gap-2 rounded-none bg-transparent px-4 py-2">
-          {demos.map((demo, index) => (
-            <TabsTrigger
-              key={index}
-              value={`demo-${index}`}
-              className="relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-2 after:h-0.5 hover:bg-accent hover:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent data-[state=inactive]:text-foreground/70"
-            >
-              {demo.name || `Demo ${index + 1}`}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        {demos.length > 1 && (
+          <TabsList className="h-auto gap-2 rounded-none bg-transparent px-4 py-2">
+            {demos.map((demo, index) => (
+              <TabsTrigger
+                key={index}
+                value={`demo-${index}`}
+                className="relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-2 after:h-0.5 hover:bg-accent hover:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent data-[state=inactive]:text-foreground/70"
+              >
+                {demo.name || `Demo ${index + 1}`}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        )}
 
         <div className="relative flex-1 h-full">
           {demos.map((demo, index) => {

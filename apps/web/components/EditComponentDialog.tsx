@@ -12,7 +12,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer"
-import { ComponentDetailsForm } from "./publish/ComponentDetailsForm"
+import { ComponentDetailsForm } from "./publish/forms/ComponentDetailsForm"
 import { Component, User, Tag, DemoWithComponent } from "@/types/global"
 import { useForm } from "react-hook-form"
 import { FormData } from "./publish/utils"

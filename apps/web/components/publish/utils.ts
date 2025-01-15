@@ -8,6 +8,9 @@ const demoSchema = z.object({
   demo_code: z.string().min(1, {
     message: "Demo code is required.",
   }),
+  demo_slug: z.string().min(1, {
+    message: "Demo slug is required.",
+  }),
   preview_image_data_url: z.string({
     required_error: "Preview image is required.",
   }),
@@ -51,7 +54,7 @@ export const formSchema = z.object({
   publish_as_username: z.string().optional(),
   slug_available: z.boolean().optional(),
   tailwind_config: z.string().optional(),
-  globals_css: z.string().optional()
+  globals_css: z.string().optional(),
 })
 
 export type FormData = z.infer<typeof formSchema>

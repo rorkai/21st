@@ -399,6 +399,7 @@ export type Database = {
           demo_code: string
           demo_dependencies: Json | null
           demo_direct_registry_dependencies: Json | null
+          demo_slug: string
           fts: unknown | null
           id: number
           name: string | null
@@ -415,8 +416,9 @@ export type Database = {
           demo_code: string
           demo_dependencies?: Json | null
           demo_direct_registry_dependencies?: Json | null
+          demo_slug?: string
           fts?: unknown | null
-          id?: never
+          id?: number
           name?: string | null
           preview_url?: string | null
           pro_preview_image_url?: string | null
@@ -431,8 +433,9 @@ export type Database = {
           demo_code?: string
           demo_dependencies?: Json | null
           demo_direct_registry_dependencies?: Json | null
+          demo_slug?: string
           fts?: unknown | null
-          id?: never
+          id?: number
           name?: string | null
           preview_url?: string | null
           pro_preview_image_url?: string | null

@@ -13,7 +13,7 @@ import { Globe, SquareArrowOutUpRight } from "lucide-react"
 import { trackEvent } from "@/lib/amplitude"
 import { useEffect } from "react"
 import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
-import { Component, User } from "@/types/global"
+import { Component, DemoWithComponent, User } from "@/types/global"
 
 const useProfileAnalytics = ({
   username,
@@ -34,10 +34,12 @@ export function UserProfileClient({
   user,
   publishedComponents,
   huntedComponents,
+  userDemos,
 }: {
   user: User
   publishedComponents: (Component & { user: User })[]
   huntedComponents: (Component & { user: User })[]
+  userDemos: DemoWithComponent[]
 }) {
   useProfileAnalytics({
     username: user.username,
@@ -160,12 +162,14 @@ export function UserProfileClient({
             <UserComponentsHeader
               publishedComponents={publishedComponents}
               huntedComponents={huntedComponents}
+              userDemos={userDemos}
               username={user.username ?? ""}
             />
             <UserComponentsList
               user={user}
               publishedComponents={publishedComponents}
               huntedComponents={huntedComponents}
+              userDemos={userDemos}
             />
           </div>
         </div>

@@ -9,9 +9,9 @@ import { CircleX } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { searchQueryAtom } from "@/components/Header"
-import { Component, User } from "@/types/global"
+import { Component, DemoWithComponent, User } from "@/types/global"
 
-export type UserComponentsTab = "published" | "hunted"
+export type UserComponentsTab = "published" | "hunted" | "demos"
 
 export const userComponentsTabAtom = atomWithStorage<UserComponentsTab>(
   "user-components-tab",
@@ -55,10 +55,12 @@ const useSearchHotkeys = (inputRef: React.RefObject<HTMLInputElement>) => {
 export function UserComponentsHeader({
   publishedComponents = [],
   huntedComponents = [],
+  userDemos = [],
   username,
 }: {
   publishedComponents?: (Component & { user: User })[]
   huntedComponents?: (Component & { user: User })[]
+  userDemos?: DemoWithComponent[]
   username: string
 }) {
   const [activeTab, setActiveTab] = useAtom(userComponentsTabAtom)
@@ -90,6 +92,11 @@ export function UserComponentsHeader({
       value: "hunted" as const,
       label: "Hunted",
       count: huntedComponents?.length ?? 0,
+    },
+    {
+      value: "demos" as const,
+      label: "Demos",
+      count: userDemos?.length ?? 0,
     },
   ]
 

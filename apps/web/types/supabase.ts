@@ -890,6 +890,36 @@ export type Database = {
           website_url: string | null
         }[]
       }
+      get_user_demos: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: {
+          id: number
+          component_id: number
+          name: string
+          demo_code: string
+          created_at: string
+          updated_at: string
+          user_id: string
+          demo_dependencies: Json
+          demo_direct_registry_dependencies: Json
+          preview_url: string
+          video_url: string
+          compiled_css: string
+          pro_preview_image_url: string
+          component_data: Json
+          user_data: Json
+          is_paid: boolean
+          payment_url: string
+          price: number
+          license: string
+          website_url: string
+          downloads_count: number
+          likes_count: number
+          fts: unknown
+        }[]
+      }
       increment: {
         Args: Record<PropertyKey, never>
         Returns: number

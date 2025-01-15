@@ -4,8 +4,8 @@ import { useRef, useState } from "react"
 import { Component, User, DemoWithComponent } from "../types/global"
 
 interface ComponentVideoPreviewProps {
-  component: Component
-  demo?: DemoWithComponent
+  component: DemoWithComponent | (Component & { user: User })
+  demo?: DemoWithComponent | (Component & { user: User })
 }
 
 export function ComponentVideoPreview({
@@ -15,8 +15,12 @@ export function ComponentVideoPreview({
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isVideoLoaded, setIsVideoLoaded] = useState(false)
 
-  const id = demo?.id || component.id
-  const videoUrl = demo?.video_url || component.video_url
+  const isDemo = "component" in component
+
+  const id = isDemo ? component.id : component.id
+  const videoUrl = isDemo
+    ? component.video_url
+    : (component as Component & { user: User }).video_url
 
   const toggleVideoIcon = (hide: boolean) => {
     const videoIcon = document.querySelector(

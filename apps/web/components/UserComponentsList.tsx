@@ -4,26 +4,39 @@ import { useAtom, useAtomValue } from "jotai"
 import { ComponentsList } from "@/components/ComponentsList"
 import { searchQueryAtom } from "@/components/Header"
 import { userComponentsTabAtom } from "@/components/UserComponentsHeader"
-import { Component, User } from "@/types/global"
+import { Component, DemoWithComponent, User } from "@/types/global"
 import { useQuery } from "@tanstack/react-query"
 
 export function UserComponentsList({
   user,
   publishedComponents = [],
   huntedComponents = [],
+  userDemos = [],
 }: {
   user: User
   publishedComponents?: (Component & { user: User })[]
   huntedComponents?: (Component & { user: User })[]
+  userDemos?: DemoWithComponent[]
 }) {
   const activeTab = useAtomValue(userComponentsTabAtom)
   const [searchQuery] = useAtom(searchQueryAtom)
-  const baseComponents =
-    activeTab === "published" ? publishedComponents : huntedComponents
 
-  const { data: components, isLoading } = useQuery<
-    (Component & { user: User })[]
-  >({
+  const getBaseComponents = () => {
+    switch (activeTab) {
+      case "published":
+        return publishedComponents
+      case "hunted":
+        return huntedComponents
+      case "demos":
+        return userDemos
+      default:
+        return publishedComponents
+    }
+  }
+
+  const baseComponents = getBaseComponents()
+
+  const { data: components, isLoading } = useQuery({
     queryKey: ["user-components", user.id, activeTab, searchQuery],
     queryFn: async () => {
       if (!searchQuery) return baseComponents
@@ -31,11 +44,14 @@ export function UserComponentsList({
       const query = searchQuery.toLowerCase()
       return baseComponents.filter((component) => {
         return (
-          component.name.toLowerCase().includes(query) ||
-          component.description?.toLowerCase().includes(query) ||
+          ("name" in component
+            ? component.name?.toLowerCase().includes(query)
+            : false) ||
+          ("description" in component
+            ? component.description?.toLowerCase().includes(query)
+            : false) ||
           component.user.name?.toLowerCase().includes(query) ||
-          (component.user.username &&
-            component.user.username.toLowerCase().includes(query))
+          component.user.username?.toLowerCase().includes(query)
         )
       })
     },

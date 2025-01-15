@@ -5,6 +5,7 @@ import {
   getUserData,
   getUserComponents,
   getHuntedComponents,
+  getUserDemos,
 } from "@/lib/queries"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 
@@ -76,20 +77,18 @@ export default async function UserProfile({
     )
   }
 
-  const publishedComponents = await getUserComponents(
-    supabaseWithAdminAccess,
-    user.id,
-  )
-  const huntedComponents = await getHuntedComponents(
-    supabaseWithAdminAccess,
-    user.username,
-  )
+  const [publishedComponents, huntedComponents, userDemos] = await Promise.all([
+    getUserComponents(supabaseWithAdminAccess, user.id),
+    getHuntedComponents(supabaseWithAdminAccess, user.username),
+    getUserDemos(supabaseWithAdminAccess, user.id),
+  ])
 
   return (
     <UserProfileClient
       user={user}
       publishedComponents={publishedComponents || []}
       huntedComponents={huntedComponents || []}
+      userDemos={userDemos || []}
     />
   )
 }

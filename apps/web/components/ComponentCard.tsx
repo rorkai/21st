@@ -43,20 +43,29 @@ export function ComponentCard({
     return <ComponentCardSkeleton />
   }
 
-  const componentData = component! as DemoWithComponent
-  const userData = componentData.user
+  const isDemo = "component" in component
 
-  const componentUrl = `/${userData.username}/${componentData.component.component_slug}/${componentData.id}`
+  const userData = isDemo
+    ? (component as DemoWithComponent).user
+    : (component as Component & { user: User }).user
+
+  const componentUrl = isDemo
+    ? `/${userData.username}/${(component as DemoWithComponent).component.component_slug}/${component.id}`
+    : `/${userData.username}/${(component as Component & { user: User }).component_slug}`
 
   const supabase = useClerkSupabaseClient()
 
+  const componentId = isDemo
+    ? (component as DemoWithComponent).component.id
+    : (component as Component & { user: User }).id
+
   const { data: analytics } = useQuery({
-    queryKey: ["component-analytics", componentData.component_id],
+    queryKey: ["component-analytics", componentId],
     queryFn: async () => {
       const { data } = await supabase
         .from("mv_component_analytics")
         .select("component_id, count")
-        .eq("component_id", componentData.component_id!)
+        .eq("component_id", componentId)
         .eq("activity_type", AnalyticsActivityType.COMPONENT_VIEW)
       return data
     },
@@ -64,40 +73,58 @@ export function ComponentCard({
     gcTime: 1000 * 60 * 30,
     refetchOnWindowFocus: false,
   })
-  console.log(componentData)
+
+  const name = isDemo
+    ? (component as DemoWithComponent).name
+    : (component as Component & { user: User }).name
+
+  const videoUrl = isDemo
+    ? (component as DemoWithComponent).video_url
+    : (component as Component & { user: User }).video_url
+
+  const codeUrl = isDemo
+    ? (component as DemoWithComponent).component.code
+    : (component as Component & { user: User }).code
+
+  const likesCount = isDemo
+    ? (component as DemoWithComponent).component.likes_count
+    : (component as Component & { user: User }).likes_count
+
   return (
     <div className="overflow-hidden">
       <Link href={componentUrl} className="block cursor-pointer">
         <div className="relative aspect-[4/3] mb-3 group">
-          <CopyComponentButton
-            codeUrl={componentData.component.code}
-            component={componentData}
-          />
+          <CopyComponentButton codeUrl={codeUrl} component={component} />
           <div className="absolute inset-0 rounded-lg overflow-hidden">
             <div className="relative w-full h-full">
               <div className="absolute inset-0" style={{ margin: "-1px" }}>
                 <ComponentPreviewImage
                   src={
-                    componentData.preview_url || "/placeholder.svg"
+                    isDemo
+                      ? (component as DemoWithComponent).preview_url ||
+                        "/placeholder.svg"
+                      : (component as Component & { user: User }).preview_url ||
+                        "/placeholder.svg"
                   }
-                  alt={componentData.name || ""}
+                  alt={
+                    isDemo
+                      ? (component as DemoWithComponent).name || ""
+                      : (component as Component & { user: User }).name || ""
+                  }
                   fallbackSrc="/placeholder.svg"
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="absolute inset-0 bg-gradient-to-b from-foreground/0 to-foreground/5" />
             </div>
-            {componentData.video_url && (
-              <ComponentVideoPreview
-                component={componentData.component}
-                demo={componentData}
-              />
+            {videoUrl && (
+              <ComponentVideoPreview component={component} demo={component} />
             )}
           </div>
-          {componentData.video_url && (
+          {videoUrl && (
             <div
               className="absolute top-2 left-2 z-20 bg-background/90 backdrop-blur rounded-md px-2 py-1 pointer-events-none"
-              data-video-icon={`${componentData.id}`}
+              data-video-icon={`${component.id}`}
             >
               <Video size={16} className="text-foreground" />
             </div>
@@ -118,7 +145,7 @@ export function ComponentCard({
             className="block cursor-pointer min-w-0 flex-1 mr-3"
           >
             <h2 className="text-sm font-medium text-foreground truncate">
-              {componentData.name}
+              {name}
             </h2>
           </Link>
           <div className="flex items-center gap-3">
@@ -128,7 +155,7 @@ export function ComponentCard({
             </div>
             <div className="flex items-center text-xs text-muted-foreground whitespace-nowrap shrink-0 gap-1">
               <Heart size={14} className="text-muted-foreground" />
-              <span>{componentData.component.likes_count || 0}</span>
+              <span>{likesCount || 0}</span>
             </div>
           </div>
         </div>

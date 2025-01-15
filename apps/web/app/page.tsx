@@ -1,6 +1,7 @@
 import React from "react"
 import { Metadata } from "next"
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 
 import {
   Component,
@@ -76,126 +77,130 @@ export const generateMetadata = async (): Promise<Metadata> => {
 }
 
 export default async function HomePage() {
-  const cookieStore = cookies()
-  const shouldShowHero = !cookieStore.has("has_visited")
-  const hasOnboarded = cookieStore.has("has_onboarded")
-  const savedSortBy = cookieStore.get("saved_sort_by")?.value as
-    | SortOption
-    | undefined
-  const savedQuickFilter = cookieStore.get("saved_quick_filter")?.value as
-    | QuickFilterOption
-    | undefined
+  try {
+    const cookieStore = cookies()
+    const shouldShowHero = !cookieStore.has("has_visited")
+    const hasOnboarded = cookieStore.has("has_onboarded")
+    const savedSortBy = cookieStore.get("saved_sort_by")?.value as
+      | SortOption
+      | undefined
+    const savedQuickFilter = cookieStore.get("saved_quick_filter")?.value as
+      | QuickFilterOption
+      | undefined
 
-  const defaultQuickFilter = savedQuickFilter || "all"
-  const defaultSortBy: SortOption = savedSortBy || "downloads"
+    const defaultQuickFilter = savedQuickFilter || "all"
+    const defaultSortBy: SortOption = savedSortBy || "downloads"
 
-  const sortByPreference: SortOption = savedSortBy?.length
-    ? (savedSortBy as SortOption)
-    : defaultSortBy
-  const quickFilterPreference: QuickFilterOption = savedQuickFilter?.length
-    ? (savedQuickFilter as QuickFilterOption)
-    : defaultQuickFilter
+    const sortByPreference: SortOption = savedSortBy?.length
+      ? (savedSortBy as SortOption)
+      : defaultSortBy
+    const quickFilterPreference: QuickFilterOption = savedQuickFilter?.length
+      ? (savedQuickFilter as QuickFilterOption)
+      : defaultQuickFilter
 
-  const orderByFields: [string, string] = (() => {
-    switch (sortByPreference) {
-      case "downloads":
-        return ["component(downloads_count)", "desc"]
-      case "likes":
-        return ["component(likes_count)", "desc"]
-      case "date":
-        return ["created_at", "desc"]
-    }
-  })()
+    const orderByFields: [string, string] = (() => {
+      switch (sortByPreference) {
+        case "downloads":
+          return ["component(downloads_count)", "desc"]
+        case "likes":
+          return ["component(likes_count)", "desc"]
+        case "date":
+          return ["created_at", "desc"]
+      }
+    })()
 
-  const { data: initialDemos, error: demosError } =
-    await supabaseWithAdminAccess
-      .from("demos")
-      .select(
-        "*, component:components!demos_component_id_fkey(*, user:users!user_id(*))",
-      )
-      .limit(40)
-      .eq("component.is_public", true)
-      .order(orderByFields[0], { ascending: orderByFields[1] === "desc" })
-      .returns<DemoWithComponent[]>()
-
-  if (demosError) {
-    console.error("Demos error:", demosError)
-    return null
-  }
-
-  const filteredDemos = await supabaseWithAdminAccess.rpc(
-    "get_filtered_demos",
-    {
-      p_quick_filter: quickFilterPreference,
-      p_sort_by: sortByPreference,
-      p_offset: 0,
-      p_limit: 40,
-    },
-  )
-
-  if (filteredDemos.error) {
-    console.error("Filtered demos error:", filteredDemos.error)
-    return null
-  }
-
-  const initialFilteredSortedDemos = (filteredDemos.data || []).map(
-    (result) => ({
-      id: result.id,
-      name: result.name,
-      demo_code: result.demo_code,
-      preview_url: result.preview_url,
-      video_url: result.video_url,
-      compiled_css: result.compiled_css,
-      demo_dependencies: result.demo_dependencies,
-      demo_direct_registry_dependencies:
-        result.demo_direct_registry_dependencies,
-      demo_slug: result.demo_slug,
-      component: {
-        ...(result.component_data as Component),
-        user: result.user_data,
-      } as Component & { user: User },
-      created_at: result.created_at,
-      updated_at: result.updated_at,
-    }),
-  ) as DemoWithComponent[]
-
-  const { data: initialTabsCountsData, error: initialTabsCountsError } =
-    await supabaseWithAdminAccess.rpc("get_components_counts")
-
-  const initialTabsCounts =
-    !initialTabsCountsError && Array.isArray(initialTabsCountsData)
-      ? initialTabsCountsData.reduce(
-          (acc, item) => {
-            acc[item.filter_type as QuickFilterOption] = item.count
-            return acc
-          },
-          {} as Record<QuickFilterOption, number>,
+    const { data: initialDemos, error: demosError } =
+      await supabaseWithAdminAccess
+        .from("demos")
+        .select(
+          "*, component:components!demos_component_id_fkey(*, user:users!user_id(*))",
         )
-      : {
-          all: 0,
-          last_released: 0,
-          most_downloaded: 0,
-        }
+        .limit(40)
+        .eq("component.is_public", true)
+        .order(orderByFields[0], { ascending: orderByFields[1] === "desc" })
+        .returns<DemoWithComponent[]>()
 
-  if (shouldShowHero) {
+    if (demosError) {
+      console.error("Demos error:", demosError)
+      return null
+    }
+
+    const filteredDemos = await supabaseWithAdminAccess.rpc(
+      "get_filtered_demos",
+      {
+        p_quick_filter: quickFilterPreference,
+        p_sort_by: sortByPreference,
+        p_offset: 0,
+        p_limit: 40,
+      },
+    )
+
+    if (filteredDemos.error) {
+      redirect("/")
+    }
+
+    const initialFilteredSortedDemos = (filteredDemos.data || []).map(
+      (result) => ({
+        id: result.id,
+        name: result.name,
+        demo_code: result.demo_code,
+        preview_url: result.preview_url,
+        video_url: result.video_url,
+        compiled_css: result.compiled_css,
+        demo_dependencies: result.demo_dependencies,
+        demo_direct_registry_dependencies:
+          result.demo_direct_registry_dependencies,
+        demo_slug: result.demo_slug,
+        component: {
+          ...(result.component_data as Component),
+          user: result.user_data,
+        } as Component & { user: User },
+        created_at: result.created_at,
+        updated_at: result.updated_at,
+      }),
+    ) as DemoWithComponent[]
+
+    const { data: initialTabsCountsData, error: initialTabsCountsError } =
+      await supabaseWithAdminAccess.rpc("get_components_counts")
+
+    const initialTabsCounts =
+      !initialTabsCountsError && Array.isArray(initialTabsCountsData)
+        ? initialTabsCountsData.reduce(
+            (acc, item) => {
+              acc[item.filter_type as QuickFilterOption] = item.count
+              return acc
+            },
+            {} as Record<QuickFilterOption, number>,
+          )
+        : {
+            all: 0,
+            last_released: 0,
+            most_downloaded: 0,
+          }
+
+    if (shouldShowHero) {
+      return (
+        <>
+          <HeroSection />
+          <NewsletterDialog />
+        </>
+      )
+    }
+
     return (
       <>
-        <HeroSection />
+        <Header variant="default" />
+        <HomePageClient
+          initialComponents={initialFilteredSortedDemos}
+          initialSortBy={sortByPreference}
+          initialQuickFilter={quickFilterPreference}
+          initialTabsCounts={initialTabsCounts}
+        />
         <NewsletterDialog />
       </>
     )
+  } catch (error) {
+    console.error("Error in home page:", error)
+    redirect("/")
   }
-
-  return (
-    <>
-      <Header variant="default" />
-      <HomePageClient
-        initialComponents={initialFilteredSortedDemos}
-        initialSortBy={sortByPreference}
-        initialQuickFilter={quickFilterPreference}
-        initialTabsCounts={initialTabsCounts}
-      />
-      <NewsletterDialog />
-    </>
-  )
 }

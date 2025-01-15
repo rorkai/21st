@@ -8,6 +8,8 @@ import {
   getUserDemos,
 } from "@/lib/queries"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
+import { validateRouteParams } from "@/lib/utils/validateRouteParams"
+import { redirect } from "next/navigation"
 
 export const generateMetadata = async ({
   params,
@@ -66,15 +68,17 @@ export default async function UserProfile({
 }: {
   params: { username: string }
 }) {
+  if (!validateRouteParams(params)) {
+    redirect("/")
+  }
+
   const { data: user, error } = await getUserData(
     supabaseWithAdminAccess,
     params.username,
   )
 
   if (!user || !user.username) {
-    return (
-      <ErrorPage error={new Error(`Error fetching user: ${error?.message}`)} />
-    )
+    redirect("/")
   }
 
   const [publishedComponents, huntedComponents, allUserDemos] =

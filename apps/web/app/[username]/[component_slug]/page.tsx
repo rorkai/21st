@@ -7,6 +7,7 @@ import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 import { extractDemoComponentNames } from "@/lib/parsers"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { Demo, User } from "@/types/global"
+import { validateRouteParams } from "@/lib/utils/validateRouteParams"
 
 const ComponentPage = dynamic(() => import("@/components/ComponentPage"), {
   ssr: false,
@@ -122,23 +123,22 @@ export default async function ComponentPageServer({
 }: {
   params: { username: string; component_slug: string; demo_slug?: string }
 }) {
-  const { username, component_slug } = params
+  if (!validateRouteParams(params)) {
+    redirect("/")
+  }
+
   const demo_slug = params.demo_slug || "default"
 
   try {
     const { data, error, shouldRedirectToDefault } = await getComponentWithDemo(
       supabaseWithAdminAccess,
-      username,
-      component_slug,
+      params.username,
+      params.component_slug,
       demo_slug,
     )
 
-    if (shouldRedirectToDefault) {
-      redirect(`/${username}/${component_slug}`)
-    }
-
-    if (error || !data) {
-      throw error || new Error("No data returned")
+    if (shouldRedirectToDefault || error || !data) {
+      redirect("/")
     }
 
     const { component, demo } = data
@@ -186,7 +186,7 @@ export default async function ComponentPageServer({
       resolveRegistryDependencyTree({
         supabase: supabaseWithAdminAccess,
         sourceDependencySlugs: [
-          `${username}/${component_slug}`,
+          `${params.username}/${params.component_slug}`,
           ...demoRegistryDeps,
         ],
         withDemoDependencies: true,

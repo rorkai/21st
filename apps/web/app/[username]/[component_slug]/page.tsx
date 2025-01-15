@@ -1,5 +1,5 @@
 import React from "react"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import dynamic from "next/dynamic"
 import ErrorPage from "@/components/ErrorPage"
 import { getComponent, getComponentWithDemo, getUserData } from "@/lib/queries"
@@ -126,12 +126,16 @@ export default async function ComponentPageServer({
   const demo_slug = params.demo_slug || "default"
 
   try {
-    const { data, error } = await getComponentWithDemo(
+    const { data, error, shouldRedirectToDefault } = await getComponentWithDemo(
       supabaseWithAdminAccess,
       username,
       component_slug,
       demo_slug,
     )
+
+    if (shouldRedirectToDefault) {
+      redirect(`/${username}/${component_slug}`)
+    }
 
     if (error || !data) {
       throw error || new Error("No data returned")

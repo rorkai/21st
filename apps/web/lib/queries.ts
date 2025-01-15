@@ -487,15 +487,17 @@ export async function getComponentWithDemo(
   supabase: SupabaseClient<Database>,
   username: string,
   componentSlug: string,
-  demoSlug: string = "default",
+  demoIdentifier: string | number = "default",
 ): Promise<{
   data: {
     component: Component & { user: User }
     demo: Demo & { tags: Tag[] }
   } | null
   error: Error | null
+  shouldRedirectToDefault?: boolean
 }> {
   try {
+    // Получаем user_id
     const { data: userData, error: userError } = await supabase
       .from("users")
       .select("id")
@@ -505,6 +507,7 @@ export async function getComponentWithDemo(
     if (userError) throw userError
     if (!userData) throw new Error("User not found")
 
+    // Получаем компонент
     const { data: component, error: componentError } = await supabase
       .from("components")
       .select(
@@ -520,7 +523,8 @@ export async function getComponentWithDemo(
     if (componentError) throw componentError
     if (!component) throw new Error("Component not found")
 
-    const { data: demo, error: demoError } = await supabase
+    // Формируем запрос для демо
+    let demoQuery = supabase
       .from("demos")
       .select(
         `
@@ -529,11 +533,27 @@ export async function getComponentWithDemo(
       `,
       )
       .eq("component_id", component.id)
-      .eq("demo_slug", demoSlug)
-      .single()
 
-    if (demoError) throw demoError
-    if (!demo) throw new Error("Demo not found")
+    // Проверяем тип идентификатора демо
+    if (typeof demoIdentifier === "number" || !isNaN(Number(demoIdentifier))) {
+      demoQuery = demoQuery.eq("id", Number(demoIdentifier))
+    } else {
+      demoQuery = demoQuery.eq("demo_slug", demoIdentifier)
+    }
+
+    const { data: demo, error: demoError } = await demoQuery.single()
+
+    // Если демо не найдено, пробуем получить демо по умолчанию
+    if (demoError || !demo) {
+      if (demoIdentifier !== "default") {
+        return {
+          data: null,
+          error: null,
+          shouldRedirectToDefault: true,
+        }
+      }
+      throw new Error("Demo not found")
+    }
 
     const formattedTags = demo.tags.map((tag: any) => tag.tags)
 

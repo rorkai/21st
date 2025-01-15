@@ -7,11 +7,12 @@ import { useClerkSupabaseClient } from "@/lib/clerk"
 import { useQuery } from "@tanstack/react-query"
 import { AnalyticsActivityType } from "@/types/global"
 
-import { Component, User } from "../types/global"
+import { Component, User, DemoWithComponent } from "../types/global"
 import ComponentPreviewImage from "./ComponentPreviewImage"
 import { ComponentVideoPreview } from "./ComponentVideoPreview"
 import { CopyComponentButton } from "./CopyComponentButton"
 import { UserAvatar } from "./UserAvatar"
+import { cn } from "@/lib/utils"
 
 export function ComponentCardSkeleton() {
   return (
@@ -20,7 +21,7 @@ export function ComponentCardSkeleton() {
         <div className="absolute inset-0 rounded-lg overflow-hidden bg-muted" />
       </div>
       <div className="flex items-center space-x-3">
-        <div className="w-6 h-6 rounded-full bg-muted" />
+        <div className="w-8 h-8 rounded-full bg-muted" />
         <div className="flex items-center justify-between flex-grow min-w-0">
           <div className="min-w-0 flex-1 mr-3">
             <div className="h-4 bg-muted rounded w-3/4" />
@@ -36,23 +37,45 @@ export function ComponentCard({
   component,
   isLoading,
 }: {
-  component?: Component & { user: User }
+  component?: DemoWithComponent | (Component & { user: User })
   isLoading?: boolean
 }) {
   if (isLoading || !component) {
     return <ComponentCardSkeleton />
   }
 
-  const componentUrl = `/${component.user.username}/${component.component_slug}`
+  const isDemo = "component" in component
+  const userData = isDemo ? component.component.user : component.user
+
+  if (!userData) {
+    return <ComponentCardSkeleton />
+  }
+
+  const componentUrl = isDemo
+    ? `/${userData.username}/${component.component.component_slug}/${component.demo_slug || `demo-${component.id}`}`
+    : `/${userData.username}/${component.component_slug}`
+
+  console.log({
+    isDemo,
+    component,
+    demoSlug: isDemo ? component.demo_slug : null,
+    componentSlug: isDemo
+      ? component.component.component_slug
+      : component.component_slug,
+    username: userData.username,
+  })
+
   const supabase = useClerkSupabaseClient()
 
+  const componentId = isDemo ? component.component.id : component.id
+
   const { data: analytics } = useQuery({
-    queryKey: ["component-analytics", component.id],
+    queryKey: ["component-analytics", componentId],
     queryFn: async () => {
       const { data } = await supabase
         .from("mv_component_analytics")
         .select("component_id, count")
-        .eq("component_id", component.id)
+        .eq("component_id", componentId)
         .eq("activity_type", AnalyticsActivityType.COMPONENT_VIEW)
       return data
     },
@@ -61,28 +84,40 @@ export function ComponentCard({
     refetchOnWindowFocus: false,
   })
 
+  const videoUrl = isDemo ? component.video_url : component.video_url
+
+  const codeUrl = isDemo ? component.component.code : component.code
+
+  const likesCount = isDemo
+    ? component.component.likes_count
+    : component.likes_count
+
   return (
     <div className="overflow-hidden">
       <Link href={componentUrl} className="block cursor-pointer">
         <div className="relative aspect-[4/3] mb-3 group">
-          <CopyComponentButton codeUrl={component.code} component={component} />
+          <CopyComponentButton codeUrl={codeUrl} component={component} />
           <div className="absolute inset-0 rounded-lg overflow-hidden">
             <div className="relative w-full h-full">
               <div className="absolute inset-0" style={{ margin: "-1px" }}>
                 <ComponentPreviewImage
-                  src={component.preview_url || "/placeholder.svg"}
-                  alt={component.name}
+                  src={
+                    isDemo
+                      ? component.preview_url || "/placeholder.svg"
+                      : component.preview_url || "/placeholder.svg"
+                  }
+                  alt={isDemo ? component.name || "" : component.name || ""}
                   fallbackSrc="/placeholder.svg"
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="absolute inset-0 bg-gradient-to-b from-foreground/0 to-foreground/5" />
             </div>
-            {component.video_url && (
-              <ComponentVideoPreview component={component} />
+            {videoUrl && (
+              <ComponentVideoPreview component={component} demo={component} />
             )}
           </div>
-          {component.video_url && (
+          {videoUrl && (
             <div
               className="absolute top-2 left-2 z-20 bg-background/90 backdrop-blur rounded-md px-2 py-1 pointer-events-none"
               data-video-icon={`${component.id}`}
@@ -90,15 +125,14 @@ export function ComponentCard({
               <Video size={16} className="text-foreground" />
             </div>
           )}
-          <CopyComponentButton codeUrl={component.code} component={component} />
         </div>
       </Link>
-      <div className="flex items-center space-x-3">
+      <div className="flex space-x-3 items-center">
         <UserAvatar
-          src={component.user.image_url || "/placeholder.svg"}
-          alt={component.user.name}
-          size={24}
-          user={component.user}
+          src={userData.image_url || "/placeholder.svg"}
+          alt={userData.name}
+          size={32}
+          user={userData}
           isClickable
         />
         <div className="flex items-center justify-between flex-grow min-w-0">
@@ -106,9 +140,16 @@ export function ComponentCard({
             href={componentUrl}
             className="block cursor-pointer min-w-0 flex-1 mr-3"
           >
-            <h2 className="text-sm font-medium text-foreground truncate">
-              {component.name}
-            </h2>
+            <div className="flex flex-col min-w-0">
+              <h2 className="text-sm font-medium text-foreground truncate">
+                {isDemo ? component.component.name : component.name}
+              </h2>
+              {isDemo && component.name !== "Default" && (
+                <p className="text-sm text-muted-foreground truncate">
+                  {component.name}
+                </p>
+              )}
+            </div>
           </Link>
           <div className="flex items-center gap-3">
             <div className="flex items-center text-xs text-muted-foreground whitespace-nowrap shrink-0 gap-1">
@@ -117,7 +158,7 @@ export function ComponentCard({
             </div>
             <div className="flex items-center text-xs text-muted-foreground whitespace-nowrap shrink-0 gap-1">
               <Heart size={14} className="text-muted-foreground" />
-              <span>{component.likes_count || 0}</span>
+              <span>{likesCount || 0}</span>
             </div>
           </div>
         </div>

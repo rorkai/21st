@@ -20,6 +20,7 @@ import { LoadingSpinner } from "../LoadingSpinner"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 import { useToast } from "@/hooks/use-toast"
 
+
 const SandpackPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react").then((module) => ({
     default: module.SandpackPreview,
@@ -30,7 +31,7 @@ export function PublishComponentPreview({
   code,
   demoCode,
   slugToPublish,
-  registryToPublish = "ui",
+  registryToPublish,
   directRegistryDependencies,
   isDarkTheme,
   customTailwindConfig,
@@ -49,6 +50,8 @@ export function PublishComponentPreview({
   const supabase = useClerkSupabaseClient()
   const [css, setCss] = useState<string | undefined>(undefined)
   const { toast } = useToast()
+
+  const currentDemoCode = demoCode
 
   const {
     data: registryDependencies,
@@ -71,8 +74,8 @@ export function PublishComponentPreview({
   })
 
   const demoComponentNames = useMemo(
-    () => extractDemoComponentNames(demoCode),
-    [demoCode],
+    () => extractDemoComponentNames(currentDemoCode),
+    [currentDemoCode],
   )
 
   const shellCode = useMemo(() => {
@@ -81,7 +84,7 @@ export function PublishComponentPreview({
       componentSlug: slugToPublish,
       relativeImportPath: `/components/${registryToPublish}`,
       code,
-      demoCode,
+      demoCode: currentDemoCode,
       theme: isDarkTheme ? "dark" : "light",
       css: "",
     })
@@ -94,7 +97,7 @@ export function PublishComponentPreview({
     slugToPublish,
     registryToPublish,
     code,
-    demoCode,
+    currentDemoCode,
     isDarkTheme,
   ])
 
@@ -108,7 +111,7 @@ export function PublishComponentPreview({
       },
       body: JSON.stringify({
         code,
-        demoCode,
+        demoCode: currentDemoCode,
         baseTailwindConfig: defaultTailwindConfig,
         baseGlobalCss: defaultGlobalCss,
         customTailwindConfig,
@@ -151,7 +154,7 @@ export function PublishComponentPreview({
       })
   }, [
     code,
-    demoCode,
+    currentDemoCode,
     customTailwindConfig,
     customGlobalCss,
     registryDependencies,
@@ -166,7 +169,7 @@ export function PublishComponentPreview({
         componentSlug: slugToPublish,
         relativeImportPath: `/components/${registryToPublish}`,
         code,
-        demoCode,
+        demoCode: currentDemoCode,
         theme: isDarkTheme ? "dark" : "light",
         css: css ?? "",
         customTailwindConfig,
@@ -177,7 +180,7 @@ export function PublishComponentPreview({
       slugToPublish,
       registryToPublish,
       code,
-      demoCode,
+      currentDemoCode,
       isDarkTheme,
       css,
       customTailwindConfig,
@@ -200,10 +203,10 @@ export function PublishComponentPreview({
   const dependencies = useMemo(() => {
     return {
       ...extractNPMDependencies(code),
-      ...extractNPMDependencies(demoCode),
+      ...extractNPMDependencies(currentDemoCode),
       ...(registryDependencies?.npmDependencies || {}),
     }
-  }, [code, demoCode, registryDependencies?.npmDependencies])
+  }, [code, currentDemoCode, registryDependencies?.npmDependencies])
 
   const providerProps = {
     template: "react-ts" as const,

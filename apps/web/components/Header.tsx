@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 
 import { atom } from "jotai"
 import {
@@ -43,6 +44,8 @@ export function Header({
   const isMobile = useIsMobile()
   const { user, signOut } = useClerk()
   const [showUserProfile, setShowUserProfile] = useState(false)
+  const searchParams = useSearchParams()
+  const step = searchParams.get("step")
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -61,11 +64,15 @@ export function Header({
     }
   }, [])
 
+  if (variant === "publish" && step) {
+    return null
+  }
+
   return (
     <>
       <header
         className={cn(
-          "flex fixed top-0 left-0 right-0 h-14 z-50 items-center justify-between px-4 py-3 text-foreground",
+          "flex fixed top-0 left-0 right-0 h-14 z-40 items-center justify-between px-4 py-3 text-foreground",
           {
             "border-b border-border/40 bg-background": variant !== "publish",
           },

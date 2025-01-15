@@ -1,0 +1,84 @@
+DROP FUNCTION public.search_demos;
+
+CREATE OR REPLACE FUNCTION public.search_demos(search_query text)
+RETURNS TABLE (
+    id bigint,                        
+    component_id bigint,              
+    name text,
+    demo_code text,
+    created_at timestamp,
+    updated_at timestamp,
+    user_id text,
+    demo_dependencies jsonb,
+    demo_direct_registry_dependencies jsonb,
+    preview_url text,
+    video_url text,
+    compiled_css text,
+    pro_preview_image_url text,
+    component_data jsonb,
+    user_data jsonb,
+    is_paid boolean,
+    payment_url text,
+    price real,
+    license text,
+    website_url text,
+    downloads_count integer,          
+    likes_count integer,
+    fts tsvector,
+    demo_slug text
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        d.id,
+        d.component_id,
+        d.name,
+        d.demo_code,
+        d.created_at AT TIME ZONE 'UTC' AS created_at,
+        d.updated_at AT TIME ZONE 'UTC' AS updated_at,
+        d.user_id,
+        d.demo_dependencies,
+        d.demo_direct_registry_dependencies,
+        d.preview_url,
+        d.video_url,
+        d.compiled_css,
+        d.pro_preview_image_url,
+        row_to_json(c)::jsonb AS component_data,
+        row_to_json(u)::jsonb AS user_data,
+        c.is_paid,
+        c.payment_url,
+        c.price,
+        c.license,
+        c.website_url,
+        c.downloads_count,
+        c.likes_count,
+        c.fts,
+        d.demo_slug
+    FROM
+        demos AS d
+    JOIN
+        components AS c ON d.component_id = c.id
+    JOIN
+        users AS u ON d.user_id = u.id
+    WHERE
+        c.is_public = true
+        AND d.fts @@ to_tsquery('english', search_query || ':*');
+END;
+$$;
+
+CREATE INDEX IF NOT EXISTS demos_fts_idx ON demos USING GIN (fts);
+UPDATE demos SET fts = to_tsvector('english',
+       coalesce(name, '') || ' ' ||
+       coalesce(demo_code, '') || ' ' ||
+       coalesce(demo_dependencies::TEXT, '') || ' ' ||
+       coalesce((SELECT name FROM components WHERE id = demos.component_id), '') || ' ' ||
+       coalesce((SELECT description FROM components WHERE id = demos.component_id), '') || ' ' ||
+       coalesce((SELECT name FROM users WHERE id = demos.user_id), '') || ' ' ||
+       coalesce((SELECT STRING_AGG(tag.name, ' ') 
+                FROM demo_tags dt 
+                JOIN tags tag ON dt.tag_id = tag.id 
+                WHERE dt.demo_id = demos.id), '')
+   );

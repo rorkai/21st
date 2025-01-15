@@ -3,7 +3,7 @@
 import React, { useEffect, useLayoutEffect, useState } from "react"
 
 import { useAtom } from "jotai"
-import { useInfiniteQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query"
 import { motion } from "framer-motion"
 
 import {
@@ -11,7 +11,8 @@ import {
   QuickFilterOption,
   SortOption,
   User,
-  ComponentWithUser,
+  DemoWithComponent,
+  Tag,
 } from "@/types/global"
 
 import { useClerkSupabaseClient } from "@/lib/clerk"
@@ -41,11 +42,12 @@ const useSetServerUserDataCookies = () => {
 }
 
 export function HomePageClient({
+  initialComponents,
   initialSortBy,
   initialQuickFilter,
   initialTabsCounts,
 }: {
-  initialComponents: (Component & { user: User })[]
+  initialComponents: DemoWithComponent[]
   initialSortBy: SortOption
   initialQuickFilter: QuickFilterOption
   initialTabsCounts: Record<QuickFilterOption, number>
@@ -58,13 +60,14 @@ export function HomePageClient({
   const [tabCounts, setTabCounts] = useState<
     Record<QuickFilterOption, number> | undefined
   >(initialTabsCounts)
+  const queryClient = useQueryClient()
 
   // Important: we don't need useEffect here
   // https://react.dev/learn/you-might-not-need-an-effect
   if (tabCounts === undefined) {
     setTabCounts(initialTabsCounts)
   }
-  
+
   // But we need useLayoutEffect here to avoid race conditions
   useLayoutEffect(() => {
     if (sortBy === undefined) {
@@ -78,134 +81,88 @@ export function HomePageClient({
   useSetServerUserDataCookies()
 
   const { data, isLoading, isFetching, fetchNextPage, hasNextPage } =
-    useInfiniteQuery({
-      queryKey: [
-        "filtered-components",
-        quickFilter,
-        sortBy,
-        debouncedSearchQuery,
-      ],
-      queryFn: async ({ pageParam = 0 }) => {
+    useInfiniteQuery<{ data: DemoWithComponent[]; total_count: number }>({
+      queryKey: ["filtered-demos", quickFilter, sortBy, debouncedSearchQuery],
+      queryFn: async ({
+        pageParam = 0,
+      }): Promise<{ data: DemoWithComponent[]; total_count: number }> => {
         if (!quickFilter || !sortBy) {
-          console.error("No quick filter or sort by")
           return {
             data: [],
             total_count: 0,
           }
         }
+
         if (!debouncedSearchQuery) {
           const { data: filteredData, error } = await supabase.rpc(
-            "get_filtered_components",
+            "get_filtered_demos",
             {
-              p_quick_filter: quickFilter!,
-              p_sort_by: sortBy!,
+              p_quick_filter: quickFilter,
+              p_sort_by: sortBy,
               p_offset: Number(pageParam) * 24,
               p_limit: 24,
             },
           )
 
-          if (error) {
-            throw new Error(error.message || `HTTP error: ${status}`)
-          }
-
-          const data = filteredData || []
-          if (data.length === 0) {
-            return {
-              data: [],
-              total_count: 0,
-            }
-          }
-
-          const components = data.map((item) => ({
-            ...item,
-            user: item.user_data as User,
-            compiled_css: null,
-            fts: null,
-            global_css_extension: null,
-            hunter_username: null,
-            is_paid: false,
-            payment_url: null,
-            price: 0,
-            pro_preview_image_url: null,
-            website_url: null,
-            tailwind_config_extension: null,
-            video_url: item.video_url || null,
-          })) as ComponentWithUser[]
-
+          if (error) throw new Error(error.message)
           return {
-            data: components,
-            total_count: data[0]?.total_count ?? 0,
+            data: (filteredData || []).map((result) => ({
+              id: result.id,
+              name: result.name,
+              demo_code: result.demo_code,
+              preview_url: result.preview_url,
+              video_url: result.video_url,
+              compiled_css: result.compiled_css,
+              demo_dependencies: result.demo_dependencies,
+              demo_direct_registry_dependencies:
+                result.demo_direct_registry_dependencies,
+              demo_slug: result.demo_slug,
+              component: {
+                ...(result.component_data as Component),
+                user: result.user_data,
+              } as Component & { user: User },
+              created_at: result.created_at,
+              updated_at: result.updated_at,
+            })) as DemoWithComponent[],
+            total_count: filteredData?.[0]?.total_count ?? 0,
           }
         }
 
-        const { data: searchData, error } = await supabase.rpc(
-          "search_components",
+        const { data: searchResults, error } = await supabase.rpc(
+          "search_demos",
           {
             search_query: debouncedSearchQuery,
           },
         )
 
-        if (error) {
-          throw new Error(error.message)
-        }
+        if (error) throw new Error(error.message)
 
-        const searchResults = searchData || []
-        if (searchResults.length === 0) {
-          return {
-            data: [],
-            total_count: 0,
-          }
-        }
-
-        const components = searchResults.map((result) => {
-          const userData = result.user_data as Record<string, unknown>
-          return {
-            id: result.id,
-            component_names: result.component_names,
-            description: result.description,
-            code: result.code,
-            demo_code: result.demo_code,
-            created_at: result.created_at,
-            updated_at: result.updated_at,
-            user_id: result.user_id,
-            dependencies: result.dependencies,
-            is_public: result.is_public,
-            downloads_count: result.downloads_count || 0,
-            likes_count: result.likes_count,
-            component_slug: result.component_slug,
-            name: result.name,
-            demo_dependencies: result.demo_dependencies,
-            registry: result.registry,
-            direct_registry_dependencies: result.direct_registry_dependencies,
-            demo_direct_registry_dependencies:
-              result.demo_direct_registry_dependencies,
-            preview_url: result.preview_url,
-            license: result.license,
-            compiled_css: null,
-            global_css_extension: null,
-            hunter_username: null,
-            is_paid: false,
-            payment_url: null,
-            price: 0,
-            pro_preview_image_url: null,
-            video_url: result.video_url,
-            website_url: null,
-            user: userData as User,
-            fts: null,
-          }
-        }) as ComponentWithUser[]
+        const demos = (searchResults || []).map((result) => ({
+          ...result,
+          component: {
+            ...(result.component_data as Component),
+            user: result.user_data,
+          } as Component & { user: User },
+        })) as DemoWithComponent[]
 
         return {
-          data: components,
-          total_count: components.length,
+          data: demos,
+          total_count: demos.length,
         }
       },
+      initialData: {
+        pages: [
+          { data: initialComponents, total_count: initialComponents.length },
+        ],
+        pageParams: [0],
+      },
       enabled: true,
-      staleTime: 1000 * 60 * 5,
+      staleTime: 0,
       gcTime: 1000 * 60 * 30,
       refetchOnWindowFocus: false,
       retry: false,
       initialPageParam: 0,
+      refetchOnMount: true,
       getNextPageParam: (lastPage, allPages) => {
         if (!lastPage?.data || lastPage.data.length === 0) return undefined
         const loadedCount = allPages.reduce(
@@ -215,8 +172,8 @@ export function HomePageClient({
         return loadedCount < lastPage.total_count ? allPages.length : undefined
       },
     })
-
-  const allComponents = data?.pages?.flatMap((d) => d.data)
+  console.log("Initial components:", initialComponents)
+  const allDemos = data?.pages?.flatMap((d) => d.data)
 
   const showSkeleton = isLoading || !data?.pages?.[0]?.data?.length
   const showSpinner = isFetching && !showSkeleton
@@ -237,6 +194,21 @@ export function HomePageClient({
     return () => window.removeEventListener("scroll", handleScroll)
   }, [isLoading, hasNextPage, fetchNextPage])
 
+  // Добавляем эффект для сброса кэша при изменении сортировки или фильтра
+  useEffect(() => {
+    if (sortBy !== undefined && quickFilter !== undefined) {
+      async function refetchData() {
+        await queryClient.invalidateQueries({
+          queryKey: ["filtered-demos", quickFilter, sortBy],
+        })
+        await queryClient.refetchQueries({
+          queryKey: ["filtered-demos", quickFilter, sortBy],
+        })
+      }
+      refetchData()
+    }
+  }, [sortBy, quickFilter, queryClient])
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -248,10 +220,7 @@ export function HomePageClient({
           filtersDisabled={!!searchQuery}
           tabCounts={tabCounts!}
         />
-        <ComponentsList
-          components={allComponents}
-          isLoading={isLoading}
-        />
+        <ComponentsList components={allDemos} isLoading={isLoading} />
         {showSpinner && (
           <div className="col-span-full flex justify-center py-4">
             <Loader2 className="h-8 w-8 animate-spin text-foreground/20" />

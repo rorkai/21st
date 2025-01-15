@@ -1,6 +1,5 @@
 import { motion } from "framer-motion"
-import { Alert, AlertDescription, AlertTitle } from "../ui/alert"
-import { Codepen, FileTerminal, SunMoon, ChevronLeft } from "lucide-react"
+import { Codepen, ChevronLeft } from "lucide-react"
 import { Code } from "../ui/code"
 import { Label } from "@radix-ui/react-label"
 import { ParsedCodeData } from "./PublishComponentForm"
@@ -10,6 +9,84 @@ import { Button } from "../ui/button"
 import { useState } from "react"
 import Link from "next/link"
 import { FormEvent } from "react"
+import { cn } from "@/lib/utils"
+
+const pageStyles = {
+  container: "flex justify-end items-start w-full h-full p-6",
+  wrapper: cn(
+    "bg-background/95",
+    "rounded-xl border border-border/40",
+    "dark:bg-background/95 dark:border-border/30",
+    "relative",
+    "w-full",
+    "flex flex-col",
+    "max-h-[calc(100vh-10rem)]",
+    "h-fit",
+  ),
+  header: cn(
+    "p-6 pb-4",
+    "border-b border-border/40 dark:border-border/30",
+    "bg-background",
+    "rounded-t-xl",
+    "flex flex-col gap-1.5",
+  ),
+  headerTitle: cn(
+    "text-sm font-medium",
+    "text-muted-foreground",
+    "uppercase tracking-wider",
+  ),
+  headerMain: cn(
+    "text-2xl font-semibold tracking-tight",
+    "text-foreground",
+    "flex items-center gap-2",
+  ),
+  icon: cn("w-6 h-6", "text-foreground/80 dark:text-foreground/90"),
+  content: cn(
+    "p-6 pt-4",
+    "space-y-5 leading-relaxed",
+    "text-[0.95rem]",
+    "text-foreground/90 dark:text-foreground/85",
+    "overflow-y-auto",
+  ),
+  list: {
+    container: "space-y-4 mt-2",
+    ordered: "list-decimal pl-5 space-y-3.5",
+    unordered: cn(
+      "list-disc pl-5 mt-2 space-y-2.5",
+      "marker:text-foreground/70 dark:marker:text-foreground/60",
+    ),
+    item: "pl-1.5",
+  },
+  code: {
+    block: cn(
+      "my-2.5 text-[0.9rem]",
+      "bg-secondary/50 dark:bg-secondary/40",
+      "border border-border/50",
+      "rounded-md p-3",
+      "text-foreground/90 dark:text-foreground/90",
+    ),
+    inline: cn(
+      "text-[0.9rem] px-1.5 py-0.5 rounded",
+      "bg-secondary/50 dark:bg-secondary/40",
+      "border border-border/50",
+      "text-foreground/90 dark:text-foreground/90",
+    ),
+  },
+  form: {
+    field: "flex flex-col space-y-1.5",
+    label: cn(
+      "text-sm font-medium",
+      "text-foreground/80 dark:text-foreground/90",
+    ),
+    error: cn(
+      "text-sm font-medium",
+      "text-destructive dark:text-destructive/90",
+    ),
+  },
+  actions: {
+    container: "absolute flex gap-2 bottom-3 right-3 z-50 h-[36px]",
+  },
+}
 
 export const ResolveUnknownDependenciesAlertForm = ({
   unknownDependencies,
@@ -22,7 +99,6 @@ export const ResolveUnknownDependenciesAlertForm = ({
     isDemoDependency: boolean
   }[]
   onDependenciesResolved: (
-    // eslint-disable-next-line no-unused-vars
     deps: {
       username: string
       slug: string
@@ -82,25 +158,11 @@ export const ResolveUnknownDependenciesAlertForm = ({
   }
 
   return (
-    <div className="w-full relative h-[70vh]">
-      <Alert className="my-2">
-        <Codepen className="h-4 w-4" />
-        <AlertTitle>Unknown dependencies detected</AlertTitle>
-        <AlertDescription>
-          To use another registry component within your component:
-          <br />
-          1. Find it on 21st.dev, or publish it if it's not there
-          <br />
-          2. Paste the link here
-        </AlertDescription>
-      </Alert>
-      <form onSubmit={handleSubmit}>
-        {unknownDependencies.map(({ slugWithUsername, registry }, index) => (
-          <div
-            key={slugWithUsername}
-            className={`flex flex-col ${index > 0 ? "mt-4" : ""}`}
-          >
-            <Label className="text-sm">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-4">
+        {unknownDependencies.map(({ slugWithUsername, registry }) => (
+          <div key={slugWithUsername} className="space-y-2">
+            <Label>
               Enter the link to{" "}
               <span className="font-semibold">
                 {registry ? `${registry}/` : ""}
@@ -110,25 +172,24 @@ export const ResolveUnknownDependenciesAlertForm = ({
             <Input
               name={slugWithUsername}
               placeholder='e.g. "https://21st.dev/shadcn/button"'
-              className="mt-1 w-full"
+              className="w-full"
             />
             {errors[slugWithUsername] && (
-              <Label className="text-sm text-red-500">
+              <p className="text-sm text-destructive">
                 {errors[slugWithUsername]}
-              </Label>
+              </p>
             )}
           </div>
         ))}
-        <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
-          <Button size="icon" variant="outline" onClick={onBack} type="button">
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <Button type="submit" size="sm">
-            Continue
-          </Button>
-        </div>
-      </form>
-    </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <Button type="button" variant="outline" size="icon" onClick={onBack}>
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <Button type="submit">Continue</Button>
+      </div>
+    </form>
   )
 }
 
@@ -139,16 +200,18 @@ export const CodeGuidelinesAlert = () => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.3 }}
-      className="flex justify-end items-center px-4 overflow-auto"
+      className={pageStyles.container}
     >
-      <Alert className="w-full border-none">
-        <FileTerminal className="h-4 w-4" />
-        <AlertTitle>Component code requirements</AlertTitle>
-        <AlertDescription className="mt-2">
-          <ol className="list-decimal pl-5 space-y-2">
+      <div className={pageStyles.wrapper}>
+        <div className={pageStyles.header}>
+          <span className={pageStyles.headerTitle}>Development Guide</span>
+          <h2 className={pageStyles.headerMain}>Component Code</h2>
+        </div>
+        <div className={pageStyles.content}>
+          <ol className={pageStyles.list.ordered}>
             <li>
               Using dependencies:
-              <ul className="list-disc pl-5 mt-1">
+              <ul className={pageStyles.list.unordered}>
                 <li>
                   You can use any dependencies from npm; we import them
                   automatically.
@@ -161,7 +224,7 @@ export const CodeGuidelinesAlert = () => {
             </li>
             <li>
               React, TypeScript & Tailwind compatibility:
-              <ul className="list-disc pl-5 mt-1">
+              <ul className={pageStyles.list.unordered}>
                 <li>
                   React client-side components are fully supported. Be sure to
                   import React:
@@ -183,7 +246,7 @@ export const CodeGuidelinesAlert = () => {
             </li>
             <li>
               Next.js & server components compatibility:
-              <ul className="list-disc pl-5 mt-1">
+              <ul className={pageStyles.list.unordered}>
                 <li>Next.js is partially supported.</li>
                 <li>React server components are not supported yet.</li>
                 <li>
@@ -202,8 +265,8 @@ export const CodeGuidelinesAlert = () => {
               </ul>
             </li>
           </ol>
-        </AlertDescription>
-      </Alert>
+        </div>
+      </div>
     </motion.div>
   )
 }
@@ -221,17 +284,19 @@ export const DemoComponentGuidelinesAlert = ({
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: 20 }}
-    transition={{ duration: 0.3, delay: 0.3 }}
-    className="flex justify-end items-center px-4 overflow-auto"
+    transition={{ duration: 0.3 }}
+    className={pageStyles.container}
   >
-    <Alert className="w-full border-none">
-      <SunMoon className="h-4 w-4" />
-      <AlertTitle>Demo code requirements</AlertTitle>
-      <AlertDescription className="mt-2">
-        <ol className="list-decimal pl-5 space-y-2">
+    <div className={pageStyles.wrapper}>
+      <div className={pageStyles.header}>
+        <span className={pageStyles.headerTitle}>Preview Guide</span>
+        <h2 className={pageStyles.headerMain}>Demo Code</h2>
+      </div>
+      <div className={pageStyles.content}>
+        <ol className={pageStyles.list.ordered}>
           <li>
             How to import:
-            <ul className="list-disc pl-5 mt-1">
+            <ul className={pageStyles.list.unordered}>
               <li>
                 Import your component with curly braces from{" "}
                 <Code
@@ -263,7 +328,7 @@ export const DemoComponentGuidelinesAlert = ({
           </li>
           <li>
             Demo structure:
-            <ul className="list-disc pl-5 mt-1">
+            <ul className={pageStyles.list.unordered}>
               <li>
                 The demo code should demonstrate the usage and appearance of the
                 component.
@@ -283,8 +348,8 @@ export const DemoComponentGuidelinesAlert = ({
             </ul>
           </li>
         </ol>
-      </AlertDescription>
-    </Alert>
+      </div>
+    </div>
   </motion.div>
 )
 
@@ -335,3 +400,113 @@ export const DebugInfoDisplay = ({
     </div>
   </>
 )
+
+export const TailwindGuidelinesAlert = () => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      transition={{ duration: 0.3 }}
+      className={pageStyles.container}
+    >
+      <div className={pageStyles.wrapper}>
+        <div className={pageStyles.header}>
+          <span className={pageStyles.headerTitle}>Configuration Guide</span>
+          <h2 className={pageStyles.headerMain}>Tailwind Settings</h2>
+        </div>
+        <div className={pageStyles.content}>
+          <ol className={pageStyles.list.ordered}>
+            <li>
+              Extending Tailwind configuration:
+              <ul className={pageStyles.list.unordered}>
+                <li>Use shadcn/ui format to extend the configuration</li>
+                <li>Add only the styles that your component needs</li>
+              </ul>
+            </li>
+            <li>
+              Configuration example:
+              <Code
+                display="block"
+                code={`/** @type {import('tailwindcss').Config} */
+module.exports = {
+  theme: {
+    extend: {
+      keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+      },
+    },
+  },
+}`}
+              />
+            </li>
+          </ol>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+export const GlobalStylesGuidelinesAlert = () => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      transition={{ duration: 0.3 }}
+      className={pageStyles.container}
+    >
+      <div className={pageStyles.wrapper}>
+        <div className={pageStyles.header}>
+          <span className={pageStyles.headerTitle}>Styling Guide</span>
+          <h2 className={pageStyles.headerMain}>Global CSS</h2>
+        </div>
+        <div className={pageStyles.content}>
+          <ol className={pageStyles.list.ordered}>
+            <li>
+              CSS Variables:
+              <ul className={pageStyles.list.unordered}>
+                <li>Define CSS variables in :root for light theme</li>
+                <li>Use .dark class for dark theme variables</li>
+              </ul>
+            </li>
+            <li>
+              globals.css example:
+              <Code
+                display="block"
+                code={`@layer base {
+  :root {
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
+
+  .dark {
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}`}
+              />
+            </li>
+          </ol>
+        </div>
+      </div>
+    </motion.div>
+  )
+}

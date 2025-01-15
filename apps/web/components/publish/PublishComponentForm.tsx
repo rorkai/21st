@@ -1,11 +1,36 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
+import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import { useTheme } from "next-themes"
+import { useUser } from "@clerk/nextjs"
+import { motion } from "framer-motion"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useRouter } from "next/navigation"
+import { Trash2 } from "lucide-react"
+import { toast } from "sonner"
+
+import { Form } from "@/components/ui/form"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { LoadingSpinner } from "../LoadingSpinner"
+import { LoadingDialog } from "../LoadingDialog"
+
+import { useDebugMode } from "@/hooks/use-debug-mode"
+import { useClerkSupabaseClient } from "@/lib/clerk"
+import { usePublishAs } from "./hooks/use-publish-as"
+import { useCodeInputsAutoFocus } from "./hooks/use-code-inputs-auto-focus"
+
+import { cn } from "@/lib/utils"
 import { uploadToR2 } from "@/lib/r2"
-import { formSchema, FormData } from "./utils"
+import { addTagsToComponent } from "@/lib/queries"
+import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import {
   extractComponentNames,
   extractNPMDependencies,
@@ -13,51 +38,29 @@ import {
   extractRegistryDependenciesFromImports,
   extractAmbigiousRegistryDependencies,
 } from "../../lib/parsers"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form"
-import { addTagsToComponent } from "@/lib/queries"
-import { ComponentDetailsForm, NameSlugForm } from "./ComponentDetailsForm"
-import { motion, AnimatePresence } from "framer-motion"
-import Image from "next/image"
-import { useClerkSupabaseClient } from "@/lib/clerk"
-import { useUser } from "@clerk/nextjs"
-import { useDebugMode } from "@/hooks/use-debug-mode"
+
 import { Tag } from "@/types/global"
+import { FormStep } from "@/types/global"
+import { Tables } from "@/types/supabase"
+import { formSchema, FormData, isFormValid } from "./utils"
+
+import { ComponentDetailsForm } from "./forms/ComponentDetailsForm"
+import { DemoDetailsForm } from "./forms/DemoDetailsForm"
+import { PublishHeader } from "./PublishHeader"
 import { PublishComponentPreview } from "./preview"
-import { useTheme } from "next-themes"
-import { cn } from "@/lib/utils"
+import { DemoPreviewTabs } from "./DemoPreviewTabs"
+import { NameSlugStep } from "./steps/name-slug-step"
+import { EditorStep } from "./steps/editor-step"
+import { SuccessDialog } from "./success-dialog"
+import { DeleteDemoDialog } from "./delete-demo-dialog"
+import { EditCodeFileCard } from "./edit-code-file-card"
 import {
-  CodeGuidelinesAlert,
   DebugInfoDisplay,
   DemoComponentGuidelinesAlert,
-  ResolveUnknownDependenciesAlertForm,
+  CodeGuidelinesAlert,
+  GlobalStylesGuidelinesAlert,
+  TailwindGuidelinesAlert,
 } from "./alerts"
-import { Tables } from "@/types/supabase"
-import { LoadingSpinner } from "../LoadingSpinner"
-import { useSuccessDialogHotkeys } from "./hotkeys"
-import { toast } from "sonner"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { usePublishAs } from "./use-publish-as"
-import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
-import { HeroVideoDialog } from "@/components/ui/hero-video-dialog"
-import { ChevronLeftIcon } from "lucide-react"
-import { Editor } from "@monaco-editor/react"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -67,25 +70,23 @@ export interface ParsedCodeData {
   demoComponentNames: string[]
 }
 
-type FormStep =
-  | "nameSlugForm"
-  | "code"
-  | "demoCode"
-  | "customization"
-  | "detailedForm"
+type CodeTab = "component" | "tailwind" | "globals"
 
 export default function PublishComponentForm() {
   const { user } = useUser()
   const client = useClerkSupabaseClient()
   const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const isDebug = useDebugMode()
   const { resolvedTheme } = useTheme()
   const isDarkTheme = resolvedTheme === "dark"
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false)
+  const [openAccordion, setOpenAccordion] = useState("component-info")
+  const [currentDemoIndex, setCurrentDemoIndex] = useState(0)
 
   const [formStartTime] = useState(() => Date.now())
   const [publishAttemptCount, setPublishAttemptCount] = useState(0)
-  const [completedSteps] = useState<string[]>([])
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -96,60 +97,78 @@ export default function PublishComponentForm() {
       publish_as_username: user?.username ?? undefined,
       unknown_dependencies: [],
       direct_registry_dependencies: [],
-      demo_direct_registry_dependencies: [],
       code: "",
-      demo_code: "",
+      demos: [
+        {
+          name: "",
+          demo_code: "",
+          preview_image_data_url: "",
+          preview_image_file: undefined,
+          preview_video_data_url: "",
+          preview_video_file: undefined,
+          demo_direct_registry_dependencies: [],
+          tags: [],
+        },
+      ],
       description: "",
-      tags: [],
       license: "mit",
       website_url: "",
+      is_public: true,
     },
   })
-  const {
-    component_slug: componentSlug,
-    code,
-    demo_code: demoCode,
-    tags: validTags,
-  } = form.getValues()
-  const unknownDependencies = form.watch("unknown_dependencies")
+
+  const { component_slug: componentSlug, code, demos } = form.getValues()
+  const currentDemo = demos?.[currentDemoIndex]
+  const demoCode = currentDemo?.demo_code || ""
+  const unknownDependencies = form.watch("unknown_dependencies") || []
   const directRegistryDependencies = form.watch("direct_registry_dependencies")
   const demoDirectRegistryDependencies = form.watch(
-    "demo_direct_registry_dependencies",
+    `demos.${currentDemoIndex}.demo_direct_registry_dependencies`,
   )
   const registryToPublish = form.watch("registry")
 
-  const [formStep, setFormStep] = useState<FormStep>("nameSlugForm")
   const isFirstRender = useRef(true)
-  const isNavigatingAway = useRef(false)
+  const [isNavigatingAway, setIsNavigatingAway] = useState(false)
+  const stepFromUrl = searchParams.get("step") as FormStep | null
+  const [formStep, setFormStep] = useState<FormStep>(
+    stepFromUrl || "nameSlugForm",
+  )
 
-  useEffect(() => {
-    const message = "You have unsaved changes. Are you sure you want to leave?"
-
-    if (formStep === "nameSlugForm") {
-      window.onbeforeunload = null
-      window.onpopstate = null
-      return
-    }
-
-    window.onpopstate = () => {
-      if (!isNavigatingAway.current && !window.confirm(message)) {
-        window.history.pushState(null, "", window.location.href)
+  const updateStepInUrl = useCallback(
+    (newStep: FormStep) => {
+      const params = new URLSearchParams(searchParams)
+      if (newStep === "nameSlugForm") {
+        params.delete("step")
       } else {
-        isNavigatingAway.current = true
-        router.back()
+        params.set("step", newStep)
       }
-    }
 
-    // Add history entry only on the first non-nameSlugForm step
-    if (isFirstRender.current) {
-      window.history.pushState(null, "", window.location.href)
-      isFirstRender.current = false
-    }
+      if (isFirstRender.current) {
+        window.history.pushState(null, "", window.location.href)
+        isFirstRender.current = false
+      }
 
-    return () => {
-      window.onpopstate = null
-    }
-  }, [formStep, router])
+      setIsNavigatingAway(true)
+
+      if (newStep === "nameSlugForm") {
+        router.replace(pathname)
+      } else {
+        router.push(`${pathname}?${params.toString()}`)
+      }
+
+      setIsNavigatingAway(false)
+    },
+    [pathname, router, searchParams],
+  )
+
+  const handleStepChange = useCallback(
+    (newStep: FormStep) => {
+      if (isNavigatingAway) return
+      setFormStep(newStep)
+      updateStepInUrl(newStep)
+    },
+    [updateStepInUrl, isNavigatingAway],
+  )
 
   const [parsedCode, setParsedCode] = useState<ParsedCodeData>({
     dependencies: {},
@@ -173,6 +192,35 @@ export default function PublishComponentForm() {
   const { isAdmin, user: publishAsUser } = usePublishAs({
     username: publishAsUsername ?? "",
   })
+
+  useEffect(() => {
+    const message = "You have unsaved changes. Are you sure you want to leave?"
+
+    if (formStep === "nameSlugForm") {
+      window.onbeforeunload = null
+      window.onpopstate = null
+      return
+    }
+
+    window.onpopstate = () => {
+      if (!isNavigatingAway && !window.confirm(message)) {
+        window.history.pushState(null, "", window.location.href)
+      } else {
+        setIsNavigatingAway(true)
+        router.back()
+      }
+    }
+
+    // Add history entry only on the first non-nameSlugForm step
+    if (isFirstRender.current) {
+      window.history.pushState(null, "", window.location.href)
+      isFirstRender.current = false
+    }
+
+    return () => {
+      window.onpopstate = null
+    }
+  }, [formStep, router])
 
   useEffect(() => {
     const parseDependenciesFromCode = () => {
@@ -225,7 +273,10 @@ export default function PublishComponentForm() {
               ).includes(d.slugWithUsername),
           )
 
-        form.setValue("unknown_dependencies", parsedUnknownDependencies)
+        form.setValue(
+          "unknown_dependencies",
+          parsedUnknownDependencies.map((d) => d.slugWithUsername),
+        )
       } catch (error) {
         console.error("Error parsing dependencies from code:", error)
       }
@@ -234,105 +285,62 @@ export default function PublishComponentForm() {
     parseDependenciesFromCode()
   }, [code, demoCode])
 
+  const [publishProgress, setPublishProgress] = useState<string>("")
+  const [isLoadingDialogOpen, setIsLoadingDialogOpen] = useState(false)
+
   const onSubmit = async (data: FormData) => {
     setPublishAttemptCount((count) => count + 1)
     setIsSubmitting(true)
+    setIsLoadingDialogOpen(true)
     try {
-      const codeFileName = `${data.component_slug}.tsx`
-      const demoCodeFileName = `${data.component_slug}.demo.tsx`
+      setPublishProgress("Uploading component files...")
+      const baseFolder = `${publishAsUser?.id}/${data.component_slug}`
 
-      const tailwindConfigFileName = `${data.component_slug}.tailwind.config.js`
-      const globalCssFileName = `${data.component_slug}.global.css`
+      if (!data.code) throw new Error("Component code is required")
+      if (!data.demos.length) throw new Error("At least one demo is required")
+      if (data.demos.some((demo) => !demo.demo_code))
+        throw new Error("Demo code is required for all demos")
 
-      const [codeUrl, demoCodeUrl, tailwindConfigUrl, globalCssUrl] =
-        await Promise.all([
-          uploadToR2({
-            file: {
-              name: codeFileName,
-              type: "text/plain",
-              textContent: data.code,
-            },
-            fileKey: `${publishAsUser?.id!}/${codeFileName}`,
-            bucketName: "components-code",
-          }),
-          uploadToR2({
-            file: {
-              name: demoCodeFileName,
-              type: "text/plain",
-              textContent: demoCode,
-            },
-            fileKey: `${publishAsUser?.id!}/${demoCodeFileName}`,
-            bucketName: "components-code",
-          }),
-          customTailwindConfig
-            ? uploadToR2({
-                file: {
-                  name: tailwindConfigFileName,
-                  type: "text/plain",
-                  textContent: customTailwindConfig,
-                },
-                fileKey: `${publishAsUser?.id!}/${tailwindConfigFileName}`,
-                bucketName: "components-code",
-              })
-            : Promise.resolve(null),
-          customGlobalCss
-            ? uploadToR2({
-                file: {
-                  name: globalCssFileName,
-                  type: "text/plain",
-                  textContent: customGlobalCss,
-                },
-                fileKey: `${publishAsUser?.id!}/${globalCssFileName}`,
-                bucketName: "components-code",
-              })
-            : Promise.resolve(null),
-        ])
-      if (!codeUrl || !demoCodeUrl) {
-        throw new Error("Failed to upload code files to R2")
-      }
-
-      let previewImageR2Url = ""
-      if (data.preview_image_file) {
-        const fileExtension = data.preview_image_file.name.split(".").pop()
-        const fileKey = `${publishAsUser?.id}/${componentSlug}.${fileExtension}`
-        const buffer = Buffer.from(await data.preview_image_file.arrayBuffer())
-        const base64Content = buffer.toString("base64")
-        previewImageR2Url = await uploadToR2({
+      const [codeUrl, tailwindConfigUrl, globalCssUrl] = await Promise.all([
+        uploadToR2({
           file: {
-            name: fileKey,
-            type: data.preview_image_file.type,
-            encodedContent: base64Content,
+            name: "code.tsx",
+            type: "text/plain",
+            textContent: data.code,
           },
-          fileKey,
+          fileKey: `${baseFolder}/code.tsx`,
           bucketName: "components-code",
-          contentType: data.preview_image_file.type,
-        })
-      }
+        }),
+        customTailwindConfig
+          ? uploadToR2({
+              file: {
+                name: "tailwind.config.js",
+                type: "text/plain",
+                textContent: customTailwindConfig,
+              },
+              fileKey: `${baseFolder}/tailwind.config.js`,
+              bucketName: "components-code",
+            })
+          : Promise.resolve(null),
+        customGlobalCss
+          ? uploadToR2({
+              file: {
+                name: "globals.css",
+                type: "text/plain",
+                textContent: customGlobalCss,
+              },
+              fileKey: `${baseFolder}/globals.css`,
+              bucketName: "components-code",
+            })
+          : Promise.resolve(null),
+      ])
 
-      let videoR2Url = undefined
-      if (data.preview_video_file) {
-        const processedVideo = data.preview_video_file
-        const fileKey = `${publishAsUser?.id}/${componentSlug}.mp4`
-        const buffer = Buffer.from(await processedVideo.arrayBuffer())
-        const base64Content = buffer.toString("base64")
-        videoR2Url = await uploadToR2({
-          file: {
-            name: fileKey,
-            type: "video/mp4",
-            encodedContent: base64Content,
-          },
-          fileKey,
-          bucketName: "components-code",
-          contentType: "video/mp4",
-        })
-      }
-
+      setPublishProgress("Creating component...")
       const componentData = {
         name: data.name,
         component_names: parsedCode.componentNames,
         component_slug: data.component_slug,
         code: codeUrl,
-        demo_code: demoCodeUrl,
         tailwind_config_extension: tailwindConfigUrl,
         global_css_extension: globalCssUrl,
         description: data.description ?? null,
@@ -340,10 +348,8 @@ export default function PublishComponentForm() {
         dependencies: parsedCode.dependencies,
         demo_dependencies: parsedCode.demoDependencies,
         direct_registry_dependencies: data.direct_registry_dependencies,
-        demo_direct_registry_dependencies:
-          data.demo_direct_registry_dependencies,
-        preview_url: previewImageR2Url,
-        video_url: videoR2Url,
+        preview_url: "",
+        video_url: "",
         registry: data.registry,
         license: data.license,
         website_url: data.website_url,
@@ -356,49 +362,135 @@ export default function PublishComponentForm() {
         .single()
 
       if (error) {
+        console.error("Error inserting component:", error)
         throw error
       }
 
-      if (validTags) {
-        await addTagsToComponent(
-          client,
-          insertedComponent.id,
-          validTags.filter((tag) => !!tag.slug) as Tag[],
+      if (!publishAsUser?.id) {
+        throw new Error("User ID is required")
+      }
+
+      for (const demo of data.demos) {
+        const demoIndex = data.demos.indexOf(demo)
+        setPublishProgress(
+          `Publishing demo ${demoIndex + 1} of ${data.demos.length}...`,
         )
+
+        const demoData: Omit<Tables<"demos">, "id"> = {
+          component_id: insertedComponent.id,
+          demo_code: "", // Will update after file upload
+          demo_dependencies: parsedCode.demoDependencies || {},
+          preview_url: "",
+          video_url: "",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          compiled_css: null,
+          pro_preview_image_url: null,
+          name: demo.name,
+          demo_direct_registry_dependencies:
+            demo.demo_direct_registry_dependencies || null,
+          user_id: publishAsUser.id,
+          fts: null,
+          demo_slug: "default",
+        }
+
+        const { data: insertedDemo, error: demoError } = await client
+          .from("demos")
+          .insert(demoData)
+          .select()
+          .single()
+
+        if (demoError) throw demoError
+
+        const demoFolder = `${baseFolder}/${insertedDemo.demo_slug}`
+
+        const [demoCodeUrl, previewImageR2Url, videoR2Url] = await Promise.all([
+          uploadToR2({
+            file: {
+              name: "code.demo.tsx",
+              type: "text/plain",
+              textContent: demo.demo_code,
+            },
+            fileKey: `${demoFolder}/code.demo.tsx`,
+            bucketName: "components-code",
+          }),
+          demo.preview_image_file &&
+          demo.preview_image_file.size > 0 &&
+          demo.preview_image_data_url
+            ? uploadToR2({
+                file: {
+                  name: "preview.png",
+                  type: demo.preview_image_file.type,
+                  encodedContent: demo.preview_image_data_url.replace(
+                    /^data:image\/(png|jpeg|jpg);base64,/,
+                    "",
+                  ),
+                },
+                fileKey: `${demoFolder}/preview.png`,
+                bucketName: "components-code",
+                contentType: demo.preview_image_file.type,
+              })
+            : Promise.resolve(null),
+          demo.preview_video_file &&
+          demo.preview_video_file.size > 0 &&
+          demo.preview_video_data_url
+            ? uploadToR2({
+                file: {
+                  name: "video.mp4",
+                  type: "video/mp4",
+                  encodedContent: demo.preview_video_data_url.replace(
+                    /^data:video\/mp4;base64,/,
+                    "",
+                  ),
+                },
+                fileKey: `${demoFolder}/video.mp4`,
+                bucketName: "components-code",
+                contentType: "video/mp4",
+              })
+            : Promise.resolve(null),
+        ])
+
+        const { error: updateDemoError } = await client
+          .from("demos")
+          .update({
+            demo_code: demoCodeUrl,
+            preview_url: previewImageR2Url,
+            video_url: videoR2Url,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", insertedDemo.id)
+
+        if (updateDemoError) throw updateDemoError
+
+        if (demo.tags?.length) {
+          await addTagsToComponent(
+            client,
+            insertedDemo.id,
+            demo.tags.filter((tag) => !!tag.slug) as Tag[],
+          )
+        }
       }
 
-      if (insertedComponent) {
-        setIsSuccessDialogOpen(true)
-      }
-
+      setPublishProgress("Done!")
+      setIsSuccessDialogOpen(true)
       trackEvent(AMPLITUDE_EVENTS.PUBLISH_COMPONENT, {
         componentName: data.name,
         componentSlug: data.component_slug,
         userId: user?.id,
-        isPublic: data.is_public,
-        hasDemo: !!data.demo_code,
-        tagsCount: data.tags?.length || 0,
-        codeQualityMetrics: {
-          linesOfCode: data.code.split("\n").length,
-          demoLinesOfCode: data.demo_code?.split("\n").length || 0,
-          componentCount: parsedCode.componentNames.length,
-          demoComponentCount: parsedCode.demoComponentNames.length,
-          dependenciesCount: Object.keys(parsedCode.dependencies).length,
-          demoDependenciesCount: Object.keys(parsedCode.demoDependencies)
-            .length,
-        },
+        hasDemo: true,
+        demosCount: data.demos.length,
         timeSpentEditing: Date.now() - formStartTime,
-        stepsCompleted: ["nameSlug", "code", "demo", "details"].filter((step) =>
-          completedSteps.includes(step),
-        ),
         publishAttempts: publishAttemptCount,
       })
     } catch (error) {
       console.error("Error adding component:", error)
-      const errorMessage = `An error occurred while adding the component${error instanceof Error ? `: ${error.message}` : ""}`
-      toast.error(errorMessage)
+      toast.error(
+        `An error occurred while adding the component${error instanceof Error ? `: ${error.message}` : ""}`,
+      )
     } finally {
       setIsSubmitting(false)
+      setPublishProgress("")
+      setIsLoadingDialogOpen(false)
     }
   }
 
@@ -413,6 +505,7 @@ export default function PublishComponentForm() {
     form.reset()
     setIsSuccessDialogOpen(false)
     setFormStep("nameSlugForm")
+    router.replace(pathname)
   }
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -421,663 +514,512 @@ export default function PublishComponentForm() {
     onSubmit(formData)
   }
 
-  const isPreviewReady =
-    unknownDependencies?.length === 0 && !!code.length && !!demoCode.length
+  const isPreviewReady = useMemo(() => {
+    return (
+      unknownDependencies?.length === 0 &&
+      typeof code === "string" &&
+      code.length > 0 &&
+      typeof demoCode === "string" &&
+      demoCode.length > 0
+    )
+  }, [unknownDependencies, code, demoCode])
 
-  const { demoCodeTextAreaRef, codeInputRef } = useCodeInputsAutoFocus(
-    formStep === "detailedForm",
+  const { codeInputRef } = useCodeInputsAutoFocus(formStep === "detailedForm")
+
+  const [activeCodeTab, setActiveCodeTab] = useState<CodeTab>("component")
+
+  const handleCodeTabChange = useCallback((value: string) => {
+    setActiveCodeTab(value as CodeTab)
+  }, [])
+
+  const isComponentInfoComplete = useCallback(() => {
+    const { description, license, name, component_slug, registry } =
+      form.getValues()
+    return (
+      !!description && !!license && !!name && !!component_slug && !!registry
+    )
+  }, [form])
+  console.log(form.getValues())
+  const handleAddNewDemo = () => {
+    const demos = form.getValues().demos || []
+    const newDemoIndex = demos.length
+
+    form.setValue("demos", [
+      ...demos,
+      {
+        name: "",
+        demo_slug: "",
+        demo_code: "",
+        tags: [],
+        preview_image_data_url: "",
+        preview_image_file: new File([], "placeholder"),
+        preview_video_data_url: "",
+        preview_video_file: new File([], "placeholder"),
+        demo_direct_registry_dependencies: [],
+      },
+    ])
+
+    setCurrentDemoIndex(newDemoIndex)
+    handleStepChange("demoCode")
+    setOpenAccordion(`demo-${newDemoIndex}`)
+  }
+
+  const isDemoComplete = (demoIndex: number) => {
+    const demo = form.getValues().demos[demoIndex]
+    return !!(
+      demo?.name &&
+      demo?.demo_code &&
+      demo?.tags?.length > 0 &&
+      demo?.preview_image_data_url
+    )
+  }
+
+  const [demoToDelete, setDemoToDelete] = useState<{
+    index: number
+    name: string
+  } | null>(null)
+
+  const handleDeleteDemo = (index: number) => {
+    const demos = form.getValues().demos
+    // Don't allow deleting if it's the last demo
+    if (demos.length <= 1) {
+      return
+    }
+
+    const newDemos = demos.filter((_, i) => i !== index)
+
+    if (index === 0 && newDemos.length > 0) {
+      const firstDemo = newDemos[0]!
+      newDemos[0] = {
+        name: firstDemo.name || "Default",
+        demo_slug: "default",
+        demo_code: firstDemo.demo_code,
+        preview_image_data_url: firstDemo.preview_image_data_url,
+        preview_image_file: firstDemo.preview_image_file,
+        tags: firstDemo.tags,
+        demo_direct_registry_dependencies:
+          firstDemo.demo_direct_registry_dependencies,
+        preview_video_data_url: firstDemo.preview_video_data_url,
+        preview_video_file: firstDemo.preview_video_file,
+      }
+    }
+
+    if (
+      openAccordion === `demo-${index}` ||
+      (index === 0 && openAccordion === "demo-info")
+    ) {
+      const newIndex = Math.max(0, index - 1)
+      setCurrentDemoIndex(newIndex)
+      setOpenAccordion(newIndex === 0 ? "demo-info" : `demo-${newIndex}`)
+    } else if (openAccordion.startsWith("demo-")) {
+      const openIndex = parseInt(openAccordion.replace("demo-", ""))
+      if (openIndex > index) {
+        setOpenAccordion(`demo-${openIndex - 1}`)
+        if (currentDemoIndex === openIndex) {
+          setCurrentDemoIndex(openIndex - 1)
+        }
+      }
+    }
+
+    setTimeout(() => {
+      form.setValue("demos", newDemos)
+      setDemoToDelete(null)
+    }, 0)
+  }
+
+  const handleAccordionChange = useCallback(
+    (value: string | undefined) => {
+      setOpenAccordion(value || "")
+    },
+    [setOpenAccordion],
   )
+
+  useEffect(() => {
+    if (isComponentInfoComplete()) {
+      setOpenAccordion("demo-info")
+    }
+  }, [isComponentInfoComplete])
 
   return (
     <>
       <Form {...form}>
-        <div className="flex w-full h-full items-center justify-center">
-          <AnimatePresence>
-            <div className={`flex gap-4 items-center h-full w-full mt-2`}>
-              <div
-                className={cn(
-                  "flex flex-col scrollbar-hide items-start gap-2 py-8 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[450px]",
+        {formStep === "code" && (
+          <div className="flex flex-col h-screen w-full absolute left-0 right-0">
+            <PublishHeader
+              formStep={formStep}
+              componentSlug={componentSlug}
+              activeCodeTab={activeCodeTab}
+              setActiveCodeTab={handleCodeTabChange}
+              setFormStep={handleStepChange}
+              handleSubmit={handleSubmit}
+              isSubmitting={isSubmitting}
+              isFormValid={isFormValid(form)}
+              form={form}
+              currentDemoIndex={currentDemoIndex}
+              setCurrentDemoIndex={setCurrentDemoIndex}
+            />
+            <div className="flex h-[calc(100vh-3rem)]">
+              <div className="w-1/2 border-r pointer-events-auto">
+                {activeCodeTab === "component" && (
+                  <div className="h-full">
+                    <EditorStep
+                      form={form}
+                      isDarkTheme={isDarkTheme}
+                      fieldName="code"
+                      value={code}
+                      onChange={(value) => form.setValue("code", value)}
+                    />
+                  </div>
                 )}
-              >
-                {formStep === "nameSlugForm" && (
+                {activeCodeTab === "tailwind" && (
+                  <div className="h-full">
+                    <EditorStep
+                      form={form}
+                      isDarkTheme={isDarkTheme}
+                      fieldName="tailwind_config"
+                      value={customTailwindConfig || ""}
+                      onChange={(value) => setCustomTailwindConfig(value)}
+                    />
+                  </div>
+                )}
+                {activeCodeTab === "globals" && (
+                  <div className="h-full">
+                    <EditorStep
+                      form={form}
+                      isDarkTheme={isDarkTheme}
+                      fieldName="globals_css"
+                      value={customGlobalCss || ""}
+                      onChange={(value) => setCustomGlobalCss(value)}
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="w-1/2 pointer-events-auto">
+                <div className="h-full p-8">
+                  {activeCodeTab === "component" && <CodeGuidelinesAlert />}
+                  {activeCodeTab === "tailwind" && <TailwindGuidelinesAlert />}
+                  {activeCodeTab === "globals" && (
+                    <GlobalStylesGuidelinesAlert />
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {(formStep === "demoCode" || formStep === "demoDetails") && (
+          <div className="flex flex-col h-screen w-full absolute left-0 right-0">
+            <PublishHeader
+              formStep={formStep}
+              componentSlug={componentSlug}
+              setFormStep={handleStepChange}
+              handleSubmit={handleSubmit}
+              isSubmitting={isSubmitting}
+              isFormValid={isFormValid(form)}
+              form={form}
+              currentDemoIndex={currentDemoIndex}
+              setCurrentDemoIndex={setCurrentDemoIndex}
+            />
+            <div className="flex h-[calc(100vh-3.5rem)]">
+              <div className="w-1/2 border-r pointer-events-auto">
+                {formStep === "demoCode" ? (
+                  <EditorStep
+                    form={form}
+                    isDarkTheme={isDarkTheme}
+                    fieldName={`demos.${currentDemoIndex}.demo_code`}
+                    value={demoCode}
+                    onChange={(value) => {
+                      const demos = form.getValues("demos")
+                      if (!demos[currentDemoIndex]) return
+
+                      const updatedDemo = {
+                        ...demos[currentDemoIndex],
+                        name: demos[currentDemoIndex].name || "",
+                        demo_code: value || "",
+                        preview_image_data_url:
+                          demos[currentDemoIndex].preview_image_data_url || "",
+                        preview_image_file:
+                          demos[currentDemoIndex].preview_image_file ||
+                          new File([], "placeholder"),
+                        tags: demos[currentDemoIndex].tags || [],
+                      }
+
+                      demos[currentDemoIndex] = updatedDemo
+                      form.setValue("demos", demos)
+                    }}
+                  />
+                ) : (
+                  <div className="p-8">
+                    <DemoDetailsForm form={form} demoIndex={currentDemoIndex} />
+                  </div>
+                )}
+              </div>
+              <div className="w-1/2 pointer-events-auto">
+                {isPreviewReady ? (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="flex flex-col justify-center w-full"
+                    className="h-full p-8"
                   >
-                    <h2 className="text-3xl font-bold mb-4">
-                      Publish your component
-                    </h2>
-                    {isAdmin && (
-                      <div className="flex flex-col gap-2 mb-4">
-                        <Label
-                          htmlFor="publish-as"
-                          className="block text-sm font-medium"
-                        >
-                          Publish as (admin only)
-                        </Label>
-                        <Input
-                          id="publish-as"
-                          placeholder="Enter username"
-                          value={publishAsUsername}
-                          onChange={(e) =>
-                            form.setValue("publish_as_username", e.target.value)
-                          }
-                        />
-                      </div>
-                    )}
-                    <NameSlugForm
-                      form={form}
-                      publishAsUserId={publishAsUser?.id}
-                      isSlugReadOnly={false}
-                      placeholderName={"Button"}
-                    />
-                    <Button
-                      className="mt-4"
-                      disabled={
-                        !form.watch("name") || !form.watch("slug_available")
+                    <React.Suspense fallback={<LoadingSpinner />}>
+                      <PublishComponentPreview
+                        code={code}
+                        demoCode={demoCode}
+                        slugToPublish={componentSlug}
+                        registryToPublish={registryToPublish}
+                        directRegistryDependencies={[
+                          ...directRegistryDependencies,
+                          ...demoDirectRegistryDependencies,
+                        ]}
+                        isDarkTheme={isDarkTheme}
+                        customTailwindConfig={customTailwindConfig}
+                        customGlobalCss={customGlobalCss}
+                      />
+                    </React.Suspense>
+                  </motion.div>
+                ) : (
+                  <div className="p-8">
+                    <DemoComponentGuidelinesAlert
+                      mainComponentName={
+                        parsedCode.componentNames[0] ?? "MyComponent"
                       }
-                      size="lg"
-                      onClick={() => setFormStep("code")}
-                    >
-                      Continue
-                    </Button>
-                  </motion.div>
-                )}
-                {formStep === "code" && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.3, delay: 0.3 }}
-                    className="w-full"
-                  >
-                    <FormField
-                      control={form.control}
-                      name="code"
-                      render={({ field }) => (
-                        <FormItem className="h-full w-full">
-                          <Label>Component code</Label>
-                          <FormControl>
-                            <motion.div
-                              className="flex flex-col relative w-full"
-                              animate={{
-                                height: "70vh",
-                              }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <Editor
-                                defaultLanguage="typescript"
-                                defaultValue={field.value}
-                                onChange={(value) =>
-                                  field.onChange(value || "")
-                                }
-                                theme={
-                                  isDarkTheme ? "github-dark" : "github-light"
-                                }
-                                options={{
-                                  minimap: { enabled: false },
-                                  scrollBeyondLastLine: false,
-                                  fontSize: 14,
-                                  lineNumbers: "off",
-                                  folding: true,
-                                  wordWrap: "on",
-                                  automaticLayout: true,
-                                  padding: { top: 16, bottom: 16 },
-                                  scrollbar: {
-                                    vertical: "visible",
-                                    horizontal: "visible",
-                                    verticalScrollbarSize: 8,
-                                    horizontalScrollbarSize: 8,
-                                    useShadows: false,
-                                  },
-                                  overviewRulerLanes: 0,
-                                  hideCursorInOverviewRuler: true,
-                                  overviewRulerBorder: false,
-                                  renderLineHighlight: "none",
-                                  contextmenu: false,
-                                  formatOnPaste: false,
-                                  formatOnType: false,
-                                  quickSuggestions: false,
-                                  suggest: {
-                                    showKeywords: false,
-                                    showSnippets: false,
-                                  },
-                                  renderValidationDecorations: "off",
-                                  hover: { enabled: false },
-                                  inlayHints: { enabled: "off" },
-                                  occurrencesHighlight: "off",
-                                  selectionHighlight: false,
-                                }}
-                                beforeMount={(monaco) => {
-                                  monaco.editor.defineTheme("github-dark", {
-                                    base: "vs-dark",
-                                    inherit: true,
-                                    rules: [],
-                                    colors: {
-                                      "editor.background": "#00000000",
-                                      "editor.foreground": "#c9d1d9",
-                                      "editor.lineHighlightBackground":
-                                        "#161b22",
-                                      "editorLineNumber.foreground": "#6e7681",
-                                      "editor.selectionBackground": "#163356",
-                                      "scrollbarSlider.background": "#24292f40",
-                                      "scrollbarSlider.hoverBackground":
-                                        "#32383f60",
-                                      "scrollbarSlider.activeBackground":
-                                        "#424a5380",
-                                    },
-                                  })
-
-                                  monaco.editor.defineTheme("github-light", {
-                                    base: "vs",
-                                    inherit: true,
-                                    rules: [],
-                                    colors: {
-                                      "editor.background": "#00000000",
-                                      "editor.foreground": "#24292f",
-                                      "editor.lineHighlightBackground":
-                                        "#f6f8fa",
-                                      "editorLineNumber.foreground": "#8c959f",
-                                      "editor.selectionBackground": "#b6e3ff",
-                                      "scrollbarSlider.background": "#24292f20",
-                                      "scrollbarSlider.hoverBackground":
-                                        "#32383f30",
-                                      "scrollbarSlider.activeBackground":
-                                        "#424a5340",
-                                    },
-                                  })
-                                }}
-                                className={cn(
-                                  "h-full w-full flex-grow rounded-md overflow-hidden",
-                                  "border border-input focus-within:ring-1 focus-within:ring-ring",
-                                )}
-                              />
-                              <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
-                                <Button
-                                  size="icon"
-                                  variant="outline"
-                                  onClick={() => setFormStep("nameSlugForm")}
-                                >
-                                  <ChevronLeftIcon className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  disabled={
-                                    !code?.length ||
-                                    !parsedCode.componentNames?.length
-                                  }
-                                  onClick={() => setFormStep("demoCode")}
-                                >
-                                  Continue
-                                </Button>
-                              </div>
-                            </motion.div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      componentSlug={componentSlug}
+                      registryToPublish={registryToPublish}
                     />
-                  </motion.div>
+                  </div>
                 )}
-                {formStep === "demoCode" && (
-                  <>
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 20 }}
-                      transition={{ duration: 0.3, delay: 0.3 }}
-                      className="w-full"
-                    >
-                      <FormField
-                        control={form.control}
-                        name="demo_code"
-                        render={({ field }) => (
-                          <FormItem className="w-full relative">
-                            <Label>Demo code</Label>
-                            <FormControl>
-                              <motion.div
-                                className="relative"
-                                animate={{
-                                  height: "70vh",
-                                }}
-                                transition={{ duration: 0.3 }}
-                              >
-                                <Editor
-                                  defaultLanguage="typescript"
-                                  defaultValue={field.value}
-                                  onChange={(value) =>
-                                    field.onChange(value || "")
-                                  }
-                                  theme={
-                                    isDarkTheme ? "github-dark" : "github-light"
-                                  }
-                                  options={{
-                                    minimap: { enabled: false },
-                                    scrollBeyondLastLine: false,
-                                    fontSize: 14,
-                                    lineNumbers: "off",
-                                    folding: true,
-                                    wordWrap: "on",
-                                    automaticLayout: true,
-                                    padding: { top: 16, bottom: 16 },
-                                    scrollbar: {
-                                      vertical: "visible",
-                                      horizontal: "visible",
-                                      verticalScrollbarSize: 8,
-                                      horizontalScrollbarSize: 8,
-                                      useShadows: false,
-                                    },
-                                    overviewRulerLanes: 0,
-                                    hideCursorInOverviewRuler: true,
-                                    overviewRulerBorder: false,
-                                    renderLineHighlight: "none",
-                                    contextmenu: false,
-                                    formatOnPaste: false,
-                                    formatOnType: false,
-                                    quickSuggestions: false,
-                                    suggest: {
-                                      showKeywords: false,
-                                      showSnippets: false,
-                                    },
-                                    renderValidationDecorations: "off",
-                                    hover: { enabled: false },
-                                    inlayHints: { enabled: "off" },
-                                    occurrencesHighlight: "off",
-                                    selectionHighlight: false,
-                                  }}
-                                  beforeMount={(monaco) => {
-                                    monaco.editor.defineTheme("github-dark", {
-                                      base: "vs-dark",
-                                      inherit: true,
-                                      rules: [],
-                                      colors: {
-                                        "editor.background": "#00000000",
-                                        "editor.foreground": "#c9d1d9",
-                                        "editor.lineHighlightBackground":
-                                          "#161b22",
-                                        "editorLineNumber.foreground":
-                                          "#6e7681",
-                                        "editor.selectionBackground": "#163356",
-                                        "scrollbarSlider.background":
-                                          "#24292f40",
-                                        "scrollbarSlider.hoverBackground":
-                                          "#32383f60",
-                                        "scrollbarSlider.activeBackground":
-                                          "#424a5380",
-                                      },
-                                    })
-
-                                    monaco.editor.defineTheme("github-light", {
-                                      base: "vs",
-                                      inherit: true,
-                                      rules: [],
-                                      colors: {
-                                        "editor.background": "#00000000",
-                                        "editor.foreground": "#24292f",
-                                        "editor.lineHighlightBackground":
-                                          "#f6f8fa",
-                                        "editorLineNumber.foreground":
-                                          "#8c959f",
-                                        "editor.selectionBackground": "#b6e3ff",
-                                        "scrollbarSlider.background":
-                                          "#24292f20",
-                                        "scrollbarSlider.hoverBackground":
-                                          "#32383f30",
-                                        "scrollbarSlider.activeBackground":
-                                          "#424a5340",
-                                      },
-                                    })
-                                  }}
-                                  className={cn(
-                                    "h-full w-full flex-grow rounded-md overflow-hidden",
-                                    "border border-input focus-within:ring-1 focus-within:ring-ring",
-                                  )}
-                                />
-                                <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
-                                  <Button
-                                    size="icon"
-                                    variant="outline"
-                                    onClick={() => setFormStep("code")}
-                                  >
-                                    <ChevronLeftIcon className="w-4 h-4" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    disabled={
-                                      !demoCode?.length ||
-                                      !parsedCode.demoComponentNames?.length
-                                    }
-                                    onClick={() => setFormStep("customization")}
-                                  >
-                                    Continue
-                                  </Button>
-                                </div>
-                              </motion.div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </motion.div>
-                  </>
-                )}
-
-                {formStep === "customization" && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.3 }}
-                    className="w-full"
-                  >
-                    <div className="flex flex-col gap-4">
-                      <h2 className="text-3xl font-bold mt-10">
-                        Tailwind styles (optional)
-                      </h2>
-                      <p className="text-sm text-muted-foreground">
-                        Optionally extend shadcn/ui Tailwind theme to customize
-                        your component
-                      </p>
-
-                      <Tabs defaultValue="tailwind" className="w-full">
-                        <TabsList className="rounded-lg h-9">
-                          <TabsTrigger value="tailwind">
-                            tailwind.config.js
-                          </TabsTrigger>
-                          <TabsTrigger value="css">globals.css</TabsTrigger>
-                        </TabsList>
-
-                        <TabsContent value="tailwind">
-                          <div className="relative flex flex-col gap-2">
-                            <Editor
-                              defaultLanguage="javascript"
-                              value={customTailwindConfig}
-                              onChange={(value) =>
-                                setCustomTailwindConfig(value || "")
-                              }
-                              theme={
-                                isDarkTheme ? "github-dark" : "github-light"
-                              }
-                              options={{
-                                minimap: { enabled: false },
-                                scrollBeyondLastLine: false,
-                                fontSize: 14,
-                                lineNumbers: "off",
-                                folding: true,
-                                wordWrap: "on",
-                                automaticLayout: true,
-                                padding: { top: 16, bottom: 16 },
-                                scrollbar: {
-                                  vertical: "visible",
-                                  horizontal: "visible",
-                                  verticalScrollbarSize: 8,
-                                  horizontalScrollbarSize: 8,
-                                  useShadows: false,
-                                },
-                                overviewRulerLanes: 0,
-                                hideCursorInOverviewRuler: true,
-                                overviewRulerBorder: false,
-                                renderLineHighlight: "none",
-                                contextmenu: false,
-                                formatOnPaste: false,
-                                formatOnType: false,
-                                quickSuggestions: false,
-                                suggest: {
-                                  showKeywords: false,
-                                  showSnippets: false,
-                                },
-                                renderValidationDecorations: "off",
-                                hover: { enabled: false },
-                                inlayHints: { enabled: "off" },
-                                occurrencesHighlight: "off",
-                                selectionHighlight: false,
-                              }}
-                              className={cn(
-                                "h-[500px] w-full rounded-md overflow-hidden",
-                                "border border-input focus-within:ring-1 focus-within:ring-ring",
-                              )}
-                            />
-                            <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
-                              <Button
-                                size="icon"
-                                variant="outline"
-                                onClick={() => setFormStep("demoCode")}
-                              >
-                                <ChevronLeftIcon className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => setFormStep("detailedForm")}
-                              >
-                                {(customTailwindConfig?.length ?? 0) > 0 ||
-                                (customGlobalCss?.length ?? 0) > 0
-                                  ? "Continue"
-                                  : "Skip"}
-                              </Button>
-                            </div>
-                          </div>
-                        </TabsContent>
-
-                        <TabsContent value="css">
-                          <div className="relative flex flex-col gap-2">
-                            <Editor
-                              defaultLanguage="css"
-                              value={customGlobalCss}
-                              onChange={(value) =>
-                                setCustomGlobalCss(value || "")
-                              }
-                              theme={
-                                isDarkTheme ? "github-dark" : "github-light"
-                              }
-                              options={{
-                                minimap: { enabled: false },
-                                scrollBeyondLastLine: false,
-                                fontSize: 14,
-                                lineNumbers: "off",
-                                folding: true,
-                                wordWrap: "on",
-                                automaticLayout: true,
-                                padding: { top: 16, bottom: 16 },
-                                scrollbar: {
-                                  vertical: "visible",
-                                  horizontal: "visible",
-                                  verticalScrollbarSize: 8,
-                                  horizontalScrollbarSize: 8,
-                                  useShadows: false,
-                                },
-                                overviewRulerLanes: 0,
-                                hideCursorInOverviewRuler: true,
-                                overviewRulerBorder: false,
-                                renderLineHighlight: "none",
-                                contextmenu: false,
-                                formatOnPaste: false,
-                                formatOnType: false,
-                                quickSuggestions: false,
-                                suggest: {
-                                  showKeywords: false,
-                                  showSnippets: false,
-                                },
-                                renderValidationDecorations: "off",
-                                hover: { enabled: false },
-                                inlayHints: { enabled: "off" },
-                                occurrencesHighlight: "off",
-                                selectionHighlight: false,
-                              }}
-                              className={cn(
-                                "h-[500px] w-full rounded-md overflow-hidden",
-                                "border border-input focus-within:ring-1 focus-within:ring-ring",
-                              )}
-                            />
-                            <div className="absolute flex gap-2 bottom-2 right-2 z-50 h-[36px]">
-                              <Button
-                                size="icon"
-                                variant="outline"
-                                onClick={() => setFormStep("demoCode")}
-                              >
-                                <ChevronLeftIcon className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => setFormStep("detailedForm")}
-                              >
-                                Continue
-                              </Button>
-                            </div>
-                          </div>
-                        </TabsContent>
-                      </Tabs>
-                    </div>
-                  </motion.div>
-                )}
-
-                {formStep === "detailedForm" &&
-                  unknownDependencies?.length > 0 && (
-                    <ResolveUnknownDependenciesAlertForm
-                      unknownDependencies={unknownDependencies}
-                      onBack={() => setFormStep("customization")}
-                      onDependenciesResolved={(resolvedDependencies) => {
-                        form.setValue(
-                          "unknown_dependencies",
-                          unknownDependencies.filter(
-                            (dependency) =>
-                              !resolvedDependencies
-                                .map((d) => d.slug)
-                                .includes(dependency.slugWithUsername),
-                          ),
-                        )
-                        form.setValue("direct_registry_dependencies", [
-                          ...new Set([
-                            ...form.getValues("direct_registry_dependencies"),
-                            ...resolvedDependencies
-                              .filter((d) => !d.isDemoDependency)
-                              .map((d) => `${d.username}/${d.slug}`),
-                          ]),
-                        ])
-                        form.setValue("demo_direct_registry_dependencies", [
-                          ...new Set([
-                            ...form.getValues(
-                              "demo_direct_registry_dependencies",
-                            ),
-                            ...resolvedDependencies
-                              .filter((d) => d.isDemoDependency)
-                              .map((d) => `${d.username}/${d.slug}`),
-                          ]),
-                        ])
-                      }}
-                    />
-                  )}
-
-                {formStep === "detailedForm" &&
-                  unknownDependencies?.length === 0 && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.3, delay: 0.3 }}
-                      className="w-full flex flex-col gap-4"
-                    >
-                      <EditCodeFileCard
-                        iconSrc={
-                          isDarkTheme ? "/tsx-file-dark.svg" : "/tsx-file.svg"
-                        }
-                        mainText={`${form.getValues("name")} code`}
-                        subText={`${parsedCode.componentNames.slice(0, 2).join(", ")}${parsedCode.componentNames.length > 2 ? ` +${parsedCode.componentNames.length - 2}` : ""}`}
-                        onEditClick={() => {
-                          setFormStep("code")
-                          codeInputRef.current?.focus()
-                        }}
-                      />
-                      <EditCodeFileCard
-                        iconSrc={
-                          isDarkTheme ? "/demo-file-dark.svg" : "/demo-file.svg"
-                        }
-                        mainText="Demo code"
-                        subText={`${parsedCode.demoComponentNames.slice(0, 2).join(", ")}${parsedCode.demoComponentNames.length > 2 ? ` +${parsedCode.demoComponentNames.length - 2}` : ""}`}
-                        onEditClick={() => {
-                          setFormStep("demoCode")
-                          setTimeout(() => {
-                            demoCodeTextAreaRef.current?.focus()
-                          }, 0)
-                        }}
-                      />
-                      <EditCodeFileCard
-                        iconSrc={
-                          isDarkTheme ? "/css-file-dark.svg" : "/css-file.svg"
-                        }
-                        mainText="Custom styles"
-                        subText="Tailwind config and globals.css"
-                        onEditClick={() => setFormStep("customization")}
-                      />
-                      <ComponentDetailsForm
-                        isEditMode={false}
-                        form={form}
-                        handleSubmit={handleSubmit}
-                        isSubmitting={isSubmitting}
-                        hotkeysEnabled={!isSuccessDialogOpen}
-                      />
-                    </motion.div>
-                  )}
               </div>
+            </div>
+          </div>
+        )}
 
-              {formStep === "nameSlugForm" && (
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3, delay: 0.2 }}
-                  className="w-2/3 h-full px-10 flex items-center"
-                >
-                  <HeroVideoDialog
-                    videoSrc="https://www.youtube.com/embed/NXpSAnmleyE"
-                    thumbnailSrc="/tutorial-thumbnail.png"
-                    thumbnailAlt="Tutorial: How to publish components"
-                    animationStyle="from-right"
+        {formStep === "nameSlugForm" && (
+          <div
+            className={cn(
+              "flex flex-col scrollbar-hide items-start gap-2 py-8 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[450px]",
+            )}
+          >
+            <NameSlugStep
+              form={form}
+              isAdmin={isAdmin}
+              publishAsUsername={publishAsUsername}
+              publishAsUser={publishAsUser}
+              onContinue={() => handleStepChange("code")}
+              onPublishAsChange={(username) =>
+                form.setValue("publish_as_username", username)
+              }
+            />
+          </div>
+        )}
+
+        {formStep === "detailedForm" && unknownDependencies?.length === 0 && (
+          <div className="flex flex-col h-[100vh] w-full absolute left-0 right-0 overflow-hidden">
+            <PublishHeader
+              formStep={formStep}
+              componentSlug={componentSlug}
+              setFormStep={handleStepChange}
+              handleSubmit={handleSubmit}
+              isSubmitting={isSubmitting}
+              isFormValid={isFormValid(form)}
+              form={form}
+              onAddDemo={handleAddNewDemo}
+              currentDemoIndex={currentDemoIndex}
+              setCurrentDemoIndex={setCurrentDemoIndex}
+            />
+            <div className="flex gap-1 w-full h-[calc(100vh-3rem)] overflow-hidden">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3, delay: 0.3 }}
+                className="w-1/3 flex flex-col gap-4 overflow-y-auto p-4"
+              >
+                <div className="space-y-4 p-[2px]">
+                  <Accordion
+                    type="single"
+                    value={openAccordion}
+                    onValueChange={handleAccordionChange}
+                    collapsible
                     className="w-full"
-                  />
-                </motion.div>
-              )}
+                  >
+                    <AccordionItem
+                      value="component-info"
+                      className="bg-background border-none"
+                    >
+                      <AccordionTrigger className="py-2 text-[15px] leading-6 hover:no-underline hover:bg-muted/50 rounded-md data-[state=open]:rounded-b-none transition-all duration-200 ease-in-out -mx-2 px-2">
+                        <div className="flex items-center gap-2">
+                          Component info
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "gap-1.5 text-xs font-medium",
+                              isComponentInfoComplete()
+                                ? "border-emerald-500/20"
+                                : "border-amber-500/20",
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "size-1.5 rounded-full",
+                                isComponentInfoComplete()
+                                  ? "bg-emerald-500"
+                                  : "bg-amber-500",
+                              )}
+                              aria-hidden="true"
+                            />
+                            {isComponentInfoComplete()
+                              ? "Complete"
+                              : "Required"}
+                          </Badge>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground">
+                        <div className="text-foreground">
+                          <ComponentDetailsForm
+                            form={form}
+                            handleSubmit={handleSubmit}
+                            isSubmitting={isSubmitting}
+                            hotkeysEnabled={!isSuccessDialogOpen}
+                          />
 
-              {formStep === "detailedForm" && isPreviewReady && (
+                          <div className="space-y-3 mt-6">
+                            <EditCodeFileCard
+                              iconSrc={
+                                isDarkTheme
+                                  ? "/tsx-file-dark.svg"
+                                  : "/tsx-file.svg"
+                              }
+                              mainText={`${form.getValues("name")} code`}
+                              subText={`${parsedCode.componentNames.slice(0, 2).join(", ")}${parsedCode.componentNames.length > 2 ? ` +${parsedCode.componentNames.length - 2}` : ""}`}
+                              onEditClick={() => {
+                                handleStepChange("code")
+                                codeInputRef.current?.focus()
+                              }}
+                            />
+                            <EditCodeFileCard
+                              iconSrc={
+                                isDarkTheme
+                                  ? "/css-file-dark.svg"
+                                  : "/css-file.svg"
+                              }
+                              mainText="Custom styles"
+                              subText="Tailwind config and globals.css"
+                              onEditClick={() => {
+                                handleStepChange("code")
+                                setActiveCodeTab("tailwind")
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+
+                    {demos?.map((demo, index) => (
+                      <AccordionItem
+                        key={index}
+                        value={`demo-${index}`}
+                        className="bg-background border-none group"
+                      >
+                        <AccordionTrigger className="py-2 text-[15px] leading-6 hover:no-underline hover:bg-muted/50 rounded-md data-[state=open]:rounded-b-none transition-all duration-200 ease-in-out -mx-2 px-2">
+                          <div className="flex items-center gap-2 w-full">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <div className="truncate">
+                                {demo.name || `Demo ${index + 1}`}
+                              </div>
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "gap-1.5 text-xs font-medium shrink-0",
+                                  isDemoComplete(index)
+                                    ? "border-emerald-500/20"
+                                    : "border-amber-500/20",
+                                )}
+                              >
+                                <span
+                                  className={cn(
+                                    "size-1.5 rounded-full",
+                                    isDemoComplete(index)
+                                      ? "bg-emerald-500"
+                                      : "bg-amber-500",
+                                  )}
+                                  aria-hidden="true"
+                                />
+                                {isDemoComplete(index)
+                                  ? "Complete"
+                                  : "Required"}
+                              </Badge>
+                            </div>
+                            {demos.length > 1 && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 ml-auto mr-1"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setDemoToDelete({
+                                    index,
+                                    name: demo?.name || `Demo ${index + 1}`,
+                                  })
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive transition-colors" />
+                              </Button>
+                            )}
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="text-foreground space-y-4">
+                            <DemoDetailsForm form={form} demoIndex={index} />
+                            <EditCodeFileCard
+                              iconSrc={
+                                isDarkTheme
+                                  ? "/demo-file-dark.svg"
+                                  : "/demo-file.svg"
+                              }
+                              mainText={`Demo ${index + 1} code`}
+                              onEditClick={() => {
+                                handleStepChange("demoCode")
+                                setCurrentDemoIndex(index)
+                              }}
+                            />
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </div>
+              </motion.div>
+
+              {isPreviewReady && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3, delay: 3 }}
-                  className="w-2/3 h-full py-4"
+                  transition={{ duration: 0.3 }}
+                  className="w-2/3 h-full"
                 >
                   <React.Suspense fallback={<LoadingSpinner />}>
-                    <PublishComponentPreview
+                    <DemoPreviewTabs
                       code={code}
-                      demoCode={demoCode}
                       slugToPublish={componentSlug}
                       registryToPublish={registryToPublish}
-                      directRegistryDependencies={[
-                        ...directRegistryDependencies,
-                        ...demoDirectRegistryDependencies,
-                      ]}
+                      directRegistryDependencies={directRegistryDependencies}
+                      demoDirectRegistryDependencies={
+                        demoDirectRegistryDependencies
+                      }
                       isDarkTheme={isDarkTheme}
                       customTailwindConfig={customTailwindConfig}
                       customGlobalCss={customGlobalCss}
+                      form={form}
                     />
                   </React.Suspense>
                 </motion.div>
               )}
-              {formStep === "code" && <CodeGuidelinesAlert />}
-              {formStep === "demoCode" && (
-                <DemoComponentGuidelinesAlert
-                  mainComponentName={
-                    parsedCode.componentNames[0] ?? "MyComponent"
-                  }
-                  componentSlug={componentSlug}
-                  registryToPublish={registryToPublish}
-                />
-              )}
             </div>
-          </AnimatePresence>
-        </div>
+          </div>
+        )}
       </Form>
       {isDebug && (
         <DebugInfoDisplay
@@ -1088,7 +1030,11 @@ export default function PublishComponentForm() {
           directRegistryDependencyImports={
             parsedCode.directRegistryDependencyImports
           }
-          unknownDependencies={unknownDependencies}
+          unknownDependencies={unknownDependencies.map((dep) => ({
+            slugWithUsername: dep,
+            registry: "ui",
+            isDemoDependency: false,
+          }))}
         />
       )}
       <SuccessDialog
@@ -1097,108 +1043,13 @@ export default function PublishComponentForm() {
         onAddAnother={handleAddAnother}
         onGoToComponent={handleGoToComponent}
       />
+      <LoadingDialog isOpen={isLoadingDialogOpen} message={publishProgress} />
+      <DeleteDemoDialog
+        isOpen={!!demoToDelete}
+        onOpenChange={(open) => !open && setDemoToDelete(null)}
+        onConfirm={() => demoToDelete && handleDeleteDemo(demoToDelete.index)}
+        demoName={demoToDelete?.name || ""}
+      />
     </>
-  )
-}
-
-const EditCodeFileCard = ({
-  iconSrc,
-  mainText,
-  subText,
-  onEditClick,
-}: {
-  iconSrc: string
-  mainText: string
-  subText: string
-  onEditClick: () => void
-}) => (
-  <div className="p-2 border rounded-md bg-background text-foreground bg-opacity-80 backdrop-blur-sm flex items-center justify-start">
-    <div className="flex items-center gap-2 w-full">
-      <div className="flex items-center justify-between w-full">
-        <div className="flex items-center">
-          <div className="w-10 h-10 relative mr-2 items-center justify-center">
-            <Image
-              src={iconSrc}
-              width={40}
-              height={40}
-              alt={`${mainText} File`}
-            />
-          </div>
-          <div className="flex flex-col items-start h-10">
-            <p className="font-semibold text-[14px]">{mainText}</p>
-            <p className="text-sm text-muted-foreground text-[12px]">
-              {subText}
-            </p>
-          </div>
-        </div>
-        <Button size="sm" onClick={onEditClick}>
-          Edit
-        </Button>
-      </div>
-    </div>
-  </div>
-)
-
-const useCodeInputsAutoFocus = (showDetailedForm: boolean) => {
-  const demoCodeTextAreaRef = useRef<HTMLTextAreaElement>(null)
-  const codeInputRef = useRef<HTMLTextAreaElement>(null)
-
-  useEffect(() => {
-    if (showDetailedForm) return
-
-    if (codeInputRef.current) {
-      codeInputRef.current?.focus?.()
-    } else if (demoCodeTextAreaRef.current) {
-      demoCodeTextAreaRef.current?.focus()
-    }
-  }, [showDetailedForm])
-
-  return { codeInputRef, demoCodeTextAreaRef }
-}
-
-const SuccessDialog = ({
-  isOpen,
-  onOpenChange,
-  onAddAnother,
-  onGoToComponent,
-}: {
-  isOpen: boolean
-  onOpenChange: (open: boolean) => void
-  onAddAnother: () => void
-  onGoToComponent: () => void
-}) => {
-  useSuccessDialogHotkeys({ isOpen, onAddAnother, onGoToComponent })
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Component Added Successfully</DialogTitle>
-          <DialogDescription className="break-words">
-            Your new component has been successfully added. What would you like
-            to do next?
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button onClick={onAddAnother} variant="outline">
-            Add Another
-            <kbd className="hidden md:inline-flex h-5 items-center rounded border border-border px-1.5 ml-1.5 font-mono text-[11px] font-medium text-muted-foreground">
-              N
-            </kbd>
-          </Button>
-          <Button onClick={onGoToComponent} variant="default">
-            View Component
-            <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border-muted-foreground/40 bg-muted-foreground/20 px-1.5 ml-1.5 font-sans  text-[11px] text-muted leading-none  opacity-100 flex">
-              <span className="text-[11px] leading-none font-sans">
-                {navigator?.platform?.toLowerCase()?.includes("mac")
-                  ? "⌘"
-                  : "Ctrl"}
-              </span>
-              ⏎
-            </kbd>
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   )
 }

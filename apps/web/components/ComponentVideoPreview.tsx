@@ -1,21 +1,30 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { Component, User } from "../types/global"
+import { Component, User, DemoWithComponent } from "../types/global"
 
 interface ComponentVideoPreviewProps {
-  component: Component & { user: User }
+  component: DemoWithComponent | (Component & { user: User })
+  demo?: DemoWithComponent | (Component & { user: User })
 }
 
 export function ComponentVideoPreview({
   component,
+  demo,
 }: ComponentVideoPreviewProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isVideoLoaded, setIsVideoLoaded] = useState(false)
 
+  const isDemo = "component" in component
+
+  const id = isDemo ? component.id : component.id
+  const videoUrl = isDemo
+    ? component.video_url
+    : (component as Component & { user: User }).video_url
+
   const toggleVideoIcon = (hide: boolean) => {
     const videoIcon = document.querySelector(
-      `[data-video-icon-${component.id}]`,
+      `[data-video-icon="${id}"]`,
     ) as HTMLElement
     if (videoIcon) {
       videoIcon.style.opacity = hide ? "0" : "1"
@@ -27,12 +36,12 @@ export function ComponentVideoPreview({
     toggleVideoIcon(true)
     const videoElement = videoRef.current
 
-    if (!videoElement || !component.video_url) {
+    if (!videoElement || !videoUrl) {
       return
     }
 
     if (!isVideoLoaded) {
-      videoElement.src = component.video_url
+      videoElement.src = videoUrl
       videoElement.load()
       videoElement
         .play()
@@ -64,7 +73,7 @@ export function ComponentVideoPreview({
     >
       <video
         ref={videoRef}
-        data-video={`${component.id}`}
+        data-video={`${id}`}
         autoPlay
         muted
         loop

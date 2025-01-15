@@ -22,22 +22,16 @@ import type {
   QuickFilterOption,
   Component,
   User,
+  DemoWithComponent,
 } from "@/types/global"
 import { QUICK_FILTER_OPTIONS, SORT_OPTIONS } from "@/types/global"
 import { setCookie } from "@/lib/cookies"
 
-const getFilteredCount = (
-  components: (Component & { user: User })[],
-  filter: QuickFilterOption,
-) => {
-  if (!components) return 0
-  return filterComponents(components, filter).length
-}
-
 interface TagComponentsHeaderProps {
   filtersDisabled: boolean
-  components?: (Component & { user: User })[]
+  demos?: DemoWithComponent[]
   currentSection?: string
+  tabCounts: Record<QuickFilterOption, number>
 }
 
 const useSearchHotkeys = (inputRef: React.RefObject<HTMLInputElement>) => {
@@ -61,8 +55,8 @@ const useSearchHotkeys = (inputRef: React.RefObject<HTMLInputElement>) => {
 
 export function TagComponentsHeader({
   filtersDisabled,
-  components,
   currentSection,
+  tabCounts,
 }: TagComponentsHeaderProps) {
   const [quickFilter, setQuickFilter] = useAtom(quickFilterAtom)
   const [sortBy, setSortBy] = useAtom(sortByAtom)
@@ -116,25 +110,13 @@ export function TagComponentsHeader({
                 <TabsTrigger
                   key={value}
                   value={value}
-                  disabled={
-                    components
-                      ? getFilteredCount(
-                          components,
-                          value as QuickFilterOption,
-                        ) === 0
-                      : false
-                  }
+                  disabled={tabCounts[value as QuickFilterOption] === 0}
                   className="flex-1 md:flex-initial relative overflow-hidden rounded-none border border-border h-8 px-4 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 first:rounded-s last:rounded-e data-[state=active]:bg-muted data-[state=active]:after:bg-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <div className="flex items-center gap-2">
                     <span className="truncate">{getFilterLabel(label)}</span>
                     <span className="text-xs text-muted-foreground tabular-nums">
-                      {components
-                        ? getFilteredCount(
-                            components,
-                            value as QuickFilterOption,
-                          )
-                        : 0}
+                      {tabCounts[value as QuickFilterOption]}
                     </span>
                   </div>
                 </TabsTrigger>

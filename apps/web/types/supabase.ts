@@ -224,7 +224,7 @@ export type Database = {
           component_names: Json
           component_slug: string
           created_at: string
-          demo_code: string
+          demo_code: string | null
           demo_dependencies: Json | null
           demo_direct_registry_dependencies: Json
           dependencies: Json | null
@@ -257,7 +257,7 @@ export type Database = {
           component_names: Json
           component_slug: string
           created_at?: string
-          demo_code: string
+          demo_code?: string | null
           demo_dependencies?: Json | null
           demo_direct_registry_dependencies?: Json
           dependencies?: Json | null
@@ -290,7 +290,7 @@ export type Database = {
           component_names?: Json
           component_slug?: string
           created_at?: string
-          demo_code?: string
+          demo_code?: string | null
           demo_dependencies?: Json | null
           demo_direct_registry_dependencies?: Json
           dependencies?: Json | null
@@ -348,6 +348,125 @@ export type Database = {
           },
           {
             foreignKeyName: "components_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demo_tags: {
+        Row: {
+          created_at: string | null
+          demo_id: number | null
+          id: number
+          tag_id: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          demo_id?: number | null
+          id?: never
+          tag_id?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          demo_id?: number | null
+          id?: never
+          tag_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demo_tags_demo_id_fkey"
+            columns: ["demo_id"]
+            isOneToOne: false
+            referencedRelation: "demos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demo_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demos: {
+        Row: {
+          compiled_css: string | null
+          component_id: number | null
+          created_at: string | null
+          demo_code: string
+          demo_dependencies: Json | null
+          demo_direct_registry_dependencies: Json | null
+          demo_slug: string
+          fts: unknown | null
+          id: number
+          name: string | null
+          preview_url: string | null
+          pro_preview_image_url: string | null
+          updated_at: string | null
+          user_id: string
+          video_url: string | null
+        }
+        Insert: {
+          compiled_css?: string | null
+          component_id?: number | null
+          created_at?: string | null
+          demo_code: string
+          demo_dependencies?: Json | null
+          demo_direct_registry_dependencies?: Json | null
+          demo_slug?: string
+          fts?: unknown | null
+          id?: number
+          name?: string | null
+          preview_url?: string | null
+          pro_preview_image_url?: string | null
+          updated_at?: string | null
+          user_id: string
+          video_url?: string | null
+        }
+        Update: {
+          compiled_css?: string | null
+          component_id?: number | null
+          created_at?: string | null
+          demo_code?: string
+          demo_dependencies?: Json | null
+          demo_direct_registry_dependencies?: Json | null
+          demo_slug?: string
+          fts?: unknown | null
+          id?: number
+          name?: string | null
+          preview_url?: string | null
+          pro_preview_image_url?: string | null
+          updated_at?: string | null
+          user_id?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demos_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "component_dependencies_graph_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demos_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demos_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components_with_username"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demos_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
@@ -624,23 +743,53 @@ export type Database = {
           tags: Json
         }[]
       }
-      get_components_counts:
-        | {
-            Args: Record<PropertyKey, never>
-            Returns: {
-              filter_type: string
-              count: number
-            }[]
-          }
-        | {
-            Args: {
-              p_sort_by: string
-            }
-            Returns: {
-              filter_type: string
-              count: number
-            }[]
-          }
+      get_components_counts: {
+        Args: {
+          p_tag_slug?: string
+        }
+        Returns: {
+          filter_type: string
+          count: number
+        }[]
+      }
+      get_demos: {
+        Args: {
+          p_tag_slug?: string
+        }
+        Returns: {
+          id: number
+          component_id: number
+          name: string
+          demo_code: string
+          created_at: string
+          updated_at: string
+          user_id: string
+          demo_dependencies: Json
+          demo_direct_registry_dependencies: Json
+          preview_url: string
+          video_url: string
+          compiled_css: string
+          pro_preview_image_url: string
+          component_data: Json
+          user_data: Json
+          is_paid: boolean
+          payment_url: string
+          price: number
+          license: string
+          website_url: string
+          downloads_count: number
+          likes_count: number
+          fts: unknown
+          demo_slug: string
+        }[]
+      }
+      get_demos_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          filter_type: string
+          count: number
+        }[]
+      }
       get_filtered_components: {
         Args: {
           p_quick_filter: string
@@ -674,6 +823,36 @@ export type Database = {
           total_count: number
         }[]
       }
+      get_filtered_demos: {
+        Args: {
+          p_quick_filter: string
+          p_sort_by: string
+          p_offset: number
+          p_limit: number
+          p_tag_slug?: string
+        }
+        Returns: {
+          id: number
+          name: string
+          demo_code: string
+          preview_url: string
+          video_url: string
+          compiled_css: string
+          demo_dependencies: Json
+          demo_direct_registry_dependencies: Json
+          pro_preview_image_url: string
+          created_at: string
+          updated_at: string
+          component_id: number
+          component_data: Json
+          user_data: Json
+          tags: Json
+          total_count: number
+          fts: unknown
+          demo_slug: string
+          debug_info: Json
+        }[]
+      }
       get_random_components: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -682,7 +861,7 @@ export type Database = {
           component_names: Json
           component_slug: string
           created_at: string
-          demo_code: string
+          demo_code: string | null
           demo_dependencies: Json | null
           demo_direct_registry_dependencies: Json
           dependencies: Json | null
@@ -708,6 +887,37 @@ export type Database = {
           user_id: string
           video_url: string | null
           website_url: string | null
+        }[]
+      }
+      get_user_demos: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: {
+          id: number
+          component_id: number
+          name: string
+          demo_code: string
+          created_at: string
+          updated_at: string
+          user_id: string
+          demo_dependencies: Json
+          demo_direct_registry_dependencies: Json
+          preview_url: string
+          video_url: string
+          compiled_css: string
+          pro_preview_image_url: string
+          component_data: Json
+          user_data: Json
+          is_paid: boolean
+          payment_url: string
+          price: number
+          license: string
+          website_url: string
+          downloads_count: number
+          likes_count: number
+          fts: unknown
+          demo_slug: string
         }[]
       }
       increment: {
@@ -741,6 +951,37 @@ export type Database = {
           downloads_count: number
           likes_count: number
           component_slug: string
+        }[]
+      }
+      search_demos: {
+        Args: {
+          search_query: string
+        }
+        Returns: {
+          id: number
+          component_id: number
+          name: string
+          demo_code: string
+          created_at: string
+          updated_at: string
+          user_id: string
+          demo_dependencies: Json
+          demo_direct_registry_dependencies: Json
+          preview_url: string
+          video_url: string
+          compiled_css: string
+          pro_preview_image_url: string
+          component_data: Json
+          user_data: Json
+          is_paid: boolean
+          payment_url: string
+          price: number
+          license: string
+          website_url: string
+          downloads_count: number
+          likes_count: number
+          fts: unknown
+          demo_slug: string
         }[]
       }
       update_component_dependencies_closure:

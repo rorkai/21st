@@ -12,8 +12,8 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer"
-import { ComponentDetailsForm } from "./publish/ComponentDetailsForm"
-import { Component, User, Tag } from "@/types/global"
+import { ComponentDetailsForm } from "./publish/forms/ComponentDetailsForm"
+import { Component, User, Tag, DemoWithComponent } from "@/types/global"
 import { useForm } from "react-hook-form"
 import { FormData } from "./publish/utils"
 import { uploadToR2 } from "@/lib/r2"
@@ -27,38 +27,52 @@ export function EditComponentDialog({
   setIsOpen,
   onUpdate,
 }: {
-  component: Component & { user: User } & { tags: Tag[] }
+  component: DemoWithComponent | (Component & { user: User } & { tags: Tag[] })
   isOpen: boolean
-  // eslint-disable-next-line no-unused-vars
   setIsOpen: (isOpen: boolean) => void
   onUpdate: (
-    // eslint-disable-next-line no-unused-vars
     updatedData: Partial<Component & { tags?: Tag[] }>,
   ) => Promise<void>
 }) {
   const isMobile = useIsMobile()
+  const componentData =
+    "component" in component ? component.component : component
+
   const form = useForm<FormData>({
     defaultValues: {
-      name: component.name,
-      code: component.code,
-      demo_code: component.demo_code,
-      component_slug: component.component_slug,
+      name: componentData.name,
+      code: componentData.code,
+      component_slug: componentData.component_slug,
       direct_registry_dependencies: [],
-      demo_direct_registry_dependencies: [],
+      demos: [
+        {
+          name: componentData.name,
+          demo_code: componentData.demo_code || "",
+          preview_image_data_url: componentData.preview_url || "",
+          preview_video_data_url: componentData.video_url || "",
+          tags: "tags" in component ? component.tags : [],
+          demo_direct_registry_dependencies: Array.isArray(
+            componentData.demo_direct_registry_dependencies,
+          )
+            ? componentData.demo_direct_registry_dependencies.map((dep) =>
+                String(dep),
+              )
+            : [],
+        },
+      ],
+      description: componentData.description ?? "",
+      license: componentData.license,
+      website_url: componentData.website_url ?? "",
+      is_public: true,
       unknown_dependencies: [],
+      registry: componentData.registry,
       slug_available: true,
-      preview_image_data_url: component.preview_url,
-      preview_video_data_url: component.video_url ?? "",
-      description: component.description ?? "",
-      license: component.license,
-      website_url: component.website_url ?? "",
-      tags: component.tags,
     },
   })
 
   const uploadToR2Mutation = useMutation({
     mutationFn: async ({ file, fileKey }: { file: File; fileKey: string }) => {
-      const actualFileKey = `${component.user.id}/${fileKey}`
+      const actualFileKey = `${componentData.user.id}/${fileKey}`
       const buffer = Buffer.from(await file.arrayBuffer())
       const base64Content = buffer.toString("base64")
       return uploadToR2({
@@ -101,33 +115,37 @@ export function EditComponentDialog({
       updatedData.name = formData.name
     }
 
-    if (formData.description !== component.description) {
+    if (formData.description !== componentData.description) {
       updatedData.description = formData.description
     }
 
-    if (formData.license !== component.license) {
+    if (formData.license !== componentData.license) {
       updatedData.license = formData.license
     }
 
-    if (formData.website_url !== component.website_url) {
+    if (formData.website_url !== componentData.website_url) {
       updatedData.website_url = formData.website_url
     }
 
-    if (formData.tags !== component.tags) {
-      updatedData.tags = formData.tags.map((tag) => ({
+    if (
+      formData.demos[0]?.tags !== ("tags" in component ? component.tags : [])
+    ) {
+      updatedData.tags = formData.demos[0]?.tags.map((tag) => ({
         id: tag.id!,
         name: tag.name,
         slug: tag.slug,
       }))
     }
 
-    if (formData.preview_image_file instanceof File) {
-      const fileExtension = formData.preview_image_file.name.split(".").pop()
-      const fileKey = `${component.component_slug}.${fileExtension}`
+    if (formData.demos[0]?.preview_image_file instanceof File) {
+      const fileExtension = formData.demos[0]?.preview_image_file.name
+        .split(".")
+        .pop()
+      const fileKey = `${componentData.component_slug}.${fileExtension}`
 
       try {
         const previewImageUrl = await uploadToR2Mutation.mutateAsync({
-          file: formData.preview_image_file,
+          file: formData.demos[0]?.preview_image_file,
           fileKey,
         })
         updatedData.preview_url = previewImageUrl
@@ -138,11 +156,11 @@ export function EditComponentDialog({
       }
     }
 
-    if (formData.preview_video_file instanceof File) {
-      const fileKey = `${component.component_slug}.mp4`
+    if (formData.demos[0]?.preview_video_file instanceof File) {
+      const fileKey = `${componentData.component_slug}.mp4`
       try {
         const videoUrl = await uploadToR2Mutation.mutateAsync({
-          file: formData.preview_video_file,
+          file: formData.demos[0]?.preview_video_file,
           fileKey,
         })
         updatedData.video_url = videoUrl

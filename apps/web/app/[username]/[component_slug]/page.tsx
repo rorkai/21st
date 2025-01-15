@@ -2,10 +2,11 @@ import React from "react"
 import { notFound } from "next/navigation"
 import dynamic from "next/dynamic"
 import ErrorPage from "@/components/ErrorPage"
-import { getComponent, getUserData } from "@/lib/queries"
+import { getComponent, getComponentWithDemo, getUserData } from "@/lib/queries"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 import { extractDemoComponentNames } from "@/lib/parsers"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
+import { Demo, User } from "@/types/global"
 
 const ComponentPage = dynamic(() => import("@/components/ComponentPage"), {
   ssr: false,
@@ -119,118 +120,143 @@ const fetchFileTextContent = async (url: string) => {
 export default async function ComponentPageServer({
   params,
 }: {
-  params: { username: string; component_slug: string }
+  params: { username: string; component_slug: string; demo_slug?: string }
 }) {
   const { username, component_slug } = params
-  const { data: component, error } = await getComponent(
-    supabaseWithAdminAccess,
-    username,
-    component_slug,
-  )
+  const demo_slug = params.demo_slug || "default"
 
-  if (error) {
-    return <ErrorPage error={error} />
-  }
+  try {
+    const { data, error } = await getComponentWithDemo(
+      supabaseWithAdminAccess,
+      username,
+      component_slug,
+      demo_slug,
+    )
 
-  if (!component) {
+    if (error || !data) {
+      throw error || new Error("No data returned")
+    }
+
+    const { component, demo } = data
+
+    const dependencies = (component.dependencies ?? {}) as Record<
+      string,
+      string
+    >
+    const demoDependencies = (demo.demo_dependencies ?? {}) as Record<
+      string,
+      string
+    >
+
+    const componentAndDemoCodePromises = [
+      fetchFileTextContent(component.code),
+      fetchFileTextContent(demo.demo_code),
+      component.tailwind_config_extension
+        ? fetchFileTextContent(component.tailwind_config_extension)
+        : Promise.resolve({ data: null, error: null }),
+      component.global_css_extension
+        ? fetchFileTextContent(component.global_css_extension)
+        : Promise.resolve({ data: null, error: null }),
+      demo.compiled_css
+        ? fetchFileTextContent(demo.compiled_css)
+        : Promise.resolve({ data: null, error: null }),
+    ]
+
+    const demoRegistryDeps = Array.isArray(
+      demo.demo_direct_registry_dependencies,
+    )
+      ? demo.demo_direct_registry_dependencies.filter(
+          (dep): dep is string => typeof dep === "string",
+        )
+      : []
+
+    const [
+      codeResult,
+      demoResult,
+      tailwindConfigResult,
+      globalCssResult,
+      compiledCssResult,
+      registryDependenciesResult,
+    ] = await Promise.all([
+      ...componentAndDemoCodePromises,
+      resolveRegistryDependencyTree({
+        supabase: supabaseWithAdminAccess,
+        sourceDependencySlugs: [
+          `${username}/${component_slug}`,
+          ...demoRegistryDeps,
+        ],
+        withDemoDependencies: true,
+      }),
+    ])
+
+    if (
+      codeResult?.error ||
+      demoResult?.error ||
+      tailwindConfigResult?.error ||
+      globalCssResult?.error ||
+      compiledCssResult?.error
+    ) {
+      return (
+        <ErrorPage
+          error={
+            codeResult?.error ??
+            demoResult?.error ??
+            tailwindConfigResult?.error ??
+            globalCssResult?.error ??
+            compiledCssResult?.error ??
+            new Error("Unknown error")
+          }
+        />
+      )
+    }
+    if (registryDependenciesResult?.error) {
+      return (
+        <ErrorPage
+          error={registryDependenciesResult.error ?? new Error("Unknown error")}
+        />
+      )
+    }
+
+    const registryDependenciesData = registryDependenciesResult?.data as {
+      filesWithRegistry: Record<string, { code: string; registry: string }>
+      npmDependencies: Record<string, string>
+    }
+
+    const registryDependenciesFiles = Object.fromEntries(
+      Object.entries(registryDependenciesData.filesWithRegistry).map(
+        ([key, value]) => [key, value.code],
+      ),
+    )
+    const demoComponentNames = extractDemoComponentNames(
+      demoResult?.data as string,
+    )
+
+    return (
+      <div className="w-full">
+        <ComponentPage
+          component={{ ...component, user: component.user, tags: demo.tags }}
+          demo={
+            { ...demo, user: component.user } as Demo & {
+              user: User
+            }
+          }
+          code={codeResult?.data as string}
+          demoCode={demoResult?.data as string}
+          dependencies={dependencies}
+          demoDependencies={demoDependencies}
+          demoComponentNames={demoComponentNames}
+          registryDependencies={registryDependenciesFiles}
+          npmDependenciesOfRegistryDependencies={
+            registryDependenciesData.npmDependencies
+          }
+          tailwindConfig={tailwindConfigResult?.data as string}
+          globalCss={globalCssResult?.data as string}
+          compiledCss={compiledCssResult?.data as string}
+        />
+      </div>
+    )
+  } catch (error) {
+    console.error("Error loading component:", error)
     notFound()
   }
-
-  const dependencies = (component.dependencies ?? {}) as Record<string, string>
-  const demoDependencies = (component.demo_dependencies ?? {}) as Record<
-    string,
-    string
-  >
-
-  const componentAndDemoCodePromises = [
-    fetchFileTextContent(component.code),
-    fetchFileTextContent(component.demo_code),
-    component.tailwind_config_extension
-      ? fetchFileTextContent(component.tailwind_config_extension)
-      : Promise.resolve({ data: null, error: null }),
-    component.global_css_extension
-      ? fetchFileTextContent(component.global_css_extension)
-      : Promise.resolve({ data: null, error: null }),
-    component.compiled_css
-      ? fetchFileTextContent(component.compiled_css)
-      : Promise.resolve({ data: null, error: null }),
-  ]
-
-  const [
-    codeResult,
-    demoResult,
-    tailwindConfigResult,
-    globalCssResult,
-    compiledCssResult,
-    registryDependenciesResult,
-  ] = await Promise.all([
-    ...componentAndDemoCodePromises,
-    resolveRegistryDependencyTree({
-      supabase: supabaseWithAdminAccess,
-      sourceDependencySlugs: [`${username}/${component_slug}`],
-      withDemoDependencies: true,
-    }),
-  ])
-
-  if (
-    codeResult?.error ||
-    demoResult?.error ||
-    tailwindConfigResult?.error ||
-    globalCssResult?.error ||
-    compiledCssResult?.error
-  ) {
-    return (
-      <ErrorPage
-        error={
-          codeResult?.error ??
-          demoResult?.error ??
-          tailwindConfigResult?.error ??
-          globalCssResult?.error ??
-          compiledCssResult?.error ??
-          new Error("Unknown error")
-        }
-      />
-    )
-  }
-  if (registryDependenciesResult?.error) {
-    return (
-      <ErrorPage
-        error={registryDependenciesResult.error ?? new Error("Unknown error")}
-      />
-    )
-  }
-
-  const registryDependenciesData = registryDependenciesResult?.data as {
-    filesWithRegistry: Record<string, { code: string; registry: string }>
-    npmDependencies: Record<string, string>
-  }
-
-  const registryDependenciesFiles = Object.fromEntries(
-    Object.entries(registryDependenciesData.filesWithRegistry).map(
-      ([key, value]) => [key, value.code],
-    ),
-  )
-  const demoComponentNames = extractDemoComponentNames(
-    demoResult?.data as string,
-  )
-
-  return (
-    <div className="w-full">
-      <ComponentPage
-        component={component}
-        code={codeResult?.data as string}
-        demoCode={demoResult?.data as string}
-        dependencies={dependencies}
-        demoDependencies={demoDependencies}
-        demoComponentNames={demoComponentNames}
-        registryDependencies={registryDependenciesFiles}
-        npmDependenciesOfRegistryDependencies={
-          registryDependenciesData.npmDependencies
-        }
-        tailwindConfig={tailwindConfigResult?.data as string}
-        globalCss={globalCssResult?.data as string}
-        compiledCss={compiledCssResult?.data as string}
-      />
-    </div>
-  )
 }

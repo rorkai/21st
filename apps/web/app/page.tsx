@@ -2,11 +2,15 @@ import React from "react"
 import { Metadata } from "next"
 import { cookies } from "next/headers"
 
-import { Component, QuickFilterOption, SortOption, User } from "@/types/global"
-import { Tables } from "@/types/supabase"
+import {
+  Component,
+  QuickFilterOption,
+  SortOption,
+  User,
+  DemoWithComponent,
+} from "@/types/global"
 
 import { supabaseWithAdminAccess } from "@/lib/supabase"
-import { filterComponents, sortComponents } from "@/lib/filters.client"
 
 import { Header } from "../components/Header"
 import { HeroSection } from "@/components/HeroSection"
@@ -75,55 +79,85 @@ export default async function HomePage() {
   const cookieStore = cookies()
   const shouldShowHero = !cookieStore.has("has_visited")
   const hasOnboarded = cookieStore.has("has_onboarded")
-  const savedSortBy = cookieStore.get("saved_sort_by")?.value as SortOption | undefined
-  const savedQuickFilter = cookieStore.get("saved_quick_filter")?.value as QuickFilterOption | undefined
-  
-  const defaultQuickFilter = hasOnboarded ? "last_released" : "all"
-  const defaultSortBy: SortOption = hasOnboarded ? "date" : "downloads"
+  const savedSortBy = cookieStore.get("saved_sort_by")?.value as
+    | SortOption
+    | undefined
+  const savedQuickFilter = cookieStore.get("saved_quick_filter")?.value as
+    | QuickFilterOption
+    | undefined
 
-  const sortByPreference: SortOption = savedSortBy?.length ? savedSortBy as SortOption : defaultSortBy
-  const quickFilterPreference: QuickFilterOption = savedQuickFilter?.length ? savedQuickFilter as QuickFilterOption : defaultQuickFilter
+  const defaultQuickFilter = savedQuickFilter || "all"
+  const defaultSortBy: SortOption = savedSortBy || "downloads"
 
-  const orderByFields: [keyof Tables<"components">, { ascending: boolean }] =
-    (() => {
-      switch (sortByPreference) {
-        case "downloads":
-          return ["downloads_count", { ascending: false }]
-        case "likes":
-          return ["likes_count", { ascending: false }]
-        case "date":
-          return ["created_at", { ascending: false }]
-      }
-    })()
+  const sortByPreference: SortOption = savedSortBy?.length
+    ? (savedSortBy as SortOption)
+    : defaultSortBy
+  const quickFilterPreference: QuickFilterOption = savedQuickFilter?.length
+    ? (savedQuickFilter as QuickFilterOption)
+    : defaultQuickFilter
 
-  const {
-    data: initialComponents,
-    error: componentsError,
-  } = await supabaseWithAdminAccess
-    .from("components")
-    .select("*, user:users!user_id (*)", { count: "exact" })
-    .limit(40)
-    .eq("is_public", true)
-    .order(...orderByFields)
-    .returns<(Component & { user: User })[]>()
+  const orderByFields: [string, string] = (() => {
+    switch (sortByPreference) {
+      case "downloads":
+        return ["component(downloads_count)", "desc"]
+      case "likes":
+        return ["component(likes_count)", "desc"]
+      case "date":
+        return ["created_at", "desc"]
+    }
+  })()
 
-  if (componentsError) {
+  const { data: initialDemos, error: demosError } =
+    await supabaseWithAdminAccess
+      .from("demos")
+      .select(
+        "*, component:components!demos_component_id_fkey(*, user:users!user_id(*))",
+      )
+      .limit(40)
+      .eq("component.is_public", true)
+      .order(orderByFields[0], { ascending: orderByFields[1] === "desc" })
+      .returns<DemoWithComponent[]>()
+
+  if (demosError) {
+    console.error("Demos error:", demosError)
     return null
   }
 
-  if (shouldShowHero) {
-    return (
-      <>
-        <HeroSection />
-        <NewsletterDialog />
-      </>
-    )
+  const filteredDemos = await supabaseWithAdminAccess.rpc(
+    "get_filtered_demos",
+    {
+      p_quick_filter: quickFilterPreference,
+      p_sort_by: sortByPreference,
+      p_offset: 0,
+      p_limit: 40,
+    },
+  )
+
+  if (filteredDemos.error) {
+    console.error("Filtered demos error:", filteredDemos.error)
+    return null
   }
 
-  const initialFilteredSortedComponents = sortComponents(
-    filterComponents(initialComponents, defaultQuickFilter),
-    sortByPreference,
-  )
+  const initialFilteredSortedDemos = (filteredDemos.data || []).map(
+    (result) => ({
+      id: result.id,
+      name: result.name,
+      demo_code: result.demo_code,
+      preview_url: result.preview_url,
+      video_url: result.video_url,
+      compiled_css: result.compiled_css,
+      demo_dependencies: result.demo_dependencies,
+      demo_direct_registry_dependencies:
+        result.demo_direct_registry_dependencies,
+      demo_slug: result.demo_slug,
+      component: {
+        ...(result.component_data as Component),
+        user: result.user_data,
+      } as Component & { user: User },
+      created_at: result.created_at,
+      updated_at: result.updated_at,
+    }),
+  ) as DemoWithComponent[]
 
   const { data: initialTabsCountsData, error: initialTabsCountsError } =
     await supabaseWithAdminAccess.rpc("get_components_counts")
@@ -143,11 +177,20 @@ export default async function HomePage() {
           most_downloaded: 0,
         }
 
+  if (shouldShowHero) {
+    return (
+      <>
+        <HeroSection />
+        <NewsletterDialog />
+      </>
+    )
+  }
+
   return (
     <>
       <Header variant="default" />
       <HomePageClient
-        initialComponents={initialFilteredSortedComponents}
+        initialComponents={initialFilteredSortedDemos}
         initialSortBy={sortByPreference}
         initialQuickFilter={quickFilterPreference}
         initialTabsCounts={initialTabsCounts}

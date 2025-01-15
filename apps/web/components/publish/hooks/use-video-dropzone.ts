@@ -1,17 +1,17 @@
 import { useState } from "react"
 import { useDropzone } from "react-dropzone"
 import { UseFormReturn } from "react-hook-form"
-import { type FormData } from "./utils"
+import type { FormData } from "../utils"
 
 async function convertVideoToMP4(file: File): Promise<File> {
-  const formData = new FormData()
-  formData.append("video", file)
+  const videoFormData = new FormData()
+  videoFormData.append("video", file)
 
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_BACKEND_URL}/convert`,
     {
       method: "POST",
-      body: formData,
+      body: videoFormData,
     },
   )
 
@@ -30,9 +30,17 @@ async function convertVideoToMP4(file: File): Promise<File> {
   )
 }
 
-export function useVideoDropzone({ form }: { form: UseFormReturn<FormData> }) {
+export function useVideoDropzone({
+  form,
+  demoIndex,
+}: {
+  form: UseFormReturn<FormData>
+  demoIndex: number
+}) {
   const [isProcessingVideo, setIsProcessingVideo] = useState(false)
-  const previewVideoDataUrl = form.watch("preview_video_data_url")
+  const previewVideoDataUrl = form.watch(
+    `demos.${demoIndex}.preview_video_data_url`,
+  )
 
   const handleVideoChange = async (file: File) => {
     if (file.size > 50 * 1024 * 1024) {
@@ -43,18 +51,27 @@ export function useVideoDropzone({ form }: { form: UseFormReturn<FormData> }) {
     try {
       setIsProcessingVideo(true)
       const previewUrl = URL.createObjectURL(file)
-      form.setValue("preview_video_data_url", previewUrl)
+      form.setValue(`demos.${demoIndex}.preview_video_data_url`, previewUrl)
 
       const processedFile = await convertVideoToMP4(file)
-      form.setValue("preview_video_file", processedFile)
+      form.setValue(`demos.${demoIndex}.preview_video_file`, processedFile)
     } catch (error) {
       console.error("Error processing video:", error)
       alert("Error processing video. Please try again.")
-      form.setValue("preview_video_data_url", undefined)
-      form.setValue("preview_video_file", undefined)
+      form.setValue(`demos.${demoIndex}.preview_video_data_url`, undefined)
+      form.setValue(`demos.${demoIndex}.preview_video_file`, undefined)
     } finally {
       setIsProcessingVideo(false)
     }
+  }
+
+  const removeVideo = () => {
+    const videoUrl = form.getValues(`demos.${demoIndex}.preview_video_data_url`)
+    if (videoUrl) {
+      URL.revokeObjectURL(videoUrl)
+    }
+    form.setValue(`demos.${demoIndex}.preview_video_data_url`, undefined)
+    form.setValue(`demos.${demoIndex}.preview_video_file`, undefined)
   }
 
   const {
@@ -74,15 +91,6 @@ export function useVideoDropzone({ form }: { form: UseFormReturn<FormData> }) {
     multiple: false,
   })
 
-  const removeVideo = () => {
-    const videoUrl = form.getValues("preview_video_data_url")
-    if (videoUrl) {
-      URL.revokeObjectURL(videoUrl)
-    }
-    form.setValue("preview_video_data_url", undefined)
-    form.setValue("preview_video_file", undefined)
-  }
-
   const openFileDialog = () => {
     const input = document.createElement("input")
     input.type = "file"
@@ -90,7 +98,7 @@ export function useVideoDropzone({ form }: { form: UseFormReturn<FormData> }) {
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0]
       if (file) {
-        handleVideoChange(file as File)
+        handleVideoChange(file)
       }
     }
     input.click()

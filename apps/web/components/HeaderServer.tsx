@@ -8,16 +8,16 @@ import { Twitter } from "lucide-react"
 
 export function HeaderServer({ text }: { text?: string }) {
   return (
-    <div className="flex items-center">
+    <div className="flex items-center gap-2">
       <Link
         href="/"
         className="flex items-center justify-center w-7 h-7 rounded-full cursor-pointer bg-foreground"
       />
       {text && (
-        <>
-          <span className="mx-2 text-muted-foreground">/</span>
+        <div className="flex items-center gap-2">
+          <Icons.slash className="text-muted-foreground w-[22px] h-[22px]" />
           <span className="text-[14px] font-medium">{text}</span>
-        </>
+        </div>
       )}
     </div>
   )

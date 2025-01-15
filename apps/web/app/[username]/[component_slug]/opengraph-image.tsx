@@ -19,7 +19,6 @@ export default async function Image({
   params: { username: string; component_slug: string }
 }) {
   const { username, component_slug } = params
-  console.log(username, component_slug)
 
   const [componentResult, userResult] = await Promise.all([
     getComponent(supabaseWithAdminAccess, username, component_slug),

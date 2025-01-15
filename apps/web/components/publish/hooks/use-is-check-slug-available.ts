@@ -16,37 +16,70 @@ const isValidSlug = (slug: string): boolean => {
   return slugRegex.test(slug)
 }
 
+type SlugType = "component" | "demo"
+
 const checkSlugUnique = async (
   supabase: SupabaseClient,
   slug: string,
+  type: SlugType,
   userId: string,
+  componentId?: number,
 ): Promise<boolean> => {
-  const { data, error } = await supabase
-    .from("components")
-    .select("id")
-    .eq("component_slug", slug)
-    .eq("user_id", userId)
+  if (type === "component") {
+    const { data, error } = await supabase
+      .from("components")
+      .select("id")
+      .eq("component_slug", slug)
+      .eq("user_id", userId)
 
-  if (error) {
-    console.error("Error checking slug uniqueness:", error)
-    return false
+    if (error) {
+      console.error("Error checking component slug uniqueness:", error)
+      return false
+    }
+
+    return data?.length === 0
+  } else {
+    const { data, error } = await supabase
+      .from("demos")
+      .select("id")
+      .eq("demo_slug", slug)
+      .eq("component_id", componentId)
+
+    if (error) {
+      console.error("Error checking demo slug uniqueness:", error)
+      return false
+    }
+
+    return data?.length === 0
   }
-
-  return data?.length === 0
 }
 
 export const generateUniqueSlug = async (
   supabase: SupabaseClient,
   baseName: string,
+  type: SlugType,
   userId: string,
+  componentId?: number,
 ) => {
   let newSlug = makeSlugFromName(baseName)
-  let isUnique = await checkSlugUnique(supabase, newSlug, userId)
+  let isUnique = await checkSlugUnique(
+    supabase,
+    newSlug,
+    type,
+    userId,
+    componentId,
+  )
   let suffix = 1
 
   while (!isUnique) {
     newSlug = `${makeSlugFromName(baseName)}-${suffix}`
-    isUnique = await checkSlugUnique(supabase, newSlug, userId)
+    isUnique = await checkSlugUnique(
+      supabase,
+      newSlug,
+      type,
+      userId,
+      componentId,
+    )
     suffix += 1
   }
 
@@ -55,11 +88,15 @@ export const generateUniqueSlug = async (
 
 export const useIsCheckSlugAvailable = ({
   slug,
+  type,
   userId,
+  componentId,
   enabled = true,
 }: {
   slug: string
+  type: SlugType
   userId: string
+  componentId?: number
   enabled?: boolean
 }) => {
   const client = useClerkSupabaseClient()
@@ -69,16 +106,20 @@ export const useIsCheckSlugAvailable = ({
     isFetching: isChecking,
     error: error,
   } = useQuery({
-    queryKey: ["slugCheck", slug, userId],
+    queryKey: ["slugCheck", slug, type, userId, componentId],
     queryFn: async () => {
       if (!isValidSlug(slug)) {
         throw new Error(
           "Slug should contain only lowercase letters, numbers and dashes. It should end with a letter or a number",
         )
       }
-      return await checkSlugUnique(client, slug, userId)
+      return await checkSlugUnique(client, slug, type, userId, componentId)
     },
-    enabled: !!slug && !!userId && !!enabled,
+    enabled:
+      !!slug &&
+      !!userId &&
+      (type === "demo" ? !!componentId : true) &&
+      !!enabled,
   })
 
   return {

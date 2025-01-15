@@ -1,7 +1,9 @@
-import React from "react"
+import React, { useEffect } from "react"
 import { cn } from "@/lib/utils"
-import { Component, User } from "../types/global"
 import { ComponentCard, ComponentCardSkeleton } from "./ComponentCard"
+import { DemoWithComponent, User, Component } from "@/types/global"
+
+type ComponentOrDemo = DemoWithComponent | (Component & { user: User })
 
 export function ComponentsList({
   components,
@@ -9,11 +11,16 @@ export function ComponentsList({
   className,
   skeletonCount = 12,
 }: {
-  components?: (Component & { user: User })[] | null
+  components?: ComponentOrDemo[] | null
   isLoading?: boolean
   className?: string
   skeletonCount?: number
 }) {
+  useEffect(() => {
+    console.log("Components list updated:", components?.length)
+    console.log("Sample component:", components?.[0])
+  }, [components])
+
   return (
     <div
       className={cn(
@@ -29,7 +36,10 @@ export function ComponentsList({
         </>
       ) : (
         components?.map((component) => (
-          <ComponentCard key={component.id} component={component} />
+          <ComponentCard
+            key={`${component.id}-${component.updated_at}`}
+            component={component}
+          />
         ))
       )}
     </div>

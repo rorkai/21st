@@ -1,11 +1,19 @@
-import { Component, Tag, User } from "@/types/global"
+import {
+  Component,
+  Demo,
+  DemoWithComponent,
+  QuickFilterOption,
+  SortOption,
+  Tag,
+  User,
+} from "@/types/global"
 import {
   UseMutationResult,
   useMutation,
   useQueryClient,
   useQuery,
 } from "@tanstack/react-query"
-import { makeSlugFromName } from "@/components/publish/use-is-check-slug-available"
+import { makeSlugFromName } from "@/components/publish/hooks/use-is-check-slug-available"
 import { SupabaseClient } from "@supabase/supabase-js"
 import { useClerkSupabaseClient } from "./clerk"
 import { Database } from "@/types/supabase"
@@ -13,6 +21,12 @@ import { Database } from "@/types/supabase"
 export const componentReadableDbFields = `
   *,
   user:users!user_id (*)
+`
+
+export const demoReadableDbFields = `
+  *,
+  component:components!component_id (*),
+  user:components!component_id(users!user_id(*))
 `
 
 export async function getComponent(
@@ -220,7 +234,7 @@ export function useLikeMutation(
 
 export async function addTagsToComponent(
   supabase: SupabaseClient<Database>,
-  componentId: number,
+  demoId: number,
   tags: Tag[],
 ) {
   for (const tag of tags) {
@@ -261,11 +275,11 @@ export async function addTagsToComponent(
     }
 
     const { error: linkError } = await supabase
-      .from("component_tags")
-      .insert({ component_id: componentId, tag_id: tagId })
+      .from("demo_tags")
+      .insert({ demo_id: demoId, tag_id: tagId })
 
     if (linkError) {
-      console.error("Error linking tag to component:", linkError)
+      console.error("Error linking tag to demo:", linkError)
     }
   }
 }
@@ -443,4 +457,157 @@ export function useHuntedComponents(username: string) {
     queryFn: () => getHuntedComponents(supabase, username),
     staleTime: Infinity,
   })
+}
+
+export async function getFilteredDemos(
+  supabase: SupabaseClient<Database>,
+  quickFilter: QuickFilterOption,
+  sortBy: SortOption,
+  offset: number,
+  limit: number = 24,
+) {
+  const { data, error } = await supabase
+    .rpc("get_filtered_demos", {
+      p_quick_filter: quickFilter,
+      p_sort_by: sortBy,
+      p_offset: offset,
+      p_limit: limit,
+    })
+    .returns<DemoWithComponent[]>()
+
+  if (error) {
+    console.error("Error fetching demos:", error)
+    throw error
+  }
+
+  return data
+}
+
+export async function getComponentWithDemo(
+  supabase: SupabaseClient<Database>,
+  username: string,
+  componentSlug: string,
+  demoSlug: string = "default",
+): Promise<{
+  data: {
+    component: Component & { user: User }
+    demo: Demo & { tags: Tag[] }
+  } | null
+  error: Error | null
+}> {
+  try {
+    const { data: component, error: componentError } = await supabase
+      .from("components")
+      .select(
+        `
+        *,
+        user:users!components_user_id_fkey(*)
+      `,
+      )
+      .eq("component_slug", componentSlug)
+      .eq("users.username", username)
+      .single()
+
+    if (componentError) throw componentError
+
+    const { data: demo, error: demoError } = await supabase
+      .from("demos")
+      .select(
+        `
+        *,
+        tags:demo_tags(tags(*))
+      `,
+      )
+      .eq("component_id", component.id)
+      .eq("demo_slug", demoSlug)
+      .single()
+
+    if (demoError) throw demoError
+
+    const formattedTags = demo.tags.map((tag: any) => tag.tags)
+
+    return {
+      data: {
+        component: component as Component & { user: User },
+        demo: { ...demo, tags: formattedTags } as Demo & { tags: Tag[] },
+      },
+      error: null,
+    }
+  } catch (error) {
+    console.error("Error in getComponentWithDemo:", error)
+    return {
+      data: null,
+      error:
+        error instanceof Error ? error : new Error("Unknown error occurred"),
+    }
+  }
+}
+
+export async function getDemos(
+  supabase: SupabaseClient<Database>,
+  tagSlug?: string,
+) {
+  const { data, error } = await supabase.rpc("get_demos", {
+    p_tag_slug: tagSlug || undefined,
+  })
+
+  if (error) {
+    console.error("Error fetching demos:", error)
+    return []
+  }
+
+  return (data || []).map((result) => ({
+    ...result,
+    component: {
+      ...(result.component_data as Component),
+      user: result.user_data,
+    } as Component & { user: User },
+  })) as DemoWithComponent[]
+}
+
+export async function getDemosCounts(supabase: SupabaseClient<Database>) {
+  const { data, error } = await supabase.rpc("get_demos_counts")
+
+  if (error) {
+    console.error("Error fetching demos counts:", error)
+    return null
+  }
+
+  return data
+}
+
+export async function getUserDemos(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+) {
+  const { data, error } = await supabase.rpc("get_user_demos", {
+    p_user_id: userId,
+  })
+
+  if (error) {
+    console.error("Error fetching user demos:", error)
+    return []
+  }
+
+  return (data || []).map((result) => ({
+    id: result.id,
+    name: result.name,
+    demo_code: result.demo_code,
+    preview_url: result.preview_url,
+    video_url: result.video_url,
+    compiled_css: result.compiled_css,
+    demo_dependencies: result.demo_dependencies,
+    demo_direct_registry_dependencies: result.demo_direct_registry_dependencies,
+    pro_preview_image_url: result.pro_preview_image_url,
+    created_at: result.created_at,
+    updated_at: result.updated_at,
+    component_id: result.component_id,
+    component: {
+      ...(result.component_data as Component),
+      user: result.user_data,
+    } as Component & { user: User },
+    user_id: result.user_id,
+    fts: result.fts || null,
+    demo_slug: result.demo_slug,
+  })) as DemoWithComponent[]
 }

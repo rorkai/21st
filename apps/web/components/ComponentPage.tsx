@@ -7,7 +7,7 @@ import { atom, useAtom } from "jotai"
 import { useQuery } from "@tanstack/react-query"
 import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs"
 
-import { Component, Tag, User } from "@/types/global"
+import { Component, Demo, Tag, User } from "@/types/global"
 import { PromptType, PROMPT_TYPES } from "@/types/global"
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import { useUpdateComponentWithTags } from "@/lib/queries"
@@ -46,7 +46,7 @@ import { LikeButton } from "./LikeButton"
 import { ThemeToggle } from "./ThemeToggle"
 import { ComponentPagePreview } from "./ComponentPagePreview"
 import { EditComponentDialog } from "./EditComponentDialog"
-import { usePublishAs } from "./publish/use-publish-as"
+import { usePublishAs } from "./publish/hooks/use-publish-as"
 import { Icons } from "@/components/icons"
 
 import {
@@ -248,6 +248,7 @@ const copyToClipboard = async (text: string) => {
 
 export default function ComponentPage({
   component: initialComponent,
+  demo: initialDemo,
   code,
   demoCode,
   dependencies,
@@ -260,6 +261,7 @@ export default function ComponentPage({
   compiledCss,
 }: {
   component: Component & { user: User } & { tags: Tag[] }
+  demo: Demo & { user: User }
   code: string
   demoCode: string
   dependencies: Record<string, string>
@@ -272,13 +274,14 @@ export default function ComponentPage({
   compiledCss?: string
 }) {
   const [component, setComponent] = useState(initialComponent)
+  const [demo, setDemo] = useState(initialDemo)
   const { user } = useUser()
   const supabase = useClerkSupabaseClient()
   const { theme } = useTheme()
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const { isAdmin } = usePublishAs({ username: user?.username ?? "" })
   const { capture } = useSupabaseAnalytics()
-
+  console.log("demo", demo)
   const canEdit = user?.id === component.user_id || isAdmin
 
   const { data: liked } = useQuery({
@@ -400,7 +403,7 @@ export default function ComponentPage({
       const prompt = getComponentInstallPrompt({
         promptType: selectedPromptType as PromptType,
         codeFileName: component.code.split("/").slice(-1)[0]!,
-        demoCodeFileName: component.demo_code.split("/").slice(-1)[0]!,
+        demoCodeFileName: demo.demo_code.split("/").slice(-1)[0]!,
         code,
         demoCode,
         registryDependencies,
@@ -479,7 +482,7 @@ export default function ComponentPage({
       className={`flex flex-col gap-2 rounded-lg h-[98vh] w-full py-4 bg-background text-foreground`}
     >
       <div className="flex justify-between items-center">
-        <div className="flex gap-1 items-center">
+        <div className="flex gap-2 items-center">
           <Tooltip>
             <TooltipTrigger asChild>
               <Link
@@ -495,25 +498,50 @@ export default function ComponentPage({
               <p className="flex items-center gap-1.5">Back to homepage</p>
             </TooltipContent>
           </Tooltip>
-          <ChevronRight size={12} className="text-muted-foreground" />
-          <Link
-            href={`/${component.user.username}`}
-            className="cursor-pointer flex items-center whitespace-nowrap"
-          >
-            <UserAvatar
-              src={component.user.image_url || "/placeholder.svg"}
-              alt={component.user.name}
-              size={20}
-              isClickable={true}
-              user={component.user}
-            />
-          </Link>
-          <ChevronRight size={12} className="text-muted-foreground" />
-          <div className="flex gap-2 items-start">
-            <p className="text-[14px] font-medium whitespace-nowrap">
-              {component.name}
-            </p>
+
+          <div className="flex items-center gap-2">
+            <Icons.slash className="text-[#ffffff24] w-[22px] h-[22px]" />
+            <div className="flex items-center gap-2 min-w-0">
+              <Link
+                href={`/${component.user.username}`}
+                className="cursor-pointer"
+              >
+                <UserAvatar
+                  src={component.user.image_url || "/placeholder.svg"}
+                  alt={component.user.name}
+                  size={22}
+                  isClickable={true}
+                  user={component.user}
+                />
+              </Link>
+              <p className="text-[14px] font-medium whitespace-nowrap">
+                {component.name}
+              </p>
+            </div>
           </div>
+
+          {demo && (
+            <div className="flex items-center gap-2">
+              <Icons.slash className="text-[#ffffff24] w-[22px] h-[22px]" />
+              <div className="flex items-center gap-2 min-w-0">
+                <Link
+                  href={`/${demo.user.username}`}
+                  className="cursor-pointer"
+                >
+                  <UserAvatar
+                    src={demo.user.image_url || "/placeholder.svg"}
+                    alt={demo.user.name}
+                    size={22}
+                    isClickable={true}
+                    user={demo.user}
+                  />
+                </Link>
+                <p className="text-[14px] font-medium whitespace-nowrap">
+                  {demo.name}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-1">
@@ -602,7 +630,7 @@ export default function ComponentPage({
                 <TooltipContent className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
                   <p className="flex items-center gap-1.5">
                     Component code
-                    <kbd className="pointer-events-none h-5 text-muted-foreground select-none items-center gap-1 rounded border bg-muted px-1.5 opacity-100 flex text-[11px] leading-none font-sans">
+                    <kbd className="pointer-events-none text-muted-foreground h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 opacity-100 flex text-[11px] leading-none font-sans">
                       [
                     </kbd>
                   </p>
@@ -760,9 +788,10 @@ export default function ComponentPage({
           }
           tailwindConfig={tailwindConfig}
           globalCss={globalCss}
-          compiledCss={compiledCss}
+          compiledCss={compiledCss ?? undefined}
           canEdit={canEdit}
           setIsEditDialogOpen={setIsEditDialogOpen}
+          demo={demo}
         />
       </div>
       <EditComponentDialog

@@ -1,10 +1,8 @@
 "use client"
 
 import { useState } from "react"
-
 import { Check, Copy } from "lucide-react"
 import { toast } from "sonner"
-
 import { Button } from "@/components/ui/button"
 import {
   Tooltip,
@@ -14,18 +12,27 @@ import {
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { useSupabaseAnalytics } from "@/hooks/use-analytics"
-import { AnalyticsActivityType, Component, User } from "@/types/global"
+import {
+  AnalyticsActivityType,
+  DemoWithComponent,
+  Component,
+  User,
+} from "@/types/global"
 
 export function CopyComponentButton({
   codeUrl,
   component,
 }: {
   codeUrl: string
-  component: Component & { user: User }
+  component: DemoWithComponent | (Component & { user: User })
 }) {
   const [copied, setCopied] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const { capture } = useSupabaseAnalytics()
+
+  const isDemo = "component" in component
+  const componentId = isDemo ? component.component.id : component.id
+  const userId = isDemo ? component.user_id : component.user_id
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -39,11 +46,7 @@ export function CopyComponentButton({
       setCopied(true)
       toast("Copied to clipboard")
       setTimeout(() => setCopied(false), 1500)
-      capture(
-        component.id,
-        AnalyticsActivityType.COMPONENT_CODE_COPY,
-        component.user.id,
-      )
+      capture(componentId, AnalyticsActivityType.COMPONENT_CODE_COPY, userId)
     } catch (err) {
       console.error("Failed to copy code:", err)
       toast.error("Failed to copy code")

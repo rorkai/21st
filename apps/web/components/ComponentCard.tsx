@@ -37,7 +37,7 @@ export function ComponentCard({
   demo,
   isLoading,
 }: {
-  component?: Component & { user: User }
+  component?: DemoWithComponent
   demo?: DemoWithComponent
   isLoading?: boolean
 }) {

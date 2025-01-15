@@ -52,17 +52,15 @@ const useSearchHotkeys = (inputRef: React.RefObject<HTMLInputElement>) => {
   }, [])
 }
 
-interface UserComponentsHeaderProps {
-  publishedComponents?: (Component & { user: User })[]
-  huntedComponents?: (Component & { user: User })[]
-  username: string
-}
-
 export function UserComponentsHeader({
   publishedComponents = [],
   huntedComponents = [],
   username,
-}: UserComponentsHeaderProps) {
+}: {
+  publishedComponents?: (Component & { user: User })[]
+  huntedComponents?: (Component & { user: User })[]
+  username: string
+}) {
   const [activeTab, setActiveTab] = useAtom(userComponentsTabAtom)
   const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom)
   const inputRef = useRef<HTMLInputElement>(null)

@@ -6,31 +6,47 @@ import { Button } from "@/components/ui/button"
 import { Header } from "@/components/Header"
 import { Icons } from "@/components/icons"
 import { UserAvatar } from "@/components/UserAvatar"
-import { UserProfileAnalytics } from "@/components/UserProfileAnalytics"
 import { UserComponentsHeader } from "@/components/UserComponentsHeader"
 import { UserComponentsList } from "@/components/UserComponentsList"
-import { Component, User } from "@/types/global"
 import { appendQueryParam } from "@/lib/utils"
 import { Globe, SquareArrowOutUpRight } from "lucide-react"
+import { trackEvent } from "@/lib/amplitude"
+import { useEffect } from "react"
+import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
+import { Component, User } from "@/types/global"
 
-interface UserProfileClientProps {
-  user: User
-  publishedComponents: (Component & { user: User })[]
-  huntedComponents: (Component & { user: User })[]
+const useProfileAnalytics = ({
+  username,
+  isManuallyAdded,
+}: {
+  username: string | null
+  isManuallyAdded: boolean
+}) => {
+  useEffect(() => {
+    trackEvent(AMPLITUDE_EVENTS.VIEW_USER_PROFILE, {
+      username,
+      isManuallyAdded,
+    })
+  }, [username, isManuallyAdded])
 }
 
 export function UserProfileClient({
   user,
   publishedComponents,
   huntedComponents,
-}: UserProfileClientProps) {
+}: {
+  user: User
+  publishedComponents: (Component & { user: User })[]
+  huntedComponents: (Component & { user: User })[]
+}) {
+  useProfileAnalytics({
+    username: user.username,
+    isManuallyAdded: user.manually_added,
+  })
+
   return (
-    <>
-      <Header page="profile" />
-      <UserProfileAnalytics
-        username={user.username || ""}
-        isManuallyAdded={user.manually_added}
-      />
+    <div key={user.id}>
+      <Header />
       <div className="flex mx-auto px-2 sm:px-4 md:px-16 py-8 mt-20">
         <div className="flex flex-col md:flex-row gap-6 md:gap-16 w-full">
           <div className="flex md:w-[20%] md:min-w-[300px] flex-col items-center w-full">
@@ -144,15 +160,16 @@ export function UserProfileClient({
             <UserComponentsHeader
               publishedComponents={publishedComponents}
               huntedComponents={huntedComponents}
-              username={user.username ?? ''}
+              username={user.username ?? ""}
             />
             <UserComponentsList
+              user={user}
               publishedComponents={publishedComponents}
               huntedComponents={huntedComponents}
             />
           </div>
         </div>
       </div>
-    </>
+    </div>
   )
 }

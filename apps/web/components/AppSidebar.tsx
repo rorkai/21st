@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation"
 import { useAtom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 
-import { ChevronRight, Sparkles } from "lucide-react"
+import { ChevronRight, Sparkles, UsersRound } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import {
   Collapsible,
@@ -88,6 +88,26 @@ export function AppSidebar() {
                 <a href="/pro" className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
                   <span>Pro Components</span>
+                  <Badge className="ml-1.5 text-xs bg-[#adfa1d] text-black px-1.5 rounded-md pointer-events-none select-none">
+                    New
+                  </Badge>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === "/authors"}
+                onClick={() => {
+                  trackEvent(AMPLITUDE_EVENTS.VIEW_SIDEBAR_SECTION, {
+                    sectionTitle: "Authors",
+                    path: "/authors",
+                  })
+                }}
+              >
+                <a href="/authors" className="flex items-center gap-2">
+                  <UsersRound className="w-4 h-4" />
+                  <span>Top Authors</span>
                   <Badge className="ml-1.5 text-xs bg-[#adfa1d] text-black px-1.5 rounded-md pointer-events-none select-none">
                     New
                   </Badge>
@@ -181,12 +201,13 @@ export function AppSidebar() {
       </SidebarContent>
       <div className="fixed bottom-0 left-0 w-[240px] z-50">
         <News
+          enableShowCompleted={false}
           articles={[
             {
               href: "https://www.producthunt.com/posts/21st-dev-2",
               title: "We're on Product Hunt! 🎉",
               summary:
-                "Help us become Product of the Week by upvoting. Your support means a lot!",
+                "Help us become Product of the Month by upvoting. Your support means a lot!",
               image: "/product-of-the-day.png",
             },
           ]}

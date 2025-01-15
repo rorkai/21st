@@ -161,6 +161,10 @@ export async function GET(
               .replace(/}\s*}/g, "}") // Remove whitespace between closing braces
               .replace(/}(?!}|$)/g, "},") // Add commas between objects where missing
               .replace(/,+/g, ",") // Remove any remaining multiple commas
+              // Quote unquoted property names, but skip already quoted ones
+              .replace(/([{,]\s*)(?!")([a-zA-Z0-9-]+):/g, '$1"$2":')
+              // Remove any remaining trailing commas
+              .replace(/,(\s*})/g, "$1")
               .trim()
 
             // Count opening and closing braces

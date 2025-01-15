@@ -3,7 +3,7 @@ import { notFound } from "next/navigation"
 import { SupabaseClient } from "@supabase/supabase-js"
 
 import { Header } from "@/components/Header"
-import { getComponents, getDemos } from "@/lib/queries"
+import { getDemos } from "@/lib/queries"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { Database } from "@/types/supabase"
 import { TagPageContent } from "./page.client"

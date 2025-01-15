@@ -6,6 +6,7 @@ import { getComponent, getComponentWithDemo, getUserData } from "@/lib/queries"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 import { extractDemoComponentNames } from "@/lib/parsers"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
+import { Demo, User } from "@/types/global"
 
 const ComponentPage = dynamic(() => import("@/components/ComponentPage"), {
   ssr: false,
@@ -119,16 +120,17 @@ const fetchFileTextContent = async (url: string) => {
 export default async function ComponentPageServer({
   params,
 }: {
-  params: { username: string; component_slug: string; demo_id?: string }
+  params: { username: string; component_slug: string; demo_slug?: string }
 }) {
-  const { username, component_slug, demo_id } = params
+  const { username, component_slug } = params
+  const demo_slug = params.demo_slug || "default"
 
   try {
     const { data, error } = await getComponentWithDemo(
       supabaseWithAdminAccess,
       username,
       component_slug,
-      demo_id ? parseInt(demo_id) : undefined,
+      demo_slug,
     )
 
     if (error || !data) {
@@ -233,7 +235,11 @@ export default async function ComponentPageServer({
       <div className="w-full">
         <ComponentPage
           component={{ ...component, user: component.user, tags: demo.tags }}
-          demo={demo}
+          demo={
+            { ...demo, user: component.user } as Demo & {
+              user: User
+            }
+          }
           code={codeResult?.data as string}
           demoCode={demoResult?.data as string}
           dependencies={dependencies}

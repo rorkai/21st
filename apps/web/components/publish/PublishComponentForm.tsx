@@ -588,7 +588,22 @@ export default function PublishComponentForm() {
 
     const newDemos = demos.filter((_, i) => i !== index)
 
-    // If we're deleting the currently open demo
+    if (index === 0 && newDemos.length > 0) {
+      const firstDemo = newDemos[0]!
+      newDemos[0] = {
+        name: firstDemo.name || "Default",
+        demo_slug: "default",
+        demo_code: firstDemo.demo_code,
+        preview_image_data_url: firstDemo.preview_image_data_url,
+        preview_image_file: firstDemo.preview_image_file,
+        tags: firstDemo.tags,
+        demo_direct_registry_dependencies:
+          firstDemo.demo_direct_registry_dependencies,
+        preview_video_data_url: firstDemo.preview_video_data_url,
+        preview_video_file: firstDemo.preview_video_file,
+      }
+    }
+
     if (
       openAccordion === `demo-${index}` ||
       (index === 0 && openAccordion === "demo-info")
@@ -597,10 +612,8 @@ export default function PublishComponentForm() {
       setCurrentDemoIndex(newIndex)
       setOpenAccordion(newIndex === 0 ? "demo-info" : `demo-${newIndex}`)
     } else if (openAccordion.startsWith("demo-")) {
-      // If we have another demo open, update its index if needed
       const openIndex = parseInt(openAccordion.replace("demo-", ""))
       if (openIndex > index) {
-        // The open demo's index needs to shift down by 1
         setOpenAccordion(`demo-${openIndex - 1}`)
         if (currentDemoIndex === openIndex) {
           setCurrentDemoIndex(openIndex - 1)
@@ -608,7 +621,6 @@ export default function PublishComponentForm() {
       }
     }
 
-    // Update form after state changes
     setTimeout(() => {
       form.setValue("demos", newDemos)
       setDemoToDelete(null)

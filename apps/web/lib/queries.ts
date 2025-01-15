@@ -487,7 +487,7 @@ export async function getComponentWithDemo(
   supabase: SupabaseClient<Database>,
   username: string,
   componentSlug: string,
-  demoId?: number,
+  demoSlug: string = "default",
 ): Promise<{
   data: {
     component: Component & { user: User }
@@ -496,58 +496,40 @@ export async function getComponentWithDemo(
   error: Error | null
 }> {
   try {
-    const { data: componentData, error: componentError } = await supabase
+    const { data: component, error: componentError } = await supabase
       .from("components")
       .select(
         `
         *,
-        user:users!components_user_id_fkey(*),
-        demos(*)
+        user:users!components_user_id_fkey(*)
       `,
       )
       .eq("component_slug", componentSlug)
-      .eq("user.username", username)
-      .eq("is_public", true)
-      .not("user", "is", null)
+      .eq("users.username", username)
       .single()
 
-    if (componentError) {
-      console.error("Error fetching component:", componentError)
-      return { data: null, error: new Error(componentError.message) }
-    }
+    if (componentError) throw componentError
 
-    if (!componentData || !componentData.demos?.length) {
-      return { data: null, error: new Error("Component or demos not found") }
-    }
-
-    const targetDemoId =
-      demoId || Math.min(...componentData.demos.map((d) => d.id))
-
-    const { data: demoData, error: demoError } = await supabase
+    const { data: demo, error: demoError } = await supabase
       .from("demos")
       .select(
         `
         *,
-        tags:demo_tags(
-          tag:tags(*)
-        )
+        tags:demo_tags(tags(*))
       `,
       )
-      .eq("id", targetDemoId)
+      .eq("component_id", component.id)
+      .eq("demo_slug", demoSlug)
       .single()
 
-    if (demoError) {
-      console.error("Error fetching demo:", demoError)
-      return { data: null, error: new Error(demoError.message) }
-    }
+    if (demoError) throw demoError
+
+    const formattedTags = demo.tags.map((tag: any) => tag.tags)
 
     return {
       data: {
-        component: componentData as Component & { user: User },
-        demo: {
-          ...demoData,
-          tags: demoData.tags.map((tagRelation: any) => tagRelation.tag),
-        },
+        component: component as Component & { user: User },
+        demo: { ...demo, tags: formattedTags } as Demo & { tags: Tag[] },
       },
       error: null,
     }
@@ -575,22 +557,11 @@ export async function getDemos(
   }
 
   return (data || []).map((result) => ({
-    id: result.id,
-    name: result.name,
-    demo_code: result.demo_code,
-    preview_url: result.preview_url,
-    video_url: result.video_url,
-    compiled_css: result.compiled_css,
-    demo_dependencies: result.demo_dependencies,
-    demo_direct_registry_dependencies: result.demo_direct_registry_dependencies,
-    pro_preview_image_url: result.pro_preview_image_url,
-    created_at: result.created_at,
-    updated_at: result.updated_at,
-    component_id: result.component_id,
-    component: result.component_data as Component,
-    user: result.user_data as User,
-    user_id: (result.component_data as Component).user_id,
-    fts: result.fts || null,
+    ...result,
+    component: {
+      ...(result.component_data as Component),
+      user: result.user_data,
+    } as Component & { user: User },
   })) as DemoWithComponent[]
 }
 
@@ -631,9 +602,12 @@ export async function getUserDemos(
     created_at: result.created_at,
     updated_at: result.updated_at,
     component_id: result.component_id,
-    component: result.component_data as Component,
-    user: result.user_data as User,
+    component: {
+      ...(result.component_data as Component),
+      user: result.user_data,
+    } as Component & { user: User },
     user_id: result.user_id,
     fts: result.fts || null,
+    demo_slug: result.demo_slug,
   })) as DemoWithComponent[]
 }

@@ -72,7 +72,7 @@ export function EditComponentDialog({
 
   const uploadToR2Mutation = useMutation({
     mutationFn: async ({ file, fileKey }: { file: File; fileKey: string }) => {
-      const actualFileKey = `${component.user.id}/${fileKey}`
+      const actualFileKey = `${componentData.user.id}/${fileKey}`
       const buffer = Buffer.from(await file.arrayBuffer())
       const base64Content = buffer.toString("base64")
       return uploadToR2({

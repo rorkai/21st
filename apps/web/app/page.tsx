@@ -2,7 +2,14 @@ import React from "react"
 import { Metadata } from "next"
 import { cookies } from "next/headers"
 
-import { Component, QuickFilterOption, SortOption, User } from "@/types/global"
+import {
+  Component,
+  QuickFilterOption,
+  SortOption,
+  User,
+  Demo,
+  DemoWithComponent,
+} from "@/types/global"
 import { Tables } from "@/types/supabase"
 
 import { supabaseWithAdminAccess } from "@/lib/supabase"
@@ -92,47 +99,51 @@ export default async function HomePage() {
     ? (savedQuickFilter as QuickFilterOption)
     : defaultQuickFilter
 
-  const orderByFields: [keyof Tables<"components">, { ascending: boolean }] =
-    (() => {
-      switch (sortByPreference) {
-        case "downloads":
-          return ["downloads_count", { ascending: false }]
-        case "likes":
-          return ["likes_count", { ascending: false }]
-        case "date":
-          return ["created_at", { ascending: false }]
-      }
-    })()
+  const orderByFields: [string, string] = (() => {
+    switch (sortByPreference) {
+      case "downloads":
+        return ["component(downloads_count)", "desc"]
+      case "likes":
+        return ["component(likes_count)", "desc"]
+      case "date":
+        return ["created_at", "desc"]
+    }
+  })()
 
-  const { data: initialComponents, error: componentsError } =
+  const { data: initialDemos, error: demosError } =
     await supabaseWithAdminAccess
-      .from("components")
-      .select("*, user:users!user_id (*)", { count: "exact" })
+      .from("demos")
+      .select(
+        "*, component:components!demos_component_id_fkey(*, user:users!user_id(*))",
+      )
       .limit(40)
-      .eq("is_public", true)
-      .order(...orderByFields)
-      .returns<(Component & { user: User })[]>()
+      .order(orderByFields[0], { ascending: orderByFields[1] === "desc" })
+      .returns<DemoWithComponent[]>()
 
-  if (componentsError) {
+  console.log("Initial demos:", initialDemos)
+
+  if (demosError) {
+    console.error("Demos error:", demosError)
     return null
   }
 
-  if (shouldShowHero) {
-    return (
-      <>
-        <HeroSection />
-        <NewsletterDialog />
-      </>
-    )
-  }
-
-  const initialFilteredSortedComponents = sortComponents(
-    filterComponents(initialComponents, defaultQuickFilter),
+  const initialFilteredSortedDemos = sortComponents(
+    filterComponents(
+      initialDemos.map((demo) => ({
+        ...demo.component,
+        user: demo.component.user,
+      })),
+      defaultQuickFilter,
+    ),
     sortByPreference,
-  ).map((comp) => ({
-    ...comp,
-    user: comp.user,
-  })) as (Component & { user: User })[]
+  ).map((comp) => {
+    const demo = initialDemos.find((d) => d.component_id === comp.id)
+    return {
+      ...demo,
+      component: comp,
+      user: demo?.component.user,
+    }
+  }) as DemoWithComponent[]
 
   const { data: initialTabsCountsData, error: initialTabsCountsError } =
     await supabaseWithAdminAccess.rpc("get_components_counts")
@@ -152,11 +163,20 @@ export default async function HomePage() {
           most_downloaded: 0,
         }
 
+  if (shouldShowHero) {
+    return (
+      <>
+        <HeroSection />
+        <NewsletterDialog />
+      </>
+    )
+  }
+
   return (
     <>
       <Header variant="default" />
       <HomePageClient
-        initialComponents={initialFilteredSortedComponents}
+        initialComponents={initialFilteredSortedDemos}
         initialSortBy={sortByPreference}
         initialQuickFilter={quickFilterPreference}
         initialTabsCounts={initialTabsCounts}

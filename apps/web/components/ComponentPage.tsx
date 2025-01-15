@@ -261,7 +261,7 @@ export default function ComponentPage({
   compiledCss,
 }: {
   component: Component & { user: User } & { tags: Tag[] }
-  demo: Demo
+  demo: Demo & { user: User }
   code: string
   demoCode: string
   dependencies: Record<string, string>
@@ -281,7 +281,7 @@ export default function ComponentPage({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const { isAdmin } = usePublishAs({ username: user?.username ?? "" })
   const { capture } = useSupabaseAnalytics()
-
+  console.log("demo", demo)
   const canEdit = user?.id === component.user_id || isAdmin
 
   const { data: liked } = useQuery({
@@ -499,23 +499,52 @@ export default function ComponentPage({
             </TooltipContent>
           </Tooltip>
           <ChevronRight size={12} className="text-muted-foreground" />
-          <Link
-            href={`/${component.user.username}`}
-            className="cursor-pointer flex items-center whitespace-nowrap"
-          >
-            <UserAvatar
-              src={component.user.image_url || "/placeholder.svg"}
-              alt={component.user.name}
-              size={20}
-              isClickable={true}
-              user={component.user}
-            />
-          </Link>
-          <ChevronRight size={12} className="text-muted-foreground" />
-          <div className="flex gap-2 items-start">
-            <p className="text-[14px] font-medium whitespace-nowrap">
-              {component.name}
-            </p>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/${component.user.username}`}
+                className="cursor-pointer flex items-center whitespace-nowrap"
+              >
+                <UserAvatar
+                  src={component.user.image_url || "/placeholder.svg"}
+                  alt={component.user.name}
+                  size={20}
+                  isClickable={true}
+                  user={component.user}
+                />
+              </Link>
+              <div className="flex gap-2 items-start">
+                <p className="text-[14px] font-medium whitespace-nowrap">
+                  {component.name}
+                </p>
+              </div>
+            </div>
+
+            {demo && demo.name !== "Default" && (
+              <>
+                <span className="text-muted-foreground">/</span>
+
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/${demo.user.username}`}
+                    className="cursor-pointer flex items-center whitespace-nowrap"
+                  >
+                    <UserAvatar
+                      src={demo.user.image_url || "/placeholder.svg"}
+                      alt={demo.user.name}
+                      size={20}
+                      isClickable={true}
+                      user={demo.user}
+                    />
+                  </Link>
+                  <div className="flex gap-2 items-start">
+                    <p className="text-[14px] font-medium whitespace-nowrap text-muted-foreground">
+                      {demo.name}
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 

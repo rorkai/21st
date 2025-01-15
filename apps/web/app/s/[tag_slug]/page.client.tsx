@@ -62,7 +62,7 @@ export function TagPageContent({
 
         const componentsForFilter = filtered.map((d) => ({
           ...d.component,
-          user: d.user,
+          user: d.component.user,
         }))
         const filteredComponents = filterComponents(
           componentsForFilter,

@@ -42,11 +42,12 @@ const useSetServerUserDataCookies = () => {
 }
 
 export function HomePageClient({
+  initialComponents,
   initialSortBy,
   initialQuickFilter,
   initialTabsCounts,
 }: {
-  initialComponents: (Component & { user: User })[]
+  initialComponents: DemoWithComponent[]
   initialSortBy: SortOption
   initialQuickFilter: QuickFilterOption
   initialTabsCounts: Record<QuickFilterOption, number>
@@ -113,15 +114,14 @@ export function HomePageClient({
               compiled_css: result.compiled_css,
               demo_dependencies: result.demo_dependencies,
               demo_direct_registry_dependencies:
-              result.demo_direct_registry_dependencies,
-              pro_preview_image_url: result.pro_preview_image_url,
+                result.demo_direct_registry_dependencies,
+              demo_slug: result.demo_slug,
+              component: {
+                ...(result.component_data as Component),
+                user: result.user_data,
+              } as Component & { user: User },
               created_at: result.created_at,
               updated_at: result.updated_at,
-              component_id: result.component_id,
-              component: result.component_data as Component,
-              user: result.user_data as User,
-              user_id: (result.component_data as Component).user_id,
-              fts: result.fts || null,
             })) as DemoWithComponent[],
             total_count: filteredData?.[0]?.total_count ?? 0,
           }
@@ -137,29 +137,23 @@ export function HomePageClient({
         if (error) throw new Error(error.message)
 
         const demos = (searchResults || []).map((result) => ({
-          id: result.id,
-          name: result.name,
-          demo_code: result.demo_code,
-          preview_url: result.preview_url,
-          video_url: result.video_url,
-          compiled_css: result.compiled_css,
-          demo_dependencies: result.demo_dependencies,
-          demo_direct_registry_dependencies:
-            result.demo_direct_registry_dependencies,
-          pro_preview_image_url: result.pro_preview_image_url,
-          created_at: result.created_at,
-          updated_at: result.updated_at,
-          component_id: result.component_id,
-          component: result.component_data as Component,
-          user: result.user_data as User,
-          user_id: result.user_id,
-          fts: result.fts || null,
+          ...result,
+          component: {
+            ...(result.component_data as Component),
+            user: result.user_data,
+          } as Component & { user: User },
         })) as DemoWithComponent[]
 
         return {
           data: demos,
           total_count: demos.length,
         }
+      },
+      initialData: {
+        pages: [
+          { data: initialComponents, total_count: initialComponents.length },
+        ],
+        pageParams: [0],
       },
       enabled: true,
       staleTime: 1000 * 60 * 5,

@@ -50,8 +50,11 @@ export function UserComponentsList({
           ("description" in component
             ? component.description?.toLowerCase().includes(query)
             : false) ||
-          component.user.name?.toLowerCase().includes(query) ||
-          component.user.username?.toLowerCase().includes(query)
+          ("component" in component
+            ? component.component.user.name?.toLowerCase().includes(query) ||
+              component.component.user.username?.toLowerCase().includes(query)
+            : component.user.name?.toLowerCase().includes(query) ||
+              component.user.username?.toLowerCase().includes(query))
         )
       })
     },

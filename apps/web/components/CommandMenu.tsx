@@ -142,22 +142,13 @@ export function CommandMenu() {
       if (error) throw new Error(error.message)
 
       return searchResults.map((result) => ({
-        id: result.id,
-        name: result.name,
-        demo_code: result.demo_code,
-        preview_url: result.preview_url,
-        video_url: result.video_url,
-        compiled_css: result.compiled_css,
-        demo_dependencies: result.demo_dependencies,
-        demo_direct_registry_dependencies:
-          result.demo_direct_registry_dependencies,
-        pro_preview_image_url: result.pro_preview_image_url,
-        created_at: result.created_at,
-        updated_at: result.updated_at,
-        component_id: result.component_id,
-        user_id: result.user_id,
-        component: result.component_data as Component,
-        user: result.user_data as User,
+        ...result,
+        component: {
+          ...(result.component_data as Component),
+          user: result.user_data,
+        } as Component & { user: User },
+        demo_slug: result.demo_slug,
+        fts: result.fts || null,
       })) as DemoWithComponent[]
     },
   })
@@ -241,7 +232,7 @@ export function CommandMenu() {
         resolveRegistryDependencyTree({
           supabase: supabase,
           sourceDependencySlugs: [
-            `${selectedComponent.user.username}/${selectedComponent.component.component_slug}`,
+            `${selectedComponent.component.user.username}/${selectedComponent.component.component_slug}`,
           ],
           withDemoDependencies: false,
         }),
@@ -303,7 +294,7 @@ export function CommandMenu() {
   const handleOpen = () => {
     if (value.startsWith("component-") && selectedComponent) {
       router.push(
-        `/${selectedComponent.user.username}/${selectedComponent.component.component_slug}/${selectedComponent.id}`,
+        `/${selectedComponent.component.user.username}/${selectedComponent.component.component_slug}/${selectedComponent.demo_slug}`,
       )
     } else if (value.startsWith("section-")) {
       const section = filteredSections
@@ -426,7 +417,7 @@ export function CommandMenu() {
                       >
                         <span className="truncate">{component.name}</span>
                         <span className="text-xs text-muted-foreground">
-                          by {component.user.username}
+                          by {component.component.user.username}
                         </span>
                       </CommandItem>
                     ))}

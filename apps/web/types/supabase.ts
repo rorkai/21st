@@ -788,6 +788,7 @@ export type Database = {
           downloads_count: number
           likes_count: number
           fts: unknown
+          demo_slug: string
         }[]
       }
       get_demos_counts: {
@@ -855,6 +856,7 @@ export type Database = {
           tags: Json
           total_count: number
           fts: unknown
+          demo_slug: string
         }[]
       }
       get_random_components: {
@@ -921,6 +923,7 @@ export type Database = {
           downloads_count: number
           likes_count: number
           fts: unknown
+          demo_slug: string
         }[]
       }
       increment: {
@@ -984,6 +987,7 @@ export type Database = {
           downloads_count: number
           likes_count: number
           fts: unknown
+          demo_slug: string
         }[]
       }
       update_component_dependencies_closure:

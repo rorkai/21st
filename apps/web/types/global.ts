@@ -9,8 +9,7 @@ export type Tag = Tables<"tags">
 export type Demo = Tables<"demos">
 
 export type DemoWithComponent = Demo & {
-  component: Component
-  user: User
+  component: Component & { user: User }
 }
 
 export type DemoWithUser = Demo & {

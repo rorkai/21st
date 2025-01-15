@@ -12,6 +12,7 @@ import ComponentPreviewImage from "./ComponentPreviewImage"
 import { ComponentVideoPreview } from "./ComponentVideoPreview"
 import { CopyComponentButton } from "./CopyComponentButton"
 import { UserAvatar } from "./UserAvatar"
+import { cn } from "@/lib/utils"
 
 export function ComponentCardSkeleton() {
   return (
@@ -20,7 +21,7 @@ export function ComponentCardSkeleton() {
         <div className="absolute inset-0 rounded-lg overflow-hidden bg-muted" />
       </div>
       <div className="flex items-center space-x-3">
-        <div className="w-6 h-6 rounded-full bg-muted" />
+        <div className="w-8 h-8 rounded-full bg-muted" />
         <div className="flex items-center justify-between flex-grow min-w-0">
           <div className="min-w-0 flex-1 mr-3">
             <div className="h-4 bg-muted rounded w-3/4" />
@@ -44,20 +45,29 @@ export function ComponentCard({
   }
 
   const isDemo = "component" in component
+  const userData = isDemo ? component.component.user : component.user
 
-  const userData = isDemo
-    ? (component as DemoWithComponent).user
-    : (component as Component & { user: User }).user
+  if (!userData) {
+    return <ComponentCardSkeleton />
+  }
 
   const componentUrl = isDemo
-    ? `/${userData.username}/${(component as DemoWithComponent).component.component_slug}/${component.id}`
-    : `/${userData.username}/${(component as Component & { user: User }).component_slug}`
+    ? `/${userData.username}/${component.component.component_slug}/${component.demo_slug || `demo-${component.id}`}`
+    : `/${userData.username}/${component.component_slug}`
+
+  console.log({
+    isDemo,
+    component,
+    demoSlug: isDemo ? component.demo_slug : null,
+    componentSlug: isDemo
+      ? component.component.component_slug
+      : component.component_slug,
+    username: userData.username,
+  })
 
   const supabase = useClerkSupabaseClient()
 
-  const componentId = isDemo
-    ? (component as DemoWithComponent).component.id
-    : (component as Component & { user: User }).id
+  const componentId = isDemo ? component.component.id : component.id
 
   const { data: analytics } = useQuery({
     queryKey: ["component-analytics", componentId],
@@ -74,21 +84,13 @@ export function ComponentCard({
     refetchOnWindowFocus: false,
   })
 
-  const name = isDemo
-    ? (component as DemoWithComponent).name
-    : (component as Component & { user: User }).name
+  const videoUrl = isDemo ? component.video_url : component.video_url
 
-  const videoUrl = isDemo
-    ? (component as DemoWithComponent).video_url
-    : (component as Component & { user: User }).video_url
-
-  const codeUrl = isDemo
-    ? (component as DemoWithComponent).component.code
-    : (component as Component & { user: User }).code
+  const codeUrl = isDemo ? component.component.code : component.code
 
   const likesCount = isDemo
-    ? (component as DemoWithComponent).component.likes_count
-    : (component as Component & { user: User }).likes_count
+    ? component.component.likes_count
+    : component.likes_count
 
   return (
     <div className="overflow-hidden">
@@ -101,16 +103,10 @@ export function ComponentCard({
                 <ComponentPreviewImage
                   src={
                     isDemo
-                      ? (component as DemoWithComponent).preview_url ||
-                        "/placeholder.svg"
-                      : (component as Component & { user: User }).preview_url ||
-                        "/placeholder.svg"
+                      ? component.preview_url || "/placeholder.svg"
+                      : component.preview_url || "/placeholder.svg"
                   }
-                  alt={
-                    isDemo
-                      ? (component as DemoWithComponent).name || ""
-                      : (component as Component & { user: User }).name || ""
-                  }
+                  alt={isDemo ? component.name || "" : component.name || ""}
                   fallbackSrc="/placeholder.svg"
                   className="w-full h-full object-cover"
                 />
@@ -131,11 +127,11 @@ export function ComponentCard({
           )}
         </div>
       </Link>
-      <div className="flex items-center space-x-3">
+      <div className="flex space-x-3 items-center">
         <UserAvatar
           src={userData.image_url || "/placeholder.svg"}
           alt={userData.name}
-          size={24}
+          size={32}
           user={userData}
           isClickable
         />
@@ -144,9 +140,16 @@ export function ComponentCard({
             href={componentUrl}
             className="block cursor-pointer min-w-0 flex-1 mr-3"
           >
-            <h2 className="text-sm font-medium text-foreground truncate">
-              {name}
-            </h2>
+            <div className="flex flex-col min-w-0">
+              <h2 className="text-sm font-medium text-foreground truncate">
+                {isDemo ? component.component.name : component.name}
+              </h2>
+              {isDemo && component.name !== "Default" && (
+                <p className="text-sm text-muted-foreground truncate">
+                  {component.name}
+                </p>
+              )}
+            </div>
           </Link>
           <div className="flex items-center gap-3">
             <div className="flex items-center text-xs text-muted-foreground whitespace-nowrap shrink-0 gap-1">

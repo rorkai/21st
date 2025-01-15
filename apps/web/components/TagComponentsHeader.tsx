@@ -33,7 +33,7 @@ const getFilteredCount = (
 ) => {
   if (!demos) return 0
   return filterComponents(
-    demos.map((d) => ({ ...d.component, user: d.user })),
+    demos.map((d) => ({ ...d.component, user: d.component.user })),
     filter,
   ).length
 }

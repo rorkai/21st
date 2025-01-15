@@ -56,7 +56,11 @@ export function NameSlugStep({
               height={90}
             >
               <div
-                className="flex items-center gap-1.5 rounded-full border border-border/40 bg-background/50 px-2.5 h-8 text-xs font-medium text-muted-foreground hover:text-accent-foreground"
+                className="flex items-center gap-1.5 rounded-full border
+                bg-background/50 px-2.5 h-8 text-xs font-medium 
+                text-muted-foreground hover:text-accent-foreground 
+                hover:border-accent-foreground/50 hover:bg-accent-foreground/10
+                hover:shadow-md"
                 onMouseEnter={() => controls.start("animate")}
                 onMouseLeave={() => controls.start("normal")}
               >

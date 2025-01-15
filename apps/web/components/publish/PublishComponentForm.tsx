@@ -403,7 +403,7 @@ export default function PublishComponentForm() {
           pro_preview_image_url: null,
           name: demo.name,
           demo_direct_registry_dependencies:
-          demo.demo_direct_registry_dependencies || null,
+            demo.demo_direct_registry_dependencies || null,
           user_id: publishAsUser.id,
           fts: null,
         }
@@ -632,8 +632,14 @@ export default function PublishComponentForm() {
     ])
 
     setCurrentDemoIndex(newDemoIndex)
-    setOpenAccordion(`demo-${newDemoIndex}`)
     handleStepChange("demoCode")
+    setOpenAccordion(`demo-${newDemoIndex}`)
+
+    console.log("Added new demo:", {
+      newDemoIndex,
+      totalDemos: demos.length + 1,
+      currentDemoCode: form.getValues().demos[newDemoIndex]?.demo_code,
+    })
   }
 
   const isDemoComplete = (demoIndex: number) => {
@@ -653,9 +659,14 @@ export default function PublishComponentForm() {
 
   const handleDeleteDemo = (index: number) => {
     const demos = form.getValues().demos
+    // Don't allow deleting if it's the last demo
+    if (demos.length <= 1) {
+      return
+    }
+
     const newDemos = demos.filter((_, i) => i !== index)
 
-    // If we're deleting the currently open demo, switch to the previous one
+    // If we're deleting the currently open demo
     if (
       openAccordion === `demo-${index}` ||
       (index === 0 && openAccordion === "demo-info")
@@ -663,9 +674,16 @@ export default function PublishComponentForm() {
       const newIndex = Math.max(0, index - 1)
       setCurrentDemoIndex(newIndex)
       setOpenAccordion(newIndex === 0 ? "demo-info" : `demo-${newIndex}`)
-    } else if (currentDemoIndex >= index) {
-      // If we're deleting a demo before the current one, update the index
-      setCurrentDemoIndex(Math.max(0, currentDemoIndex - 1))
+    } else if (openAccordion.startsWith("demo-")) {
+      // If we have another demo open, update its index if needed
+      const openIndex = parseInt(openAccordion.replace("demo-", ""))
+      if (openIndex > index) {
+        // The open demo's index needs to shift down by 1
+        setOpenAccordion(`demo-${openIndex - 1}`)
+        if (currentDemoIndex === openIndex) {
+          setCurrentDemoIndex(openIndex - 1)
+        }
+      }
     }
 
     // Update form after state changes
@@ -675,55 +693,27 @@ export default function PublishComponentForm() {
     }, 0)
   }
 
+  const handleAccordionChange = useCallback(
+    (value: string | undefined) => {
+      console.log("Accordion change:", { value, currentDemoIndex })
+      setOpenAccordion(value || "")
+      if (value === "demo-info") {
+        setCurrentDemoIndex(0)
+      } else if (value?.startsWith("demo-")) {
+        const index = parseInt(value.replace("demo-", ""))
+        if (!isNaN(index)) {
+          setCurrentDemoIndex(index)
+        }
+      }
+    },
+    [setOpenAccordion, setCurrentDemoIndex],
+  )
+
   useEffect(() => {
     if (isComponentInfoComplete()) {
       setOpenAccordion("demo-info")
     }
   }, [isComponentInfoComplete])
-
-  useEffect(() => {
-    const demos = form.watch("demos")
-    const currentDemo = demos[currentDemoIndex]
-    if (currentDemo?.demo_code) {
-      setOpenAccordion(
-        currentDemoIndex === 0 ? "demo-info" : `demo-${currentDemoIndex}`,
-      )
-    }
-  }, [currentDemoIndex, form.watch("demos")])
-
-  const handleAccordionChange = useCallback(
-    (value: string | undefined) => {
-      console.log("Accordion change:", { value, currentDemoIndex })
-
-      // First update the accordion
-      setOpenAccordion(value || "")
-
-      // Then update the demo index after a small delay
-      setTimeout(() => {
-        if (value === "demo-info") {
-          console.log("Setting demo index to 0")
-          setCurrentDemoIndex(0)
-        } else if (value?.startsWith("demo-")) {
-          const index = parseInt(value.replace("demo-", ""))
-          if (!isNaN(index)) {
-            console.log("Setting demo index to", index)
-            setCurrentDemoIndex(index)
-          }
-        }
-      }, 0)
-
-      console.log("New state:", {
-        openAccordion: value,
-        currentDemoIndex:
-          value === "demo-info"
-            ? 0
-            : value?.startsWith("demo-")
-              ? parseInt(value.replace("demo-", ""))
-              : currentDemoIndex,
-      })
-    },
-    [setOpenAccordion, setCurrentDemoIndex, currentDemoIndex],
-  )
 
   return (
     <>
@@ -940,7 +930,7 @@ export default function PublishComponentForm() {
               publishProgress={publishProgress}
               onAddDemo={handleAddNewDemo}
             />
-            <div className="flex gap-8 w-full h-[calc(100vh-3rem)] overflow-hidden">
+            <div className="flex gap-1 w-full h-[calc(100vh-3rem)] overflow-hidden">
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -1028,133 +1018,76 @@ export default function PublishComponentForm() {
                       </AccordionContent>
                     </AccordionItem>
 
-                    <AccordionItem
-                      value="demo-info"
-                      className="bg-background border-none"
-                    >
-                      <AccordionTrigger className="py-2 text-[15px] leading-6 hover:no-underline hover:bg-muted/50 rounded-md data-[state=open]:rounded-b-none transition-all duration-200 ease-in-out -mx-2 px-2">
-                        <div className="flex items-center gap-2">
-                          Demo
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              "gap-1.5 text-xs font-medium",
-                              isDemoInfoComplete()
-                                ? "border-emerald-500/20"
-                                : "border-amber-500/20",
-                            )}
-                          >
-                            <span
-                              className={cn(
-                                "size-1.5 rounded-full",
-                                isDemoInfoComplete()
-                                  ? "bg-emerald-500"
-                                  : "bg-amber-500",
-                              )}
-                              aria-hidden="true"
-                            />
-                            {isDemoInfoComplete() ? "Complete" : "Required"}
-                          </Badge>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground">
-                        <div className="text-foreground space-y-4">
-                          <DemoDetailsForm form={form} />
-                          <EditCodeFileCard
-                            iconSrc={
-                              isDarkTheme
-                                ? "/demo-file-dark.svg"
-                                : "/demo-file.svg"
-                            }
-                            mainText="Demo code"
-                            subText={`${parsedCode.demoComponentNames.slice(0, 2).join(", ")}${
-                              parsedCode.demoComponentNames.length > 2
-                                ? ` +${parsedCode.demoComponentNames.length - 2}`
-                                : ""
-                            }`}
-                            onEditClick={() => {
-                              handleStepChange("demoCode")
-                              setTimeout(() => {
-                                demoCodeTextAreaRef.current?.focus()
-                              }, 0)
-                            }}
-                          />
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-
-                    {demos?.map(
-                      (_, index) =>
-                        index > 0 && (
-                          <AccordionItem
-                            key={index}
-                            value={`demo-${index}`}
-                            className="bg-background border-none group"
-                          >
-                            <AccordionTrigger className="py-2 text-[15px] leading-6 hover:no-underline hover:bg-muted/50 rounded-md data-[state=open]:rounded-b-none transition-all duration-200 ease-in-out -mx-2 px-2">
-                              <div className="flex items-center gap-2 w-full">
-                                <div className="flex items-center gap-2 flex-1">
-                                  Demo {index + 1}
-                                  <Badge
-                                    variant="outline"
-                                    className={cn(
-                                      "gap-1.5 text-xs font-medium",
-                                      isDemoComplete(index)
-                                        ? "border-emerald-500/20"
-                                        : "border-amber-500/20",
-                                    )}
-                                  >
-                                    <span
-                                      className={cn(
-                                        "size-1.5 rounded-full",
-                                        isDemoComplete(index)
-                                          ? "bg-emerald-500"
-                                          : "bg-amber-500",
-                                      )}
-                                      aria-hidden="true"
-                                    />
-                                    {isDemoComplete(index)
-                                      ? "Complete"
-                                      : "Required"}
-                                  </Badge>
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 ml-auto mr-1"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    const demo = form.getValues().demos[index]
-                                    setDemoToDelete({
-                                      index,
-                                      name: demo?.name || `Demo ${index + 1}`,
-                                    })
-                                  }}
-                                >
-                                  <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive transition-colors" />
-                                </Button>
-                              </div>
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="text-foreground space-y-4">
-                                <DemoDetailsForm form={form} />
-                                <EditCodeFileCard
-                                  iconSrc={
-                                    isDarkTheme
-                                      ? "/demo-file-dark.svg"
-                                      : "/demo-file.svg"
-                                  }
-                                  mainText={`Demo ${index + 1} code`}
-                                  onEditClick={() => {
-                                    handleStepChange("demoCode")
-                                    setCurrentDemoIndex(index)
-                                  }}
+                    {demos?.map((demo, index) => (
+                      <AccordionItem
+                        key={index}
+                        value={`demo-${index}`}
+                        className="bg-background border-none group"
+                      >
+                        <AccordionTrigger className="py-2 text-[15px] leading-6 hover:no-underline hover:bg-muted/50 rounded-md data-[state=open]:rounded-b-none transition-all duration-200 ease-in-out -mx-2 px-2">
+                          <div className="flex items-center gap-2 w-full">
+                            <div className="flex items-center gap-2 flex-1">
+                              {demo.name || `Demo ${index + 1}`}
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "gap-1.5 text-xs font-medium",
+                                  isDemoComplete(index)
+                                    ? "border-emerald-500/20"
+                                    : "border-amber-500/20",
+                                )}
+                              >
+                                <span
+                                  className={cn(
+                                    "size-1.5 rounded-full",
+                                    isDemoComplete(index)
+                                      ? "bg-emerald-500"
+                                      : "bg-amber-500",
+                                  )}
+                                  aria-hidden="true"
                                 />
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        ),
-                    )}
+                                {isDemoComplete(index)
+                                  ? "Complete"
+                                  : "Required"}
+                              </Badge>
+                            </div>
+                            {demos.length > 1 && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 ml-auto mr-1"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setDemoToDelete({
+                                    index,
+                                    name: demo?.name || `Demo ${index + 1}`,
+                                  })
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive transition-colors" />
+                              </Button>
+                            )}
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="text-foreground space-y-4">
+                            <DemoDetailsForm form={form} />
+                            <EditCodeFileCard
+                              iconSrc={
+                                isDarkTheme
+                                  ? "/demo-file-dark.svg"
+                                  : "/demo-file.svg"
+                              }
+                              mainText={`Demo ${index + 1} code`}
+                              onEditClick={() => {
+                                handleStepChange("demoCode")
+                                setCurrentDemoIndex(index)
+                              }}
+                            />
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
                   </Accordion>
                 </div>
               </motion.div>

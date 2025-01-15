@@ -34,7 +34,7 @@ export function PublishComponentPreview({
   code,
   demoCode,
   slugToPublish,
-  registryToPublish = "ui",
+  registryToPublish,
   directRegistryDependencies,
   isDarkTheme,
   customTailwindConfig,
@@ -56,25 +56,18 @@ export function PublishComponentPreview({
   const [css, setCss] = useState<string | undefined>(undefined)
   const { toast } = useToast()
   const [currentDemoIndex] = useAtom(currentDemoIndexAtom)
-  const demos = form.watch("demos")
-
-  useEffect(() => {
-    setCss(undefined)
-  }, [currentDemoIndex])
 
   const currentDemoCode = useMemo(() => {
-    console.log("Updating demo code for index:", currentDemoIndex, {
-      demoCount: demos?.length,
-      currentDemo: demos?.[currentDemoIndex],
+    const demos = form.watch("demos")
+    console.log("Preview update:", {
+      currentDemoIndex,
+      demosCount: demos?.length,
+      hasDemoCode: !!demos?.[currentDemoIndex]?.demo_code,
     })
-    const currentDemo = demos?.[currentDemoIndex]
-    if (!currentDemo) {
-      console.log("No demo found, using fallback")
-      return demoCode
-    }
-    console.log("Using demo code from index", currentDemoIndex)
-    return currentDemo.demo_code || demoCode
-  }, [currentDemoIndex, demos, demoCode])
+
+    // Используем либо переданный demoCode, либо код из текущего демо
+    return demoCode || demos?.[currentDemoIndex]?.demo_code || ""
+  }, [form, currentDemoIndex, demoCode])
 
   const {
     data: registryDependencies,

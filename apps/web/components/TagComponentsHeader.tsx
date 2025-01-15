@@ -104,7 +104,6 @@ export function TagComponentsHeader({
           <Tabs
             value={quickFilter}
             onValueChange={(value) => {
-              console.log("Tab changed to:", value)
               setQuickFilter(value as QuickFilterOption)
               setCookie({
                 name: "saved_quick_filter",

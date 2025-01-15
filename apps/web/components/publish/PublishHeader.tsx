@@ -1,20 +1,23 @@
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { ChevronLeftIcon } from "lucide-react"
-import { FormStep } from "@/types/global"
+
 import { UseFormReturn } from "react-hook-form"
-import { FormData } from "./utils"
-import { ResolveUnknownDependenciesAlertForm } from "./alerts"
+import { ChevronLeftIcon } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { useState, useEffect } from "react"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Icons } from "../icons"
 import { LoadingSpinner } from "../LoadingSpinner"
+
+import { FormStep } from "@/types/global"
+import { FormData } from "./utils"
+import { ResolveUnknownDependenciesAlertForm } from "./alerts"
 
 interface PublishHeaderProps {
   formStep: FormStep
@@ -26,7 +29,6 @@ interface PublishHeaderProps {
   isSubmitting?: boolean
   isFormValid: boolean
   form?: UseFormReturn<FormData>
-  publishProgress: string
   onAddDemo?: () => void
   currentDemoIndex: number
   setCurrentDemoIndex: (index: number) => void
@@ -42,7 +44,6 @@ export function PublishHeader({
   isSubmitting,
   isFormValid,
   form,
-  publishProgress,
   onAddDemo,
   currentDemoIndex,
   setCurrentDemoIndex,
@@ -195,8 +196,6 @@ export function PublishHeader({
       console.error("Error updating dependencies:", error)
     }
   }
-
-  console.log("formData", form?.getValues())
 
   const isDemoDetailsValid = () => {
     if (!form || formStep !== "demoDetails") return true

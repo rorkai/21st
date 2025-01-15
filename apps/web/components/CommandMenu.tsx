@@ -301,7 +301,6 @@ export function CommandMenu() {
   }
 
   const handleOpen = () => {
-    console.log(selectedComponent)
     if (value.startsWith("component-") && selectedComponent) {
       router.push(
         `/${selectedComponent.user.username}/${selectedComponent.component.component_slug}/${selectedComponent.id}`,

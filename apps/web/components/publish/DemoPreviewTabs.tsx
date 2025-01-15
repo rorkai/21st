@@ -34,21 +34,18 @@ export function DemoPreviewTabs({
     new Set(["demo-0"]),
   )
 
-  // Обновляем активный таб при удалении демо
   useEffect(() => {
     if (demos.length === 0) {
       setActiveTab("demo-0")
       return
     }
 
-    // Если текущий индекс больше, чем количество демо
     const currentIndex = parseInt(activeTab.replace("demo-", ""))
     if (currentIndex >= demos.length) {
       setActiveTab(`demo-${demos.length - 1}`)
     }
   }, [demos.length, activeTab])
 
-  // Отслеживаем изменение активного таба
   useEffect(() => {
     setRenderedTabs((prev) => new Set([...prev, activeTab]))
   }, [activeTab])
@@ -75,7 +72,6 @@ export function DemoPreviewTabs({
         <div className="relative flex-1 h-full">
           {demos.map((demo, index) => {
             const tabId = `demo-${index}`
-            // Рендерим превью только если оно уже было активировано
             if (!renderedTabs.has(tabId)) {
               return null
             }
@@ -101,7 +97,6 @@ export function DemoPreviewTabs({
                     isDarkTheme={isDarkTheme}
                     customTailwindConfig={customTailwindConfig}
                     customGlobalCss={customGlobalCss}
-                    form={form}
                   />
                 </React.Suspense>
               </div>

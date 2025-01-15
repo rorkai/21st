@@ -1,11 +1,36 @@
 "use client"
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
+import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import { useTheme } from "next-themes"
+import { useUser } from "@clerk/nextjs"
+import { motion } from "framer-motion"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import { Trash2 } from "lucide-react"
+import { toast } from "sonner"
+
+import { Form } from "@/components/ui/form"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { LoadingSpinner } from "../LoadingSpinner"
+import { LoadingDialog } from "../LoadingDialog"
+
+import { useDebugMode } from "@/hooks/use-debug-mode"
+import { useClerkSupabaseClient } from "@/lib/clerk"
+import { usePublishAs } from "./hooks/use-publish-as"
+import { useCodeInputsAutoFocus } from "./hooks/use-code-inputs-auto-focus"
+
+import { cn } from "@/lib/utils"
 import { uploadToR2 } from "@/lib/r2"
-import { formSchema, FormData, isFormValid, DemoFormData } from "./utils"
+import { addTagsToComponent } from "@/lib/queries"
+import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import {
   extractComponentNames,
   extractNPMDependencies,
@@ -13,17 +38,22 @@ import {
   extractRegistryDependenciesFromImports,
   extractAmbigiousRegistryDependencies,
 } from "../../lib/parsers"
-import { Form } from "@/components/ui/form"
-import { addTagsToComponent } from "@/lib/queries"
-import { ComponentDetailsForm } from "./ComponentDetailsForm"
-import { motion } from "framer-motion"
-import { useClerkSupabaseClient } from "@/lib/clerk"
-import { useUser } from "@clerk/nextjs"
-import { useDebugMode } from "@/hooks/use-debug-mode"
+
 import { Tag } from "@/types/global"
+import { FormStep } from "@/types/global"
+import { Tables } from "@/types/supabase"
+import { formSchema, FormData, isFormValid } from "./utils"
+
+import { ComponentDetailsForm } from "./ComponentDetailsForm"
+import { DemoDetailsForm } from "./DemoDetailsForm"
+import { PublishHeader } from "./PublishHeader"
 import { PublishComponentPreview } from "./preview"
-import { useTheme } from "next-themes"
-import { cn } from "@/lib/utils"
+import { DemoPreviewTabs } from "./DemoPreviewTabs"
+import { NameSlugStep } from "./steps/name-slug-step"
+import { EditorStep } from "./steps/editor-step"
+import { SuccessDialog } from "./success-dialog"
+import { DeleteDemoDialog } from "./delete-demo-dialog"
+import { EditCodeFileCard } from "./edit-code-file-card"
 import {
   DebugInfoDisplay,
   DemoComponentGuidelinesAlert,
@@ -31,33 +61,6 @@ import {
   GlobalStylesGuidelinesAlert,
   TailwindGuidelinesAlert,
 } from "./alerts"
-import { Tables } from "@/types/supabase"
-import { LoadingSpinner } from "../LoadingSpinner"
-import { toast } from "sonner"
-import { usePublishAs } from "./hooks/use-publish-as"
-import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
-import { NameSlugStep } from "./steps/name-slug-step"
-import { EditorStep } from "./steps/editor-step"
-import { SuccessDialog } from "./success-dialog"
-import { EditCodeFileCard } from "./edit-code-file-card"
-import { useCodeInputsAutoFocus } from "./hooks/use-code-inputs-auto-focus"
-import { DemoDetailsForm } from "./DemoDetailsForm"
-import { PublishHeader } from "./PublishHeader"
-import { FormStep } from "@/types/global"
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { useAtom } from "jotai"
-import { openAccordionAtom } from "@/atoms/publish"
-import { LoadingDialog } from "../LoadingDialog"
-import { DeleteDemoDialog } from "./delete-demo-dialog"
-import { Trash2 } from "lucide-react"
-import { DemoPreviewTabs } from "./DemoPreviewTabs"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -79,7 +82,7 @@ export default function PublishComponentForm() {
   const { resolvedTheme } = useTheme()
   const isDarkTheme = resolvedTheme === "dark"
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false)
-  const [openAccordion, setOpenAccordion] = useAtom(openAccordionAtom)
+  const [openAccordion, setOpenAccordion] = useState("component-info")
   const [currentDemoIndex, setCurrentDemoIndex] = useState(0)
 
   const [formStartTime] = useState(() => Date.now())
@@ -286,19 +289,6 @@ export default function PublishComponentForm() {
   const [isLoadingDialogOpen, setIsLoadingDialogOpen] = useState(false)
 
   const onSubmit = async (data: FormData) => {
-    console.log("Starting onSubmit with data:", {
-      componentSlug: data.component_slug,
-      demoCount: data.demos?.length,
-      hasCode: !!data.code,
-      userId: publishAsUser?.id,
-      demoData: data.demos.map((demo) => ({
-        hasName: !!demo.name,
-        hasDemoCode: !!demo.demo_code,
-        hasPreviewImage: !!demo.preview_image_file,
-        hasPreviewVideo: !!demo.preview_video_file,
-      })),
-    })
-
     setPublishAttemptCount((count) => count + 1)
     setIsSubmitting(true)
     setIsLoadingDialogOpen(true)
@@ -344,12 +334,6 @@ export default function PublishComponentForm() {
             })
           : Promise.resolve(null),
       ])
-
-      console.log("Files uploaded successfully:", {
-        codeUrl,
-        hasTailwindConfig: !!tailwindConfigUrl,
-        hasGlobalCss: !!globalCssUrl,
-      })
 
       setPublishProgress("Creating component...")
       const componentData = {
@@ -419,13 +403,6 @@ export default function PublishComponentForm() {
 
         const demoFolder = `${baseFolder}/${insertedDemo.id}`
 
-        console.log(`Uploading files for demo ${demoIndex + 1}:`, {
-          hasDemoCode: !!demo.demo_code,
-          hasPreviewImage: !!demo.preview_image_file,
-          hasPreviewVideo: !!demo.preview_video_file,
-          demoFolder,
-        })
-
         const [demoCodeUrl, previewImageR2Url, videoR2Url] = await Promise.all([
           uploadToR2({
             file: {
@@ -471,12 +448,6 @@ export default function PublishComponentForm() {
               })
             : Promise.resolve(null),
         ])
-
-        console.log(`Demo ${demoIndex + 1} files uploaded:`, {
-          demoCodeUrl,
-          hasPreviewImage: !!previewImageR2Url,
-          hasPreviewVideo: !!videoR2Url,
-        })
 
         const { error: updateDemoError } = await client
           .from("demos")
@@ -552,9 +523,7 @@ export default function PublishComponentForm() {
     )
   }, [unknownDependencies, code, demoCode])
 
-  const { demoCodeTextAreaRef, codeInputRef } = useCodeInputsAutoFocus(
-    formStep === "detailedForm",
-  )
+  const { codeInputRef } = useCodeInputsAutoFocus(formStep === "detailedForm")
 
   const [activeCodeTab, setActiveCodeTab] = useState<CodeTab>("component")
 
@@ -569,50 +538,6 @@ export default function PublishComponentForm() {
       !!description && !!license && !!name && !!component_slug && !!registry
     )
   }, [form])
-
-  const isDemoInfoComplete = useCallback(() => {
-    const values = form.getValues()
-    const currentDemo = values.demos[0]
-    return !!(currentDemo?.name && demoCode)
-  }, [form, demoCode])
-
-  const handleFileChange = (event: { target: { files: File[] } }) => {
-    const file = event.target.files[0]
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert("File is too large. Maximum size is 5 MB.")
-        return
-      }
-
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const demos = form.getValues("demos")
-        if (!demos[0]) return
-        const updatedDemo: DemoFormData = {
-          ...demos[0],
-          name: demos[0].name || "",
-          demo_code: demos[0].demo_code || "",
-          preview_image_data_url: (e.target?.result as string) || "",
-          preview_image_file: file,
-          tags: demos[0].tags || [],
-        }
-        demos[0] = updatedDemo
-        form.setValue("demos", demos)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const isDemoDetailsValid = () => {
-    if (!form || formStep !== "demoDetails") return true
-    const values = form.getValues()
-    const currentDemo = values.demos[currentDemoIndex]
-    return !!(
-      currentDemo?.name &&
-      currentDemo?.tags?.length > 0 &&
-      currentDemo?.preview_image_data_url
-    )
-  }
 
   const handleAddNewDemo = () => {
     const demos = form.getValues().demos || []
@@ -635,12 +560,6 @@ export default function PublishComponentForm() {
     setCurrentDemoIndex(newDemoIndex)
     handleStepChange("demoCode")
     setOpenAccordion(`demo-${newDemoIndex}`)
-
-    console.log("Added new demo:", {
-      newDemoIndex,
-      totalDemos: demos.length + 1,
-      currentDemoCode: form.getValues().demos[newDemoIndex]?.demo_code,
-    })
   }
 
   const isDemoComplete = (demoIndex: number) => {
@@ -722,7 +641,6 @@ export default function PublishComponentForm() {
               isSubmitting={isSubmitting}
               isFormValid={isFormValid(form)}
               form={form}
-              publishProgress={publishProgress}
               currentDemoIndex={currentDemoIndex}
               setCurrentDemoIndex={setCurrentDemoIndex}
             />
@@ -785,7 +703,6 @@ export default function PublishComponentForm() {
               isSubmitting={isSubmitting}
               isFormValid={isFormValid(form)}
               form={form}
-              publishProgress={publishProgress}
               currentDemoIndex={currentDemoIndex}
               setCurrentDemoIndex={setCurrentDemoIndex}
             />
@@ -845,7 +762,6 @@ export default function PublishComponentForm() {
                         isDarkTheme={isDarkTheme}
                         customTailwindConfig={customTailwindConfig}
                         customGlobalCss={customGlobalCss}
-                        form={form}
                       />
                     </React.Suspense>
                   </motion.div>
@@ -894,7 +810,6 @@ export default function PublishComponentForm() {
               isSubmitting={isSubmitting}
               isFormValid={isFormValid(form)}
               form={form}
-              publishProgress={publishProgress}
               onAddDemo={handleAddNewDemo}
               currentDemoIndex={currentDemoIndex}
               setCurrentDemoIndex={setCurrentDemoIndex}

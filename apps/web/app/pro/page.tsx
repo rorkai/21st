@@ -22,13 +22,6 @@ async function getOGImage(url: string): Promise<string | null> {
       $('meta[name="twitter:image"]').first().attr("content") ||
       $('meta[property="twitter:image"]').first().attr("content")
 
-    if (!ogImage) {
-      console.log("No OG image found for", url)
-      $("meta").each((i, elem) => {
-        console.log($(elem).attr("property"), $(elem).attr("content"))
-      })
-    }
-
     return ogImage || null
   } catch (error) {
     console.error(`Error fetching OG image for ${url}:`, error)

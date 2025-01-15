@@ -5,13 +5,11 @@ import { useQuery } from "@tanstack/react-query"
 import { ComponentsList } from "@/components/ComponentsList"
 import { quickFilterAtom, sortByAtom } from "@/components/ComponentsHeader"
 import { searchQueryAtom } from "@/components/Header"
-import { sortComponents, filterComponents } from "@/lib/filters.client"
+import { filterComponents } from "@/lib/filters.client"
 import {
   DemoWithComponent,
   QuickFilterOption,
-  SortOption,
-  Component,
-  User,
+  SortOption
 } from "@/types/global"
 import { TagComponentsHeader } from "@/components/TagComponentsHeader"
 import { useLayoutEffect, useState } from "react"
@@ -31,7 +29,6 @@ export function TagPageContent({
 }) {
   const [sortBy, setSortBy] = useAtom(sortByAtom)
   const [quickFilter, setQuickFilter] = useAtom(quickFilterAtom)
-  console.log("Current quickFilter:", quickFilter)
   const [searchQuery] = useAtom(searchQueryAtom)
   const [tabCounts, setTabCounts] = useState<
     Record<QuickFilterOption, number> | undefined
@@ -80,8 +77,6 @@ export function TagPageContent({
       staleTime: 0,
     },
   )
-
-  console.log("Rendering with components:", filteredComponents?.length)
 
   return (
     <div className="container mx-auto mt-20">

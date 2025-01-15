@@ -3,7 +3,7 @@ import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { Header } from "@/components/Header"
 import { Download, Eye } from "lucide-react"
 import { Metadata } from "next"
-import { Card, CardHeader, CardFooter } from "@/components/ui/card"
+import { Card, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 
 export const dynamic = "force-dynamic"

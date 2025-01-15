@@ -19,9 +19,7 @@ import React, { useMemo, useState, useEffect } from "react"
 import { LoadingSpinner } from "../LoadingSpinner"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 import { useToast } from "@/hooks/use-toast"
-import { useAtom } from "jotai"
-import { UseFormReturn } from "react-hook-form"
-import type { FormData } from "./utils"
+
 
 const SandpackPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react").then((module) => ({
@@ -38,7 +36,6 @@ export function PublishComponentPreview({
   isDarkTheme,
   customTailwindConfig,
   customGlobalCss,
-  form,
 }: {
   code: string
   demoCode: string
@@ -48,7 +45,6 @@ export function PublishComponentPreview({
   isDarkTheme: boolean
   customTailwindConfig?: string
   customGlobalCss?: string
-  form: UseFormReturn<FormData>
 }) {
   const isDebug = useDebugMode()
   const supabase = useClerkSupabaseClient()

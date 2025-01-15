@@ -1,9 +1,10 @@
 import Link from "next/link"
-import Image from "next/image"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { Header } from "@/components/Header"
 import { Download, Eye } from "lucide-react"
 import { Metadata } from "next"
+import { Card, CardHeader, CardFooter } from "@/components/ui/card"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 
 export const dynamic = "force-dynamic"
 
@@ -89,47 +90,54 @@ export default async function AuthorsPage() {
       <div className="container mx-auto mt-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
           {authorsWithStats.map((author) => (
-            <Link
-              href={`/${author.username}`}
-              key={author.id}
-              className="block p-6 rounded-lg border border-border/40 dark:border-border/40 transition-colors"
-            >
-              <div className="flex items-start gap-4">
-                {author.image_url && (
-                  <Image
-                    src={author.image_url}
-                    alt={author.name || author.username || ""}
-                    width={48}
-                    height={48}
-                    className="rounded-full"
-                  />
-                )}
-                <div className="flex flex-col h-[140px] gap-2">
-                  <div className="flex-1 min-h-0">
-                    <h2 className="font-semibold text-lg">
-                      {author.name || author.username}
-                    </h2>
-                    {author.bio && (
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                        {author.bio}
-                      </p>
-                    )}
+            <Link href={`/${author.username}`} key={author.id}>
+              <Card className="h-full hover:bg-accent/50 transition-colors">
+                <CardHeader className="h-full">
+                  <div className="flex items-start gap-4">
+                    <Avatar className="h-12 w-12">
+                      {author.image_url ? (
+                        <AvatarImage
+                          src={author.image_url}
+                          alt={author.name || author.username || ""}
+                        />
+                      ) : (
+                        <AvatarFallback>
+                          {(
+                            (author.name || author.username || "?")?.[0] || "?"
+                          ).toUpperCase()}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                    <div className="flex flex-col h-full">
+                      <div className="space-y-1 mb-4">
+                        <h2 className="font-semibold text-lg">
+                          {author.name || author.username}
+                        </h2>
+                          <p className="text-sm text-muted-foreground line-clamp-1 h-5">
+                            {author.bio || `@${author.username}`}
+                          </p>
+                      </div>
+                      <div className="mt-auto space-y-0.5">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Eye className="w-4 h-4" />
+                          <span className="text-sm">
+                            {author.total_views.toLocaleString()} views
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Download className="w-4 h-4" />
+                          <span className="text-sm">
+                            {(
+                              author.total_usages + author.total_downloads
+                            ).toLocaleString()}{" "}
+                            usages
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-sm flex flex-col text-gray-500 gap-1 mt-auto pt-4">
-                    <span className="flex items-center gap-1">
-                      <Eye className="w-4 h-4" />
-                      {author.total_views.toLocaleString()} views
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Download className="w-4 h-4" />
-                      {(
-                        author.total_usages + author.total_downloads
-                      ).toLocaleString()}{" "}
-                      usages
-                    </span>
-                  </div>
-                </div>
-              </div>
+                </CardHeader>
+              </Card>
             </Link>
           ))}
         </div>

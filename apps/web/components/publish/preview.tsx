@@ -20,7 +20,6 @@ import { LoadingSpinner } from "../LoadingSpinner"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 import { useToast } from "@/hooks/use-toast"
 import { useAtom } from "jotai"
-import { currentDemoIndexAtom } from "@/atoms/publish"
 import { UseFormReturn } from "react-hook-form"
 import type { FormData } from "./utils"
 
@@ -55,19 +54,8 @@ export function PublishComponentPreview({
   const supabase = useClerkSupabaseClient()
   const [css, setCss] = useState<string | undefined>(undefined)
   const { toast } = useToast()
-  const [currentDemoIndex] = useAtom(currentDemoIndexAtom)
 
-  const currentDemoCode = useMemo(() => {
-    const demos = form.watch("demos")
-    console.log("Preview update:", {
-      currentDemoIndex,
-      demosCount: demos?.length,
-      hasDemoCode: !!demos?.[currentDemoIndex]?.demo_code,
-    })
-
-    // Используем либо переданный demoCode, либо код из текущего демо
-    return demoCode || demos?.[currentDemoIndex]?.demo_code || ""
-  }, [form, currentDemoIndex, demoCode])
+  const currentDemoCode = demoCode
 
   const {
     data: registryDependencies,

@@ -12,19 +12,18 @@ import { useAvailableTags } from "@/lib/queries"
 import MultipleSelector, { Option } from "@/components/ui/multiselect"
 import { Input } from "@/components/ui/input"
 import { FormField } from "@/components/ui/form"
-import { useAtom } from "jotai"
-import { currentDemoIndexAtom } from "@/atoms/publish"
 
 export const DemoDetailsForm = ({
   form,
+  demoIndex,
 }: {
   form: UseFormReturn<FormData>
+  demoIndex: number
 }) => {
   const { resolvedTheme } = useTheme()
   const isDarkTheme = resolvedTheme === "dark"
-  const [currentDemoIndex] = useAtom(currentDemoIndexAtom)
   const previewImageDataUrl = form.watch(
-    `demos.${currentDemoIndex}.preview_image_data_url`,
+    `demos.${demoIndex}.preview_image_data_url`,
   )
 
   const { data: availableTags = [] } = useAvailableTags()
@@ -47,7 +46,7 @@ export const DemoDetailsForm = ({
     getVideoInputProps,
     removeVideo,
     openFileDialog,
-  } = useVideoDropzone({ form })
+  } = useVideoDropzone({ form, demoIndex })
 
   const handleFileChange = (event: { target: { files: File[] } }) => {
     const file = event.target.files[0]
@@ -60,12 +59,12 @@ export const DemoDetailsForm = ({
       const reader = new FileReader()
       reader.onload = (e) => {
         form.setValue(
-          `demos.${currentDemoIndex}.preview_image_data_url`,
+          `demos.${demoIndex}.preview_image_data_url`,
           e.target?.result as string,
         )
       }
       reader.readAsDataURL(file)
-      form.setValue(`demos.${currentDemoIndex}.preview_image_file`, file)
+      form.setValue(`demos.${demoIndex}.preview_image_file`, file)
     }
   }
 
@@ -95,7 +94,7 @@ export const DemoDetailsForm = ({
           </Label>
           <FormField
             control={form.control}
-            name={`demos.${currentDemoIndex}.name`}
+            name={`demos.${demoIndex}.name`}
             render={({ field }) => (
               <Input id={demoNameId} placeholder="Enter demo name" {...field} />
             )}
@@ -115,15 +114,13 @@ export const DemoDetailsForm = ({
           </Label>
           <div>
             <MultipleSelector
-              value={form
-                .watch(`demos.${currentDemoIndex}.tags`)
-                ?.map((tag) => ({
-                  value: tag.slug,
-                  label: tag.name,
-                }))}
+              value={form.watch(`demos.${demoIndex}.tags`)?.map((tag) => ({
+                value: tag.slug,
+                label: tag.name,
+              }))}
               onChange={(options) => {
                 form.setValue(
-                  `demos.${currentDemoIndex}.tags`,
+                  `demos.${demoIndex}.tags`,
                   options.map((option) => ({
                     name: option.label,
                     slug: option.value,

@@ -14,8 +14,6 @@ import {
 } from "@/components/ui/dialog"
 import { useState, useEffect } from "react"
 import { Icons } from "../icons"
-import { useAtom } from "jotai"
-import { currentDemoIndexAtom } from "@/atoms/publish"
 import { LoadingSpinner } from "../LoadingSpinner"
 
 interface PublishHeaderProps {
@@ -30,6 +28,8 @@ interface PublishHeaderProps {
   form?: UseFormReturn<FormData>
   publishProgress: string
   onAddDemo?: () => void
+  currentDemoIndex: number
+  setCurrentDemoIndex: (index: number) => void
 }
 
 export function PublishHeader({
@@ -44,9 +44,10 @@ export function PublishHeader({
   form,
   publishProgress,
   onAddDemo,
+  currentDemoIndex,
+  setCurrentDemoIndex,
 }: PublishHeaderProps) {
   const [showDependenciesModal, setShowDependenciesModal] = useState(false)
-  const [currentDemoIndex, setCurrentDemoIndex] = useAtom(currentDemoIndexAtom)
 
   useEffect(() => {
     const demos = form?.getValues().demos || []

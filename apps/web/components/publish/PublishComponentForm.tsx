@@ -53,10 +53,11 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useAtom } from "jotai"
-import { currentDemoIndexAtom, openAccordionAtom } from "@/atoms/publish"
+import { openAccordionAtom } from "@/atoms/publish"
 import { LoadingDialog } from "../LoadingDialog"
 import { DeleteDemoDialog } from "./delete-demo-dialog"
 import { Trash2 } from "lucide-react"
+import { DemoPreviewTabs } from "./DemoPreviewTabs"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -78,8 +79,8 @@ export default function PublishComponentForm() {
   const { resolvedTheme } = useTheme()
   const isDarkTheme = resolvedTheme === "dark"
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false)
-  const [currentDemoIndex, setCurrentDemoIndex] = useAtom(currentDemoIndexAtom)
   const [openAccordion, setOpenAccordion] = useAtom(openAccordionAtom)
+  const [currentDemoIndex, setCurrentDemoIndex] = useState(0)
 
   const [formStartTime] = useState(() => Date.now())
   const [publishAttemptCount, setPublishAttemptCount] = useState(0)
@@ -695,18 +696,9 @@ export default function PublishComponentForm() {
 
   const handleAccordionChange = useCallback(
     (value: string | undefined) => {
-      console.log("Accordion change:", { value, currentDemoIndex })
       setOpenAccordion(value || "")
-      if (value === "demo-info") {
-        setCurrentDemoIndex(0)
-      } else if (value?.startsWith("demo-")) {
-        const index = parseInt(value.replace("demo-", ""))
-        if (!isNaN(index)) {
-          setCurrentDemoIndex(index)
-        }
-      }
     },
-    [setOpenAccordion, setCurrentDemoIndex],
+    [setOpenAccordion],
   )
 
   useEffect(() => {
@@ -731,6 +723,8 @@ export default function PublishComponentForm() {
               isFormValid={isFormValid(form)}
               form={form}
               publishProgress={publishProgress}
+              currentDemoIndex={currentDemoIndex}
+              setCurrentDemoIndex={setCurrentDemoIndex}
             />
             <div className="flex h-[calc(100vh-3rem)]">
               <div className="w-1/2 border-r pointer-events-auto">
@@ -769,42 +763,13 @@ export default function PublishComponentForm() {
                 )}
               </div>
               <div className="w-1/2 pointer-events-auto">
-                {isPreviewReady ? (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="h-full p-8"
-                  >
-                    <React.Suspense fallback={<LoadingSpinner />}>
-                      <PublishComponentPreview
-                        code={code}
-                        demoCode={demoCode}
-                        slugToPublish={componentSlug}
-                        registryToPublish={registryToPublish}
-                        directRegistryDependencies={[
-                          ...directRegistryDependencies,
-                          ...demoDirectRegistryDependencies,
-                        ]}
-                        isDarkTheme={isDarkTheme}
-                        customTailwindConfig={customTailwindConfig}
-                        customGlobalCss={customGlobalCss}
-                        form={form}
-                      />
-                    </React.Suspense>
-                  </motion.div>
-                ) : (
-                  <div className="h-full p-8">
-                    {activeCodeTab === "component" && <CodeGuidelinesAlert />}
-                    {activeCodeTab === "tailwind" && (
-                      <TailwindGuidelinesAlert />
-                    )}
-                    {activeCodeTab === "globals" && (
-                      <GlobalStylesGuidelinesAlert />
-                    )}
-                  </div>
-                )}
+                <div className="h-full p-8">
+                  {activeCodeTab === "component" && <CodeGuidelinesAlert />}
+                  {activeCodeTab === "tailwind" && <TailwindGuidelinesAlert />}
+                  {activeCodeTab === "globals" && (
+                    <GlobalStylesGuidelinesAlert />
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -821,6 +786,8 @@ export default function PublishComponentForm() {
               isFormValid={isFormValid(form)}
               form={form}
               publishProgress={publishProgress}
+              currentDemoIndex={currentDemoIndex}
+              setCurrentDemoIndex={setCurrentDemoIndex}
             />
             <div className="flex h-[calc(100vh-3.5rem)]">
               <div className="w-1/2 border-r pointer-events-auto">
@@ -852,7 +819,7 @@ export default function PublishComponentForm() {
                   />
                 ) : (
                   <div className="p-8">
-                    <DemoDetailsForm form={form} />
+                    <DemoDetailsForm form={form} demoIndex={currentDemoIndex} />
                   </div>
                 )}
               </div>
@@ -929,6 +896,8 @@ export default function PublishComponentForm() {
               form={form}
               publishProgress={publishProgress}
               onAddDemo={handleAddNewDemo}
+              currentDemoIndex={currentDemoIndex}
+              setCurrentDemoIndex={setCurrentDemoIndex}
             />
             <div className="flex gap-1 w-full h-[calc(100vh-3rem)] overflow-hidden">
               <motion.div
@@ -1071,7 +1040,7 @@ export default function PublishComponentForm() {
                         </AccordionTrigger>
                         <AccordionContent>
                           <div className="text-foreground space-y-4">
-                            <DemoDetailsForm form={form} />
+                            <DemoDetailsForm form={form} demoIndex={index} />
                             <EditCodeFileCard
                               iconSrc={
                                 isDarkTheme
@@ -1101,15 +1070,14 @@ export default function PublishComponentForm() {
                   className="w-2/3 h-full"
                 >
                   <React.Suspense fallback={<LoadingSpinner />}>
-                    <PublishComponentPreview
+                    <DemoPreviewTabs
                       code={code}
-                      demoCode={demoCode}
                       slugToPublish={componentSlug}
                       registryToPublish={registryToPublish}
-                      directRegistryDependencies={[
-                        ...directRegistryDependencies,
-                        ...demoDirectRegistryDependencies,
-                      ]}
+                      directRegistryDependencies={directRegistryDependencies}
+                      demoDirectRegistryDependencies={
+                        demoDirectRegistryDependencies
+                      }
                       isDarkTheme={isDarkTheme}
                       customTailwindConfig={customTailwindConfig}
                       customGlobalCss={customGlobalCss}

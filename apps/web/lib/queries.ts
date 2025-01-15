@@ -496,6 +496,15 @@ export async function getComponentWithDemo(
   error: Error | null
 }> {
   try {
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("username", username)
+      .single()
+
+    if (userError) throw userError
+    if (!userData) throw new Error("User not found")
+
     const { data: component, error: componentError } = await supabase
       .from("components")
       .select(
@@ -505,10 +514,11 @@ export async function getComponentWithDemo(
       `,
       )
       .eq("component_slug", componentSlug)
-      .eq("users.username", username)
+      .eq("user_id", userData.id)
       .single()
 
     if (componentError) throw componentError
+    if (!component) throw new Error("Component not found")
 
     const { data: demo, error: demoError } = await supabase
       .from("demos")
@@ -523,6 +533,7 @@ export async function getComponentWithDemo(
       .single()
 
     if (demoError) throw demoError
+    if (!demo) throw new Error("Demo not found")
 
     const formattedTags = demo.tags.map((tag: any) => tag.tags)
 

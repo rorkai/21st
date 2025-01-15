@@ -41,6 +41,12 @@ const useSetServerUserDataCookies = () => {
   }, [])
 }
 
+const refetchData = async (queryClient: any, quickFilter: any, sortBy: any) => {
+  await queryClient.invalidateQueries({
+    queryKey: ["filtered-demos", quickFilter, sortBy],
+  })
+}
+
 export function HomePageClient({
   initialComponents,
   initialSortBy,
@@ -172,7 +178,6 @@ export function HomePageClient({
         return loadedCount < lastPage.total_count ? allPages.length : undefined
       },
     })
-  console.log("Initial components:", initialComponents)
   const allDemos = data?.pages?.flatMap((d) => d.data)
 
   const showSkeleton = isLoading || !data?.pages?.[0]?.data?.length
@@ -194,18 +199,9 @@ export function HomePageClient({
     return () => window.removeEventListener("scroll", handleScroll)
   }, [isLoading, hasNextPage, fetchNextPage])
 
-  // Добавляем эффект для сброса кэша при изменении сортировки или фильтра
   useEffect(() => {
     if (sortBy !== undefined && quickFilter !== undefined) {
-      async function refetchData() {
-        await queryClient.invalidateQueries({
-          queryKey: ["filtered-demos", quickFilter, sortBy],
-        })
-        await queryClient.refetchQueries({
-          queryKey: ["filtered-demos", quickFilter, sortBy],
-        })
-      }
-      refetchData()
+      refetchData(queryClient, quickFilter, sortBy)
     }
   }, [sortBy, quickFilter, queryClient])
 

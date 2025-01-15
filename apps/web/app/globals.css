@@ -209,6 +209,7 @@ iframe {
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
   .dark {
     --background: 240 10% 3.9%;
     --foreground: 240 4.8% 95.9%;
@@ -249,6 +250,7 @@ iframe {
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -267,4 +269,8 @@ iframe {
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
+}
+
+[data-vaul-drawer-close-button] {
+  display: none;
 }

@@ -32,15 +32,6 @@ export function TagPageContent({
   initialSortBy: SortOption
   initialQuickFilter: QuickFilterOption
 }) {
-  console.log("Client: Starting TagPageContent render", {
-    initialComponentsCount: initialComponents.length,
-    tagName,
-    tagSlug,
-    initialTabCounts,
-    initialSortBy,
-    initialQuickFilter,
-  })
-
   const [sortBy, setSortBy] = useAtom(sortByAtom)
   const [quickFilter, setQuickFilter] = useAtom(quickFilterAtom)
   const [searchQuery] = useAtom(searchQueryAtom)
@@ -61,15 +52,7 @@ export function TagPageContent({
   }>({
     queryKey: ["tag-filtered-demos", tagSlug, quickFilter, sortBy, searchQuery],
     queryFn: async () => {
-      console.log("Client: Executing query function", {
-        tagSlug,
-        quickFilter,
-        sortBy,
-        searchQuery,
-      })
-
       if (!quickFilter || !sortBy) {
-        console.log("Client: Missing filter or sort")
         return { data: [], total_count: 0 }
       }
 
@@ -83,11 +66,6 @@ export function TagPageContent({
           p_tag_slug: tagSlug,
         },
       )
-
-      console.log("Client: RPC result", {
-        error,
-        dataLength: filteredData?.length,
-      })
 
       if (error) throw new Error(error.message)
 

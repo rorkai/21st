@@ -539,7 +539,6 @@ export default function PublishComponentForm() {
       !!description && !!license && !!name && !!component_slug && !!registry
     )
   }, [form])
-  console.log(form.getValues())
   const handleAddNewDemo = () => {
     const demos = form.getValues().demos || []
     const newDemoIndex = demos.length

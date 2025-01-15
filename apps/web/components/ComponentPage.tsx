@@ -274,14 +274,13 @@ export default function ComponentPage({
   compiledCss?: string
 }) {
   const [component, setComponent] = useState(initialComponent)
-  const [demo, setDemo] = useState(initialDemo)
+  const [demo] = useState(initialDemo)
   const { user } = useUser()
   const supabase = useClerkSupabaseClient()
   const { theme } = useTheme()
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const { isAdmin } = usePublishAs({ username: user?.username ?? "" })
   const { capture } = useSupabaseAnalytics()
-  console.log("demo", demo)
   const canEdit = user?.id === component.user_id || isAdmin
 
   const { data: liked } = useQuery({
@@ -310,7 +309,8 @@ export default function ComponentPage({
   const { mutate: updateComponent } = useUpdateComponentWithTags(supabase)
 
   const handleUpdate = async (
-    updatedData: Partial<Component & { tags: Tag[] }>,
+    updatedData: Partial<Component>,
+    demoUpdates: Partial<Demo> & { demo_tags?: Tag[] },
   ) => {
     return new Promise<void>((resolve, reject) => {
       updateComponent(
@@ -318,6 +318,23 @@ export default function ComponentPage({
         {
           onSuccess: async () => {
             try {
+              if (Object.keys(demoUpdates).length > 0 && demoUpdates.id) {
+                const { error: demoError } = await supabase
+                  .from("demos")
+                  .update({
+                    preview_url: demoUpdates.preview_url,
+                    video_url: demoUpdates.video_url,
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq("id", demoUpdates.id)
+
+                if (demoError) {
+                  console.error("Error updating demo:", demoError)
+                  reject(demoError)
+                  return
+                }
+              }
+
               const { data: updatedComponent, error } = await supabase
                 .from("components")
                 .select(
@@ -796,6 +813,7 @@ export default function ComponentPage({
       </div>
       <EditComponentDialog
         component={component}
+        demo={demo}
         isOpen={isEditDialogOpen}
         setIsOpen={setIsEditDialogOpen}
         onUpdate={handleUpdate}

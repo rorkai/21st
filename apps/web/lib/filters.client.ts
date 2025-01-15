@@ -15,9 +15,6 @@ export function filterComponents(
   items: FilterableComponent[],
   quickFilter: QuickFilterOption,
 ) {
-  console.log("Filter type:", quickFilter)
-  console.log("Items before filtering:", items.length)
-
   let filtered = [...items]
 
   switch (quickFilter) {
@@ -42,7 +39,6 @@ export function filterComponents(
       break
   }
 
-  console.log("Items after filtering:", filtered.length)
   return filtered
 }
 
@@ -50,8 +46,6 @@ export function sortComponents(
   items: FilterableComponent[],
   sortBy: SortOption,
 ) {
-  console.log("Sorting by:", sortBy)
-
   return [...items].sort((a, b) => {
     const componentA = isDemoWithComponent(a) ? a.component : a
     const componentB = isDemoWithComponent(b) ? b.component : b

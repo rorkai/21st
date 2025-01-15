@@ -32,7 +32,6 @@ const getTagInfo = async (
     .single()
 
   if (error) {
-    console.error("Error fetching tag info:", error)
     throw error
   }
 
@@ -40,17 +39,12 @@ const getTagInfo = async (
 }
 
 export default async function TagPage({ params }: TagPageProps) {
-  console.log("Server: Starting TagPage render")
   const cookieStore = cookies()
   const tagSlug = params.tag_slug
 
-  console.log("Server: Tag slug:", tagSlug)
-
   const tagInfo = await getTagInfo(supabaseWithAdminAccess, tagSlug)
-  console.log("Server: Tag info:", tagInfo)
 
   if (!tagInfo) {
-    console.log("Server: Tag not found")
     notFound()
   }
 
@@ -83,14 +77,7 @@ export default async function TagPage({ params }: TagPageProps) {
     },
   )
 
-  console.log("Server: Full filtered demos data:", {
-    firstItem: filteredDemos.data?.[0],
-    debug: filteredDemos.data?.[0]?.debug_info,
-    error: filteredDemos.error,
-  })
-
   if (filteredDemos.error) {
-    console.error("Filtered demos error:", filteredDemos.error)
     return null
   }
 
@@ -134,8 +121,6 @@ export default async function TagPage({ params }: TagPageProps) {
           last_released: 0,
           most_downloaded: 0,
         }
-
-  console.log("Server: Initial tabs counts:", initialTabsCounts)
 
   return (
     <>

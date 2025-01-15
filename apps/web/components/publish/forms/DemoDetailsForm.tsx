@@ -60,6 +60,7 @@ export const DemoDetailsForm = ({
 
   const handleFileChange = (event: { target: { files: File[] } }) => {
     const file = event.target.files[0]
+
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         alert("File is too large. Maximum size is 5 MB.")
@@ -68,13 +69,14 @@ export const DemoDetailsForm = ({
 
       const reader = new FileReader()
       reader.onload = (e) => {
-        form.setValue(
-          `demos.${demoIndex}.preview_image_data_url`,
-          e.target?.result as string,
-        )
+        const dataUrl = e.target?.result as string
+      
+        form.setValue(`demos.${demoIndex}.preview_image_data_url`, dataUrl)
       }
-      reader.readAsDataURL(file)
+
       form.setValue(`demos.${demoIndex}.preview_image_file`, file)
+
+      reader.readAsDataURL(file)
     }
   }
 
@@ -84,6 +86,7 @@ export const DemoDetailsForm = ({
     isDragActive: isImageDragActive,
   } = useDropzone({
     onDrop: (acceptedFiles: File[]) => {
+
       if (acceptedFiles.length > 0) {
         handleFileChange({ target: { files: acceptedFiles } })
       }

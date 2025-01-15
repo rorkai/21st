@@ -75,14 +75,22 @@ export default async function HomePage() {
   const cookieStore = cookies()
   const shouldShowHero = !cookieStore.has("has_visited")
   const hasOnboarded = cookieStore.has("has_onboarded")
-  const savedSortBy = cookieStore.get("saved_sort_by")?.value as SortOption | undefined
-  const savedQuickFilter = cookieStore.get("saved_quick_filter")?.value as QuickFilterOption | undefined
-  
+  const savedSortBy = cookieStore.get("saved_sort_by")?.value as
+    | SortOption
+    | undefined
+  const savedQuickFilter = cookieStore.get("saved_quick_filter")?.value as
+    | QuickFilterOption
+    | undefined
+
   const defaultQuickFilter = hasOnboarded ? "last_released" : "all"
   const defaultSortBy: SortOption = hasOnboarded ? "date" : "downloads"
 
-  const sortByPreference: SortOption = savedSortBy?.length ? savedSortBy as SortOption : defaultSortBy
-  const quickFilterPreference: QuickFilterOption = savedQuickFilter?.length ? savedQuickFilter as QuickFilterOption : defaultQuickFilter
+  const sortByPreference: SortOption = savedSortBy?.length
+    ? (savedSortBy as SortOption)
+    : defaultSortBy
+  const quickFilterPreference: QuickFilterOption = savedQuickFilter?.length
+    ? (savedQuickFilter as QuickFilterOption)
+    : defaultQuickFilter
 
   const orderByFields: [keyof Tables<"components">, { ascending: boolean }] =
     (() => {
@@ -96,16 +104,14 @@ export default async function HomePage() {
       }
     })()
 
-  const {
-    data: initialComponents,
-    error: componentsError,
-  } = await supabaseWithAdminAccess
-    .from("components")
-    .select("*, user:users!user_id (*)", { count: "exact" })
-    .limit(40)
-    .eq("is_public", true)
-    .order(...orderByFields)
-    .returns<(Component & { user: User })[]>()
+  const { data: initialComponents, error: componentsError } =
+    await supabaseWithAdminAccess
+      .from("components")
+      .select("*, user:users!user_id (*)", { count: "exact" })
+      .limit(40)
+      .eq("is_public", true)
+      .order(...orderByFields)
+      .returns<(Component & { user: User })[]>()
 
   if (componentsError) {
     return null
@@ -123,7 +129,10 @@ export default async function HomePage() {
   const initialFilteredSortedComponents = sortComponents(
     filterComponents(initialComponents, defaultQuickFilter),
     sortByPreference,
-  )
+  ).map((comp) => ({
+    ...comp,
+    user: comp.user,
+  })) as (Component & { user: User })[]
 
   const { data: initialTabsCountsData, error: initialTabsCountsError } =
     await supabaseWithAdminAccess.rpc("get_components_counts")

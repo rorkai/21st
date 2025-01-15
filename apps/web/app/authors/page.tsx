@@ -94,7 +94,7 @@ export default async function AuthorsPage() {
               <Card className="h-full hover:bg-accent/50 transition-colors">
                 <CardHeader className="h-full">
                   <div className="flex items-start gap-4">
-                    <Avatar className="h-12 w-12">
+                    <Avatar className="h-12 w-12 bg-muted/30">
                       {author.image_url ? (
                         <AvatarImage
                           src={author.image_url}

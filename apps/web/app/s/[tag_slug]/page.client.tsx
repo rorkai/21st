@@ -77,7 +77,7 @@ export function TagPageContent({
         )
       },
       initialData: demos,
-      staleTime: 0
+      staleTime: 0,
     },
   )
 

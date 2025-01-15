@@ -500,7 +500,7 @@ export default function ComponentPage({
           </Tooltip>
 
           <div className="flex items-center gap-2">
-            <Icons.slash className="text-[#ffffff24] w-[22px] h-[22px]" />
+            <Icons.slash className="text-border w-[22px] h-[22px]" />
             <div className="flex items-center gap-2 min-w-0">
               <Link
                 href={`/${component.user.username}`}
@@ -522,7 +522,7 @@ export default function ComponentPage({
 
           {demo && (
             <div className="flex items-center gap-2">
-              <Icons.slash className="text-[#ffffff24] w-[22px] h-[22px]" />
+              <Icons.slash className="text-border w-[22px] h-[22px]" />
               <div className="flex items-center gap-2 min-w-0">
                 <Link
                   href={`/${demo.user.username}`}

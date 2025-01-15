@@ -1,16 +1,20 @@
 "use client"
 
 import { useAtom } from "jotai"
-import { useClerkSupabaseClient } from "@/lib/clerk"
 import { useQuery } from "@tanstack/react-query"
-
 import { ComponentsList } from "@/components/ComponentsList"
 import { quickFilterAtom, sortByAtom } from "@/components/ComponentsHeader"
 import { searchQueryAtom } from "@/components/Header"
-import { Component, QuickFilterOption, SortOption, User } from "@/types/global"
+import { sortComponents, filterComponents } from "@/lib/filters.client"
+import {
+  DemoWithComponent,
+  QuickFilterOption,
+  SortOption,
+  Component,
+  User,
+} from "@/types/global"
 import { TagComponentsHeader } from "@/components/TagComponentsHeader"
 import { useLayoutEffect, useState } from "react"
-import { DemoWithComponent } from "@/types/global"
 
 export function TagPageContent({
   demos,
@@ -27,6 +31,7 @@ export function TagPageContent({
 }) {
   const [sortBy, setSortBy] = useAtom(sortByAtom)
   const [quickFilter, setQuickFilter] = useAtom(quickFilterAtom)
+  console.log("Current quickFilter:", quickFilter)
   const [searchQuery] = useAtom(searchQueryAtom)
   const [tabCounts, setTabCounts] = useState<
     Record<QuickFilterOption, number> | undefined
@@ -48,79 +53,35 @@ export function TagPageContent({
     }
   }, [])
 
-  const { data: filteredDemos, isLoading } = useQuery<DemoWithComponent[]>({
-    queryKey: ["tag-components", tagName, sortBy, quickFilter, searchQuery],
-    queryFn: async () => {
-      if (!quickFilter || !sortBy) {
-        return []
-      }
+  const { data: filteredComponents, isLoading } = useQuery<DemoWithComponent[]>(
+    {
+      queryKey: ["tag-components", tagName, sortBy, quickFilter, searchQuery],
+      queryFn: async () => {
+        let filtered = demos
 
-      const supabase = useClerkSupabaseClient()
+        if (!sortBy || !quickFilter) {
+          return filtered
+        }
 
-      if (searchQuery) {
-        const { data: searchResults, error } = await supabase.rpc(
-          "search_demos",
-          {
-            search_query: searchQuery,
-          },
+        const componentsForFilter = filtered.map((d) => ({
+          ...d.component,
+          user: d.user,
+        }))
+        const filteredComponents = filterComponents(
+          componentsForFilter,
+          quickFilter,
         )
 
-        if (error) throw new Error(error.message)
-
-        return (searchResults || []).map((result) => ({
-          id: result.id,
-          name: result.name,
-          demo_code: result.demo_code,
-          preview_url: result.preview_url,
-          video_url: result.video_url,
-          compiled_css: result.compiled_css,
-          demo_dependencies: result.demo_dependencies,
-          demo_direct_registry_dependencies:
-            result.demo_direct_registry_dependencies,
-          pro_preview_image_url: result.pro_preview_image_url,
-          created_at: result.created_at,
-          updated_at: result.updated_at,
-          component_id: result.component_id,
-          component: result.component_data as Component,
-          user: result.user_data as User,
-          user_id: result.user_id,
-          fts: result.fts || null,
-        })) as DemoWithComponent[]
-      }
-
-      const { data: filteredData, error } = await supabase.rpc(
-        "get_filtered_demos",
-        {
-          p_quick_filter: quickFilter,
-          p_sort_by: sortBy,
-          p_offset: 0,
-          p_limit: 100,
-        },
-      )
-
-      if (error) throw new Error(error.message)
-
-      return (filteredData || []).map((result) => ({
-        id: result.id,
-        name: result.name,
-        demo_code: result.demo_code,
-        preview_url: result.preview_url,
-        video_url: result.video_url,
-        compiled_css: result.compiled_css,
-        demo_dependencies: result.demo_dependencies,
-        demo_direct_registry_dependencies:
-          result.demo_direct_registry_dependencies,
-        pro_preview_image_url: result.pro_preview_image_url,
-        created_at: result.created_at,
-        updated_at: result.updated_at,
-        component_id: result.component_id,
-        component: result.component_data as Component,
-        user: result.user_data as User,
-        user_id: (result.component_data as Component).user_id,
-        fts: result.fts || null,
-      })) as DemoWithComponent[]
+        return filtered.filter((demo) =>
+          filteredComponents.some((comp) => comp.id === demo.component.id),
+        )
+      },
+      initialData: demos,
+      staleTime: 0
     },
-  })
+  )
+
+  console.log("Rendering with components:", filteredComponents?.length)
 
   return (
     <div className="container mx-auto mt-20">
@@ -129,10 +90,7 @@ export function TagPageContent({
         demos={demos}
         currentSection={tagName}
       />
-      <ComponentsList
-        components={filteredDemos || demos}
-        isLoading={isLoading}
-      />
+      <ComponentsList components={filteredComponents} isLoading={isLoading} />
     </div>
   )
 }

@@ -16,7 +16,6 @@ export function ComponentsList({
   className?: string
   skeletonCount?: number
   }) {
-  console.log("Client components:", components)
 
   return (
     <div

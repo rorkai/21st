@@ -1,19 +1,29 @@
-import { Component, QuickFilterOption, SortOption, User } from "@/types/global"
+import {
+  Component,
+  QuickFilterOption,
+  SortOption,
+  User,
+  DemoWithComponent,
+} from "@/types/global"
+
+type ComponentWithUser = Component & { user: User }
+type FilterableComponent = ComponentWithUser | DemoWithComponent
 
 // TODO: move to server when we have more components and infinite pagination on home/category pages
 
 export function filterComponents(
-  components: (Component & { user: User })[],
+  items: FilterableComponent[],
   quickFilter: QuickFilterOption,
 ) {
-  let filtered = [...components]
+  let filtered = [...items]
 
   switch (quickFilter) {
     case "all":
       break
     case "last_released":
-      filtered = filtered.filter((c) => {
-        const date = new Date(c.created_at)
+      filtered = filtered.filter((item) => {
+        const component = isDemoWithComponent(item) ? item.component : item
+        const date = new Date(component.created_at)
         const now = new Date()
         const diffDays = Math.floor(
           (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
@@ -22,7 +32,10 @@ export function filterComponents(
       })
       break
     case "most_downloaded":
-      filtered = filtered.filter((c) => (c.downloads_count || 0) > 6)
+      filtered = filtered.filter((item) => {
+        const component = isDemoWithComponent(item) ? item.component : item
+        return (component.downloads_count || 0) > 6
+      })
       break
   }
 
@@ -30,21 +43,35 @@ export function filterComponents(
 }
 
 export function sortComponents(
-  components: (Component & { user: User })[],
+  items: FilterableComponent[],
   sortBy: SortOption,
 ) {
-  return [...components].sort((a, b) => {
+  return [...items].sort((a, b) => {
+    const componentA = isDemoWithComponent(a) ? a.component : a
+    const componentB = isDemoWithComponent(b) ? b.component : b
+
     switch (sortBy) {
       case "downloads":
-        return (b.downloads_count || 0) - (a.downloads_count || 0)
+        return (
+          (componentB.downloads_count || 0) - (componentA.downloads_count || 0)
+        )
       case "likes":
-        return (b.likes_count || 0) - (a.likes_count || 0)
+        return (componentB.likes_count || 0) - (componentA.likes_count || 0)
       case "date":
         return (
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          new Date(componentB.created_at).getTime() -
+          new Date(componentA.created_at).getTime()
         )
       default:
-        return (b.downloads_count || 0) - (a.downloads_count || 0)
+        return (
+          (componentB.downloads_count || 0) - (componentA.downloads_count || 0)
+        )
     }
   })
+}
+
+function isDemoWithComponent(
+  item: FilterableComponent,
+): item is DemoWithComponent {
+  return "component" in item
 }

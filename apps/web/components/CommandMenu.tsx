@@ -133,7 +133,7 @@ export function CommandMenu() {
       if (!searchQuery) return []
 
       const { data: searchResults, error } = await supabase.rpc(
-        "search_components",
+        "search_demos",
         {
           search_query: searchQuery,
         },
@@ -154,21 +154,10 @@ export function CommandMenu() {
         pro_preview_image_url: result.pro_preview_image_url,
         created_at: result.created_at,
         updated_at: result.updated_at,
-        component_id: result.id,
-        component: {
-          id: result.id,
-          name: result.name,
-          component_slug: result.component_slug,
-          code: result.code,
-          demo_code: result.demo_code,
-          downloads_count: result.downloads_count || 0,
-          likes_count: result.likes_count,
-          license: result.license,
-          is_public: result.is_public,
-          user_id: result.user_id,
-        } as Component,
-        user: result.user_data as User,
+        component_id: result.component_id,
         user_id: result.user_id,
+        component: result.component_data as Component,
+        user: result.user_data as User,
       })) as DemoWithComponent[]
     },
   })
@@ -207,7 +196,8 @@ export function CommandMenu() {
     if (!value.startsWith("component-")) return null
     const [userId, componentSlug] = value.replace("component-", "").split("/")
     return components?.find(
-      (c) => c.user_id === userId && c.component.component_slug === componentSlug,
+      (c) =>
+        c.user_id === userId && c.component.component_slug === componentSlug,
     )
   }, [components, value])
 
@@ -231,7 +221,9 @@ export function CommandMenu() {
         fetchFileTextContent(selectedComponent.component.code),
         fetchFileTextContent(selectedComponent.demo_code),
         selectedComponent.component.tailwind_config_extension
-          ? fetchFileTextContent(selectedComponent.component.tailwind_config_extension)
+          ? fetchFileTextContent(
+              selectedComponent.component.tailwind_config_extension,
+            )
           : Promise.resolve({ data: null, error: null }),
         selectedComponent.component.compiled_css
           ? fetchFileTextContent(selectedComponent.component.compiled_css)
@@ -282,10 +274,8 @@ export function CommandMenu() {
         code: codeResult.data as string,
         demoCode: demoResult!.data as string,
         registryDependencies: registryDependenciesFiles,
-        npmDependencies: (selectedComponent.component.dependencies ?? {}) as Record<
-          string,
-          string
-        >,
+        npmDependencies: (selectedComponent.component.dependencies ??
+          {}) as Record<string, string>,
         npmDependenciesOfRegistryDependencies:
           registryDependenciesData.npmDependencies,
         tailwindConfig: tailwindConfigResult!.data as string,
@@ -311,9 +301,10 @@ export function CommandMenu() {
   }
 
   const handleOpen = () => {
+    console.log(selectedComponent)
     if (value.startsWith("component-") && selectedComponent) {
       router.push(
-        `/${selectedComponent.user.username}/${selectedComponent.component.component_slug}`,
+        `/${selectedComponent.user.username}/${selectedComponent.component.component_slug}/${selectedComponent.id}`,
       )
     } else if (value.startsWith("section-")) {
       const section = filteredSections
@@ -431,14 +422,7 @@ export function CommandMenu() {
                       <CommandItem
                         key={component.id}
                         value={`component-${component.user_id}/${component.component.component_slug}`}
-                        onSelect={() => {
-                          router.push(
-                            `/${component.user.username}/${component.component.component_slug}`,
-                          )
-                          setSearchQuery("")
-                          setValue("")
-                          setOpen(false)
-                        }}
+                        onSelect={handleOpen}
                         className="flex items-center gap-2"
                       >
                         <span className="truncate">{component.name}</span>

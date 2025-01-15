@@ -81,7 +81,9 @@ export function HomePageClient({
   const { data, isLoading, isFetching, fetchNextPage, hasNextPage } =
     useInfiniteQuery<{ data: DemoWithComponent[]; total_count: number }>({
       queryKey: ["filtered-demos", quickFilter, sortBy, debouncedSearchQuery],
-      queryFn: async ({ pageParam = 0 }) => {
+      queryFn: async ({
+        pageParam = 0,
+      }): Promise<{ data: DemoWithComponent[]; total_count: number }> => {
         if (!quickFilter || !sortBy) {
           return {
             data: [],
@@ -100,64 +102,41 @@ export function HomePageClient({
             },
           )
 
-          if (error) {
-            throw new Error(error.message)
-          }
-
-          const data = filteredData || []
-          if (data.length === 0) {
-            return {
-              data: [],
-              total_count: 0,
-            }
-          }
-
-          const demos = data.map((item) => ({
-            id: item.id,
-            name: item.name,
-            demo_code: item.demo_code,
-            preview_url: item.preview_url,
-            video_url: item.video_url,
-            compiled_css: item.compiled_css,
-            demo_dependencies: item.demo_dependencies,
-            demo_direct_registry_dependencies:
-              item.demo_direct_registry_dependencies,
-            pro_preview_image_url: item.pro_preview_image_url,
-            created_at: item.created_at,
-            updated_at: item.updated_at,
-            component_id: item.component_id,
-            component: item.component_data as Component,
-            user: item.user_data as User,
-            tags: item.tags as Tag[],
-            user_id: (item.component_data as Component).user_id,
-          })) as DemoWithComponent[]
-
+          if (error) throw new Error(error.message)
           return {
-            data: demos,
-            total_count: data[0]?.total_count ?? 0,
+            data: (filteredData || []).map((result) => ({
+              id: result.id,
+              name: result.name,
+              demo_code: result.demo_code,
+              preview_url: result.preview_url,
+              video_url: result.video_url,
+              compiled_css: result.compiled_css,
+              demo_dependencies: result.demo_dependencies,
+              demo_direct_registry_dependencies:
+              result.demo_direct_registry_dependencies,
+              pro_preview_image_url: result.pro_preview_image_url,
+              created_at: result.created_at,
+              updated_at: result.updated_at,
+              component_id: result.component_id,
+              component: result.component_data as Component,
+              user: result.user_data as User,
+              user_id: (result.component_data as Component).user_id,
+              fts: result.fts || null,
+            })) as DemoWithComponent[],
+            total_count: filteredData?.[0]?.total_count ?? 0,
           }
         }
 
-        const { data: searchData, error } = await supabase.rpc(
-          "search_components",
+        const { data: searchResults, error } = await supabase.rpc(
+          "search_demos",
           {
             search_query: debouncedSearchQuery,
           },
         )
 
-        if (error) {
-          throw new Error(error.message)
-        }
+        if (error) throw new Error(error.message)
 
-        const searchResults = searchData || []
-        if (searchResults.length === 0) {
-          return {
-            data: [],
-            total_count: 0,
-          }
-        }
-
-        const demos = searchResults.map((result) => ({
+        const demos = (searchResults || []).map((result) => ({
           id: result.id,
           name: result.name,
           demo_code: result.demo_code,
@@ -170,20 +149,11 @@ export function HomePageClient({
           pro_preview_image_url: result.pro_preview_image_url,
           created_at: result.created_at,
           updated_at: result.updated_at,
-          component_id: result.id,
-          component: {
-            id: result.id,
-            name: result.name,
-            component_slug: result.component_slug,
-            downloads_count: result.downloads_count || 0,
-            likes_count: result.likes_count,
-            license: result.license,
-            is_public: result.is_public,
-            user_id: result.user_id,
-          } as Component,
+          component_id: result.component_id,
+          component: result.component_data as Component,
           user: result.user_data as User,
-          tags: [],
           user_id: result.user_id,
+          fts: result.fts || null,
         })) as DemoWithComponent[]
 
         return {

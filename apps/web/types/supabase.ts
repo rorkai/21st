@@ -399,6 +399,7 @@ export type Database = {
           demo_code: string
           demo_dependencies: Json | null
           demo_direct_registry_dependencies: Json | null
+          fts: unknown | null
           id: number
           name: string | null
           preview_url: string | null
@@ -414,6 +415,7 @@ export type Database = {
           demo_code: string
           demo_dependencies?: Json | null
           demo_direct_registry_dependencies?: Json | null
+          fts?: unknown | null
           id?: never
           name?: string | null
           preview_url?: string | null
@@ -429,6 +431,7 @@ export type Database = {
           demo_code?: string
           demo_dependencies?: Json | null
           demo_direct_registry_dependencies?: Json | null
+          fts?: unknown | null
           id?: never
           name?: string | null
           preview_url?: string | null
@@ -811,6 +814,7 @@ export type Database = {
           user_data: Json
           tags: Json
           total_count: number
+          fts: unknown
         }[]
       }
       get_random_components: {
@@ -880,6 +884,36 @@ export type Database = {
           downloads_count: number
           likes_count: number
           component_slug: string
+        }[]
+      }
+      search_demos: {
+        Args: {
+          search_query: string
+        }
+        Returns: {
+          id: number
+          component_id: number
+          name: string
+          demo_code: string
+          created_at: string
+          updated_at: string
+          user_id: string
+          demo_dependencies: Json
+          demo_direct_registry_dependencies: Json
+          preview_url: string
+          video_url: string
+          compiled_css: string
+          pro_preview_image_url: string
+          component_data: Json
+          user_data: Json
+          is_paid: boolean
+          payment_url: string
+          price: number
+          license: string
+          website_url: string
+          downloads_count: number
+          likes_count: number
+          fts: unknown
         }[]
       }
       update_component_dependencies_closure:

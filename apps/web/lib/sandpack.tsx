@@ -202,7 +202,7 @@ export default function App() {
       <RouterProvider>
         <div className="bg-background text-foreground">
           {showSelect && (
-            <div className="absolute z-10 top-16 right-4 flex flex-col items-end gap-1">
+            <div className="absolute z-10 top-4 right-14 flex flex-col items-end gap-1">
               <Select onValueChange={handleSelect} value={demoComponentNames[currentIndex]} className="shadow ">
                 <SelectTrigger className="gap-2 h-8">
                   <SelectValue />
@@ -287,9 +287,9 @@ export default function App() {
           <div className="relative flex items-center justify-center h-screen w-full m-auto p-16 bg-background text-foreground">
             <div className="absolute lab-bg inset-0 size-full bg-[radial-gradient(#00000021_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff22_1px,transparent_1px)] [background-size:16px_16px]"></div>
             {showSelect && (
-              <div className="absolute z-10 top-4 right-4 flex flex-col items-end gap-1">
+              <div className="absolute z-10 top-4 right-14 flex flex-col items-end gap-1">
                 <Select onValueChange={handleSelect} value={demoComponentNames[currentIndex]} className="shadow">
-                  <SelectTrigger className="gap-2">
+                  <SelectTrigger className="gap-2 h-8">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

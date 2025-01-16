@@ -8,7 +8,12 @@ import { useAtom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import { useQuery } from "@tanstack/react-query"
 
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
 import {
   Command,
   CommandEmpty,
@@ -330,6 +335,11 @@ export function CommandMenu() {
         className="p-0 max-w-3xl h-[470px] overflow-hidden"
         hideCloseButton
       >
+        <DialogTitle className="sr-only">Command Menu</DialogTitle>
+        <DialogDescription className="sr-only">
+          Search and navigate through components and sections using keyboard
+          shortcuts
+        </DialogDescription>
         <Command value={value} onValueChange={setValue} className="h-full">
           <CommandInput
             value={searchQuery}

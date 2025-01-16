@@ -110,15 +110,12 @@ export const ComponentDetailsForm = ({
     rules: {
       onChange: (e) => {
         const rawValue = e.target.value
-        console.log("Raw input value:", rawValue)
 
         // Remove any protocols from input
         const cleanUrl = rawValue
           .trim()
           .replace(/^(https?:\/\/)+(www\.)?/, "")
           .replace(/\/$/, "")
-
-        console.log("Cleaned URL:", cleanUrl)
 
         // Simple URL validation
         const urlRegex =

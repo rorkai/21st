@@ -55,16 +55,6 @@ export function ComponentCard({
     ? `/${userData.username}/${component.component.component_slug}/${component.demo_slug || `demo-${component.id}`}`
     : `/${userData.username}/${component.component_slug}`
 
-  console.log({
-    isDemo,
-    component,
-    demoSlug: isDemo ? component.demo_slug : null,
-    componentSlug: isDemo
-      ? component.component.component_slug
-      : component.component_slug,
-    username: userData.username,
-  })
-
   const supabase = useClerkSupabaseClient()
 
   const componentId = isDemo ? component.component.id : component.id

@@ -385,12 +385,12 @@ export default function ComponentPage({
       {
         onSuccess: async () => {
           try {
-            console.log("Component updates:", updatedData)
+            
 
             if (Object.keys(demoUpdates).length > 0 && demoUpdates.id) {
               // Sync demo tags if present
               if (demoUpdates.demo_tags?.length !== undefined) {
-                console.log("New tags set:", demoUpdates.demo_tags)
+                
 
                 // First, remove all existing tags for this demo
                 const { error: deleteError } = await supabase
@@ -410,7 +410,7 @@ export default function ComponentPage({
                   ) as Tag[]
 
                   if (tagsToAdd.length > 0) {
-                    console.log("Adding new tag set:", tagsToAdd)
+      
                     await addTagsToComponent(
                       supabase,
                       demoUpdates.id,
@@ -424,6 +424,7 @@ export default function ComponentPage({
                 preview_url: demoUpdates.preview_url,
                 video_url: demoUpdates.video_url,
                 updated_at: new Date().toISOString(),
+                tags: demoUpdates.demo_tags,
               }
               console.log("Demo updates:", demoUpdatePayload)
 

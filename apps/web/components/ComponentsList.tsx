@@ -16,10 +16,6 @@ export function ComponentsList({
   className?: string
   skeletonCount?: number
 }) {
-  useEffect(() => {
-    console.log("Components list updated:", components?.length)
-    console.log("Sample component:", components?.[0])
-  }, [components])
 
   return (
     <div

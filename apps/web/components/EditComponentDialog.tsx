@@ -23,6 +23,11 @@ import { useIsMobile } from "@/hooks/use-media-query"
 import { DemoDetailsForm } from "./publish/forms/DemoDetailsForm"
 import { Button } from "./ui/button"
 
+const cleanInitialUrl = (url: string | null) => {
+  if (!url) return ""
+  return url.replace(/^(https?:\/\/)+(www\.)?/, "")
+}
+
 export function EditComponentDialog({
   component,
   demo,
@@ -68,7 +73,7 @@ export function EditComponentDialog({
       ],
       description: componentData.description ?? "",
       license: componentData.license,
-      website_url: componentData.website_url ?? "",
+      website_url: cleanInitialUrl(componentData.website_url ?? ""),
       is_public: true,
       unknown_dependencies: [],
       registry: componentData.registry,

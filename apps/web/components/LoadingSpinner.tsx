@@ -26,8 +26,12 @@ export const LoadingSpinner = ({
   )
 }
 
-export const LoadingSpinnerPage = () => (
+export const LoadingSpinnerPage = ({
+  text,
+  size,
+  showText
+}: LoadingSpinnerProps) => (
   <div className="w-full h-screen flex items-center justify-center bg-background">
-    <LoadingSpinner />
+    <LoadingSpinner text={text} size={size} showText={showText} />
   </div>
 )

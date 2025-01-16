@@ -676,3 +676,26 @@ export async function searchDemos(
     return demo as unknown as DemoWithComponent
   })
 }
+
+export async function getComponentDemos(
+  supabase: SupabaseClient<Database>,
+  componentId: number,
+) {
+  const { data, error } = await supabase
+    .from("demos")
+    .select(
+      `
+      *,
+      user:users!user_id (*)
+    `,
+    )
+    .eq("component_id", componentId)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.error("Error fetching component demos:", error)
+    return { data: null, error }
+  }
+
+  return { data, error: null }
+}

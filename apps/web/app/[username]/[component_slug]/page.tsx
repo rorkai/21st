@@ -2,7 +2,7 @@ import React from "react"
 import { notFound, redirect } from "next/navigation"
 import dynamic from "next/dynamic"
 import ErrorPage from "@/components/ErrorPage"
-import { getComponent, getComponentWithDemo, getUserData } from "@/lib/queries"
+import { getComponent, getComponentDemos, getComponentWithDemo, getUserData } from "@/lib/queries"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 import { extractDemoComponentNames } from "@/lib/parsers"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
@@ -142,6 +142,10 @@ export default async function ComponentPageServer({
 
     const { component, demo } = data
 
+
+    const { data: componentDemos, error: demosError } = await getComponentDemos(supabaseWithAdminAccess, component.id)
+
+
     const dependencies = (component.dependencies ?? {}) as Record<
       string,
       string
@@ -239,6 +243,7 @@ export default async function ComponentPageServer({
         <ComponentPage
           component={component}
           demo={demo}
+          componentDemos={componentDemos}
           code={codeResult?.data as string}
           demoCode={demoResult?.data as string}
           dependencies={dependencies}

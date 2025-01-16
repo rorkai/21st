@@ -48,11 +48,34 @@ import { ComponentPagePreview } from "./ComponentPagePreview"
 import { EditComponentDialog } from "./EditComponentDialog"
 import { usePublishAs } from "./publish/hooks/use-publish-as"
 import { Icons } from "@/components/icons"
+import Image from "next/image"
 
-import { CodeXml, Info, Pencil, ChevronDown, Flag } from "lucide-react"
+import {
+  CodeXml,
+  Info,
+  Pencil,
+  ChevronDown,
+  Flag,
+  Plus,
+  Check,
+} from "lucide-react"
 import { toast } from "sonner"
 import { atomWithStorage } from "jotai/utils"
 import { useRouter } from "next/navigation"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "@/components/ui/command"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
 export const isShowCodeAtom = atom(true)
 const selectedPromptTypeAtom = atomWithStorage<PromptType | "v0-open">(
@@ -301,9 +324,8 @@ async function purgeCacheForDemo(
 
 type ComponentPageProps = {
   component: Component & { user: User } & { tags: Tag[] }
-  demo: Demo & {
-    user: User // Убедимся что этот тип определен правильно
-  } & { tags: Tag[] }
+  demo: Demo & { user: User } & { tags: Tag[] }
+  componentDemos: Demo[] | null
   code: string
   demoCode: string
   dependencies: Record<string, string>
@@ -329,6 +351,7 @@ export default function ComponentPage({
   tailwindConfig,
   globalCss,
   compiledCss,
+  componentDemos,
 }: ComponentPageProps) {
   console.log("Component Page Demo:", {
     demoData: initialDemo,
@@ -632,33 +655,74 @@ export default function ComponentPage({
           {demo && (
             <div className="hidden md:flex items-center gap-2">
               <Icons.slash className="text-border w-[22px] h-[22px]" />
-              <div className="flex items-center gap-2 min-w-0">
-                <Link
-                  href={`/${demo.user.username}`}
-                  className="cursor-pointer"
-                >
-                  <UserAvatar
-                    src={demo.user.image_url || "/placeholder.svg"}
-                    alt={demo.user.name}
-                    size={22}
-                    isClickable={true}
-                    user={demo.user}
-                  />
-                </Link>
-                <p className="text-[14px] font-medium whitespace-nowrap">
-                  {demo.name}
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    router.push(`/publish/demo?componentId=${component.id}`)
-                  }}
-                  className="h-7"
-                >
-                  Add demo
-                </Button>
-              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <div className="flex items-center gap-2 min-w-0 hover:bg-accent rounded-md p-2 cursor-pointer group">
+                    <Link href={`/${demo.user.username}`}>
+                      <UserAvatar
+                        src={demo.user.image_url || "/placeholder.svg"}
+                        alt={demo.user.name}
+                        size={22}
+                        isClickable={true}
+                        user={demo.user}
+                      />
+                    </Link>
+                    <p className="text-[14px] font-medium whitespace-nowrap">
+                      {demo.name}
+                    </p>
+                    <ChevronDown
+                      size={16}
+                      className="text-muted-foreground group-hover:text-foreground transition-colors"
+                    />
+                  </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-[300px] p-0">
+                  <Command>
+                    <CommandInput placeholder="Find demo..." />
+                    <CommandList>
+                      <CommandEmpty>No demos found.</CommandEmpty>
+                      <CommandGroup>
+                        {componentDemos?.map((d) => (
+                          <CommandItem
+                            key={d.id}
+                            onSelect={() =>
+                              router.push(
+                                `/${component.user.username}/${component.component_slug}/${d.demo_slug}`,
+                              )
+                            }
+                            className="flex items-center gap-2"
+                          >
+                            <Image
+                              src={d.preview_url || "/placeholder.svg"}
+                              alt={d.name || ""}
+                              width={80}
+                              height={60}
+                              className="rounded-sm"
+                            />
+                            {d.name}
+                            {d.id === demo.id && (
+                              <Check size={16} className="ml-auto" />
+                            )}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                      <CommandSeparator />
+                      <CommandGroup>
+                        <CommandItem
+                          onSelect={() =>
+                            router.push(
+                              `/publish/demo?componentId=${component.id}`,
+                            )
+                          }
+                        >
+                          <Plus size={16} className="mr-2" />
+                          Add new demo
+                        </CommandItem>
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
           )}
         </div>

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation"
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import PublishComponentForm from "@/components/publish/PublishComponentForm"
 import fetchFileTextContent from "@/lib/utils/fetchFileTextContent"
+import { LoadingSpinnerPage } from "@/components/LoadingSpinner"
 
 interface ComponentData {
   code: string
@@ -19,42 +20,43 @@ export default function AddDemoPage() {
   const supabase = useClerkSupabaseClient()
   const [componentData, setComponentData] = useState<ComponentData | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     async function fetchComponentData() {
-      if (!componentId) {
-        setError("No componentId provided")
-        return
-      }
-
-      console.log("Fetching component with id:", componentId)
-
-      const { data: component, error: supabaseError } = await supabase
-        .from("components")
-        .select(
-          `
-          *,
-          user:users!components_user_id_fkey(*)
-        `,
-        )
-        .eq("id", componentId)
-        .single()
-
-      if (supabaseError) {
-        console.error("Supabase error:", supabaseError)
-        setError(supabaseError.message)
-        return
-      }
-
-      if (!component) {
-        console.error("No component found")
-        setError("Component not found")
-        return
-      }
-
-      console.log("Component found:", component)
-
       try {
+        if (!componentId) {
+          setError("No componentId provided")
+          return
+        }
+
+        console.log("Fetching component with id:", componentId)
+
+        const { data: component, error: supabaseError } = await supabase
+          .from("components")
+          .select(
+            `
+            *,
+            user:users!components_user_id_fkey(*)
+          `,
+          )
+          .eq("id", componentId)
+          .single()
+
+        if (supabaseError) {
+          console.error("Supabase error:", supabaseError)
+          setError(supabaseError.message)
+          return
+        }
+
+        if (!component) {
+          console.error("No component found")
+          setError("Component not found")
+          return
+        }
+
+        console.log("Component found:", component)
+
         const [codeResult, tailwindConfigResult, globalCssResult] =
           await Promise.all([
             fetchFileTextContent(component.code),
@@ -86,6 +88,8 @@ export default function AddDemoPage() {
       } catch (err) {
         console.error("Error fetching files:", err)
         setError(err instanceof Error ? err.message : "Unknown error")
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -93,11 +97,16 @@ export default function AddDemoPage() {
   }, [componentId, supabase])
 
   if (error) {
-    return <div className="p-4 text-red-500">Error: {error}</div>
+    return (
+      <div className="flex flex-col items-center justify-center h-[50vh] gap-4">
+        <div className="text-red-500 text-lg font-medium">Error</div>
+        <div className="text-muted-foreground">{error}</div>
+      </div>
+    )
   }
 
-  if (!componentData) {
-    return <div className="p-4">Loading...</div>
+  if (isLoading || !componentData) {
+    return <LoadingSpinnerPage text="Loading component..." size="lg" showText={true} />
   }
 
   return (

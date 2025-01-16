@@ -274,6 +274,30 @@ const copyToClipboard = async (text: string) => {
   }
 }
 
+async function purgeCacheForDemo(
+  previewUrl?: string,
+  videoUrl?: string,
+): Promise<void> {
+  const filesToPurge: string[] = []
+  if (previewUrl) {
+    filesToPurge.push(previewUrl)
+  }
+  if (videoUrl) {
+    filesToPurge.push(videoUrl)
+  }
+
+  if (filesToPurge.length === 0) return
+
+  await fetch("/api/purge-cache", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      filesToPurge,
+      pathToRevalidate: "/",
+    }),
+  })
+}
+
 export default function ComponentPage({
   component: initialComponent,
   demo: initialDemo,
@@ -346,6 +370,12 @@ export default function ComponentPage({
         {
           onSuccess: async () => {
             try {
+              if (demoUpdates.preview_url || demoUpdates.video_url) {
+                await purgeCacheForDemo(
+                  demoUpdates.preview_url ?? undefined,
+                  demoUpdates.video_url ?? undefined,
+                )
+              }
               console.log("Component updates:", updatedData)
 
               if (Object.keys(demoUpdates).length > 0 && demoUpdates.id) {

@@ -40,8 +40,9 @@ export function News({
     return () => clearTimeout(timeout)
   }, [cardCount])
 
-  const isServer = typeof window === "undefined"
-  if (isServer) return null
+  if (typeof window === "undefined") {
+    return <div />
+  }
 
   return cards.length || (enableShowCompleted && showCompleted) ? (
     <div
@@ -56,39 +57,39 @@ export function News({
             <div
               key={href}
               className={cn(
-              "absolute left-0 top-0 size-full scale-[var(--scale)] transition-[opacity,transform] duration-200",
-              cardCount - idx > 3
-                ? [
-                    "opacity-0 sm:group-hover:translate-y-[var(--y)] sm:group-hover:opacity-[var(--opacity)]",
-                    "sm:group-has-[*[data-dragging=true]]:translate-y-[var(--y)] sm:group-has-[*[data-dragging=true]]:opacity-[var(--opacity)]",
-                  ]
-                : "translate-y-[var(--y)] opacity-[var(--opacity)]",
-            )}
-            style={
-              {
-                "--y": `-${(cardCount - (idx + 1)) * OFFSET_FACTOR}%`,
-                "--scale": 1 - (cardCount - (idx + 1)) * SCALE_FACTOR,
-                "--opacity":
-                  cardCount - (idx + 1) >= 6
-                    ? 0
-                    : 1 - (cardCount - (idx + 1)) * OPACITY_FACTOR,
-              } as React.CSSProperties
-            }
-            aria-hidden={idx !== cardCount - 1}
-          >
-            <NewsCard
-              title={title}
-              description={summary}
-              image={image}
-              href={href}
-              hideContent={cardCount - idx > 2}
-              active={idx === cardCount - 1}
-              onDismiss={() =>
-                setDismissedNews([href, ...dismissedNews.slice(0, 50)])
+                "absolute left-0 top-0 size-full scale-[var(--scale)] transition-[opacity,transform] duration-200",
+                cardCount - idx > 3
+                  ? [
+                      "opacity-0 sm:group-hover:translate-y-[var(--y)] sm:group-hover:opacity-[var(--opacity)]",
+                      "sm:group-has-[*[data-dragging=true]]:translate-y-[var(--y)] sm:group-has-[*[data-dragging=true]]:opacity-[var(--opacity)]",
+                    ]
+                  : "translate-y-[var(--y)] opacity-[var(--opacity)]",
+              )}
+              style={
+                {
+                  "--y": `-${(cardCount - (idx + 1)) * OFFSET_FACTOR}%`,
+                  "--scale": 1 - (cardCount - (idx + 1)) * SCALE_FACTOR,
+                  "--opacity":
+                    cardCount - (idx + 1) >= 6
+                      ? 0
+                      : 1 - (cardCount - (idx + 1)) * OPACITY_FACTOR,
+                } as React.CSSProperties
               }
-            />
-          </div>
-        ))}
+              aria-hidden={idx !== cardCount - 1}
+            >
+              <NewsCard
+                title={title}
+                description={summary}
+                image={image}
+                href={href}
+                hideContent={cardCount - idx > 2}
+                active={idx === cardCount - 1}
+                onDismiss={() =>
+                  setDismissedNews([href, ...dismissedNews.slice(0, 50)])
+                }
+              />
+            </div>
+          ))}
         {/* <div className="pointer-events-none invisible" aria-hidden>
           <NewsCard title="Title" description="Description" />
         </div> */}

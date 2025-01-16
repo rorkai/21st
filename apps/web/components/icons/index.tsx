@@ -13,14 +13,14 @@ export const Icons = {
     <svg
       data-testid="geist-icon"
       height="16"
-      stroke-linejoin="round"
+      strokeLinejoin="round"
       viewBox="0 0 16 16"
       width="16"
       {...props}
     >
       <path
-        fill-rule="evenodd"
-        clip-rule="evenodd"
+        fillRule="evenodd"
+        clipRule="evenodd"
         d="M13.5 3V2.25H15V3V10C15 10.5523 14.5523 11 14 11H3.56068L5.53035 12.9697L6.06068 13.5L5.00002 14.5607L4.46969 14.0303L1.39647 10.9571C1.00595 10.5666 1.00595 9.93342 1.39647 9.54289L4.46969 6.46967L5.00002 5.93934L6.06068 7L5.53035 7.53033L3.56068 9.5H13.5V3Z"
         fill="currentColor"
       />
@@ -98,14 +98,14 @@ export const Icons = {
   slash: (props: LucideProps) => (
     <svg
       height="16"
-      stroke-linejoin="round"
+      strokeLinejoin="round"
       viewBox="0 0 16 16"
       width="16"
       {...props}
     >
       <path
-        fill-rule="evenodd"
-        clip-rule="evenodd"
+        fillRule="evenodd"
+        clipRule="evenodd"
         d="M4.01526 15.3939L4.3107 14.7046L10.3107 0.704556L10.6061 0.0151978L11.9849 0.606077L11.6894 1.29544L5.68942 15.2954L5.39398 15.9848L4.01526 15.3939Z"
         fill="currentColor"
       />

@@ -108,18 +108,14 @@ export async function getUserComponents(
 export async function getComponents(
   supabase: SupabaseClient<Database>,
   tagSlug?: string,
-) {
+): Promise<(Component & { user: User } & { tags: Tag[] })[]> {
   let query = supabase
     .from("components")
     .select(
       `
     *,
     user:users!user_id (*),
-    component_tags!inner (
-      tags!inner (
-        slug
-      )
-    )
+    tags:component_tags(tags(name, slug))
   `,
     )
     .eq("is_public", true)
@@ -131,12 +127,16 @@ export async function getComponents(
 
   const { data, error } = await query
     .limit(1000)
-    .returns<(Component & { user: User } & { tags: Tag[] })[]>()
+    .returns<(Component & { user: User } & { tags: { tags: Tag }[] })[]>()
 
   if (error) {
     throw new Error(error.message)
   }
-  return data as (Component & { user: User } & { tags: Tag[] })[]
+
+  return data.map((component) => ({
+    ...component,
+    tags: component.tags ? component.tags.map((tag) => tag.tags) : [],
+  })) as (Component & { user: User } & { tags: Tag[] })[]
 }
 
 export async function getComponentTags(
@@ -486,98 +486,64 @@ export async function getFilteredDemos(
 export async function getComponentWithDemo(
   supabase: SupabaseClient<Database>,
   username: string,
-  componentSlug: string,
-  demoIdentifier: string | number = "default",
-): Promise<{
-  data: {
-    component: Component & { user: User }
-    demo: Demo & { tags: Tag[] }
-  } | null
-  error: Error | null
-  shouldRedirectToDefault?: boolean
-}> {
-  try {
-    const { data: userData, error: userError } = await supabase
-      .from("users")
-      .select("id")
-      .eq("username", username)
-      .single()
+  slug: string,
+  demo_slug: string,
+) {
+  const { data: component, error: componentError } = await supabase
+    .from("components")
+    .select(
+      `
+      ${componentReadableDbFields},
+      tags:component_tags(tags(name, slug))
+    `,
+    )
+    .eq("component_slug", slug)
+    .eq("user.username", username)
+    .not("user", "is", null)
+    .eq("is_public", true)
+    .single()
 
-    if (userError) throw userError
-    if (!userData) throw new Error("User not found")
+  if (componentError) {
+    console.error("Error fetching component:", componentError)
+    return { data: null, error: new Error(componentError.message) }
+  }
 
-    const { data: component, error: componentError } = await supabase
-      .from("components")
-      .select(
-        `
-        *,
-        user:users!components_user_id_fkey(*)
-      `,
-      )
-      .eq("component_slug", componentSlug)
-      .eq("user_id", userData.id)
-      .single()
+  const { data: demo, error: demoError } = await supabase
+    .from("demos")
+    .select(
+      `
+      *,
+      tags:demo_tags(tags(name, slug))
+    `,
+    )
+    .eq("component_id", component.id)
+    .eq("demo_slug", demo_slug)
+    .single()
 
-    if (componentError) throw componentError
-    if (!component) throw new Error("Component not found")
-
-    let demoQuery = supabase
-      .from("demos")
-      .select(
-        `
-        *,
-        tags:demo_tags(tags(*))
-      `,
-      )
-      .eq("component_id", component.id)
-
-    if (typeof demoIdentifier === "number" || !isNaN(Number(demoIdentifier))) {
-      demoQuery = demoQuery.eq("id", Number(demoIdentifier))
-    } else {
-      demoQuery = demoQuery.eq("demo_slug", demoIdentifier)
+  if (demoError) {
+    if (demo_slug === "default") {
+      return { data: null, error: new Error(demoError.message) }
     }
+    return { data: null, error: null, shouldRedirectToDefault: true }
+  }
 
-    const { data: demo, error: demoError } = await demoQuery.single()
+  const formattedComponent = {
+    ...component,
+    tags: component.tags ? component.tags.map((tag: any) => tag.tags) : [],
+  } as unknown as Component & { user: User } & { tags: Tag[] }
 
-    if (demoError || !demo) {
-      if (demoIdentifier !== "default") {
-        return {
-          data: null,
-          error: null,
-          shouldRedirectToDefault: true,
-        }
-      }
-      throw new Error("Demo not found")
-    }
+  const formattedDemo = {
+    ...demo,
+    user: component.user,
+    tags: demo.tags ? demo.tags.map((tag: any) => tag.tags) : [],
+  } as unknown as Demo & { user: User } & { tags: Tag[] }
 
-    const formattedTags = demo.tags.map((tag: any) => tag.tags)
-
-    return {
-      data: {
-        component: component as Component & { user: User },
-        demo: { ...demo, tags: formattedTags } as Demo & { tags: Tag[] },
-      },
-      error: null,
-    }
-  } catch (error) {
-    console.error("Error in getComponentWithDemo:", error)
-    const pgError = error as { code?: string }
-
-    if (pgError.code === "PGRST116") {
-      console.log("No rows found, redirecting to default")
-      return {
-        data: null,
-        error: null,
-        shouldRedirectToDefault: true,
-      }
-    }
-
-    return {
-      data: null,
-      error:
-        error instanceof Error ? error : new Error("Unknown error occurred"),
-      shouldRedirectToDefault: true,
-    }
+  return {
+    data: {
+      component: formattedComponent,
+      demo: formattedDemo,
+    },
+    error: null,
   }
 }
 
@@ -594,13 +560,18 @@ export async function getDemos(
     return []
   }
 
-  return (data || []).map((result) => ({
-    ...result,
-    component: {
-      ...(result.component_data as Component),
-      user: result.user_data,
-    } as Component & { user: User },
-  })) as DemoWithComponent[]
+  return (data || []).map((result) => {
+    const demo = {
+      ...result,
+      tags: [],
+      component: {
+        ...(result.component_data as Component),
+        user: result.user_data as User,
+        tags: [],
+      } as Component & { user: User } & { tags: Tag[] },
+    }
+    return demo as unknown as DemoWithComponent
+  })
 }
 
 export async function getDemosCounts(supabase: SupabaseClient<Database>) {
@@ -648,4 +619,40 @@ export async function getUserDemos(
     fts: result.fts || null,
     demo_slug: result.demo_slug,
   })) as DemoWithComponent[]
+}
+
+export async function searchDemos(
+  supabase: SupabaseClient<Database>,
+  searchQuery: string,
+): Promise<DemoWithComponent[]> {
+  const { data: searchResults, error } = await supabase.rpc("search_demos", {
+    search_query: searchQuery,
+  })
+
+  if (error) throw new Error(error.message)
+
+  return (searchResults || []).map((result) => {
+    const demo = {
+      id: result.id,
+      name: result.name,
+      demo_code: result.demo_code,
+      preview_url: result.preview_url,
+      video_url: result.video_url,
+      created_at: result.created_at,
+      updated_at: result.updated_at,
+      component_id: result.component_id,
+      demo_dependencies: result.demo_dependencies,
+      demo_direct_registry_dependencies:
+        result.demo_direct_registry_dependencies,
+      demo_slug: result.demo_slug,
+      compiled_css: result.compiled_css,
+      component: {
+        ...(result.component_data as Component),
+        user: result.user_data as User,
+      },
+      tags: [],
+      user_id: result.user_id,
+    }
+    return demo as unknown as DemoWithComponent
+  })
 }

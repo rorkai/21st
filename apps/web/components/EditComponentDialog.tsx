@@ -13,7 +13,14 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer"
 import { ComponentDetailsForm } from "./publish/forms/ComponentDetailsForm"
-import { Component, User, Tag, DemoWithComponent, Demo } from "@/types/global"
+import {
+  Component,
+  User,
+  Tag,
+  DemoWithComponent,
+  Demo,
+  DemoWithTags,
+} from "@/types/global"
 import { useForm } from "react-hook-form"
 import { FormData } from "./publish/utils"
 import { uploadToR2 } from "@/lib/r2"
@@ -35,8 +42,8 @@ export function EditComponentDialog({
   setIsOpen,
   onUpdate,
 }: {
-  component: DemoWithComponent | (Component & { user: User } & { tags: Tag[] })
-  demo: Demo & { user: User }
+  component: DemoWithComponent | (Component & { user: User })
+  demo: DemoWithTags
   isOpen: boolean
   setIsOpen: (isOpen: boolean) => void
   onUpdate: (
@@ -61,7 +68,7 @@ export function EditComponentDialog({
           demo_slug: "component" in component ? component.demo_slug : "default",
           preview_image_data_url: demo.preview_url || "",
           preview_video_data_url: demo.video_url || "",
-          tags: "tags" in component ? component.tags : [],
+          tags: demo.tags || [],
           demo_direct_registry_dependencies: [],
         },
       ],

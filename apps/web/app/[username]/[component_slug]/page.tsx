@@ -238,12 +238,8 @@ export default async function ComponentPageServer({
     return (
       <div className="w-full">
         <ComponentPage
-          component={{ ...component, user: component.user, tags: demo.tags }}
-          demo={
-            { ...demo, user: component.user } as Demo & {
-              user: User
-            }
-          }
+          component={component}
+          demo={{ ...demo, user: component.user }}
           code={codeResult?.data as string}
           demoCode={demoResult?.data as string}
           dependencies={dependencies}

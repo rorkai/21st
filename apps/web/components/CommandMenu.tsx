@@ -142,15 +142,17 @@ export function CommandMenu() {
 
       if (error) throw new Error(error.message)
 
-      return searchResults.map((result) => ({
-        ...result,
-        component: {
-          ...(result.component_data as Component),
-          user: result.user_data,
-        } as Component & { user: User },
-        demo_slug: result.demo_slug,
-        fts: result.fts || null,
-      })) as DemoWithComponent[]
+      return searchResults.map(
+        (result) =>
+          ({
+            ...result,
+            component: {
+              ...(result.component_data as Component),
+              user: result.user_data,
+            } as Component & { user: User },
+            tags: [],
+          }) as unknown as DemoWithComponent,
+      )
     },
   })
 
@@ -416,7 +418,11 @@ export function CommandMenu() {
                         onSelect={handleOpen}
                         className="flex items-center gap-2"
                       >
-                        <span className="truncate">{component.name}</span>
+                        <span className="truncate">
+                          {component.name === "Default"
+                            ? component.component.name
+                            : `${component.component.name} - ${component.name}`}
+                        </span>
                         <span className="text-xs text-muted-foreground">
                           by {component.component.user.username}
                         </span>

@@ -13,7 +13,9 @@ import {
   User,
   DemoWithComponent,
   Tag,
+  Demo,
 } from "@/types/global"
+import type { Json } from "@/types/supabase"
 
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import { setCookie } from "@/lib/cookies"
@@ -26,6 +28,24 @@ import {
 import { Loader2 } from "lucide-react"
 import { useDebounce } from "@/hooks/use-debounce"
 import ComponentsList from "@/components/ComponentsList"
+
+type SearchResult = {
+  id: number
+  name: string
+  demo_code: string
+  preview_url: string
+  video_url: string
+  created_at: string
+  updated_at: string
+  component_id: number
+  demo_dependencies: Json
+  demo_direct_registry_dependencies: Json
+  demo_slug: string
+  compiled_css: string | null
+  user_id: string | null
+  component_data: Json
+  user_data: Json
+}
 
 const useSetServerUserDataCookies = () => {
   useEffect(() => {
@@ -112,24 +132,17 @@ export function HomePageClient({
 
           if (error) throw new Error(error.message)
           return {
-            data: (filteredData || []).map((result) => ({
-              id: result.id,
-              name: result.name,
-              demo_code: result.demo_code,
-              preview_url: result.preview_url,
-              video_url: result.video_url,
-              compiled_css: result.compiled_css,
-              demo_dependencies: result.demo_dependencies,
-              demo_direct_registry_dependencies:
-                result.demo_direct_registry_dependencies,
-              demo_slug: result.demo_slug,
-              component: {
-                ...(result.component_data as Component),
-                user: result.user_data,
-              } as Component & { user: User },
-              created_at: result.created_at,
-              updated_at: result.updated_at,
-            })) as DemoWithComponent[],
+            data: (filteredData || []).map(
+              (result) =>
+                ({
+                  ...result,
+                  component: {
+                    ...(result.component_data as Component),
+                    user: result.user_data,
+                  } as Component & { user: User },
+                  tags: [],
+                }) as unknown as DemoWithComponent,
+            ),
             total_count: filteredData?.[0]?.total_count ?? 0,
           }
         }
@@ -143,13 +156,17 @@ export function HomePageClient({
 
         if (error) throw new Error(error.message)
 
-        const demos = (searchResults || []).map((result) => ({
-          ...result,
-          component: {
-            ...(result.component_data as Component),
-            user: result.user_data,
-          } as Component & { user: User },
-        })) as DemoWithComponent[]
+        const demos = (searchResults || []).map(
+          (result) =>
+            ({
+              ...result,
+              component: {
+                ...(result.component_data as Component),
+                user: result.user_data,
+              } as Component & { user: User },
+              tags: [],
+            }) as unknown as DemoWithComponent,
+        )
 
         return {
           data: demos,

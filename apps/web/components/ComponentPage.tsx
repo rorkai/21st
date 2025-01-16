@@ -7,10 +7,10 @@ import { atom, useAtom } from "jotai"
 import { useQuery } from "@tanstack/react-query"
 import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs"
 
-import { Component, Demo, Tag, User } from "@/types/global"
+import { Component, Demo, Tag, User, DemoWithTags } from "@/types/global"
 import { PromptType, PROMPT_TYPES } from "@/types/global"
 import { useClerkSupabaseClient } from "@/lib/clerk"
-import { useUpdateComponentWithTags } from "@/lib/queries"
+import { addTagsToComponent, useUpdateComponentWithTags } from "@/lib/queries"
 import {
   identifyUser,
   trackPageProperties,
@@ -77,7 +77,7 @@ const useAnalytics = ({
   component,
   user,
 }: {
-  component: Component & { user: User; tags: Tag[] }
+  component: Component & { user: User }
   user: ReturnType<typeof useUser>["user"]
 }) => {
   const { capture } = useSupabaseAnalytics()
@@ -87,7 +87,7 @@ const useAnalytics = ({
       componentName: component.name,
       authorId: component.user.id,
       isPublic: component.is_public,
-      tags: component.tags.map((tag) => tag.name),
+      tags: [],
       downloadsCount: component.downloads_count,
       hasDemo: !!component.demo_code,
       deviceType: window.innerWidth < 768 ? "mobile" : "desktop",
@@ -306,6 +306,21 @@ async function purgeCacheForDemo(
   })
 }
 
+type ComponentPageProps = {
+  component: Component & { user: User } & { tags: Tag[] }
+  demo: DemoWithTags
+  code: string
+  demoCode: string
+  dependencies: Record<string, string>
+  demoDependencies: Record<string, string>
+  demoComponentNames: string[]
+  registryDependencies: Record<string, string>
+  npmDependenciesOfRegistryDependencies: Record<string, string>
+  tailwindConfig?: string
+  globalCss?: string
+  compiledCss?: string
+}
+
 export default function ComponentPage({
   component: initialComponent,
   demo: initialDemo,
@@ -319,20 +334,7 @@ export default function ComponentPage({
   tailwindConfig,
   globalCss,
   compiledCss,
-}: {
-  component: Component & { user: User } & { tags: Tag[] }
-  demo: Demo & { user: User }
-  code: string
-  demoCode: string
-  dependencies: Record<string, string>
-  demoDependencies: Record<string, string>
-  demoComponentNames: string[]
-  registryDependencies: Record<string, string>
-  npmDependenciesOfRegistryDependencies: Record<string, string>
-  tailwindConfig?: string
-  globalCss?: string
-  compiledCss?: string
-}) {
+}: ComponentPageProps) {
   const [component, setComponent] = useState(initialComponent)
   const [demo] = useState(initialDemo)
   const { user } = useUser()
@@ -386,6 +388,15 @@ export default function ComponentPage({
             console.log("Component updates:", updatedData)
 
             if (Object.keys(demoUpdates).length > 0 && demoUpdates.id) {
+              // Add new demo tags if present
+              if (demoUpdates.demo_tags?.length) {
+                await addTagsToComponent(
+                  supabase,
+                  demoUpdates.id,
+                  demoUpdates.demo_tags.filter((tag) => !!tag.slug) as Tag[],
+                )
+              }
+
               const demoUpdatePayload = {
                 preview_url: demoUpdates.preview_url,
                 video_url: demoUpdates.video_url,

@@ -1,24 +1,28 @@
-import { Tables } from "./supabase"
+import { Database } from "./supabase"
+import type { Json } from "./supabase"
 
-export type User = Tables<"users">
-
-export type Component = Tables<"components">
-
-export type Tag = Tables<"tags">
-
-export type Demo = Tables<"demos">
+export type Component = Database["public"]["Tables"]["components"]["Row"]
+export type Demo = Database["public"]["Tables"]["demos"]["Row"]
+export type User = Database["public"]["Tables"]["users"]["Row"]
+export type Tag = Database["public"]["Tables"]["tags"]["Row"]
 
 export type DemoWithComponent = Demo & {
   component: Component & { user: User }
+  tags: Tag[]
 }
 
-export type DemoWithUser = Demo & {
+export type DemoWithTags = Demo & {
+  tags: Tag[]
   user: User
 }
 
-export type DemoTag = Tables<"demo_tags">
+export type DemoWithComponentAndTags = DemoWithComponent & {
+  tags: Tag[]
+}
 
-export type ComponentTag = Tables<"component_tags">
+export type DemoTag = Database["public"]["Tables"]["demo_tags"]["Row"]
+
+export type ComponentTag = Database["public"]["Tables"]["component_tags"]["Row"]
 
 export type SortOption = "downloads" | "likes" | "date"
 

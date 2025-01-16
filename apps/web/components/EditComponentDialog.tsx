@@ -22,7 +22,6 @@ import { toast } from "sonner"
 import { useIsMobile } from "@/hooks/use-media-query"
 import { DemoDetailsForm } from "./publish/forms/DemoDetailsForm"
 import { Button } from "./ui/button"
-import { Tables } from "@/types/supabase"
 
 export function EditComponentDialog({
   component,

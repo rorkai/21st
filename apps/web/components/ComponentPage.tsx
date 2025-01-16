@@ -318,14 +318,19 @@ export default function ComponentPage({
         {
           onSuccess: async () => {
             try {
+              console.log("Component updates:", updatedData)
+
               if (Object.keys(demoUpdates).length > 0 && demoUpdates.id) {
+                const demoUpdatePayload = {
+                  preview_url: demoUpdates.preview_url,
+                  video_url: demoUpdates.video_url, 
+                  updated_at: new Date().toISOString(),
+                }
+                console.log("Demo updates:", demoUpdatePayload)
+
                 const { error: demoError } = await supabase
                   .from("demos")
-                  .update({
-                    preview_url: demoUpdates.preview_url,
-                    video_url: demoUpdates.video_url,
-                    updated_at: new Date().toISOString(),
-                  })
+                  .update(demoUpdatePayload)
                   .eq("id", demoUpdates.id)
 
                 if (demoError) {
@@ -359,6 +364,8 @@ export default function ComponentPage({
                     (tagRelation: any) => tagRelation.tag,
                   ),
                 }
+
+                console.log("Updated component data:", transformedComponent)
 
                 setComponent(
                   transformedComponent as Component & { user: User } & {
@@ -455,17 +462,6 @@ export default function ComponentPage({
     } catch (err) {
       console.error("Failed to copy AI prompt:", err)
       toast.error("Failed to generate AI prompt")
-    }
-  }
-
-  const handleCodeCopy = async (text: string) => {
-    try {
-      await copyToClipboard(text)
-      toast.success("Code copied to clipboard")
-      capture(component.id, AnalyticsActivityType.COMPONENT_CODE_COPY, user?.id)
-    } catch (err) {
-      console.error("Failed to copy code:", err)
-      toast.error("Failed to copy code")
     }
   }
 

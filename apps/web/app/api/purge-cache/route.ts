@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     const zoneId = process.env.CLOUDFLARE_ZONE_ID
     const apiToken = process.env.CLOUDFLARE_PURGE_CACHE_API_KEY
     const cloudflareUrl = `https://api.cloudflare.com/client/v4/zones/${zoneId}/purge_cache`
-    
+
     console.log("filesToPurge", filesToPurge)
 
     const resp = await fetch(cloudflareUrl, {
@@ -37,7 +37,11 @@ export async function POST(request: Request) {
     }
 
     if (pathToRevalidate) {
-      await revalidatePath(pathToRevalidate)
+      if (Array.isArray(pathToRevalidate)) {
+        await Promise.all(pathToRevalidate.map((path) => revalidatePath(path)))
+      } else {
+        await revalidatePath(pathToRevalidate)
+      }
     }
 
     if (tagToRevalidate) {

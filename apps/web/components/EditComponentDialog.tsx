@@ -59,16 +59,10 @@ export function EditComponentDialog({
           name: componentData.name,
           demo_code: componentData.demo_code || "",
           demo_slug: "component" in component ? component.demo_slug : "default",
-          preview_image_data_url: componentData.preview_url || "",
-          preview_video_data_url: componentData.video_url || "",
+          preview_image_data_url: demo.preview_url || "",
+          preview_video_data_url: demo.video_url || "",
           tags: "tags" in component ? component.tags : [],
-          demo_direct_registry_dependencies: Array.isArray(
-            componentData.demo_direct_registry_dependencies,
-          )
-            ? componentData.demo_direct_registry_dependencies.map((dep) =>
-                String(dep),
-              )
-            : [],
+          demo_direct_registry_dependencies: [],
         },
       ],
       description: componentData.description ?? "",

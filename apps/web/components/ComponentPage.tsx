@@ -67,6 +67,12 @@ const selectedPromptTypeAtom = atomWithStorage<PromptType | "v0-open">(
 )
 export const isFullScreenAtom = atom(false)
 
+const addNoCacheParam = (url: string | null | undefined) => {
+  if (!url) return undefined
+  const separator = url.includes("?") ? "&" : "?"
+  return `${url}${separator}t=${Date.now()}`
+}
+
 const useAnalytics = ({
   component,
   user,
@@ -275,8 +281,8 @@ const copyToClipboard = async (text: string) => {
 }
 
 async function purgeCacheForDemo(
-  previewUrl?: string,
-  videoUrl?: string,
+  previewUrl: string | null | undefined,
+  videoUrl: string | null | undefined,
 ): Promise<void> {
   const filesToPurge: string[] = []
   if (previewUrl) {
@@ -288,12 +294,14 @@ async function purgeCacheForDemo(
 
   if (filesToPurge.length === 0) return
 
+  const currentPath = window.location.pathname
+
   await fetch("/api/purge-cache", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       filesToPurge,
-      pathToRevalidate: "/",
+      pathToRevalidate: ["/", currentPath],
     }),
   })
 }
@@ -364,87 +372,83 @@ export default function ComponentPage({
     updatedData: Partial<Component>,
     demoUpdates: Partial<Demo> & { demo_tags?: Tag[] },
   ) => {
-    return new Promise<void>((resolve, reject) => {
-      updateComponent(
-        { componentId: component.id, updatedData },
-        {
-          onSuccess: async () => {
-            try {
-              if (demoUpdates.preview_url || demoUpdates.video_url) {
-                await purgeCacheForDemo(
-                  demoUpdates.preview_url ?? undefined,
-                  demoUpdates.video_url ?? undefined,
-                )
-              }
-              console.log("Component updates:", updatedData)
-
-              if (Object.keys(demoUpdates).length > 0 && demoUpdates.id) {
-                const demoUpdatePayload = {
-                  preview_url: demoUpdates.preview_url,
-                  video_url: demoUpdates.video_url,
-                  updated_at: new Date().toISOString(),
-                }
-                console.log("Demo updates:", demoUpdatePayload)
-
-                const { error: demoError } = await supabase
-                  .from("demos")
-                  .update(demoUpdatePayload)
-                  .eq("id", demoUpdates.id)
-
-                if (demoError) {
-                  console.error("Error updating demo:", demoError)
-                  reject(demoError)
-                  return
-                }
-              }
-
-              const { data: updatedComponent, error } = await supabase
-                .from("components")
-                .select(
-                  `
-                  *,
-                  user:users!components_user_id_fkey(*),
-                  tags:component_tags(
-                    tag:tag_id(*)
-                  )
-                `,
-                )
-                .eq("id", component.id)
-                .single()
-
-              if (error) {
-                console.error("Error fetching updated component:", error)
-                reject(error)
-              } else if (updatedComponent) {
-                const transformedComponent = {
-                  ...updatedComponent,
-                  tags: updatedComponent.tags.map(
-                    (tagRelation: any) => tagRelation.tag,
-                  ),
-                }
-
-                console.log("Updated component data:", transformedComponent)
-
-                setComponent(
-                  transformedComponent as Component & { user: User } & {
-                    tags: Tag[]
-                  },
-                )
-                setIsEditDialogOpen(false)
-                resolve()
-              }
-            } catch (err) {
-              console.error("Error in onSuccess:", err)
-              reject(err)
-            }
-          },
-          onError: (error) => {
-            console.error("Error updating component:", error)
-            reject(error)
-          },
-        },
+    if (demoUpdates.preview_url || demoUpdates.video_url) {
+      await purgeCacheForDemo(
+        addNoCacheParam(demoUpdates.preview_url),
+        addNoCacheParam(demoUpdates.video_url),
       )
-    })
+    }
+    updateComponent(
+      { componentId: component.id, updatedData },
+      {
+        onSuccess: async () => {
+          try {
+            console.log("Component updates:", updatedData)
+
+            if (Object.keys(demoUpdates).length > 0 && demoUpdates.id) {
+              const demoUpdatePayload = {
+                preview_url: demoUpdates.preview_url,
+                video_url: demoUpdates.video_url,
+                updated_at: new Date().toISOString(),
+              }
+              console.log("Demo updates:", demoUpdatePayload)
+
+              const { error: demoError } = await supabase
+                .from("demos")
+                .update(demoUpdatePayload)
+                .eq("id", demoUpdates.id)
+
+              if (demoError) {
+                console.error("Error updating demo:", demoError)
+                return
+              }
+            }
+
+            const { data: updatedComponent, error } = await supabase
+              .from("components")
+              .select(
+                `
+                *,
+                user:users!components_user_id_fkey(*),
+                tags:component_tags(
+                  tag:tag_id(*)
+                )
+              `,
+              )
+              .eq("id", component.id)
+              .single()
+
+            if (error) {
+              console.error("Error fetching updated component:", error)
+              return
+            } else if (updatedComponent) {
+              const transformedComponent = {
+                ...updatedComponent,
+                tags: updatedComponent.tags.map(
+                  (tagRelation: any) => tagRelation.tag,
+                ),
+              }
+
+              console.log("Updated component data:", transformedComponent)
+
+              setComponent(
+                transformedComponent as Component & { user: User } & {
+                  tags: Tag[]
+                },
+              )
+              setIsEditDialogOpen(false)
+            }
+          } catch (err) {
+            console.error("Error in onSuccess:", err)
+            return
+          }
+        },
+        onError: (error) => {
+          console.error("Error updating component:", error)
+          return
+        },
+      },
+    )
   }
 
   const handleEditClick = () => {

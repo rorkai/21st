@@ -592,7 +592,7 @@ export default function ComponentPage({
           </div>
 
           {demo && (
-            <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2">
               <Icons.slash className="text-border w-[22px] h-[22px]" />
               <div className="flex items-center gap-2 min-w-0">
                 <Link

@@ -1,5 +1,5 @@
 import React, { useState, useRef, Suspense, useEffect } from "react"
-import { useAnimation, motion } from "framer-motion"
+import { useAnimation, motion, AnimatePresence } from "framer-motion"
 import { useAtom } from "jotai"
 import { useTheme } from "next-themes"
 import {
@@ -9,13 +9,15 @@ import {
   CodeXml,
   Info,
   ChevronDown,
+  Maximize2,
+  Minimize2,
 } from "lucide-react"
 
 import { ComponentPageInfo } from "./ComponentPageInfo"
 import { Icons } from "@/components/icons"
 import { LoadingSpinner } from "./LoadingSpinner"
 import { CopyCodeButton } from "./CopyCodeButton"
-import { isShowCodeAtom } from "./ComponentPage"
+import { isShowCodeAtom, isFullScreenAtom } from "./ComponentPage"
 
 import {
   DropdownMenu,
@@ -47,6 +49,7 @@ import { toast } from "sonner"
 import { useUser } from "@clerk/nextjs"
 
 import styles from "./ComponentPreview.module.css"
+import { FullScreenButton } from "./ui/full-screen-button"
 
 const SandpackPreview = React.lazy(() =>
   import("@codesandbox/sandpack-react/unstyled").then((module) => ({
@@ -91,6 +94,7 @@ export function ComponentPagePreview({
   const isDarkTheme = resolvedTheme === "dark"
   const [isShowCode, setIsShowCode] = useAtom(isShowCodeAtom)
   const isDebug = useDebugMode()
+  const [isFullScreen] = useAtom(isFullScreenAtom)
 
   const dumySandpackFiles = generateSandpackFiles({
     demoComponentNames,
@@ -224,13 +228,31 @@ export function ComponentPagePreview({
   }
 
   return (
-    <div className="h-full w-full flex gap-2 rounded-lg min-h-90vh md:flex-row flex-col">
+    <motion.div
+      layout
+      className={cn(
+        "h-full w-full flex gap-2 rounded-lg min-h-90vh md:flex-row flex-col",
+        isFullScreen && "fixed inset-0 z-50 bg-background p-4",
+      )}
+      transition={{
+        layout: {
+          duration: 0.4,
+          ease: [0.4, 0, 0.2, 1], // ease-out-cubic
+        },
+      }}
+    >
       <SandpackProviderUnstyled {...providerProps}>
         <motion.div
-          layout
-          className="flex-grow h-full relative"
-          transition={{ duration: 0.3 }}
+          layout="position"
+          className="flex-grow h-full relative rounded-lg overflow-hidden"
+          transition={{
+            layout: {
+              duration: 0.4,
+              ease: [0.4, 0, 0.2, 1],
+            },
+          }}
         >
+          <FullScreenButton />
           <Suspense fallback={<LoadingSpinner text="Loading preview..." />}>
             {previewError ? (
               <div className="flex flex-col items-center justify-center h-full gap-3">
@@ -267,65 +289,90 @@ export function ComponentPagePreview({
           )}
         </motion.div>
       </SandpackProviderUnstyled>
-      <div className="h-full w-full md:max-w-[30%] min-h-90vh overflow-hidden rounded-lg border border-border min-w-[350px] dark:bg-[#151515]">
-        <SandpackProvider {...providerProps}>
-          <div ref={sandpackRef} className="h-full w-full flex relative">
-            <SandpackLayout className="flex w-full flex-row gap-4">
-              <div className={`flex flex-col w-full ${styles.customScroller}`}>
-                <MobileControls
-                  isShowCode={isShowCode}
-                  setIsShowCode={setIsShowCode}
-                  canEdit={canEdit}
-                  setIsEditDialogOpen={setIsEditDialogOpen}
-                />
-                <div className="flex w-full h-full flex-col">
-                  {isShowCode ? (
-                    <>
-                      <CopyCommandSection component={component} />
-                      {isDebug && <SandpackFileExplorer />}
-                      <div
-                        className={`overflow-auto ${styles.codeViewerWrapper} relative`}
-                      >
-                        <CopyCodeButton
-                          component_id={component.id}
-                          user_id={user?.id}
-                        />
-                        <Tabs value={activeFile} onValueChange={setActiveFile}>
-                          <TabsList className="h-9 relative bg-muted dark:bg-background justify-start w-full gap-0.5 pb-0 before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-border px-4 overflow-x-auto flex-nowrap hide-scrollbar">
-                            {visibleFiles.map((file) => (
-                              <TabsTrigger
-                                key={file}
-                                value={file}
-                                className="overflow-hidden data-[state=active]:rounded-b-none dark:data-[state=active]:bg-muted data-[state=active]:border-x data-[state=active]:border-t data-[state=active]:border-border bg-muted dark:bg-background py-2 data-[state=active]:z-10 data-[state=active]:shadow-none flex-shrink-0 whitespace-nowrap"
-                              >
-                                {file.split("/").pop()}
-                              </TabsTrigger>
-                            ))}
-                          </TabsList>
-                          <div className="">
-                            <SandpackCodeViewer
-                              wrapContent={true}
-                              showTabs={false}
+
+      <AnimatePresence mode="popLayout">
+        {!isFullScreen && (
+          <motion.div
+            layout="position"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{
+              duration: 0.3,
+              opacity: { duration: 0.2 },
+              x: {
+                type: "spring",
+                stiffness: 300,
+                damping: 30,
+              },
+            }}
+            className="h-full w-full md:max-w-[30%] min-h-90vh overflow-hidden rounded-lg border border-border min-w-[350px] dark:bg-[#151515]"
+          >
+            <SandpackProvider {...providerProps}>
+              <div ref={sandpackRef} className="h-full w-full flex relative">
+                <SandpackLayout className="flex w-full flex-row gap-4">
+                  <div
+                    className={`flex flex-col w-full ${styles.customScroller}`}
+                  >
+                    <MobileControls
+                      isShowCode={isShowCode}
+                      setIsShowCode={setIsShowCode}
+                      canEdit={canEdit}
+                      setIsEditDialogOpen={setIsEditDialogOpen}
+                    />
+                    <div className="flex w-full h-full flex-col">
+                      {isShowCode ? (
+                        <>
+                          <CopyCommandSection component={component} />
+                          {isDebug && <SandpackFileExplorer />}
+                          <div
+                            className={`overflow-auto ${styles.codeViewerWrapper} relative`}
+                          >
+                            <CopyCodeButton
+                              component_id={component.id}
+                              user_id={user?.id}
                             />
+                            <Tabs
+                              value={activeFile}
+                              onValueChange={setActiveFile}
+                            >
+                              <TabsList className="h-9 relative bg-muted dark:bg-background justify-start w-full gap-0.5 pb-0 before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-border px-4 overflow-x-auto flex-nowrap hide-scrollbar">
+                                {visibleFiles.map((file) => (
+                                  <TabsTrigger
+                                    key={file}
+                                    value={file}
+                                    className="overflow-hidden data-[state=active]:rounded-b-none dark:data-[state=active]:bg-muted data-[state=active]:border-x data-[state=active]:border-t data-[state=active]:border-border bg-muted dark:bg-background py-2 data-[state=active]:z-10 data-[state=active]:shadow-none flex-shrink-0 whitespace-nowrap"
+                                  >
+                                    {file.split("/").pop()}
+                                  </TabsTrigger>
+                                ))}
+                              </TabsList>
+                              <div className="">
+                                <SandpackCodeViewer
+                                  wrapContent={true}
+                                  showTabs={false}
+                                />
+                              </div>
+                            </Tabs>
                           </div>
-                        </Tabs>
-                      </div>
-                    </>
-                  ) : (
-                    <ComponentPageInfo component={component} />
-                  )}
-                </div>
+                        </>
+                      ) : (
+                        <ComponentPageInfo component={component} />
+                      )}
+                    </div>
+                  </div>
+                </SandpackLayout>
               </div>
-            </SandpackLayout>
-          </div>
-        </SandpackProvider>
-      </div>
+            </SandpackProvider>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {isDebug && (
         <div className="absolute top-0 left-0 bg-background text-foreground p-2 z-50">
           Debug Mode
         </div>
       )}
-    </div>
+    </motion.div>
   )
 }
 
@@ -504,5 +551,3 @@ const MobileControls = ({
     </div>
   )
 }
-
-export default ComponentPagePreview

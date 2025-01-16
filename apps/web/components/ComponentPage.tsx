@@ -65,6 +65,7 @@ const selectedPromptTypeAtom = atomWithStorage<PromptType | "v0-open">(
   "selectedPromptType",
   PROMPT_TYPES.BASIC,
 )
+export const isFullScreenAtom = atom(false)
 
 const useAnalytics = ({
   component,
@@ -116,6 +117,8 @@ const useKeyboardShortcuts = ({
   setIsEditDialogOpen: Dispatch<SetStateAction<boolean>>
   handlePromptAction: () => void
 }) => {
+  const [, setIsFullScreen] = useAtom(isFullScreenAtom)
+
   const handleShareClick = async () => {
     if (typeof window === "undefined") return
 
@@ -207,6 +210,31 @@ const useKeyboardShortcuts = ({
     window.addEventListener("keydown", keyDownHandler)
     return () => window.removeEventListener("keydown", keyDownHandler)
   }, [])
+
+  useEffect(() => {
+    const keyDownHandler = (e: KeyboardEvent) => {
+      if (
+        e.code === "KeyF" &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        !e.shiftKey &&
+        e.target instanceof Element &&
+        !e.target.matches("input, textarea")
+      ) {
+        e.preventDefault()
+        setIsFullScreen((prev) => !prev)
+      }
+
+      if (e.code === "Escape") {
+        e.preventDefault()
+        setIsFullScreen(false)
+      }
+    }
+
+    window.addEventListener("keydown", keyDownHandler)
+    return () => window.removeEventListener("keydown", keyDownHandler)
+  }, [setIsFullScreen])
 }
 
 const copyToClipboard = async (text: string) => {
@@ -323,7 +351,7 @@ export default function ComponentPage({
               if (Object.keys(demoUpdates).length > 0 && demoUpdates.id) {
                 const demoUpdatePayload = {
                   preview_url: demoUpdates.preview_url,
-                  video_url: demoUpdates.video_url, 
+                  video_url: demoUpdates.video_url,
                   updated_at: new Date().toISOString(),
                 }
                 console.log("Demo updates:", demoUpdatePayload)
@@ -500,7 +528,7 @@ export default function ComponentPage({
             <TooltipTrigger asChild>
               <Link
                 href="/"
-                className="flex items-center justify-center w-5 h-5 rounded-full cursor-pointer bg-foreground"
+                className="flex items-center justify-center w-[22px] h-[22px] rounded-full cursor-pointer bg-foreground"
               />
             </TooltipTrigger>
             <TooltipContent

@@ -119,6 +119,7 @@ export function ComponentPagePreview({
     component,
     shellCode,
     demo.id,
+    demo.demo_slug,
     tailwindConfig,
     globalCss,
     compiledCss,

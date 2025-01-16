@@ -12,6 +12,7 @@ export const useCompileCss = (
   component: Component & { user: User } & { tags: Tag[] },
   shellCode: string[],
   demoId: number,
+  demoSlug: string,
   tailwindConfig?: string,
   globalCss?: string,
   compiledCss?: string | null,
@@ -56,7 +57,7 @@ export const useCompileCss = (
             return
           }
 
-          const fileName = `${component.component_slug}/${demoId}.compiled.css`
+          const fileName = `${component.component_slug}/${demoSlug}/compiled.css`
           const url = await uploadToR2({
             file: {
               name: fileName,

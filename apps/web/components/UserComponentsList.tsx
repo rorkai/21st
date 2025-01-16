@@ -6,6 +6,9 @@ import { searchQueryAtom } from "@/components/Header"
 import { userComponentsTabAtom } from "@/components/UserComponentsHeader"
 import { Component, DemoWithComponent, User } from "@/types/global"
 import { useQuery } from "@tanstack/react-query"
+import { transformDemoResult } from "@/lib/utils/transformData"
+
+type ComponentOrDemo = DemoWithComponent | (Component & { user: User })
 
 export function UserComponentsList({
   user,
@@ -21,17 +24,46 @@ export function UserComponentsList({
   const activeTab = useAtomValue(userComponentsTabAtom)
   const [searchQuery] = useAtom(searchQueryAtom)
 
-  const getBaseComponents = () => {
+  const getBaseComponents = (): ComponentOrDemo[] => {
+    let result: ComponentOrDemo[] = []
+
     switch (activeTab) {
       case "published":
-        return publishedComponents
+        result = publishedComponents
+        break
       case "hunted":
-        return huntedComponents
+        // Transform hunted components to match DemoWithComponent structure
+        result = huntedComponents.map((component) => {
+          return {
+            id: component.id,
+            name: component.name || "",
+            demo_code: component.demo_code || "",
+            preview_url: component.preview_url || "",
+            video_url: component.video_url || null,
+            compiled_css: component.compiled_css || null,
+            demo_dependencies: component.demo_dependencies || null,
+            demo_direct_registry_dependencies:
+              component.direct_registry_dependencies || null,
+            demo_slug: "default",
+            component_id: component.id,
+            user_id: component.user_id,
+            pro_preview_image_url: component.pro_preview_image_url || null,
+            created_at: component.created_at,
+            updated_at: component.updated_at,
+            fts: null,
+            component: component,
+            user: component.user,
+            tags: [],
+          }
+        })
+        break
       case "demos":
-        return userDemos
+        result = userDemos
+        break
       default:
-        return publishedComponents
+        result = publishedComponents
     }
+    return result
   }
 
   const baseComponents = getBaseComponents()
@@ -41,22 +73,31 @@ export function UserComponentsList({
     queryFn: async () => {
       if (!searchQuery) return baseComponents
 
+      if (!searchQuery) return baseComponents
+
       const query = searchQuery.toLowerCase()
-      return baseComponents.filter((component) => {
+      const filtered = baseComponents.filter((component: ComponentOrDemo) => {
+        const componentName = component.name || ""
+        const componentDescription =
+          "description" in component ? component.description || "" : ""
+        const userName =
+          "component" in component
+            ? component.component.user.name || ""
+            : component.user.name || ""
+        const userUsername =
+          "component" in component
+            ? component.component.user.username || ""
+            : component.user.username || ""
+
         return (
-          ("name" in component
-            ? component.name?.toLowerCase().includes(query)
-            : false) ||
-          ("description" in component
-            ? component.description?.toLowerCase().includes(query)
-            : false) ||
-          ("component" in component
-            ? component.component.user.name?.toLowerCase().includes(query) ||
-              component.component.user.username?.toLowerCase().includes(query)
-            : component.user.name?.toLowerCase().includes(query) ||
-              component.user.username?.toLowerCase().includes(query))
+          componentName.toLowerCase().includes(query) ||
+          componentDescription.toLowerCase().includes(query) ||
+          userName.toLowerCase().includes(query) ||
+          userUsername.toLowerCase().includes(query)
         )
       })
+
+      return filtered
     },
     initialData: baseComponents,
     refetchOnWindowFocus: false,

@@ -17,6 +17,7 @@ import { makeSlugFromName } from "@/components/publish/hooks/use-is-check-slug-a
 import { SupabaseClient } from "@supabase/supabase-js"
 import { useClerkSupabaseClient } from "./clerk"
 import { Database } from "@/types/supabase"
+import { transformDemoResult } from "@/lib/utils/transformData"
 
 export const componentReadableDbFields = `
   *,
@@ -598,36 +599,28 @@ export async function getUserDemos(
   supabase: SupabaseClient<Database>,
   userId: string,
 ) {
-  const { data, error } = await supabase.rpc("get_user_demos", {
-    p_user_id: userId,
-  })
+  const { data: filteredData, error } = await supabase.rpc(
+    "get_filtered_demos",
+    {
+      p_quick_filter: "all",
+      p_sort_by: "newest",
+      p_offset: 0,
+      p_limit: 1000,
+    },
+  )
 
   if (error) {
     console.error("Error fetching user demos:", error)
-    return []
+    return null
   }
 
-  return (data || []).map((result) => ({
-    id: result.id,
-    name: result.name,
-    demo_code: result.demo_code,
-    preview_url: result.preview_url,
-    video_url: result.video_url,
-    compiled_css: result.compiled_css,
-    demo_dependencies: result.demo_dependencies,
-    demo_direct_registry_dependencies: result.demo_direct_registry_dependencies,
-    pro_preview_image_url: result.pro_preview_image_url,
-    created_at: result.created_at,
-    updated_at: result.updated_at,
-    component_id: result.component_id,
-    component: {
-      ...(result.component_data as Component),
-      user: result.user_data,
-    } as Component & { user: User },
-    user_id: result.user_id,
-    fts: result.fts || null,
-    demo_slug: result.demo_slug,
-  })) as DemoWithComponent[]
+  // Transform all demos first
+  const transformedDemos = (filteredData || []).map(transformDemoResult)
+
+  // Then filter by user ID
+  return transformedDemos.filter(
+    (demo: DemoWithComponent) => demo.user_id === userId,
+  )
 }
 
 export async function searchDemos(

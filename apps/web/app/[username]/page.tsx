@@ -1,5 +1,6 @@
 import { ErrorPage } from "@/components/ErrorPage"
 import { UserProfileClient } from "./page.client"
+import { transformDemoResult } from "@/lib/utils/transformData"
 
 import {
   getUserData,
@@ -81,24 +82,27 @@ export default async function UserProfile({
     redirect("/")
   }
 
-  const [publishedComponents, huntedComponents, allUserDemos] =
-    await Promise.all([
-      getUserComponents(supabaseWithAdminAccess, user.id),
-      getHuntedComponents(supabaseWithAdminAccess, user.username),
-      getUserDemos(supabaseWithAdminAccess, user.id),
-    ])
+  const [huntedComponents, allUserDemos] = await Promise.all([
+    getHuntedComponents(supabaseWithAdminAccess, user.username),
+    getUserDemos(supabaseWithAdminAccess, user.id),
+  ])
 
+  // userComponents - demos of own components (where user is both component and demo creator)
   const userDemos =
-    allUserDemos?.filter((demo) => demo.component.user_id !== user.id) || []
+    allUserDemos?.filter((demo) => demo.component.user_id === user.id) || []
 
+  // userDemos - demos created by user for other people's components
   const userComponents = allUserDemos
-    ? allUserDemos.filter((demo) => demo.component.user_id === demo.user_id)
+    ? allUserDemos.filter(
+        (demo) =>
+          demo.component.user_id !== user.id && demo.user_id === user.id,
+      )
     : []
 
   return (
     <UserProfileClient
       user={user}
-      publishedComponents={userComponents || []}
+      publishedComponents={userComponents}
       huntedComponents={huntedComponents || []}
       userDemos={userDemos}
     />

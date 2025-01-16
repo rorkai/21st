@@ -54,6 +54,7 @@ import { EditorStep } from "./steps/editor-step"
 import { SuccessDialog } from "./success-dialog"
 import { DeleteDemoDialog } from "./delete-demo-dialog"
 import { EditCodeFileCard } from "./edit-code-file-card"
+import { ThemeToggle } from "../ThemeToggle"
 import {
   DebugInfoDisplay,
   DemoComponentGuidelinesAlert,
@@ -760,10 +761,14 @@ export default function PublishComponentForm() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="h-full p-8"
+                    className="h-full p-8 relative"
                   >
+                    <div className="absolute top-4 right-4 z-10">
+                      <ThemeToggle />
+                    </div>
                     <React.Suspense fallback={<LoadingSpinner />}>
                       <PublishComponentPreview
+                        key={`${code}-${demoCode}-${customTailwindConfig}-${customGlobalCss}-${isDarkTheme}`}
                         code={code}
                         demoCode={demoCode}
                         slugToPublish={componentSlug}

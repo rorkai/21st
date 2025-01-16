@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/dialog"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Icons } from "../icons"
-import { LoadingSpinner } from "../LoadingSpinner"
 
 import { FormStep } from "@/types/global"
 import { FormData } from "./utils"
@@ -368,7 +367,6 @@ export function PublishHeader({
             >
               {isSubmitting ? (
                 <div className="flex items-center gap-2">
-                  <LoadingSpinner />
                   <span>Publishing...</span>
                 </div>
               ) : (

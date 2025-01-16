@@ -353,7 +353,11 @@ export const ComponentDetailsForm = ({
               </span>
             </div>
             {form.formState.errors.website_url ? (
-              <p className="text-sm text-destructive">
+              <p
+                className="text-xs text-destructive"
+                role="region"
+                aria-live="polite"
+              >
                 {form.formState.errors.website_url.message}
               </p>
             ) : (

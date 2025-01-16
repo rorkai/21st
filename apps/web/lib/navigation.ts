@@ -66,6 +66,7 @@ const uiComponents: NavigationItem[] = [
   { title: "Sign up", href: "/s/registration-signup" },
   { title: "Select", href: "/s/select" },
   { title: "Slider", href: "/s/slider" },
+  { title: "Spinner Loader", href: "/s/spinner-loader", isNew: true },
   { title: "Tables", href: "/s/table" },
   { title: "Tags", href: "/s/chip-tag" },
   { title: "Tabs", href: "/s/tab" },

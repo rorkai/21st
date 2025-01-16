@@ -202,9 +202,9 @@ export default function App() {
       <RouterProvider>
         <div className="bg-background text-foreground">
           {showSelect && (
-            <div className="absolute z-10 top-4 right-4 flex flex-col items-end gap-1">
-              <Select onValueChange={handleSelect} value={demoComponentNames[currentIndex]} className="shadow">
-                <SelectTrigger className="gap-2">
+            <div className="absolute z-10 top-16 right-4 flex flex-col items-end gap-1">
+              <Select onValueChange={handleSelect} value={demoComponentNames[currentIndex]} className="shadow ">
+                <SelectTrigger className="gap-2 h-8">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

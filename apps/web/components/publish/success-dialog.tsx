@@ -15,6 +15,7 @@ interface SuccessDialogProps {
   onOpenChange: (open: boolean) => void
   onAddAnother: () => void
   onGoToComponent: () => void
+  mode?: "component" | "demo"
 }
 
 export function SuccessDialog({
@@ -22,28 +23,43 @@ export function SuccessDialog({
   onOpenChange,
   onAddAnother,
   onGoToComponent,
+  mode = "component",
 }: SuccessDialogProps) {
   useSuccessDialogHotkeys({ isOpen, onAddAnother, onGoToComponent })
+
+  const title =
+    mode === "component"
+      ? "Component Added Successfully"
+      : "Demo Added Successfully"
+
+  const description =
+    mode === "component"
+      ? "Your new component has been successfully added. What would you like to do next?"
+      : "Your new demo has been successfully added. What would you like to do next?"
+
+  const addAnotherText =
+    mode === "component" ? "Add Another Component" : "Add Another Demo"
+
+  const viewText = mode === "component" ? "View Component" : "View Demo"
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Component Added Successfully</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="break-words">
-            Your new component has been successfully added. What would you like
-            to do next?
+            {description}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button onClick={onAddAnother} variant="outline">
-            Add Another
+            {addAnotherText}
             <kbd className="hidden md:inline-flex h-5 items-center rounded border border-border px-1.5 ml-1.5 font-mono text-[11px] font-medium text-muted-foreground">
               N
             </kbd>
           </Button>
           <Button onClick={onGoToComponent} variant="default">
-            View Component
+            {viewText}
             <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border-muted-foreground/40 bg-muted-foreground/20 px-1.5 ml-1.5 font-sans  text-[11px] text-muted leading-none  opacity-100 flex">
               <span className="text-[11px] leading-none font-sans">
                 {navigator?.platform?.toLowerCase()?.includes("mac")

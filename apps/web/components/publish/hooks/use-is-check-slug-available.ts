@@ -86,6 +86,88 @@ export const generateUniqueSlug = async (
   return newSlug
 }
 
+export const generateDemoSlug = async (
+  supabase: SupabaseClient,
+  name: string,
+  componentId: number,
+  userId: string,
+): Promise<string> => {
+  console.log("Generating demo slug for:", { name, componentId, userId })
+
+  // Проверяем существующие демо для этого компонента с полным логированием
+  const { data: existingDemos, error: demosError } = await supabase
+    .from("demos")
+    .select("id, demo_slug, component_id")
+    .eq("component_id", componentId)
+    .then((result) => {
+      console.log("Supabase query result:", {
+        data: result.data,
+        error: result.error,
+        status: result.status,
+        statusText: result.statusText,
+        count: result.count
+      })
+      return result
+    })
+
+  if (demosError) {
+    console.error("Error fetching existing demos:", demosError)
+    throw demosError
+  }
+
+  // Дополнительная проверка конкретного слага
+  const slugToCheck = makeSlugFromName(name)
+  const { data: existingWithSlug, error: slugCheckError } = await supabase
+    .from("demos")
+    .select("id, demo_slug, component_id")
+    .eq("component_id", componentId)
+    .eq("demo_slug", slugToCheck)
+    .then((result) => {
+      console.log("Slug check result:", {
+        slug: slugToCheck,
+        data: result.data,
+        error: result.error,
+        status: result.status,
+        statusText: result.statusText,
+        count: result.count
+      })
+      return result
+    })
+
+  console.log("Existing demos:", existingDemos)
+  console.log("Checking specific slug:", { 
+    slug: slugToCheck, 
+    exists: existingWithSlug?.length && existingWithSlug.length > 0 
+  })
+
+  // Проверяем доступность 'default'
+  const hasDefaultDemo = existingDemos?.some(demo => demo.demo_slug === 'default')
+  
+  if (!hasDefaultDemo) {
+    console.log("Using 'default' slug as it's available")
+    return "default"
+  }
+
+  // Если 'default' занят, генерируем уникальный slug из имени
+  let baseSlug = makeSlugFromName(name)
+  let finalSlug = baseSlug
+  let counter = 1
+
+  while (true) {
+    const slugExists = existingDemos?.some(demo => demo.demo_slug === finalSlug)
+    
+    console.log("Checking slug:", finalSlug, "exists:", slugExists)
+    
+    if (!slugExists) {
+      console.log("Found available slug:", finalSlug)
+      return finalSlug
+    }
+
+    finalSlug = `${baseSlug}-${counter}`
+    counter++
+  }
+}
+
 export const useIsCheckSlugAvailable = ({
   slug,
   type,

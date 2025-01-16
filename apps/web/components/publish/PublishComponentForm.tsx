@@ -62,6 +62,7 @@ import {
   GlobalStylesGuidelinesAlert,
   TailwindGuidelinesAlert,
 } from "./alerts"
+import { generateDemoSlug } from "./hooks/use-is-check-slug-available"
 
 export interface ParsedCodeData {
   dependencies: Record<string, string>
@@ -73,7 +74,23 @@ export interface ParsedCodeData {
 
 type CodeTab = "component" | "tailwind" | "globals"
 
-export default function PublishComponentForm() {
+interface PublishComponentFormProps {
+  mode?: "full" | "add-demo"
+  existingComponent?: any
+  initialStep?: FormStep
+  initialCode?: string
+  initialTailwindConfig?: string | null
+  initialGlobalCss?: string | null
+}
+
+export default function PublishComponentForm({
+  mode = "full",
+  existingComponent,
+  initialStep,
+  initialCode,
+  initialTailwindConfig,
+  initialGlobalCss,
+}: PublishComponentFormProps) {
   const { user } = useUser()
   const client = useClerkSupabaseClient()
   const router = useRouter()
@@ -89,33 +106,65 @@ export default function PublishComponentForm() {
   const [formStartTime] = useState(() => Date.now())
   const [publishAttemptCount, setPublishAttemptCount] = useState(0)
 
+  const isAddDemoMode = mode === "add-demo"
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      component_slug: "",
-      registry: "ui",
-      publish_as_username: user?.username ?? undefined,
-      unknown_dependencies: [],
-      direct_registry_dependencies: [],
-      code: "",
-      demos: [
-        {
+    defaultValues: isAddDemoMode
+      ? {
+          name: existingComponent.name,
+          code: initialCode || "",
+          component_slug: existingComponent.component_slug,
+          registry: existingComponent.registry,
+          description: existingComponent.description,
+          license: existingComponent.license,
+          website_url: existingComponent.website_url,
+          is_public: existingComponent.is_public,
+          publish_as_username: user?.username ?? undefined,
+          unknown_dependencies: [],
+          direct_registry_dependencies:
+            existingComponent.direct_registry_dependencies || [],
+          tailwind_config: initialTailwindConfig || "",
+          globals_css: initialGlobalCss || "",
+          demos: [
+            {
+              name: "",
+              demo_code: "",
+              demo_slug: "",
+              tags: [],
+              preview_image_data_url: "",
+              preview_image_file: new File([], "placeholder"),
+              preview_video_data_url: "",
+              preview_video_file: new File([], "placeholder"),
+              demo_direct_registry_dependencies: [],
+            },
+          ],
+        }
+      : {
           name: "",
-          demo_code: "",
-          preview_image_data_url: "",
-          preview_image_file: undefined,
-          preview_video_data_url: "",
-          preview_video_file: undefined,
-          demo_direct_registry_dependencies: [],
-          tags: [],
+          component_slug: "",
+          registry: "ui",
+          publish_as_username: user?.username ?? undefined,
+          unknown_dependencies: [],
+          direct_registry_dependencies: [],
+          code: "",
+          demos: [
+            {
+              name: "",
+              demo_code: "",
+              preview_image_data_url: "",
+              preview_image_file: undefined,
+              preview_video_data_url: "",
+              preview_video_file: undefined,
+              demo_direct_registry_dependencies: [],
+              tags: [],
+            },
+          ],
+          description: "",
+          license: "mit",
+          website_url: "",
+          is_public: true,
         },
-      ],
-      description: "",
-      license: "mit",
-      website_url: "",
-      is_public: true,
-    },
   })
 
   const { component_slug: componentSlug, code, demos } = form.getValues()
@@ -132,21 +181,21 @@ export default function PublishComponentForm() {
   const [isNavigatingAway, setIsNavigatingAway] = useState(false)
   const stepFromUrl = searchParams.get("step") as FormStep | null
   const [formStep, setFormStep] = useState<FormStep>(
-    stepFromUrl || "nameSlugForm",
+    initialStep || stepFromUrl || "nameSlugForm",
   )
 
   const updateStepInUrl = useCallback(
     (newStep: FormStep) => {
+      if (isFirstRender.current && initialStep) {
+        isFirstRender.current = false
+        return
+      }
+
       const params = new URLSearchParams(searchParams)
       if (newStep === "nameSlugForm") {
         params.delete("step")
       } else {
         params.set("step", newStep)
-      }
-
-      if (isFirstRender.current) {
-        window.history.pushState(null, "", window.location.href)
-        isFirstRender.current = false
       }
 
       setIsNavigatingAway(true)
@@ -159,17 +208,40 @@ export default function PublishComponentForm() {
 
       setIsNavigatingAway(false)
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams, initialStep],
   )
 
-  const handleStepChange = useCallback(
-    (newStep: FormStep) => {
-      if (isNavigatingAway) return
-      setFormStep(newStep)
-      updateStepInUrl(newStep)
-    },
-    [updateStepInUrl, isNavigatingAway],
-  )
+  const handleStepChange = async (newStep: FormStep) => {
+    if (newStep === "demoCode") {
+      const demos = form?.getValues("demos") || []
+      const currentDemo = demos[currentDemoIndex]
+
+      if (!currentDemo?.demo_code) {
+        const demoSlug = await generateDemoSlug(
+          client,
+          currentDemo?.name || "demo",
+          existingComponent.id,
+          user?.id as string,
+        )
+
+        form?.setValue(`demos.${currentDemoIndex}`, {
+          name: "",
+          demo_slug: demoSlug,
+          demo_code: "",
+          tags: [],
+          preview_image_data_url: "",
+          preview_image_file: new File([], "placeholder"),
+          preview_video_data_url: "",
+          preview_video_file: new File([], "placeholder"),
+          demo_direct_registry_dependencies: [],
+        })
+
+        form?.setValue("unknown_dependencies", [])
+      }
+    }
+
+    setFormStep(newStep)
+  }
 
   const [parsedCode, setParsedCode] = useState<ParsedCodeData>({
     dependencies: {},
@@ -289,97 +361,20 @@ export default function PublishComponentForm() {
   const [publishProgress, setPublishProgress] = useState<string>("")
   const [isLoadingDialogOpen, setIsLoadingDialogOpen] = useState(false)
 
+  const [createdDemoSlug, setCreatedDemoSlug] = useState<string>()
+
   const onSubmit = async (data: FormData) => {
     setPublishAttemptCount((count) => count + 1)
     setIsSubmitting(true)
     setIsLoadingDialogOpen(true)
     try {
-      setPublishProgress("Uploading component files...")
-      const baseFolder = `${publishAsUser?.id}/${data.component_slug}`
-
-      if (!data.code) throw new Error("Component code is required")
-      if (!data.demos.length) throw new Error("At least one demo is required")
-      if (data.demos.some((demo) => !demo.demo_code))
-        throw new Error("Demo code is required for all demos")
-
-      const [codeUrl, tailwindConfigUrl, globalCssUrl] = await Promise.all([
-        uploadToR2({
-          file: {
-            name: "code.tsx",
-            type: "text/plain",
-            textContent: data.code,
-          },
-          fileKey: `${baseFolder}/code.tsx`,
-          bucketName: "components-code",
-        }),
-        customTailwindConfig
-          ? uploadToR2({
-              file: {
-                name: "tailwind.config.js",
-                type: "text/plain",
-                textContent: customTailwindConfig,
-              },
-              fileKey: `${baseFolder}/tailwind.config.js`,
-              bucketName: "components-code",
-            })
-          : Promise.resolve(null),
-        customGlobalCss
-          ? uploadToR2({
-              file: {
-                name: "globals.css",
-                type: "text/plain",
-                textContent: customGlobalCss,
-              },
-              fileKey: `${baseFolder}/globals.css`,
-              bucketName: "components-code",
-            })
-          : Promise.resolve(null),
-      ])
-
-      setPublishProgress("Creating component...")
-      const componentData = {
-        name: data.name,
-        component_names: parsedCode.componentNames,
-        component_slug: data.component_slug,
-        code: codeUrl,
-        tailwind_config_extension: tailwindConfigUrl,
-        global_css_extension: globalCssUrl,
-        description: data.description ?? null,
-        user_id: publishAsUser?.id,
-        dependencies: parsedCode.dependencies,
-        demo_dependencies: parsedCode.demoDependencies,
-        direct_registry_dependencies: data.direct_registry_dependencies,
-        preview_url: "",
-        video_url: "",
-        registry: data.registry,
-        license: data.license,
-        website_url: data.website_url,
-      } as Tables<"components">
-
-      const { data: insertedComponent, error } = await client
-        .from("components")
-        .insert(componentData)
-        .select()
-        .single()
-
-      if (error) {
-        console.error("Error inserting component:", error)
-        throw error
-      }
-
-      if (!publishAsUser?.id) {
-        throw new Error("User ID is required")
-      }
-
-      for (const demo of data.demos) {
-        const demoIndex = data.demos.indexOf(demo)
-        setPublishProgress(
-          `Publishing demo ${demoIndex + 1} of ${data.demos.length}...`,
-        )
+      if (isAddDemoMode) {
+        setPublishProgress("Publishing demo...")
+        const baseFolder = `${existingComponent.user_id}/${existingComponent.component_slug}`
 
         const demoData: Omit<Tables<"demos">, "id"> = {
-          component_id: insertedComponent.id,
-          demo_code: "", // Will update after file upload
+          component_id: existingComponent.id,
+          demo_code: "",
           demo_dependencies: parsedCode.demoDependencies || {},
           preview_url: "",
           video_url: "",
@@ -387,12 +382,17 @@ export default function PublishComponentForm() {
           updated_at: new Date().toISOString(),
           compiled_css: null,
           pro_preview_image_url: null,
-          name: demo.name,
+          name: data.demos[0]?.name || "",
           demo_direct_registry_dependencies:
-            demo.demo_direct_registry_dependencies || null,
-          user_id: publishAsUser.id,
+            data.demos[0]?.demo_direct_registry_dependencies || null,
+          user_id: user?.id || "",
           fts: null,
-          demo_slug: "default",
+          demo_slug: await generateDemoSlug(
+            client,
+            data.demos[0]?.name || "demo",
+            existingComponent.id,
+            user?.id || "",
+          ),
         }
 
         const { data: insertedDemo, error: demoError } = await client
@@ -404,20 +404,21 @@ export default function PublishComponentForm() {
         if (demoError) throw demoError
 
         const demoFolder = `${baseFolder}/${insertedDemo.demo_slug}`
+        const demo = data.demos[0]
 
         const [demoCodeUrl, previewImageR2Url, videoR2Url] = await Promise.all([
           uploadToR2({
             file: {
               name: "code.demo.tsx",
               type: "text/plain",
-              textContent: demo.demo_code,
+              textContent: demo?.demo_code || "",
             },
             fileKey: `${demoFolder}/code.demo.tsx`,
             bucketName: "components-code",
           }),
-          demo.preview_image_file &&
-          demo.preview_image_file.size > 0 &&
-          demo.preview_image_data_url
+          demo?.preview_image_file &&
+          demo?.preview_image_file.size > 0 &&
+          demo?.preview_image_data_url
             ? uploadToR2({
                 file: {
                   name: "preview.png",
@@ -432,9 +433,9 @@ export default function PublishComponentForm() {
                 contentType: demo.preview_image_file.type,
               })
             : Promise.resolve(null),
-          demo.preview_video_file &&
-          demo.preview_video_file.size > 0 &&
-          demo.preview_video_data_url
+          demo?.preview_video_file &&
+          demo?.preview_video_file.size > 0 &&
+          demo?.preview_video_data_url
             ? uploadToR2({
                 file: {
                   name: "video.mp4",
@@ -463,12 +464,200 @@ export default function PublishComponentForm() {
 
         if (updateDemoError) throw updateDemoError
 
-        if (demo.tags?.length) {
+        if (demo?.tags?.length) {
           await addTagsToComponent(
             client,
             insertedDemo.id,
             demo.tags.filter((tag) => !!tag.slug) as Tag[],
           )
+        }
+
+        setCreatedDemoSlug(insertedDemo.demo_slug)
+      } else {
+        setPublishProgress("Uploading component files...")
+        const baseFolder = `${publishAsUser?.id}/${data.component_slug}`
+
+        if (!data.code) throw new Error("Component code is required")
+        if (!data.demos.length) throw new Error("At least one demo is required")
+        if (data.demos.some((demo) => !demo.demo_code))
+          throw new Error("Demo code is required for all demos")
+
+        const [codeUrl, tailwindConfigUrl, globalCssUrl] = await Promise.all([
+          uploadToR2({
+            file: {
+              name: "code.tsx",
+              type: "text/plain",
+              textContent: data.code,
+            },
+            fileKey: `${baseFolder}/code.tsx`,
+            bucketName: "components-code",
+          }),
+          customTailwindConfig
+            ? uploadToR2({
+                file: {
+                  name: "tailwind.config.js",
+                  type: "text/plain",
+                  textContent: customTailwindConfig,
+                },
+                fileKey: `${baseFolder}/tailwind.config.js`,
+                bucketName: "components-code",
+              })
+            : Promise.resolve(null),
+          customGlobalCss
+            ? uploadToR2({
+                file: {
+                  name: "globals.css",
+                  type: "text/plain",
+                  textContent: customGlobalCss,
+                },
+                fileKey: `${baseFolder}/globals.css`,
+                bucketName: "components-code",
+              })
+            : Promise.resolve(null),
+        ])
+
+        setPublishProgress("Creating component...")
+        const componentData = {
+          name: data.name,
+          component_names: parsedCode.componentNames,
+          component_slug: data.component_slug,
+          code: codeUrl,
+          tailwind_config_extension: tailwindConfigUrl,
+          global_css_extension: globalCssUrl,
+          description: data.description ?? null,
+          user_id: publishAsUser?.id,
+          dependencies: parsedCode.dependencies,
+          demo_dependencies: parsedCode.demoDependencies,
+          direct_registry_dependencies: data.direct_registry_dependencies,
+          preview_url: "",
+          video_url: "",
+          registry: data.registry,
+          license: data.license,
+          website_url: data.website_url,
+        } as Tables<"components">
+
+        const { data: insertedComponent, error } = await client
+          .from("components")
+          .insert(componentData)
+          .select()
+          .single()
+
+        if (error) {
+          console.error("Error inserting component:", error)
+          throw error
+        }
+
+        if (!publishAsUser?.id) {
+          throw new Error("User ID is required")
+        }
+
+        for (const demo of data.demos) {
+          const demoIndex = data.demos.indexOf(demo)
+          setPublishProgress(
+            `Publishing demo ${demoIndex + 1} of ${data.demos.length}...`,
+          )
+
+          const demoSlug = await generateDemoSlug(
+            client,
+            demo.name || "Default",
+            insertedComponent.id,
+            publishAsUser.id,
+          )
+
+          const demoData: Omit<Tables<"demos">, "id"> = {
+            component_id: insertedComponent.id,
+            demo_code: "",
+            demo_dependencies: parsedCode.demoDependencies || {},
+            preview_url: "",
+            video_url: "",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            compiled_css: null,
+            pro_preview_image_url: null,
+            name: demo.name,
+            demo_direct_registry_dependencies:
+              demo.demo_direct_registry_dependencies || null,
+            user_id: publishAsUser.id,
+            fts: null,
+            demo_slug: demoSlug,
+          }
+
+          const { data: insertedDemo, error: demoError } = await client
+            .from("demos")
+            .insert(demoData)
+            .select()
+            .single()
+
+          if (demoError) throw demoError
+
+          const demoFolder = `${baseFolder}/${insertedDemo.demo_slug}`
+
+          const [demoCodeUrl, previewImageR2Url, videoR2Url] =
+            await Promise.all([
+              uploadToR2({
+                file: {
+                  name: "code.demo.tsx",
+                  type: "text/plain",
+                  textContent: demo.demo_code,
+                },
+                fileKey: `${demoFolder}/code.demo.tsx`,
+                bucketName: "components-code",
+              }),
+              demo.preview_image_file &&
+              demo.preview_image_file.size > 0 &&
+              demo.preview_image_data_url
+                ? uploadToR2({
+                    file: {
+                      name: "preview.png",
+                      type: demo.preview_image_file.type,
+                      encodedContent: demo.preview_image_data_url.replace(
+                        /^data:image\/(png|jpeg|jpg);base64,/,
+                        "",
+                      ),
+                    },
+                    fileKey: `${demoFolder}/preview.png`,
+                    bucketName: "components-code",
+                    contentType: demo.preview_image_file.type,
+                  })
+                : Promise.resolve(null),
+              demo.preview_video_file &&
+              demo.preview_video_file.size > 0 &&
+              demo.preview_video_data_url
+                ? uploadToR2({
+                    file: {
+                      name: "video.mp4",
+                      type: "video/mp4",
+                      encodedContent: demo.preview_video_data_url.replace(
+                        /^data:video\/mp4;base64,/,
+                        "",
+                      ),
+                    },
+                    fileKey: `${demoFolder}/video.mp4`,
+                    bucketName: "components-code",
+                    contentType: "video/mp4",
+                  })
+                : Promise.resolve(null),
+            ])
+
+          const { error: updateDemoError } = await client
+            .from("demos")
+            .update({
+              demo_code: demoCodeUrl,
+              preview_url: previewImageR2Url,
+              video_url: videoR2Url,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", insertedDemo.id)
+
+          if (updateDemoError) throw updateDemoError
+
+          if (demo.tags?.length) {
+            await addTagsToComponent(
+              client,
+              insertedDemo.id,
+              demo.tags.filter((tag) => !!tag.slug) as Tag[],
+            )
+          }
         }
       }
 
@@ -495,12 +684,22 @@ export default function PublishComponentForm() {
     }
   }
 
-  const handleGoToComponent = () => {
-    if (publishAsUser?.username) {
-      router.push(`/${publishAsUser.username}/${componentSlug}`)
+  const handleGoToComponent = useCallback(() => {
+    if (isAddDemoMode && existingComponent) {
+      router.push(
+        `/${existingComponent.user.username}/${existingComponent.component_slug}/${createdDemoSlug}`,
+      )
+    } else {
+      router.push(`/${user?.username}/${form.getValues().component_slug}`)
     }
-    setIsSuccessDialogOpen(false)
-  }
+  }, [
+    isAddDemoMode,
+    existingComponent,
+    createdDemoSlug,
+    user?.username,
+    form,
+    router,
+  ])
 
   const handleAddAnother = () => {
     form.reset()
@@ -510,6 +709,7 @@ export default function PublishComponentForm() {
   }
 
   const handleSubmit = (event: React.FormEvent) => {
+    console.log("handleSubmit", form.getValues())
     event.preventDefault()
     const formData = form.getValues()
     onSubmit(formData)
@@ -639,6 +839,18 @@ export default function PublishComponentForm() {
       setOpenAccordion("demo-info")
     }
   }, [isComponentInfoComplete])
+
+  useEffect(() => {
+    if (isAddDemoMode && initialCode) {
+      form.setValue("code", initialCode)
+      if (initialTailwindConfig) {
+        form.setValue("tailwind_config", initialTailwindConfig)
+      }
+      if (initialGlobalCss) {
+        form.setValue("globals_css", initialGlobalCss)
+      }
+    }
+  }, [isAddDemoMode, initialCode, initialTailwindConfig, initialGlobalCss])
 
   return (
     <>
@@ -848,77 +1060,76 @@ export default function PublishComponentForm() {
                     collapsible
                     className="w-full"
                   >
-                    <AccordionItem
-                      value="component-info"
-                      className="bg-background border-none"
-                    >
-                      <AccordionTrigger className="py-2 text-[15px] leading-6 hover:no-underline hover:bg-muted/50 rounded-md data-[state=open]:rounded-b-none transition-all duration-200 ease-in-out -mx-2 px-2">
-                        <div className="flex items-center gap-2">
-                          Component info
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              "gap-1.5 text-xs font-medium",
-                              isComponentInfoComplete()
-                                ? "border-emerald-500/20"
-                                : "border-amber-500/20",
-                            )}
-                          >
-                            <span
+                    {!isAddDemoMode && (
+                      <AccordionItem value="component-info">
+                        <AccordionTrigger className="py-2 text-[15px] leading-6 hover:no-underline hover:bg-muted/50 rounded-md data-[state=open]:rounded-b-none transition-all duration-200 ease-in-out -mx-2 px-2">
+                          <div className="flex items-center gap-2">
+                            Component info
+                            <Badge
+                              variant="outline"
                               className={cn(
-                                "size-1.5 rounded-full",
+                                "gap-1.5 text-xs font-medium",
                                 isComponentInfoComplete()
-                                  ? "bg-emerald-500"
-                                  : "bg-amber-500",
+                                  ? "border-emerald-500/20"
+                                  : "border-amber-500/20",
                               )}
-                              aria-hidden="true"
-                            />
-                            {isComponentInfoComplete()
-                              ? "Complete"
-                              : "Required"}
-                          </Badge>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground">
-                        <div className="text-foreground">
-                          <ComponentDetailsForm
-                            form={form}
-                            handleSubmit={handleSubmit}
-                            isSubmitting={isSubmitting}
-                            hotkeysEnabled={!isSuccessDialogOpen}
-                          />
-
-                          <div className="space-y-3 mt-6">
-                            <EditCodeFileCard
-                              iconSrc={
-                                isDarkTheme
-                                  ? "/tsx-file-dark.svg"
-                                  : "/tsx-file.svg"
-                              }
-                              mainText={`${form.getValues("name")} code`}
-                              subText={`${parsedCode.componentNames.slice(0, 2).join(", ")}${parsedCode.componentNames.length > 2 ? ` +${parsedCode.componentNames.length - 2}` : ""}`}
-                              onEditClick={() => {
-                                handleStepChange("code")
-                                codeInputRef.current?.focus()
-                              }}
-                            />
-                            <EditCodeFileCard
-                              iconSrc={
-                                isDarkTheme
-                                  ? "/css-file-dark.svg"
-                                  : "/css-file.svg"
-                              }
-                              mainText="Custom styles"
-                              subText="Tailwind config and globals.css"
-                              onEditClick={() => {
-                                handleStepChange("code")
-                                setActiveCodeTab("tailwind")
-                              }}
-                            />
+                            >
+                              <span
+                                className={cn(
+                                  "size-1.5 rounded-full",
+                                  isComponentInfoComplete()
+                                    ? "bg-emerald-500"
+                                    : "bg-amber-500",
+                                )}
+                                aria-hidden="true"
+                              />
+                              {isComponentInfoComplete()
+                                ? "Complete"
+                                : "Required"}
+                            </Badge>
                           </div>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
+                        </AccordionTrigger>
+                        <AccordionContent className="text-muted-foreground">
+                          <div className="text-foreground">
+                            <ComponentDetailsForm
+                              form={form}
+                              handleSubmit={handleSubmit}
+                              isSubmitting={isSubmitting}
+                              hotkeysEnabled={!isSuccessDialogOpen}
+                            />
+
+                            <div className="space-y-3 mt-6">
+                              <EditCodeFileCard
+                                iconSrc={
+                                  isDarkTheme
+                                    ? "/tsx-file-dark.svg"
+                                    : "/tsx-file.svg"
+                                }
+                                mainText={`${form.getValues("name")} code`}
+                                subText={`${parsedCode.componentNames.slice(0, 2).join(", ")}${parsedCode.componentNames.length > 2 ? ` +${parsedCode.componentNames.length - 2}` : ""}`}
+                                onEditClick={() => {
+                                  handleStepChange("code")
+                                  codeInputRef.current?.focus()
+                                }}
+                              />
+                              <EditCodeFileCard
+                                iconSrc={
+                                  isDarkTheme
+                                    ? "/css-file-dark.svg"
+                                    : "/css-file.svg"
+                                }
+                                mainText="Custom styles"
+                                subText="Tailwind config and globals.css"
+                                onEditClick={() => {
+                                  handleStepChange("code")
+                                  setActiveCodeTab("tailwind")
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    )}
 
                     {demos?.map((demo, index) => (
                       <AccordionItem
@@ -1046,6 +1257,7 @@ export default function PublishComponentForm() {
         onOpenChange={setIsSuccessDialogOpen}
         onAddAnother={handleAddAnother}
         onGoToComponent={handleGoToComponent}
+        mode={isAddDemoMode ? "demo" : "component"}
       />
       <LoadingDialog isOpen={isLoadingDialogOpen} message={publishProgress} />
       <DeleteDemoDialog

@@ -6,7 +6,6 @@ import { getComponent, getComponentWithDemo, getUserData } from "@/lib/queries"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 import { extractDemoComponentNames } from "@/lib/parsers"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
-import { Demo, User } from "@/types/global"
 import { validateRouteParams } from "@/lib/utils/validateRouteParams"
 
 const ComponentPage = dynamic(() => import("@/components/ComponentPage"), {
@@ -239,7 +238,7 @@ export default async function ComponentPageServer({
       <div className="w-full">
         <ComponentPage
           component={component}
-          demo={{ ...demo, user: component.user }}
+          demo={demo}
           code={codeResult?.data as string}
           demoCode={demoResult?.data as string}
           dependencies={dependencies}

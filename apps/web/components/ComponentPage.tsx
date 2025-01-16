@@ -49,16 +49,10 @@ import { EditComponentDialog } from "./EditComponentDialog"
 import { usePublishAs } from "./publish/hooks/use-publish-as"
 import { Icons } from "@/components/icons"
 
-import {
-  ChevronRight,
-  CodeXml,
-  Info,
-  Pencil,
-  ChevronDown,
-  Flag,
-} from "lucide-react"
+import { CodeXml, Info, Pencil, ChevronDown, Flag } from "lucide-react"
 import { toast } from "sonner"
 import { atomWithStorage } from "jotai/utils"
+import { useRouter } from "next/navigation"
 
 export const isShowCodeAtom = atom(true)
 const selectedPromptTypeAtom = atomWithStorage<PromptType | "v0-open">(
@@ -66,7 +60,6 @@ const selectedPromptTypeAtom = atomWithStorage<PromptType | "v0-open">(
   PROMPT_TYPES.BASIC,
 )
 export const isFullScreenAtom = atom(false)
-
 const addNoCacheParam = (url: string | null | undefined) => {
   if (!url) return undefined
   const separator = url.includes("?") ? "&" : "?"
@@ -308,7 +301,9 @@ async function purgeCacheForDemo(
 
 type ComponentPageProps = {
   component: Component & { user: User } & { tags: Tag[] }
-  demo: DemoWithTags
+  demo: Demo & {
+    user: User // Убедимся что этот тип определен правильно
+  } & { tags: Tag[] }
   code: string
   demoCode: string
   dependencies: Record<string, string>
@@ -335,8 +330,14 @@ export default function ComponentPage({
   globalCss,
   compiledCss,
 }: ComponentPageProps) {
+  console.log("Component Page Demo:", {
+    demoData: initialDemo,
+    demoUser: initialDemo.user,
+    componentUser: initialComponent.user,
+  })
+
   const [component, setComponent] = useState(initialComponent)
-  const [demo] = useState(initialDemo)
+  const demo = initialDemo
   const { user } = useUser()
   const supabase = useClerkSupabaseClient()
   const { theme } = useTheme()
@@ -344,6 +345,7 @@ export default function ComponentPage({
   const { isAdmin } = usePublishAs({ username: user?.username ?? "" })
   const { capture } = useSupabaseAnalytics()
   const canEdit = user?.id === component.user_id || isAdmin
+  const router = useRouter()
 
   const { data: liked } = useQuery({
     queryKey: ["hasUserLikedComponent", component.id, user?.id],
@@ -385,13 +387,9 @@ export default function ComponentPage({
       {
         onSuccess: async () => {
           try {
-            
-
             if (Object.keys(demoUpdates).length > 0 && demoUpdates.id) {
               // Sync demo tags if present
               if (demoUpdates.demo_tags?.length !== undefined) {
-                
-
                 // First, remove all existing tags for this demo
                 const { error: deleteError } = await supabase
                   .from("demo_tags")
@@ -410,7 +408,6 @@ export default function ComponentPage({
                   ) as Tag[]
 
                   if (tagsToAdd.length > 0) {
-      
                     await addTagsToComponent(
                       supabase,
                       demoUpdates.id,
@@ -587,6 +584,8 @@ export default function ComponentPage({
     handlePromptAction,
   })
 
+  console.log("demo user", demo.user)
+
   return (
     <div
       className={`flex flex-col gap-2 rounded-lg h-[98vh] w-full py-4 bg-background text-foreground`}
@@ -649,6 +648,16 @@ export default function ComponentPage({
                 <p className="text-[14px] font-medium whitespace-nowrap">
                   {demo.name}
                 </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    router.push(`/publish/demo?componentId=${component.id}`)
+                  }}
+                  className="h-7"
+                >
+                  Add demo
+                </Button>
               </div>
             </div>
           )}

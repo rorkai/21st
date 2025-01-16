@@ -91,10 +91,14 @@ export default async function UserProfile({
   const userDemos =
     allUserDemos?.filter((demo) => demo.component.user_id !== user.id) || []
 
+  const userComponents = allUserDemos
+    ? allUserDemos.filter((demo) => demo.component.user_id === demo.user_id)
+    : []
+
   return (
     <UserProfileClient
       user={user}
-      publishedComponents={publishedComponents || []}
+      publishedComponents={userComponents || []}
       huntedComponents={huntedComponents || []}
       userDemos={userDemos}
     />

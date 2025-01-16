@@ -58,7 +58,7 @@ export function UserComponentsHeader({
   userDemos = [],
   username,
 }: {
-  publishedComponents?: (Component & { user: User })[]
+  publishedComponents?: DemoWithComponent[]
   huntedComponents?: (Component & { user: User })[]
   userDemos?: DemoWithComponent[]
   username: string

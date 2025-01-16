@@ -37,7 +37,7 @@ export function UserProfileClient({
   userDemos,
 }: {
   user: User
-  publishedComponents: (Component & { user: User })[]
+  publishedComponents: DemoWithComponent[]
   huntedComponents: (Component & { user: User })[]
   userDemos: DemoWithComponent[]
 }) {

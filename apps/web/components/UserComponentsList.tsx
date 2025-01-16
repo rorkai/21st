@@ -14,7 +14,7 @@ export function UserComponentsList({
   userDemos = [],
 }: {
   user: User
-  publishedComponents?: (Component & { user: User })[]
+  publishedComponents?: DemoWithComponent[]
   huntedComponents?: (Component & { user: User })[]
   userDemos?: DemoWithComponent[]
 }) {

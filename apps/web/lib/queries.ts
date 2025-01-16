@@ -497,7 +497,6 @@ export async function getComponentWithDemo(
   shouldRedirectToDefault?: boolean
 }> {
   try {
-
     const { data: userData, error: userError } = await supabase
       .from("users")
       .select("id")
@@ -562,10 +561,22 @@ export async function getComponentWithDemo(
     }
   } catch (error) {
     console.error("Error in getComponentWithDemo:", error)
+    const pgError = error as { code?: string }
+
+    if (pgError.code === "PGRST116") {
+      console.log("No rows found, redirecting to default")
+      return {
+        data: null,
+        error: null,
+        shouldRedirectToDefault: true,
+      }
+    }
+
     return {
       data: null,
       error:
         error instanceof Error ? error : new Error("Unknown error occurred"),
+      shouldRedirectToDefault: true,
     }
   }
 }

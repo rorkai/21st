@@ -138,7 +138,7 @@ export default async function ComponentPageServer({
     )
 
     if (shouldRedirectToDefault || error || !data) {
-      redirect("/")
+      return redirect("/")
     }
 
     const { component, demo } = data
@@ -260,7 +260,10 @@ export default async function ComponentPageServer({
       </div>
     )
   } catch (error) {
+    if (error instanceof Error && error.message === "NEXT_REDIRECT") {
+      throw error
+    }
     console.error("Error loading component:", error)
-    notFound()
+    return notFound()
   }
 }

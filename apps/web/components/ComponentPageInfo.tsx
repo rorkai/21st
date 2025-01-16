@@ -332,42 +332,45 @@ export const ComponentPageInfo = ({
                   >
                     <span className="pl-1">
                       {(() => {
-                        const url = new URL(component.website_url)
-                        const domain = url.hostname.replace("www.", "")
+                        try {
+                          const url = new URL(component.website_url)
+                          const domain = url.hostname.replace("www.", "")
 
-                        const cleanPath =
-                          url.pathname?.slice(1).split("?")[0] || ""
+                          const cleanPath =
+                            url.pathname?.slice(1).split("?")[0] || ""
+                          const segments = cleanPath.split("/").filter(Boolean)
 
-                        const segments = cleanPath.split("/").filter(Boolean)
+                          const formattedPath =
+                            segments.length > 0
+                              ? segments.length === 1
+                                ? segments[0]?.slice(0, 12)
+                                : segments
+                                    .slice(0, 2)
+                                    .map((s) => s.slice(0, 6))
+                                    .join("/")
+                              : ""
 
-                        const formattedPath =
-                          segments.length > 0
-                            ? segments.length === 1
-                              ? segments[0]?.slice(0, 12)
-                              : segments
-                                  .slice(0, 2)
-                                  .map((s) => s.slice(0, 6))
-                                  .join("/")
-                            : ""
-
-                        return (
-                          <>
-                            {domain}
-                            {formattedPath && (
-                              <span className="text-muted-foreground">
-                                /{formattedPath}
-                                {segments.length > 2 ||
-                                (segments.length === 1 &&
-                                  (segments[0]?.length ?? 0) > 12) ||
-                                (segments.length === 2 &&
-                                  ((segments[0]?.length ?? 0) > 6 ||
-                                    (segments[1]?.length ?? 0) > 6))
-                                  ? "..."
-                                  : ""}
-                              </span>
-                            )}
-                          </>
-                        )
+                          return (
+                            <>
+                              {domain}
+                              {formattedPath && (
+                                <span className="text-muted-foreground">
+                                  /{formattedPath}
+                                  {segments.length > 2 ||
+                                  (segments.length === 1 &&
+                                    (segments[0]?.length ?? 0) > 12) ||
+                                  (segments.length === 2 &&
+                                    ((segments[0]?.length ?? 0) > 6 ||
+                                      (segments[1]?.length ?? 0) > 6))
+                                    ? "..."
+                                    : ""}
+                                </span>
+                              )}
+                            </>
+                          )
+                        } catch (e) {
+                          return component.website_url
+                        }
                       })()}
                     </span>
                   </a>

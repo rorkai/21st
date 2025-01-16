@@ -388,13 +388,36 @@ export default function ComponentPage({
             console.log("Component updates:", updatedData)
 
             if (Object.keys(demoUpdates).length > 0 && demoUpdates.id) {
-              // Add new demo tags if present
-              if (demoUpdates.demo_tags?.length) {
-                await addTagsToComponent(
-                  supabase,
-                  demoUpdates.id,
-                  demoUpdates.demo_tags.filter((tag) => !!tag.slug) as Tag[],
-                )
+              // Sync demo tags if present
+              if (demoUpdates.demo_tags?.length !== undefined) {
+                console.log("New tags set:", demoUpdates.demo_tags)
+
+                // First, remove all existing tags for this demo
+                const { error: deleteError } = await supabase
+                  .from("demo_tags")
+                  .delete()
+                  .eq("demo_id", demoUpdates.id)
+
+                if (deleteError) {
+                  console.error("Error deleting existing tags:", deleteError)
+                  return
+                }
+
+                // Then add new tags if there are any
+                if (demoUpdates.demo_tags.length > 0) {
+                  const tagsToAdd = demoUpdates.demo_tags.filter(
+                    (tag) => !!tag.slug,
+                  ) as Tag[]
+
+                  if (tagsToAdd.length > 0) {
+                    console.log("Adding new tag set:", tagsToAdd)
+                    await addTagsToComponent(
+                      supabase,
+                      demoUpdates.id,
+                      tagsToAdd,
+                    )
+                  }
+                }
               }
 
               const demoUpdatePayload = {

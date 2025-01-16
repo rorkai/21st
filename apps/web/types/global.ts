@@ -8,7 +8,12 @@ export type Tag = Database["public"]["Tables"]["tags"]["Row"]
 
 export type DemoWithComponent = Demo & {
   component: Component & { user: User }
+  user: User
   tags: Tag[]
+  component_id: number | null
+  user_id: string
+  fts: unknown | null
+  pro_preview_image_url: string | null
 }
 
 export type DemoWithTags = Demo & {

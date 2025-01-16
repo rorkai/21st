@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import PublishComponentForm from "@/components/publish/PublishComponentForm"
@@ -14,7 +14,7 @@ interface ComponentData {
   component: any
 }
 
-export default function AddDemoPage() {
+function AddDemoContent() {
   const searchParams = useSearchParams()
   const componentId = searchParams.get("componentId")
   const supabase = useClerkSupabaseClient()
@@ -29,8 +29,6 @@ export default function AddDemoPage() {
           setError("No componentId provided")
           return
         }
-
-        console.log("Fetching component with id:", componentId)
 
         const { data: component, error: supabaseError } = await supabase
           .from("components")
@@ -55,8 +53,6 @@ export default function AddDemoPage() {
           return
         }
 
-        console.log("Component found:", component)
-
         const [codeResult, tailwindConfigResult, globalCssResult] =
           await Promise.all([
             fetchFileTextContent(component.code),
@@ -73,8 +69,6 @@ export default function AddDemoPage() {
           setError("Failed to fetch component code")
           return
         }
-
-        console.log("Files fetched successfully")
 
         setComponentData({
           code: codeResult.data!,
@@ -106,7 +100,13 @@ export default function AddDemoPage() {
   }
 
   if (isLoading || !componentData) {
-    return <LoadingSpinnerPage text="Loading component..." size="lg" showText={true} />
+    return (
+      <LoadingSpinnerPage
+        text="Loading component..."
+        size="lg"
+        showText={true}
+      />
+    )
   }
 
   return (
@@ -118,5 +118,17 @@ export default function AddDemoPage() {
       initialTailwindConfig={componentData.tailwindConfig}
       initialGlobalCss={componentData.globalCss}
     />
+  )
+}
+
+export default function AddDemoPage() {
+  return (
+    <Suspense
+      fallback={
+        <LoadingSpinnerPage text="Loading..." size="lg" showText={true} />
+      }
+    >
+      <AddDemoContent />
+    </Suspense>
   )
 }

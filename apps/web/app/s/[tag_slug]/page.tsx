@@ -15,6 +15,7 @@ import {
 } from "@/types/global"
 import { cookies } from "next/headers"
 import { validateRouteParams } from "@/lib/utils/validateRouteParams"
+import { transformDemoResult } from "@/lib/utils/transformData"
 
 interface TagPageProps {
   params: {
@@ -87,25 +88,8 @@ export default async function TagPage({ params }: TagPageProps) {
     }
 
     const initialFilteredSortedDemos = (filteredDemos.data || []).map(
-      (result) => ({
-        id: result.id,
-        name: result.name,
-        demo_code: result.demo_code,
-        preview_url: result.preview_url,
-        video_url: result.video_url,
-        compiled_css: result.compiled_css,
-        demo_dependencies: result.demo_dependencies,
-        demo_direct_registry_dependencies:
-          result.demo_direct_registry_dependencies,
-        demo_slug: result.demo_slug,
-        component: {
-          ...(result.component_data as Component),
-          user: result.user_data,
-        } as Component & { user: User },
-        created_at: result.created_at,
-        updated_at: result.updated_at,
-      }),
-    ) as DemoWithComponent[]
+      transformDemoResult,
+    )
 
     const { data: initialTabsCountsData, error: initialTabsCountsError } =
       await supabaseWithAdminAccess.rpc("get_components_counts", {

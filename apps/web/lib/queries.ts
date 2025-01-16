@@ -489,8 +489,6 @@ export async function getComponentWithDemo(
   slug: string,
   demo_slug: string,
 ) {
-  console.log("Fetching component and demo for:", { username, slug, demo_slug })
-
   const { data: component, error: componentError } = await supabase
     .from("components")
     .select(
@@ -507,8 +505,6 @@ export async function getComponentWithDemo(
     .not("user", "is", null)
     .eq("is_public", true)
     .single()
-
-  console.log("Component data:", component)
 
   if (componentError) {
     console.error("Error fetching component:", componentError)
@@ -530,8 +526,6 @@ export async function getComponentWithDemo(
     .eq("demo_slug", demo_slug)
     .single()
 
-  console.log("Demo data:", demo)
-
   if (demoError) {
     console.error("Error fetching demo:", demoError)
     if (demo_slug === "default") {
@@ -552,11 +546,6 @@ export async function getComponentWithDemo(
     ...component,
     tags: component.tags ? component.tags.map((tag: any) => tag.tags) : [],
   } as unknown as Component & { user: User } & { tags: Tag[] }
-
-  console.log("Final formatted demo:", {
-    demoUser: formattedDemo.user,
-    componentUser: formattedComponent.user,
-  })
 
   return {
     data: {

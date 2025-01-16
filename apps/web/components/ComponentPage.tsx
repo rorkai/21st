@@ -353,11 +353,6 @@ export default function ComponentPage({
   compiledCss,
   componentDemos,
 }: ComponentPageProps) {
-  console.log("Component Page Demo:", {
-    demoData: initialDemo,
-    demoUser: initialDemo.user,
-    componentUser: initialComponent.user,
-  })
 
   const [component, setComponent] = useState(initialComponent)
   const demo = initialDemo
@@ -607,8 +602,6 @@ export default function ComponentPage({
     handlePromptAction,
   })
 
-  console.log("demo user", demo.user)
-
   return (
     <div
       className={`flex flex-col gap-2 rounded-lg h-[98vh] w-full py-4 bg-background text-foreground`}
@@ -676,7 +669,7 @@ export default function ComponentPage({
                     />
                   </div>
                 </PopoverTrigger>
-                <PopoverContent className="w-[300px] p-0">
+                <PopoverContent side="bottom" align="start" className="w-[300px] p-0">
                   <Command>
                     <CommandInput placeholder="Find demo..." />
                     <CommandList>

@@ -45,14 +45,14 @@ export function ComponentCard({
   }
 
   const isDemo = "component" in component
-  const userData = isDemo ? component.component.user : component.user
+  const userData = component.user
 
   if (!userData) {
     return <ComponentCardSkeleton />
   }
 
   const componentUrl = isDemo
-    ? `/${userData.username}/${component.component.component_slug}/${component.demo_slug || `demo-${component.id}`}`
+    ? `/${component.component.user.username}/${component.component.component_slug}/${component.demo_slug || `demo-${component.id}`}`
     : `/${userData.username}/${component.component_slug}`
 
   const supabase = useClerkSupabaseClient()

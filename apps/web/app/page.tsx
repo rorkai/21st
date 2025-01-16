@@ -9,9 +9,11 @@ import {
   SortOption,
   User,
   DemoWithComponent,
+  Tag,
 } from "@/types/global"
 
 import { supabaseWithAdminAccess } from "@/lib/supabase"
+import { transformDemoResult } from "@/lib/utils/transformData"
 
 import { Header } from "../components/Header"
 import { HeroSection } from "@/components/HeroSection"
@@ -113,7 +115,7 @@ export default async function HomePage() {
       await supabaseWithAdminAccess
         .from("demos")
         .select(
-          "*, component:components!demos_component_id_fkey(*, user:users!user_id(*))",
+          "*, component:components!demos_component_id_fkey(*, user:users!user_id(*)), user:users!user_id(*)",
         )
         .limit(40)
         .eq("component.is_public", true)
@@ -140,25 +142,8 @@ export default async function HomePage() {
     }
 
     const initialFilteredSortedDemos = (filteredDemos.data || []).map(
-      (result) => ({
-        id: result.id,
-        name: result.name,
-        demo_code: result.demo_code,
-        preview_url: result.preview_url,
-        video_url: result.video_url,
-        compiled_css: result.compiled_css,
-        demo_dependencies: result.demo_dependencies,
-        demo_direct_registry_dependencies:
-          result.demo_direct_registry_dependencies,
-        demo_slug: result.demo_slug,
-        component: {
-          ...(result.component_data as Component),
-          user: result.user_data,
-        } as Component & { user: User },
-        created_at: result.created_at,
-        updated_at: result.updated_at,
-      }),
-    ) as DemoWithComponent[]
+      transformDemoResult,
+    )
 
     const { data: initialTabsCountsData, error: initialTabsCountsError } =
       await supabaseWithAdminAccess.rpc("get_components_counts")

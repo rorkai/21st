@@ -28,6 +28,7 @@ import {
 import { Loader2 } from "lucide-react"
 import { useDebounce } from "@/hooks/use-debounce"
 import ComponentsList from "@/components/ComponentsList"
+import { transformDemoResult } from "@/lib/utils/transformData"
 
 type SearchResult = {
   id: number
@@ -131,18 +132,9 @@ export function HomePageClient({
           )
 
           if (error) throw new Error(error.message)
+          const transformedData = (filteredData || []).map(transformDemoResult)
           return {
-            data: (filteredData || []).map(
-              (result) =>
-                ({
-                  ...result,
-                  component: {
-                    ...(result.component_data as Component),
-                    user: result.user_data,
-                  } as Component & { user: User },
-                  tags: [],
-                }) as unknown as DemoWithComponent,
-            ),
+            data: transformedData,
             total_count: filteredData?.[0]?.total_count ?? 0,
           }
         }
@@ -155,22 +147,13 @@ export function HomePageClient({
         )
 
         if (error) throw new Error(error.message)
-
-        const demos = (searchResults || []).map(
-          (result) =>
-            ({
-              ...result,
-              component: {
-                ...(result.component_data as Component),
-                user: result.user_data,
-              } as Component & { user: User },
-              tags: [],
-            }) as unknown as DemoWithComponent,
+        const transformedSearchResults = (searchResults || []).map(
+          transformDemoResult,
         )
 
         return {
-          data: demos,
-          total_count: demos.length,
+          data: transformedSearchResults,
+          total_count: transformedSearchResults.length,
         }
       },
       initialData: {

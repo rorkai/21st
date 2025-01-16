@@ -16,6 +16,7 @@ import {
 import { TagComponentsHeader } from "@/components/TagComponentsHeader"
 import { useLayoutEffect, useState, useEffect } from "react"
 import { useClerkSupabaseClient } from "@/lib/clerk"
+import { transformDemoResult } from "@/lib/utils/transformData"
 
 export function TagPageContent({
   initialComponents,
@@ -69,25 +70,10 @@ export function TagPageContent({
 
       if (error) throw new Error(error.message)
 
+      const transformedData = (filteredData || []).map(transformDemoResult)
+
       return {
-        data: (filteredData || []).map((result) => ({
-          id: result.id,
-          name: result.name,
-          demo_code: result.demo_code,
-          preview_url: result.preview_url,
-          video_url: result.video_url,
-          compiled_css: result.compiled_css,
-          demo_dependencies: result.demo_dependencies,
-          demo_direct_registry_dependencies:
-            result.demo_direct_registry_dependencies,
-          demo_slug: result.demo_slug,
-          component: {
-            ...(result.component_data as Component),
-            user: result.user_data,
-          } as Component & { user: User },
-          created_at: result.created_at,
-          updated_at: result.updated_at,
-        })) as DemoWithComponent[],
+        data: transformedData,
         total_count: filteredData?.[0]?.total_count ?? 0,
       }
     },

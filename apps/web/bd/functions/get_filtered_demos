@@ -21,6 +21,7 @@ CREATE OR REPLACE FUNCTION public.get_filtered_demos(
   component_id bigint,
   component_data jsonb,
   user_data jsonb,
+  component_user_data jsonb,
   tags jsonb,
   total_count bigint,
   fts tsvector,
@@ -65,7 +66,8 @@ BEGIN
         'likes_count', c.likes_count,
         'license', c.license
       ) as component_data,
-      row_to_json(u.*)::jsonb as user_data,
+      row_to_json(du.*)::jsonb as user_data,
+      row_to_json(cu.*)::jsonb as component_user_data,
       COALESCE(
         jsonb_agg(
           jsonb_build_object(
@@ -78,7 +80,8 @@ BEGIN
       ) as tags
     FROM demos d
     JOIN components c ON d.component_id = c.id
-    JOIN users u ON c.user_id = u.id
+    JOIN users du ON d.user_id = du.id
+    JOIN users cu ON c.user_id = cu.id
     LEFT JOIN demo_tags dt ON d.id = dt.demo_id
     LEFT JOIN tags t ON dt.tag_id = t.id
     WHERE c.is_public = true
@@ -94,7 +97,7 @@ BEGIN
         t.slug = p_tag_slug
       ELSE true
     END
-    GROUP BY d.id, c.id, u.id
+    GROUP BY d.id, c.id, du.id, cu.id
   )
   SELECT 
     d.id,
@@ -111,6 +114,7 @@ BEGIN
     d.component_id,
     d.component_data,
     d.user_data,
+    d.component_user_data,
     d.tags,
     v_total_count as total_count,
     d.fts,

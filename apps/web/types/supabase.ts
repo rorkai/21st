@@ -358,21 +358,21 @@ export type Database = {
       demo_tags: {
         Row: {
           created_at: string | null
-          demo_id: number | null
+          demo_id: number
           id: number
-          tag_id: number | null
+          tag_id: number
         }
         Insert: {
           created_at?: string | null
-          demo_id?: number | null
+          demo_id: number
           id?: never
-          tag_id?: number | null
+          tag_id: number
         }
         Update: {
           created_at?: string | null
-          demo_id?: number | null
+          demo_id?: number
           id?: never
-          tag_id?: number | null
+          tag_id?: number
         }
         Relationships: [
           {
@@ -846,6 +846,7 @@ export type Database = {
           component_id: number
           component_data: Json
           user_data: Json
+          component_user_data: Json
           tags: Json
           total_count: number
           fts: unknown

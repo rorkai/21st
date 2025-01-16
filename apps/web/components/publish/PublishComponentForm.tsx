@@ -709,7 +709,6 @@ export default function PublishComponentForm({
   }
 
   const handleSubmit = (event: React.FormEvent) => {
-    console.log("handleSubmit", form.getValues())
     event.preventDefault()
     const formData = form.getValues()
     onSubmit(formData)

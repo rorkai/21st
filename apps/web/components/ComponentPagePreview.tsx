@@ -231,7 +231,7 @@ export function ComponentPagePreview({
     <motion.div
       layout
       className={cn(
-        "h-full w-full flex gap-2 rounded-lg min-h-90vh md:flex-row flex-col",
+        "h-full w-full flex gap-2 rounded-lg md:flex-row flex-col max-h-[92vh] ",
         isFullScreen && "fixed inset-0 z-50 bg-background p-4",
       )}
       transition={{
@@ -306,7 +306,7 @@ export function ComponentPagePreview({
                 damping: 30,
               },
             }}
-            className="h-full w-full md:max-w-[30%] min-h-90vh overflow-hidden rounded-lg border border-border min-w-[350px] dark:bg-[#151515]"
+            className="h-full w-full md:max-w-[30%] min-h-[92vh] overflow-hidden rounded-lg border border-border min-w-[350px] dark:bg-[#151515]"
           >
             <SandpackProvider {...providerProps}>
               <div ref={sandpackRef} className="h-full w-full flex relative">

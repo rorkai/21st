@@ -265,7 +265,7 @@ export const ComponentDetailsForm = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor={registryId}>
-                Registry <span className="text-destructive">*</span>
+                Component type <span className="text-destructive">*</span>
               </Label>
               <FormField
                 control={form.control}
@@ -276,16 +276,50 @@ export const ComponentDetailsForm = ({
                     onValueChange={field.onChange}
                     required
                   >
-                    <SelectTrigger id={registryId}>
-                      <SelectValue placeholder="Select a registry" />
+                    <SelectTrigger
+                      id={registryId}
+                      className="[&_[data-desc]]:hidden"
+                    >
+                      <SelectValue placeholder="Select component type" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ui">ui</SelectItem>
-                      <SelectItem value="components">components</SelectItem>
-                      <SelectItem value="hooks">hooks</SelectItem>
-                      <SelectItem value="icons">icons</SelectItem>
-                      <SelectItem value="blocks">blocks</SelectItem>
-                      <SelectItem value="pages">pages</SelectItem>
+                    <SelectContent className="[&_*[role=option]>span]:end-2 [&_*[role=option]>span]:start-auto [&_*[role=option]]:pe-8 [&_*[role=option]]:ps-2">
+                      <SelectItem value="ui">
+                        UI Component
+                        <span
+                          className="mt-1 block text-xs text-muted-foreground"
+                          data-desc
+                        >
+                          Reusable interface elements like buttons, inputs, and
+                          cards
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="hooks">
+                        Hook
+                        <span
+                          className="mt-1 block text-xs text-muted-foreground"
+                          data-desc
+                        >
+                          Custom React hooks for state and logic management
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="blocks">
+                        Block
+                        <span
+                          className="mt-1 block text-xs text-muted-foreground"
+                          data-desc
+                        >
+                          Larger sections like Hero, Features, or Testimonials
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="icons">
+                        Icon
+                        <span
+                          className="mt-1 block text-xs text-muted-foreground"
+                          data-desc
+                        >
+                          Custom icon components and icon sets
+                        </span>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 )}

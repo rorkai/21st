@@ -19,7 +19,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import { LoadingSpinner } from "../LoadingSpinner"
+import { LoadingSpinner, LoadingSpinnerPage } from "../LoadingSpinner"
 import { LoadingDialog } from "../LoadingDialog"
 
 import { useDebugMode } from "@/hooks/use-debug-mode"
@@ -265,7 +265,6 @@ export default function PublishComponentForm({
   const { isAdmin, user: publishAsUser } = usePublishAs({
     username: publishAsUsername ?? "",
   })
-
 
   if (process.env.NODE_ENV === "development") {
     console.log("form", form.getValues())
@@ -856,6 +855,65 @@ export default function PublishComponentForm({
     }
   }, [isAddDemoMode, initialCode, initialTailwindConfig, initialGlobalCss])
 
+  const [previewKey, setPreviewKey] = useState<string>(
+    () =>
+      `${code}-${demoCode}-${customTailwindConfig}-${customGlobalCss}-${isDarkTheme}`,
+  )
+  const [shouldBlurPreview, setShouldBlurPreview] = useState(false)
+
+  const [isFirstPreviewRender, setIsFirstPreviewRender] = useState(true)
+
+  useEffect(() => {
+    if (formStep === "demoCode" && isPreviewReady) {
+      if (isFirstPreviewRender) {
+        setIsFirstPreviewRender(false)
+        return
+      }
+
+      const demoValue = form.getValues(`demos.${currentDemoIndex}.demo_code`)
+      if (demoValue !== demoCode) {
+        setShouldBlurPreview(true)
+      }
+    }
+  }, [
+    form,
+    demoCode,
+    formStep,
+    isPreviewReady,
+    currentDemoIndex,
+    isFirstPreviewRender,
+  ])
+
+  const handleRestartPreview = () => {
+    setPreviewKey(
+      `${code}-${demoCode}-${customTailwindConfig}-${customGlobalCss}-${isDarkTheme}-${Date.now()}`,
+    )
+    setShouldBlurPreview(false)
+  }
+
+  const handleDemoCodeChange = (value: string) => {
+    const demos = form.getValues("demos")
+    if (!demos[currentDemoIndex]) return
+
+    const updatedDemo = {
+      ...demos[currentDemoIndex],
+      name: demos[currentDemoIndex].name || "",
+      demo_code: value || "",
+      preview_image_data_url:
+        demos[currentDemoIndex].preview_image_data_url || "",
+      preview_image_file:
+        demos[currentDemoIndex].preview_image_file ||
+        new File([], "placeholder"),
+      tags: demos[currentDemoIndex].tags || [],
+    }
+
+    demos[currentDemoIndex] = updatedDemo
+    form.setValue("demos", demos)
+    if (!isFirstPreviewRender) {
+      setShouldBlurPreview(true)
+    }
+  }
+
   return (
     <>
       <Form {...form}>
@@ -949,25 +1007,7 @@ export default function PublishComponentForm({
                     isDarkTheme={isDarkTheme}
                     fieldName={`demos.${currentDemoIndex}.demo_code`}
                     value={demoCode}
-                    onChange={(value) => {
-                      const demos = form.getValues("demos")
-                      if (!demos[currentDemoIndex]) return
-
-                      const updatedDemo = {
-                        ...demos[currentDemoIndex],
-                        name: demos[currentDemoIndex].name || "",
-                        demo_code: value || "",
-                        preview_image_data_url:
-                          demos[currentDemoIndex].preview_image_data_url || "",
-                        preview_image_file:
-                          demos[currentDemoIndex].preview_image_file ||
-                          new File([], "placeholder"),
-                        tags: demos[currentDemoIndex].tags || [],
-                      }
-
-                      demos[currentDemoIndex] = updatedDemo
-                      form.setValue("demos", demos)
-                    }}
+                    onChange={handleDemoCodeChange}
                   />
                 ) : (
                   <div className="p-8">
@@ -992,22 +1032,44 @@ export default function PublishComponentForm({
                     <div className="absolute top-4 right-4 z-10">
                       <ThemeToggle />
                     </div>
-                    <React.Suspense fallback={<LoadingSpinner />}>
-                      <PublishComponentPreview
-                        key={`${code}-${demoCode}-${customTailwindConfig}-${customGlobalCss}-${isDarkTheme}`}
-                        code={code}
-                        demoCode={demoCode}
-                        slugToPublish={componentSlug}
-                        registryToPublish={registryToPublish}
-                        directRegistryDependencies={[
-                          ...directRegistryDependencies,
-                          ...demoDirectRegistryDependencies,
-                        ]}
-                        isDarkTheme={isDarkTheme}
-                        customTailwindConfig={customTailwindConfig}
-                        customGlobalCss={customGlobalCss}
-                      />
-                    </React.Suspense>
+                    <div
+                      className={cn(
+                        "relative h-full",
+                        shouldBlurPreview && "filter blur-sm",
+                      )}
+                    >
+                      <React.Suspense
+                        fallback={
+                          <LoadingSpinnerPage className="absolute inset-0" />
+                        }
+                      >
+                        <PublishComponentPreview
+                          key={previewKey}
+                          code={code}
+                          demoCode={demoCode}
+                          slugToPublish={componentSlug}
+                          registryToPublish={registryToPublish}
+                          directRegistryDependencies={[
+                            ...directRegistryDependencies,
+                            ...demoDirectRegistryDependencies,
+                          ]}
+                          isDarkTheme={isDarkTheme}
+                          customTailwindConfig={customTailwindConfig}
+                          customGlobalCss={customGlobalCss}
+                        />
+                      </React.Suspense>
+                    </div>
+                    {shouldBlurPreview && formStep === "demoCode" && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Button
+                          onClick={handleRestartPreview}
+                          variant="secondary"
+                          className="z-20"
+                        >
+                          Update Preview
+                        </Button>
+                      </div>
+                    )}
                   </motion.div>
                 ) : (
                   <div className="p-8">

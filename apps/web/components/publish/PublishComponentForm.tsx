@@ -220,7 +220,7 @@ export default function PublishComponentForm({
         const demoSlug = await generateDemoSlug(
           client,
           currentDemo?.name || "demo",
-          existingComponent.id,
+          existingComponent?.id || null,
           user?.id as string,
         )
 

@@ -89,9 +89,14 @@ export const generateUniqueSlug = async (
 export const generateDemoSlug = async (
   supabase: SupabaseClient,
   name: string,
-  componentId: number,
+  componentId: number | null,
   userId: string,
 ): Promise<string> => {
+  // For new components, just generate a slug from name
+  if (componentId === null) {
+    return makeSlugFromName(name) || "default"
+  }
+
   const { data: existingDemos, error: demosError } = await supabase
     .from("demos")
     .select("id, demo_slug, component_id")
@@ -112,7 +117,7 @@ export const generateDemoSlug = async (
 
   // If 'default' is taken, generate unique slug from name
   let baseSlug = makeSlugFromName(name)
-  let finalSlug = baseSlug
+  let finalSlug = baseSlug || "demo"
   let counter = 1
 
   while (true) {

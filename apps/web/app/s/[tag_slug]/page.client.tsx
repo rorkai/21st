@@ -2,18 +2,18 @@
 
 import { useAtom } from "jotai"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { ComponentsList } from "@/components/ComponentsList"
-import { quickFilterAtom, sortByAtom } from "@/components/ComponentsHeader"
-import { searchQueryAtom } from "@/components/Header"
-import { filterComponents } from "@/lib/filters.client"
+import { ComponentsList } from "@/components/ui/items-list"
+import {
+  quickFilterAtom,
+  sortByAtom,
+} from "@/components/features/main-page/main-page-header"
+import { searchQueryAtom } from "@/components/ui/header.client"
 import {
   DemoWithComponent,
   QuickFilterOption,
   SortOption,
-  User,
-  Component,
 } from "@/types/global"
-import { TagComponentsHeader } from "@/components/TagComponentsHeader"
+import { TagComponentsHeader } from "@/components/features/tag-page/tag-page-header"
 import { useLayoutEffect, useState, useEffect } from "react"
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import { transformDemoResult } from "@/lib/utils/transformData"

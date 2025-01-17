@@ -1,16 +1,24 @@
 import React from "react"
 import { notFound, redirect } from "next/navigation"
 import dynamic from "next/dynamic"
-import ErrorPage from "@/components/ErrorPage"
-import { getComponent, getComponentDemos, getComponentWithDemo, getUserData } from "@/lib/queries"
+import ErrorPage from "@/components/ui/error-page"
+import {
+  getComponent,
+  getComponentDemos,
+  getComponentWithDemo,
+  getUserData,
+} from "@/lib/queries"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 import { extractDemoComponentNames } from "@/lib/parsers"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { validateRouteParams } from "@/lib/utils/validateRouteParams"
 
-const ComponentPage = dynamic(() => import("@/components/ComponentPage"), {
-  ssr: false,
-})
+const ComponentPage = dynamic(
+  () => import("@/components/features/component-page/component-page-layout"),
+  {
+    ssr: false,
+  },
+)
 
 export const generateMetadata = async ({
   params,
@@ -142,9 +150,10 @@ export default async function ComponentPageServer({
 
     const { component, demo } = data
 
-
-    const { data: componentDemos, error: demosError } = await getComponentDemos(supabaseWithAdminAccess, component.id)
-
+    const { data: componentDemos, error: demosError } = await getComponentDemos(
+      supabaseWithAdminAccess,
+      component.id,
+    )
 
     const dependencies = (component.dependencies ?? {}) as Record<
       string,

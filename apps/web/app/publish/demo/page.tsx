@@ -3,9 +3,9 @@
 import { useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { useClerkSupabaseClient } from "@/lib/clerk"
-import PublishComponentForm from "@/components/publish/PublishComponentForm"
+import PublishComponentForm from "@/components/features/publish/publish-layout"
 import fetchFileTextContent from "@/lib/utils/fetchFileTextContent"
-import { LoadingSpinnerPage } from "@/components/LoadingSpinner"
+import { LoadingSpinnerPage } from "@/components/ui/loading-spinner"
 
 interface ComponentData {
   code: string

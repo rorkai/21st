@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
-import { Header } from "@/components/Header"
+import { Header } from "@/components/ui/header.client"
 import { Download, Eye } from "lucide-react"
 import { Metadata } from "next"
 import { Card, CardHeader } from "@/components/ui/card"
@@ -113,9 +113,9 @@ export default async function AuthorsPage() {
                         <h2 className="font-semibold text-lg">
                           {author.name || author.username}
                         </h2>
-                          <p className="text-sm text-muted-foreground line-clamp-1 h-5">
-                            {author.bio || `@${author.username}`}
-                          </p>
+                        <p className="text-sm text-muted-foreground line-clamp-1 h-5">
+                          {author.bio || `@${author.username}`}
+                        </p>
                       </div>
                       <div className="mt-auto space-y-0.5">
                         <div className="flex items-center gap-2 text-muted-foreground">

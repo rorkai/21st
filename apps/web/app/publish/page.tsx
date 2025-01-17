@@ -1,9 +1,9 @@
 import React from "react"
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs"
-import PublishComponentForm from "@/components/publish/PublishComponentForm"
+import PublishComponentForm from "@/components/features/publish/publish-layout"
 
 import Head from "next/head"
-import { Header } from "@/components/Header"
+import { Header } from "@/components/ui/header.client"
 
 export default function PublishPage() {
   return (

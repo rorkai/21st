@@ -13,7 +13,7 @@ import {
   useQueryClient,
   useQuery,
 } from "@tanstack/react-query"
-import { makeSlugFromName } from "@/components/publish/hooks/use-is-check-slug-available"
+import { makeSlugFromName } from "@/components/features/publish/hooks/use-is-check-slug-available"
 import { SupabaseClient } from "@supabase/supabase-js"
 import { useClerkSupabaseClient } from "./clerk"
 import { Database } from "@/types/supabase"

@@ -7,8 +7,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { useSuccessDialogHotkeys } from "../features/publish/hooks/use-hooks"
-import { Icons } from "../icons"
+import { useSuccessDialogHotkeys } from "../hooks/use-hooks"
+import { Icons } from "../../../icons"
 
 interface SuccessDialogProps {
   isOpen: boolean

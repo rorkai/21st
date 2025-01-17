@@ -7,9 +7,9 @@ import { ClerkProvider } from "@clerk/nextjs"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/AppSidebar"
-import { CommandMenu } from "@/components/CommandMenu"
-import { ProductHuntDialog } from "@/components/ProductHuntDialog"
+import { AppSidebar } from "@/components/ui/sidebar-layout"
+import { CommandMenu } from "@/components/ui/command-menu"
+import { ProductHuntDialog } from "@/components/ui/product-hunt-dialog"
 
 import { initAmplitude } from "@/lib/amplitude"
 

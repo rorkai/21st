@@ -54,7 +54,7 @@ export function ComponentCard({
   const componentUrl = isDemo
     ? `/${component.component.user.username}/${component.component.component_slug}/${component.demo_slug || `demo-${component.id}`}`
     : `/${userData.username}/${component.component_slug}`
-
+  /* 
   const supabase = useClerkSupabaseClient()
 
   const componentId = isDemo ? component.component.id : component.id
@@ -73,7 +73,7 @@ export function ComponentCard({
     gcTime: 1000 * 60 * 30,
     refetchOnWindowFocus: false,
   })
-
+ */
   const videoUrl = isDemo ? component.video_url : component.video_url
 
   const codeUrl = isDemo ? component.component.code : component.code
@@ -142,10 +142,10 @@ export function ComponentCard({
             </div>
           </Link>
           <div className="flex items-center gap-3">
-            <div className="flex items-center text-xs text-muted-foreground whitespace-nowrap shrink-0 gap-1">
+            {/* <div className="flex items-center text-xs text-muted-foreground whitespace-nowrap shrink-0 gap-1">
               <Eye size={14} />
               <span>{analytics?.[0]?.count || 0}</span>
-            </div>
+            </div> */}
             <div className="flex items-center text-xs text-muted-foreground whitespace-nowrap shrink-0 gap-1">
               <Heart size={14} className="text-muted-foreground" />
               <span>{likesCount || 0}</span>

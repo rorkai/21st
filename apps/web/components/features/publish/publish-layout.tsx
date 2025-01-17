@@ -655,6 +655,21 @@ export default function PublishComponentForm({
           throw error
         }
 
+        if (!data.is_public) {
+          // create entry in submissions table
+          const { error: submissionError } = await client
+            .from("submissions")
+            .insert({
+              component_id: insertedComponent.id,
+              status: "waiting_for_review",
+            })
+
+          if (submissionError) {
+            console.error("Error inserting submission:", submissionError)
+            throw submissionError
+          }
+        }
+
         if (!publishAsUser?.id) {
           throw new Error("User ID is required")
         }

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",
-    "types": "supabase gen types --lang=typescript --project-id \"vucvdpamtrjkzmubwlts\" --schema public > ./types/supabase.ts",
+    "types": "supabase gen types --lang=typescript --project-id 'vucvdpamtrjkzmubwlts' --schema public > ./types/supabase.ts",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

@@ -842,6 +842,7 @@ export type Database = {
           p_sort_by: string
           p_offset: number
           p_limit: number
+          p_include_private?: boolean
         }
         Returns: {
           id: number
@@ -876,6 +877,7 @@ export type Database = {
           p_offset: number
           p_limit: number
           p_tag_slug?: string
+          p_include_private?: boolean
         }
         Returns: {
           id: number

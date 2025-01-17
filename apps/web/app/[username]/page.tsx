@@ -1,16 +1,14 @@
-import { ErrorPage } from "@/components/ui/error-page"
 import { UserProfileClient } from "./page.client"
-import { transformDemoResult } from "@/lib/utils/transformData"
 
 import {
   getUserData,
-  getUserComponents,
   getHuntedComponents,
   getUserDemos,
 } from "@/lib/queries"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { validateRouteParams } from "@/lib/utils/validateRouteParams"
 import { redirect } from "next/navigation"
+import { currentUser } from "@clerk/nextjs/server"
 
 export const generateMetadata = async ({
   params,
@@ -78,13 +76,15 @@ export default async function UserProfile({
     params.username,
   )
 
+  const loggedInUser = await currentUser()
+
   if (!user || !user.username) {
     redirect("/")
   }
 
   const [huntedComponents, allUserDemos] = await Promise.all([
     getHuntedComponents(supabaseWithAdminAccess, user.username),
-    getUserDemos(supabaseWithAdminAccess, user.id),
+    getUserDemos(supabaseWithAdminAccess, user.id, loggedInUser?.id),
   ])
 
   // userComponents - demos of own components (where user is both component and demo creator)

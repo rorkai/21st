@@ -1,7 +1,7 @@
 import { useAtom } from "jotai"
 import { Maximize2, Minimize2 } from "lucide-react"
 import { motion } from "framer-motion"
-import { isFullScreenAtom } from "../ComponentPage"
+import { isFullScreenAtom } from "../features/component-page/component-page-layout"
 import {
   Tooltip,
   TooltipContent,
@@ -52,7 +52,10 @@ export function FullScreenButton() {
             </div>
           </motion.button>
         </TooltipTrigger>
-        <TooltipContent side="left" className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
+        <TooltipContent
+          side="left"
+          className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2"
+        >
           <p className="flex items-center gap-1.5">
             {isFullScreen ? "Exit full screen" : "Full screen"}
             <kbd className="pointer-events-none h-5 text-muted-foreground select-none items-center gap-1 rounded border bg-muted px-1.5 opacity-100 flex text-[11px] leading-none font-sans">

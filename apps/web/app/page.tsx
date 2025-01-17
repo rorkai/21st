@@ -4,20 +4,17 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
 import {
-  Component,
   QuickFilterOption,
   SortOption,
-  User,
   DemoWithComponent,
-  Tag,
 } from "@/types/global"
 
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { transformDemoResult } from "@/lib/utils/transformData"
 
-import { Header } from "../components/Header"
-import { HeroSection } from "@/components/HeroSection"
-import { NewsletterDialog } from "@/components/NewsletterDialog"
+import { Header } from "@/components/ui/header.client"
+import { HeroSection } from "@/components/ui/hero-section"
+import { NewsletterDialog } from "@/components/ui/newsletter-dialog"
 import { HomePageClient } from "./page.client"
 
 export const dynamic = "force-dynamic"

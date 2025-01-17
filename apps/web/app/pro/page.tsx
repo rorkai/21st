@@ -4,8 +4,8 @@ import Link from "next/link"
 
 import { load } from "cheerio"
 
-import { Header } from "@/components/Header"
-import { UserAvatar } from "@/components/UserAvatar"
+import { Header } from "@/components/ui/header.client"
+import { UserAvatar } from "@/components/ui/user-avatar"
 
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 

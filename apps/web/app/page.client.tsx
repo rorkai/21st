@@ -7,46 +7,23 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query"
 import { motion } from "framer-motion"
 
 import {
-  Component,
   QuickFilterOption,
   SortOption,
-  User,
   DemoWithComponent,
-  Tag,
-  Demo,
 } from "@/types/global"
-import type { Json } from "@/types/supabase"
 
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import { setCookie } from "@/lib/cookies"
-import { searchQueryAtom } from "@/components/Header"
+import { searchQueryAtom } from "@/components/ui/header.client"
 import {
   ComponentsHeader,
   sortByAtom,
   quickFilterAtom,
-} from "@/components/ComponentsHeader"
+} from "@/components/features/main-page/main-page-header"
 import { Loader2 } from "lucide-react"
 import { useDebounce } from "@/hooks/use-debounce"
-import ComponentsList from "@/components/ComponentsList"
+import ComponentsList from "@/components/ui/items-list"
 import { transformDemoResult } from "@/lib/utils/transformData"
-
-type SearchResult = {
-  id: number
-  name: string
-  demo_code: string
-  preview_url: string
-  video_url: string
-  created_at: string
-  updated_at: string
-  component_id: number
-  demo_dependencies: Json
-  demo_direct_registry_dependencies: Json
-  demo_slug: string
-  compiled_css: string | null
-  user_id: string | null
-  component_data: Json
-  user_data: Json
-}
 
 const useSetServerUserDataCookies = () => {
   useEffect(() => {

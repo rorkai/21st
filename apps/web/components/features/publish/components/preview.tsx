@@ -16,7 +16,7 @@ import {
 } from "@codesandbox/sandpack-react"
 import { useQuery } from "@tanstack/react-query"
 import React, { useMemo, useState, useEffect } from "react"
-import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { LoadingSpinner } from "../../../ui/loading-spinner"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 import { useToast } from "@/hooks/use-toast"
 

@@ -1,4 +1,4 @@
-import { ErrorPage } from "@/components/ErrorPage"
+import { ErrorPage } from "@/components/ui/error-page"
 import { UserProfileClient } from "./page.client"
 import { transformDemoResult } from "@/lib/utils/transformData"
 

@@ -1,17 +1,14 @@
 import { Metadata } from "next"
-import { notFound, redirect } from "next/navigation"
+import { redirect } from "next/navigation"
 import { SupabaseClient } from "@supabase/supabase-js"
 
-import { Header } from "@/components/Header"
+import { Header } from "@/components/ui/header.client"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { Database } from "@/types/supabase"
 import { TagPageContent } from "./page.client"
 import {
-  Component,
   QuickFilterOption,
-  SortOption,
-  DemoWithComponent,
-  User,
+  SortOption
 } from "@/types/global"
 import { cookies } from "next/headers"
 import { validateRouteParams } from "@/lib/utils/validateRouteParams"

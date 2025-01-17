@@ -19,6 +19,7 @@ export type DemoWithComponent = Demo & {
 export type DemoWithTags = Demo & {
   tags: Tag[]
   user: User
+  component: Component & { user: User }
 }
 
 export type DemoWithComponentAndTags = DemoWithComponent & {

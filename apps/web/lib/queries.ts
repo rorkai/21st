@@ -539,7 +539,13 @@ export async function getComponentWithDemo(
     ...(demo as any),
     user: demo.demo_user,
     tags: demo.tags ? demo.tags.map((tag: any) => tag.tags) : [],
-  } as unknown as Demo & { user: User } & { tags: Tag[] }
+    component: {
+      ...component,
+      user: component.user,
+    },
+  } as unknown as Demo & { user: User } & { tags: Tag[] } & {
+    component: Component & { user: User }
+  }
 
   delete (formattedDemo as any).demo_user
 
@@ -668,7 +674,14 @@ export async function getComponentDemos(
     .select(
       `
       *,
-      user:users!user_id (*)
+      user:users!user_id (*),
+      tags:demo_tags(
+        tag:tag_id(*)
+      ),
+      component:components!component_id (
+        *,
+        user:users!user_id (*)
+      )
     `,
     )
     .eq("component_id", componentId)
@@ -679,5 +692,15 @@ export async function getComponentDemos(
     return { data: null, error }
   }
 
-  return { data, error: null }
+  // Transform the data to match DemoWithTags type
+  const transformedData = data?.map((demo: any) => ({
+    ...demo,
+    tags: demo.tags.map((tagRelation: any) => tagRelation.tag),
+    component: {
+      ...demo.component,
+      user: demo.component.user,
+    },
+  }))
+
+  return { data: transformedData, error: null }
 }

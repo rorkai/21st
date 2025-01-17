@@ -324,8 +324,8 @@ async function purgeCacheForDemo(
 
 type ComponentPageProps = {
   component: Component & { user: User } & { tags: Tag[] }
-  demo: Demo & { user: User } & { tags: Tag[] }
-  componentDemos: Demo[] | null
+  demo: DemoWithTags
+  componentDemos: DemoWithTags[] | null
   code: string
   demoCode: string
   dependencies: Record<string, string>
@@ -688,16 +688,36 @@ export default function ComponentPage({
                             }
                             className="flex items-center gap-2"
                           >
-                            <Image
-                              src={d.preview_url || "/placeholder.svg"}
-                              alt={d.name || ""}
-                              width={80}
-                              height={60}
-                              className="rounded-sm"
-                            />
-                            {d.name}
+                            <div className="relative w-[80px] h-[60px] flex-shrink-0">
+                              <Image
+                                src={d.preview_url || "/placeholder.svg"}
+                                alt={d.name || ""}
+                                fill
+                                className="rounded-sm object-cover"
+                              />
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                              <p className="font-medium line-clamp-2">
+                                {d.name}
+                              </p>
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <UserAvatar
+                                  src={d.user.image_url || "/placeholder.svg"}
+                                  alt={d.user.name}
+                                  size={16}
+                                  isClickable={false}
+                                  user={d.user}
+                                />
+                                <span className="truncate">
+                                  {d.user.username}
+                                </span>
+                              </div>
+                            </div>
                             {d.id === demo.id && (
-                              <Check size={16} className="ml-auto" />
+                              <Check
+                                size={16}
+                                className="ml-auto flex-shrink-0"
+                              />
                             )}
                           </CommandItem>
                         ))}

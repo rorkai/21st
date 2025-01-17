@@ -266,6 +266,11 @@ export default function PublishComponentForm({
     username: publishAsUsername ?? "",
   })
 
+
+  if (process.env.NODE_ENV === "development") {
+    console.log("form", form.getValues())
+  }
+
   useEffect(() => {
     const message = "You have unsaved changes. Are you sure you want to leave?"
 
@@ -932,7 +937,12 @@ export default function PublishComponentForm({
               setCurrentDemoIndex={setCurrentDemoIndex}
             />
             <div className="flex h-[calc(100vh-3.5rem)]">
-              <div className="w-1/2 border-r pointer-events-auto">
+              <div
+                className={cn(
+                  "border-r pointer-events-auto transition-[width] duration-300",
+                  formStep === "demoCode" ? "w-1/2" : "w-1/3",
+                )}
+              >
                 {formStep === "demoCode" ? (
                   <EditorStep
                     form={form}
@@ -965,7 +975,12 @@ export default function PublishComponentForm({
                   </div>
                 )}
               </div>
-              <div className="w-1/2 pointer-events-auto">
+              <div
+                className={cn(
+                  "pointer-events-auto transition-[width] duration-300",
+                  formStep === "demoCode" ? "w-1/2" : "w-2/3",
+                )}
+              >
                 {isPreviewReady ? (
                   <motion.div
                     initial={{ opacity: 0 }}

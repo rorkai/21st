@@ -92,7 +92,7 @@ export function HeroSection() {
               asChild
             >
               <a
-                href="https://github.com/rorkai/21st"
+                href="https://github.com/serafimcloud/21st"
                 target="_blank"
                 rel="noreferrer"
               >

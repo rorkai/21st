@@ -92,7 +92,7 @@ export default function TermsOfService() {
           <br />
           United Kingdom
           <br />
-          Email: serafim@rorkai.com
+          Email: serafimcloud@gmail.com
         </p>
       </div>
     </div>

@@ -7,7 +7,7 @@ export function GitHubStars() {
   const { data: stars, isLoading } = useQuery({
     queryKey: ["github-stars"],
     queryFn: async () => {
-      const res = await fetch("https://api.github.com/repos/rorkai/21st")
+      const res = await fetch("https://api.github.com/repos/serafimcloud/21st")
       const data = await res.json()
       return data.stargazers_count as number
     },

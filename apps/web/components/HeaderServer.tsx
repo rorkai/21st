@@ -56,7 +56,7 @@ HeaderServer.SocialIcons = function SocialIcons() {
       </Link>
       <div className="flex items-center gap-2 ml-1">
         <Link
-          href="https://github.com/rorkai/21st"
+          href="https://github.com/serafimcloud/21st"
           target="_blank"
           rel="noreferrer"
         >

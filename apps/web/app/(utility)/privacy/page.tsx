@@ -76,7 +76,7 @@ export default function PrivacyPolicy() {
           <br />
           United Kingdom
           <br />
-          Email: serafim@rorkai.com
+          Email: serafimcloud@gmail.com
         </p>
       </div>
     </div>

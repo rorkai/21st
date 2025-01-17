@@ -63,7 +63,7 @@ import {
   TailwindGuidelinesAlert,
 } from "./alerts"
 import { generateDemoSlug } from "./hooks/use-is-check-slug-available"
-
+import { useIsAdmin } from "./hooks/use-is-admin"
 export interface ParsedCodeData {
   dependencies: Record<string, string>
   demoDependencies: Record<string, string>
@@ -196,6 +196,7 @@ export default function PublishComponentForm({
   const [publishAttemptCount, setPublishAttemptCount] = useState(0)
 
   const isAddDemoMode = mode === "add-demo"
+  const isUserAdmin = useIsAdmin()
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -252,7 +253,7 @@ export default function PublishComponentForm({
           description: "",
           license: "mit",
           website_url: "",
-          is_public: true,
+          is_public: isUserAdmin,
         },
   })
 
@@ -642,6 +643,7 @@ export default function PublishComponentForm({
           registry: data.registry,
           license: data.license,
           website_url: data.website_url,
+          is_public: data.is_public,
         } as Tables<"components">
 
         const { data: insertedComponent, error } = await client

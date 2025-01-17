@@ -474,6 +474,52 @@ export type Database = {
           },
         ]
       }
+      submissions: {
+        Row: {
+          component_id: number
+          created_at: string
+          id: number
+          moderators_feedback: string | null
+          status: Database["public"]["Enums"]["submission_status"]
+        }
+        Insert: {
+          component_id: number
+          created_at?: string
+          id?: number
+          moderators_feedback?: string | null
+          status: Database["public"]["Enums"]["submission_status"]
+        }
+        Update: {
+          component_id?: number
+          created_at?: string
+          id?: number
+          moderators_feedback?: string | null
+          status?: Database["public"]["Enums"]["submission_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submissions_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: true
+            referencedRelation: "component_dependencies_graph_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submissions_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: true
+            referencedRelation: "components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submissions_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: true
+            referencedRelation: "components_with_username"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tags: {
         Row: {
           id: number
@@ -1024,7 +1070,11 @@ export type Database = {
           }
     }
     Enums: {
-      [_ in never]: never
+      submission_status:
+        | "waiting_for_review"
+        | "published"
+        | "rejected"
+        | "changes_needed"
     }
     CompositeTypes: {
       component_with_user: {

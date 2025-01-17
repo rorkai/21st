@@ -83,6 +83,95 @@ interface PublishComponentFormProps {
   initialGlobalCss?: string | null
 }
 
+const PreviewSection = React.memo(
+  ({
+    isPreviewReady,
+    formStep,
+    code,
+    componentSlug,
+    registryToPublish,
+    directRegistryDependencies,
+    demoDirectRegistryDependencies,
+    isDarkTheme,
+    customTailwindConfig,
+    customGlobalCss,
+    form,
+    parsedCode,
+    shouldBlurPreview,
+    onRestartPreview,
+    previewKey,
+    currentDemoIndex,
+  }: {
+    isPreviewReady: boolean
+    formStep: FormStep
+    code: string
+    componentSlug: string
+    registryToPublish: string
+    directRegistryDependencies: string[]
+    demoDirectRegistryDependencies: string[]
+    isDarkTheme: boolean
+    customTailwindConfig?: string
+    customGlobalCss?: string
+    form: any
+    parsedCode: ParsedCodeData
+    shouldBlurPreview: boolean
+    onRestartPreview: () => void
+    previewKey: string
+    currentDemoIndex: number
+  }) => {
+    if (!isPreviewReady) {
+      return (
+        <div className="p-8 w-1/2">
+          <DemoComponentGuidelinesAlert
+            mainComponentName={parsedCode.componentNames[0] ?? "MyComponent"}
+            componentSlug={componentSlug}
+            registryToPublish={registryToPublish}
+          />
+        </div>
+      )
+    }
+
+    return (
+      <div
+        className={cn(
+          "pointer-events-auto transition-[width] duration-300",
+          formStep === "demoCode" ? "w-1/2" : "w-2/3",
+          formStep === "demoCode" && "!w-1/2",
+        )}
+      >
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="h-full"
+        >
+          <React.Suspense fallback={<LoadingSpinner />}>
+            <DemoPreviewTabs
+              code={code}
+              slugToPublish={componentSlug}
+              registryToPublish={registryToPublish}
+              directRegistryDependencies={directRegistryDependencies}
+              demoDirectRegistryDependencies={demoDirectRegistryDependencies}
+              isDarkTheme={isDarkTheme}
+              customTailwindConfig={customTailwindConfig}
+              customGlobalCss={customGlobalCss}
+              form={form}
+              shouldBlurPreview={shouldBlurPreview}
+              onRestartPreview={onRestartPreview}
+              formStep={formStep}
+              previewKey={previewKey}
+              currentDemoIndex={currentDemoIndex}
+            />
+          </React.Suspense>
+        </motion.div>
+      </div>
+    )
+  },
+)
+
+PreviewSection.displayName = "PreviewSection"
+
 export default function PublishComponentForm({
   mode = "full",
   existingComponent,
@@ -914,6 +1003,16 @@ export default function PublishComponentForm({
     }
   }
 
+  useEffect(() => {
+    const demos = form.getValues().demos || []
+    if (demos.length > 0) {
+      const lastDemoIndex = demos.length - 1
+      if (formStep === "detailedForm") {
+        setOpenAccordion(`demo-${lastDemoIndex}`)
+      }
+    }
+  }, [form.getValues().demos?.length, formStep])
+
   return (
     <>
       <Form {...form}>
@@ -981,118 +1080,243 @@ export default function PublishComponentForm({
           </div>
         )}
 
-        {(formStep === "demoCode" || formStep === "demoDetails") && (
-          <div className="flex flex-col h-screen w-full absolute left-0 right-0">
-            <PublishHeader
-              formStep={formStep}
-              componentSlug={componentSlug}
-              setFormStep={handleStepChange}
-              handleSubmit={handleSubmit}
-              isSubmitting={isSubmitting}
-              isFormValid={isFormValid(form)}
-              form={form}
-              currentDemoIndex={currentDemoIndex}
-              setCurrentDemoIndex={setCurrentDemoIndex}
-            />
-            <div className="flex h-[calc(100vh-3.5rem)]">
-              <div
-                className={cn(
-                  "border-r pointer-events-auto transition-[width] duration-300",
-                  formStep === "demoCode" ? "w-1/2" : "w-1/3",
-                )}
-              >
-                {formStep === "demoCode" ? (
-                  <EditorStep
-                    form={form}
-                    isDarkTheme={isDarkTheme}
-                    fieldName={`demos.${currentDemoIndex}.demo_code`}
-                    value={demoCode}
-                    onChange={handleDemoCodeChange}
-                  />
-                ) : (
-                  <div className="p-8">
-                    <DemoDetailsForm form={form} demoIndex={currentDemoIndex} />
-                  </div>
-                )}
-              </div>
-              <div
-                className={cn(
-                  "pointer-events-auto transition-[width] duration-300",
-                  formStep === "demoCode" ? "w-1/2" : "w-2/3",
-                )}
-              >
-                {isPreviewReady ? (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="h-full p-8 relative"
-                  >
-                    <div className="absolute top-4 right-4 z-10">
-                      <ThemeToggle />
-                    </div>
-                    <div
-                      className={cn(
-                        "relative h-full",
-                        shouldBlurPreview && "filter blur-sm",
-                      )}
-                    >
-                      <React.Suspense
-                        fallback={
-                          <LoadingSpinnerPage className="absolute inset-0" />
-                        }
-                      >
-                        <PublishComponentPreview
-                          key={previewKey}
-                          code={code}
-                          demoCode={demoCode}
-                          slugToPublish={componentSlug}
-                          registryToPublish={registryToPublish}
-                          directRegistryDependencies={[
-                            ...directRegistryDependencies,
-                            ...demoDirectRegistryDependencies,
-                          ]}
-                          isDarkTheme={isDarkTheme}
-                          customTailwindConfig={customTailwindConfig}
-                          customGlobalCss={customGlobalCss}
-                        />
-                      </React.Suspense>
-                    </div>
-                    {shouldBlurPreview && formStep === "demoCode" && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Button
-                          onClick={handleRestartPreview}
-                          variant="secondary"
-                          className="z-20"
-                        >
-                          Update Preview
-                        </Button>
-                      </div>
-                    )}
-                  </motion.div>
-                ) : (
-                  <div className="p-8">
-                    <DemoComponentGuidelinesAlert
-                      mainComponentName={
-                        parsedCode.componentNames[0] ?? "MyComponent"
-                      }
-                      componentSlug={componentSlug}
-                      registryToPublish={registryToPublish}
+        <div
+          className={cn(
+            "flex flex-col h-screen w-full absolute left-0 right-0",
+            formStep === "nameSlugForm" && "hidden",
+          )}
+        >
+          {(formStep === "demoCode" ||
+            formStep === "demoDetails" ||
+            formStep === "detailedForm") && (
+            <>
+              <PublishHeader
+                formStep={formStep}
+                componentSlug={componentSlug}
+                setFormStep={handleStepChange}
+                handleSubmit={handleSubmit}
+                isSubmitting={isSubmitting}
+                isFormValid={isFormValid(form)}
+                form={form}
+                currentDemoIndex={currentDemoIndex}
+                setCurrentDemoIndex={setCurrentDemoIndex}
+                onAddDemo={handleAddNewDemo}
+              />
+              <div className="flex h-[calc(100vh-3.5rem)]">
+                <div
+                  className={cn(
+                    "border-r pointer-events-auto transition-[width] duration-300",
+                    formStep === "demoCode" ? "w-1/2" : "w-1/3",
+                    formStep === "demoCode" && "!w-1/2",
+                  )}
+                >
+                  {formStep === "demoCode" && (
+                    <EditorStep
+                      form={form}
+                      isDarkTheme={isDarkTheme}
+                      fieldName={`demos.${currentDemoIndex}.demo_code`}
+                      value={demoCode}
+                      onChange={handleDemoCodeChange}
                     />
-                  </div>
-                )}
+                  )}
+                  {formStep === "demoDetails" && (
+                    <div className="p-8">
+                      <DemoDetailsForm
+                        form={form}
+                        demoIndex={currentDemoIndex}
+                      />
+                    </div>
+                  )}
+                  {formStep === "detailedForm" && (
+                    <div className="w-full flex flex-col gap-4 overflow-y-auto p-4">
+                      <div className="space-y-4 p-[2px]">
+                        <Accordion
+                          type="single"
+                          value={openAccordion}
+                          onValueChange={handleAccordionChange}
+                          collapsible
+                          className="w-full"
+                        >
+                          {!isAddDemoMode && (
+                            <AccordionItem value="component-info">
+                              <AccordionTrigger className="py-2 text-[15px] leading-6 hover:no-underline hover:bg-muted/50 rounded-md data-[state=open]:rounded-b-none transition-all duration-200 ease-in-out -mx-2 px-2">
+                                <div className="flex items-center gap-2">
+                                  Component info
+                                  <Badge
+                                    variant="outline"
+                                    className={cn(
+                                      "gap-1.5 text-xs font-medium",
+                                      isComponentInfoComplete()
+                                        ? "border-emerald-500/20"
+                                        : "border-amber-500/20",
+                                    )}
+                                  >
+                                    <span
+                                      className={cn(
+                                        "size-1.5 rounded-full",
+                                        isComponentInfoComplete()
+                                          ? "bg-emerald-500"
+                                          : "bg-amber-500",
+                                      )}
+                                      aria-hidden="true"
+                                    />
+                                    {isComponentInfoComplete()
+                                      ? "Complete"
+                                      : "Required"}
+                                  </Badge>
+                                </div>
+                              </AccordionTrigger>
+                              <AccordionContent className="text-muted-foreground">
+                                <div className="text-foreground">
+                                  <ComponentDetailsForm
+                                    form={form}
+                                    handleSubmit={handleSubmit}
+                                    isSubmitting={isSubmitting}
+                                    hotkeysEnabled={!isSuccessDialogOpen}
+                                  />
+
+                                  <div className="space-y-3 mt-6">
+                                    <EditCodeFileCard
+                                      iconSrc={
+                                        isDarkTheme
+                                          ? "/tsx-file-dark.svg"
+                                          : "/tsx-file.svg"
+                                      }
+                                      mainText={`${form.getValues("name")} code`}
+                                      subText={`${parsedCode.componentNames.slice(0, 2).join(", ")}${parsedCode.componentNames.length > 2 ? ` +${parsedCode.componentNames.length - 2}` : ""}`}
+                                      onEditClick={() => {
+                                        handleStepChange("code")
+                                        codeInputRef.current?.focus()
+                                      }}
+                                    />
+                                    <EditCodeFileCard
+                                      iconSrc={
+                                        isDarkTheme
+                                          ? "/css-file-dark.svg"
+                                          : "/css-file.svg"
+                                      }
+                                      mainText="Custom styles"
+                                      subText="Tailwind config and globals.css"
+                                      onEditClick={() => {
+                                        handleStepChange("code")
+                                        setActiveCodeTab("tailwind")
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              </AccordionContent>
+                            </AccordionItem>
+                          )}
+
+                          {demos?.map((demo, index) => (
+                            <AccordionItem
+                              key={index}
+                              value={`demo-${index}`}
+                              className="bg-background border-none group"
+                            >
+                              <AccordionTrigger className="py-2 text-[15px] leading-6 hover:no-underline hover:bg-muted/50 rounded-md data-[state=open]:rounded-b-none transition-all duration-200 ease-in-out -mx-2 px-2">
+                                <div className="flex items-center gap-2 w-full">
+                                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                                    <div className="truncate">
+                                      {demo.name || `Demo ${index + 1}`}
+                                    </div>
+                                    <Badge
+                                      variant="outline"
+                                      className={cn(
+                                        "gap-1.5 text-xs font-medium shrink-0",
+                                        isDemoComplete(index)
+                                          ? "border-emerald-500/20"
+                                          : "border-amber-500/20",
+                                      )}
+                                    >
+                                      <span
+                                        className={cn(
+                                          "size-1.5 rounded-full",
+                                          isDemoComplete(index)
+                                            ? "bg-emerald-500"
+                                            : "bg-amber-500",
+                                        )}
+                                        aria-hidden="true"
+                                      />
+                                      {isDemoComplete(index)
+                                        ? "Complete"
+                                        : "Required"}
+                                    </Badge>
+                                  </div>
+                                  {demos.length > 1 && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 ml-auto mr-1"
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        setDemoToDelete({
+                                          index,
+                                          name:
+                                            demo?.name || `Demo ${index + 1}`,
+                                        })
+                                      }}
+                                    >
+                                      <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive transition-colors" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </AccordionTrigger>
+                              <AccordionContent>
+                                <div className="text-foreground space-y-4">
+                                  <DemoDetailsForm
+                                    form={form}
+                                    demoIndex={index}
+                                  />
+                                  <EditCodeFileCard
+                                    iconSrc={
+                                      isDarkTheme
+                                        ? "/demo-file-dark.svg"
+                                        : "/demo-file.svg"
+                                    }
+                                    mainText={`Demo ${index + 1} code`}
+                                    onEditClick={() => {
+                                      handleStepChange("demoCode")
+                                      setCurrentDemoIndex(index)
+                                    }}
+                                  />
+                                </div>
+                              </AccordionContent>
+                            </AccordionItem>
+                          ))}
+                        </Accordion>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <PreviewSection
+                  isPreviewReady={isPreviewReady}
+                  formStep={formStep}
+                  code={code}
+                  componentSlug={componentSlug}
+                  registryToPublish={registryToPublish}
+                  directRegistryDependencies={directRegistryDependencies}
+                  demoDirectRegistryDependencies={
+                    demoDirectRegistryDependencies
+                  }
+                  isDarkTheme={isDarkTheme}
+                  customTailwindConfig={customTailwindConfig}
+                  customGlobalCss={customGlobalCss}
+                  form={form}
+                  parsedCode={parsedCode}
+                  shouldBlurPreview={shouldBlurPreview}
+                  onRestartPreview={handleRestartPreview}
+                  previewKey={previewKey}
+                  currentDemoIndex={currentDemoIndex}
+                />
               </div>
-            </div>
-          </div>
-        )}
+            </>
+          )}
+        </div>
 
         {formStep === "nameSlugForm" && (
-          <div
-            className={cn(
-              "flex flex-col scrollbar-hide items-start gap-2 py-8 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[450px]",
-            )}
-          >
+          <div className="flex flex-col scrollbar-hide items-start gap-2 py-8 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[450px]">
             <NameSlugStep
               form={form}
               isAdmin={isAdmin}
@@ -1103,212 +1327,6 @@ export default function PublishComponentForm({
                 form.setValue("publish_as_username", username)
               }
             />
-          </div>
-        )}
-
-        {formStep === "detailedForm" && unknownDependencies?.length === 0 && (
-          <div className="flex flex-col h-[100vh] w-full absolute left-0 right-0 overflow-hidden">
-            <PublishHeader
-              formStep={formStep}
-              componentSlug={componentSlug}
-              setFormStep={handleStepChange}
-              handleSubmit={handleSubmit}
-              isSubmitting={isSubmitting}
-              isFormValid={isFormValid(form)}
-              form={form}
-              onAddDemo={handleAddNewDemo}
-              currentDemoIndex={currentDemoIndex}
-              setCurrentDemoIndex={setCurrentDemoIndex}
-            />
-            <div className="flex gap-1 w-full h-[calc(100vh-3rem)] overflow-hidden">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3, delay: 0.3 }}
-                className="w-1/3 flex flex-col gap-4 overflow-y-auto p-4"
-              >
-                <div className="space-y-4 p-[2px]">
-                  <Accordion
-                    type="single"
-                    value={openAccordion}
-                    onValueChange={handleAccordionChange}
-                    collapsible
-                    className="w-full"
-                  >
-                    {!isAddDemoMode && (
-                      <AccordionItem value="component-info">
-                        <AccordionTrigger className="py-2 text-[15px] leading-6 hover:no-underline hover:bg-muted/50 rounded-md data-[state=open]:rounded-b-none transition-all duration-200 ease-in-out -mx-2 px-2">
-                          <div className="flex items-center gap-2">
-                            Component info
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                "gap-1.5 text-xs font-medium",
-                                isComponentInfoComplete()
-                                  ? "border-emerald-500/20"
-                                  : "border-amber-500/20",
-                              )}
-                            >
-                              <span
-                                className={cn(
-                                  "size-1.5 rounded-full",
-                                  isComponentInfoComplete()
-                                    ? "bg-emerald-500"
-                                    : "bg-amber-500",
-                                )}
-                                aria-hidden="true"
-                              />
-                              {isComponentInfoComplete()
-                                ? "Complete"
-                                : "Required"}
-                            </Badge>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="text-muted-foreground">
-                          <div className="text-foreground">
-                            <ComponentDetailsForm
-                              form={form}
-                              handleSubmit={handleSubmit}
-                              isSubmitting={isSubmitting}
-                              hotkeysEnabled={!isSuccessDialogOpen}
-                            />
-
-                            <div className="space-y-3 mt-6">
-                              <EditCodeFileCard
-                                iconSrc={
-                                  isDarkTheme
-                                    ? "/tsx-file-dark.svg"
-                                    : "/tsx-file.svg"
-                                }
-                                mainText={`${form.getValues("name")} code`}
-                                subText={`${parsedCode.componentNames.slice(0, 2).join(", ")}${parsedCode.componentNames.length > 2 ? ` +${parsedCode.componentNames.length - 2}` : ""}`}
-                                onEditClick={() => {
-                                  handleStepChange("code")
-                                  codeInputRef.current?.focus()
-                                }}
-                              />
-                              <EditCodeFileCard
-                                iconSrc={
-                                  isDarkTheme
-                                    ? "/css-file-dark.svg"
-                                    : "/css-file.svg"
-                                }
-                                mainText="Custom styles"
-                                subText="Tailwind config and globals.css"
-                                onEditClick={() => {
-                                  handleStepChange("code")
-                                  setActiveCodeTab("tailwind")
-                                }}
-                              />
-                            </div>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    )}
-
-                    {demos?.map((demo, index) => (
-                      <AccordionItem
-                        key={index}
-                        value={`demo-${index}`}
-                        className="bg-background border-none group"
-                      >
-                        <AccordionTrigger className="py-2 text-[15px] leading-6 hover:no-underline hover:bg-muted/50 rounded-md data-[state=open]:rounded-b-none transition-all duration-200 ease-in-out -mx-2 px-2">
-                          <div className="flex items-center gap-2 w-full">
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <div className="truncate">
-                                {demo.name || `Demo ${index + 1}`}
-                              </div>
-                              <Badge
-                                variant="outline"
-                                className={cn(
-                                  "gap-1.5 text-xs font-medium shrink-0",
-                                  isDemoComplete(index)
-                                    ? "border-emerald-500/20"
-                                    : "border-amber-500/20",
-                                )}
-                              >
-                                <span
-                                  className={cn(
-                                    "size-1.5 rounded-full",
-                                    isDemoComplete(index)
-                                      ? "bg-emerald-500"
-                                      : "bg-amber-500",
-                                  )}
-                                  aria-hidden="true"
-                                />
-                                {isDemoComplete(index)
-                                  ? "Complete"
-                                  : "Required"}
-                              </Badge>
-                            </div>
-                            {demos.length > 1 && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 ml-auto mr-1"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setDemoToDelete({
-                                    index,
-                                    name: demo?.name || `Demo ${index + 1}`,
-                                  })
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive transition-colors" />
-                              </Button>
-                            )}
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="text-foreground space-y-4">
-                            <DemoDetailsForm form={form} demoIndex={index} />
-                            <EditCodeFileCard
-                              iconSrc={
-                                isDarkTheme
-                                  ? "/demo-file-dark.svg"
-                                  : "/demo-file.svg"
-                              }
-                              mainText={`Demo ${index + 1} code`}
-                              onEditClick={() => {
-                                handleStepChange("demoCode")
-                                setCurrentDemoIndex(index)
-                              }}
-                            />
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </div>
-              </motion.div>
-
-              {isPreviewReady && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="w-2/3 h-full"
-                >
-                  <React.Suspense fallback={<LoadingSpinner />}>
-                    <DemoPreviewTabs
-                      code={code}
-                      slugToPublish={componentSlug}
-                      registryToPublish={registryToPublish}
-                      directRegistryDependencies={directRegistryDependencies}
-                      demoDirectRegistryDependencies={
-                        demoDirectRegistryDependencies
-                      }
-                      isDarkTheme={isDarkTheme}
-                      customTailwindConfig={customTailwindConfig}
-                      customGlobalCss={customGlobalCss}
-                      form={form}
-                    />
-                  </React.Suspense>
-                </motion.div>
-              )}
-            </div>
           </div>
         )}
       </Form>

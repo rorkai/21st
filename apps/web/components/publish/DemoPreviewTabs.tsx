@@ -5,6 +5,8 @@ import { PublishComponentPreview } from "./preview"
 import { UseFormReturn } from "react-hook-form"
 import type { FormData } from "./utils"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { FormStep } from "@/types/global"
 
 interface DemoPreviewTabsProps {
   code: string
@@ -16,6 +18,11 @@ interface DemoPreviewTabsProps {
   customTailwindConfig?: string
   customGlobalCss?: string
   form: UseFormReturn<FormData>
+  shouldBlurPreview?: boolean
+  onRestartPreview?: () => void
+  formStep?: FormStep
+  previewKey?: string
+  currentDemoIndex: number
 }
 
 export function DemoPreviewTabs({
@@ -23,16 +30,34 @@ export function DemoPreviewTabs({
   slugToPublish,
   registryToPublish,
   directRegistryDependencies,
+  demoDirectRegistryDependencies,
   isDarkTheme,
   customTailwindConfig,
   customGlobalCss,
   form,
+  shouldBlurPreview,
+  onRestartPreview,
+  formStep,
+  previewKey,
+  currentDemoIndex,
 }: DemoPreviewTabsProps) {
   const demos = form.watch("demos") || []
   const [activeTab, setActiveTab] = useState("demo-0")
   const [renderedTabs, setRenderedTabs] = useState<Set<string>>(
     new Set(["demo-0"]),
   )
+
+  const [previewKeys, setPreviewKeys] = useState<Record<number, string>>({})
+
+  const handleRestartPreview = () => {
+    if (onRestartPreview) {
+      onRestartPreview()
+      setPreviewKeys((prev) => ({
+        ...prev,
+        [currentDemoIndex]: `${Date.now()}`,
+      }))
+    }
+  }
 
   useEffect(() => {
     if (demos.length === 0) {
@@ -49,6 +74,12 @@ export function DemoPreviewTabs({
   useEffect(() => {
     setRenderedTabs((prev) => new Set([...prev, activeTab]))
   }, [activeTab])
+
+  useEffect(() => {
+    if (demos.length > 0) {
+      setActiveTab(`demo-${demos.length - 1}`)
+    }
+  }, [demos.length])
 
   return (
     <div className="flex flex-col h-full">
@@ -87,19 +118,35 @@ export function DemoPreviewTabs({
                 )}
               >
                 <React.Suspense fallback={<LoadingSpinner />}>
-                  <PublishComponentPreview
-                    code={code}
-                    demoCode={demo.demo_code}
-                    slugToPublish={slugToPublish}
-                    registryToPublish={registryToPublish}
-                    directRegistryDependencies={[
-                      ...directRegistryDependencies,
-                      ...(demo.demo_direct_registry_dependencies || []),
-                    ]}
-                    isDarkTheme={isDarkTheme}
-                    customTailwindConfig={customTailwindConfig}
-                    customGlobalCss={customGlobalCss}
-                  />
+                  <div className="relative h-full">
+                    <PublishComponentPreview
+                      code={code}
+                      demoCode={demo.demo_code}
+                      slugToPublish={slugToPublish}
+                      registryToPublish={registryToPublish}
+                      directRegistryDependencies={[
+                        ...directRegistryDependencies,
+                        ...(demo.demo_direct_registry_dependencies || []),
+                      ]}
+                      isDarkTheme={isDarkTheme}
+                      customTailwindConfig={customTailwindConfig}
+                      customGlobalCss={customGlobalCss}
+                      key={previewKeys[index] || previewKey}
+                    />
+                    {shouldBlurPreview &&
+                      formStep === "demoCode" &&
+                      currentDemoIndex === index && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+                          <Button
+                            onClick={handleRestartPreview}
+                            variant="secondary"
+                            className="z-20"
+                          >
+                            Update Preview
+                          </Button>
+                        </div>
+                      )}
+                  </div>
                 </React.Suspense>
               </div>
             )

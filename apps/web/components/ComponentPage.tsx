@@ -353,7 +353,6 @@ export default function ComponentPage({
   compiledCss,
   componentDemos,
 }: ComponentPageProps) {
-
   const [component, setComponent] = useState(initialComponent)
   const demo = initialDemo
   const { user } = useUser()
@@ -650,7 +649,7 @@ export default function ComponentPage({
               <Icons.slash className="text-border w-[22px] h-[22px]" />
               <Popover>
                 <PopoverTrigger asChild>
-                  <div className="flex items-center gap-2 min-w-0 hover:bg-accent rounded-md p-2 cursor-pointer group">
+                  <Button variant="ghost" className="gap-2">
                     <Link href={`/${demo.user.username}`}>
                       <UserAvatar
                         src={demo.user.image_url || "/placeholder.svg"}
@@ -667,9 +666,13 @@ export default function ComponentPage({
                       size={16}
                       className="text-muted-foreground group-hover:text-foreground transition-colors"
                     />
-                  </div>
+                  </Button>
                 </PopoverTrigger>
-                <PopoverContent side="bottom" align="start" className="w-[300px] p-0">
+                <PopoverContent
+                  side="bottom"
+                  align="start"
+                  className="w-[300px] p-0"
+                >
                   <Command>
                     <CommandInput placeholder="Find demo..." />
                     <CommandList>

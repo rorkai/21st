@@ -36,7 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn(GeistSans.variable, GeistMono.variable, "font-sans")}>
-        <div className="px-4 h-full">
+        <div className="h-full">
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <TooltipProvider>
               <AppProviders>{children}</AppProviders>

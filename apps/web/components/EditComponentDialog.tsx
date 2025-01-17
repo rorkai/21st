@@ -63,7 +63,7 @@ export function EditComponentDialog({
       direct_registry_dependencies: [],
       demos: [
         {
-          name: componentData.name,
+          name: demo.name || "",
           demo_code: componentData.demo_code || "",
           demo_slug: "component" in component ? component.demo_slug : "default",
           preview_image_data_url: demo.preview_url || "",

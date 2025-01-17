@@ -60,6 +60,11 @@ export function DemoPreviewTabs({
   }
 
   useEffect(() => {
+    setActiveTab(`demo-${currentDemoIndex}`)
+    setRenderedTabs((prev) => new Set([...prev, `demo-${currentDemoIndex}`]))
+  }, [currentDemoIndex])
+
+  useEffect(() => {
     if (demos.length === 0) {
       setActiveTab("demo-0")
       return
@@ -74,12 +79,6 @@ export function DemoPreviewTabs({
   useEffect(() => {
     setRenderedTabs((prev) => new Set([...prev, activeTab]))
   }, [activeTab])
-
-  useEffect(() => {
-    if (demos.length > 0) {
-      setActiveTab(`demo-${demos.length - 1}`)
-    }
-  }, [demos.length])
 
   return (
     <div className="flex flex-col h-full">

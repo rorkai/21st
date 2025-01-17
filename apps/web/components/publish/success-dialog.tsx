@@ -37,8 +37,7 @@ export function SuccessDialog({
       ? "Your new component has been successfully added. What would you like to do next?"
       : "Your new demo has been successfully added. What would you like to do next?"
 
-  const addAnotherText =
-    mode === "component" ? "Add Another Component" : "Add Another Demo"
+  const addAnotherText = mode === "component" ? "Add another" : "Add another"
 
   const viewText = mode === "component" ? "View Component" : "View Demo"
 

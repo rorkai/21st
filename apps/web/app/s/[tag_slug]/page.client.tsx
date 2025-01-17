@@ -100,7 +100,7 @@ export function TagPageContent({
   }, [sortBy, quickFilter, queryClient, tagSlug])
 
   return (
-    <div className="container mx-auto mt-20">
+    <div className="container mx-auto mt-20 px-4">
       <TagComponentsHeader
         filtersDisabled={!!searchQuery}
         tabCounts={tabCounts!}

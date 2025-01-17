@@ -31,6 +31,10 @@ interface PublishHeaderProps {
   onAddDemo?: () => void
   currentDemoIndex: number
   setCurrentDemoIndex: (index: number) => void
+  previousStep?: FormStep
+  isAddingNewDemo?: boolean
+  isEditingFromCard?: boolean
+  mode?: "full" | "add-demo"
 }
 
 export function PublishHeader({
@@ -46,6 +50,10 @@ export function PublishHeader({
   onAddDemo,
   currentDemoIndex,
   setCurrentDemoIndex,
+  previousStep,
+  isAddingNewDemo,
+  isEditingFromCard,
+  mode = "full",
 }: PublishHeaderProps) {
   const [showDependenciesModal, setShowDependenciesModal] = useState(false)
 
@@ -261,32 +269,56 @@ export function PublishHeader({
           />
           <div className="flex-1" />
           <div className="text-center font-medium mr-8">
-            Create demo for {form?.getValues().name || ""}
+            {isEditingFromCard ? "Edit demo code" : "Create demo for"}{" "}
+            {form?.getValues().name || ""}
           </div>
           <div className="flex items-center gap-2 flex-1 justify-end">
             <div className="flex items-center gap-2">
-              <Button
-                size="icon"
-                variant="outline"
-                onClick={() =>
-                  handleStepChange(
-                    formStep === "demoCode" ? "code" : "demoCode",
-                  )
-                }
-              >
-                <ChevronLeftIcon className="w-4 h-4" />
-              </Button>
-              <Button
-                size="sm"
-                onClick={() =>
-                  formStep === "demoCode"
-                    ? handleDemoCodeContinue()
-                    : handleStepChange("detailedForm")
-                }
-                disabled={formStep === "demoDetails" && !isDemoDetailsValid()}
-              >
-                {formStep === "demoCode" ? "Continue" : "Save demo"}
-              </Button>
+              {isEditingFromCard ? (
+                <Button
+                  size="sm"
+                  onClick={() => handleStepChange("detailedForm")}
+                >
+                  Save
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    size={
+                      isAddingNewDemo && formStep === "demoCode" ? "sm" : "icon"
+                    }
+                    variant="outline"
+                    onClick={() =>
+                      handleStepChange(
+                        isAddingNewDemo && formStep === "demoCode"
+                          ? "detailedForm"
+                          : formStep === "demoDetails"
+                            ? "demoCode"
+                            : "code",
+                      )
+                    }
+                  >
+                    {isAddingNewDemo && formStep === "demoCode" ? (
+                      "Cancel"
+                    ) : (
+                      <ChevronLeftIcon className="w-4 h-4" />
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() =>
+                      formStep === "demoCode"
+                        ? handleDemoCodeContinue()
+                        : handleStepChange("detailedForm")
+                    }
+                    disabled={
+                      formStep === "demoDetails" && !isDemoDetailsValid()
+                    }
+                  >
+                    {formStep === "demoCode" ? "Continue" : "Save demo"}
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -109,7 +109,7 @@ export default async function ProPage() {
     <>
       <Header text="Pro components" />
 
-      <div className="container mx-auto mt-20">
+      <div className="container mx-auto mt-20 px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
           {publishersWithImages.map((publisher) => (
             <div className="flex flex-col group" key={publisher.id}>

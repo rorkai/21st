@@ -239,7 +239,7 @@ export default async function ComponentPageServer({
     )
 
     return (
-      <div className="w-full">
+      <div className="w-full px-4">
         <ComponentPage
           component={component}
           demo={demo}

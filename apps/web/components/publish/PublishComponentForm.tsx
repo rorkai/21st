@@ -300,7 +300,29 @@ export default function PublishComponentForm({
     [pathname, router, searchParams, initialStep],
   )
 
+  const [previousStep, setPreviousStep] = useState<FormStep>()
+
+  const [isEditingFromCard, setIsEditingFromCard] = useState(false)
+
   const handleStepChange = async (newStep: FormStep) => {
+    setPreviousStep(formStep)
+
+    if (
+      (isAddingNewDemo || isEditingFromCard) &&
+      newStep === "detailedForm" &&
+      formStep === "demoCode"
+    ) {
+      if (isAddingNewDemo) {
+        const demos = form.getValues("demos") || []
+        form.setValue("demos", demos.slice(0, -1))
+      }
+      setIsAddingNewDemo(false)
+      setIsEditingFromCard(false)
+    } else if (newStep === "detailedForm") {
+      setIsAddingNewDemo(false)
+      setIsEditingFromCard(false)
+    }
+
     if (newStep === "demoCode") {
       const demos = form?.getValues("demos") || []
       const currentDemo = demos[currentDemoIndex]
@@ -462,110 +484,103 @@ export default function PublishComponentForm({
     setIsLoadingDialogOpen(true)
     try {
       if (isAddDemoMode) {
-        setPublishProgress("Publishing demo...")
         const baseFolder = `${existingComponent.user_id}/${existingComponent.component_slug}`
 
-        const demoData: Omit<Tables<"demos">, "id"> = {
-          component_id: existingComponent.id,
-          demo_code: "",
-          demo_dependencies: parsedCode.demoDependencies || {},
-          preview_url: "",
-          video_url: "",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          compiled_css: null,
-          pro_preview_image_url: null,
-          name: data.demos[0]?.name || "",
-          demo_direct_registry_dependencies:
-            data.demos[0]?.demo_direct_registry_dependencies || null,
-          user_id: user?.id || "",
-          fts: null,
-          demo_slug: await generateDemoSlug(
-            client,
-            data.demos[0]?.name || "demo",
-            existingComponent.id,
-            user?.id || "",
-          ),
-        }
-
-        const { data: insertedDemo, error: demoError } = await client
-          .from("demos")
-          .insert(demoData)
-          .select()
-          .single()
-
-        if (demoError) throw demoError
-
-        const demoFolder = `${baseFolder}/${insertedDemo.demo_slug}`
-        const demo = data.demos[0]
-
-        const [demoCodeUrl, previewImageR2Url, videoR2Url] = await Promise.all([
-          uploadToR2({
-            file: {
-              name: "code.demo.tsx",
-              type: "text/plain",
-              textContent: demo?.demo_code || "",
-            },
-            fileKey: `${demoFolder}/code.demo.tsx`,
-            bucketName: "components-code",
-          }),
-          demo?.preview_image_file &&
-          demo?.preview_image_file.size > 0 &&
-          demo?.preview_image_data_url
-            ? uploadToR2({
-                file: {
-                  name: "preview.png",
-                  type: demo.preview_image_file.type,
-                  encodedContent: demo.preview_image_data_url.replace(
-                    /^data:image\/(png|jpeg|jpg);base64,/,
-                    "",
-                  ),
-                },
-                fileKey: `${demoFolder}/preview.png`,
-                bucketName: "components-code",
-                contentType: demo.preview_image_file.type,
-              })
-            : Promise.resolve(null),
-          demo?.preview_video_file &&
-          demo?.preview_video_file.size > 0 &&
-          demo?.preview_video_data_url
-            ? uploadToR2({
-                file: {
-                  name: "video.mp4",
-                  type: "video/mp4",
-                  encodedContent: demo.preview_video_data_url.replace(
-                    /^data:video\/mp4;base64,/,
-                    "",
-                  ),
-                },
-                fileKey: `${demoFolder}/video.mp4`,
-                bucketName: "components-code",
-                contentType: "video/mp4",
-              })
-            : Promise.resolve(null),
-        ])
-
-        const { error: updateDemoError } = await client
-          .from("demos")
-          .update({
-            demo_code: demoCodeUrl,
-            preview_url: previewImageR2Url,
-            video_url: videoR2Url,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", insertedDemo.id)
-
-        if (updateDemoError) throw updateDemoError
-
-        if (demo?.tags?.length) {
-          await addTagsToComponent(
-            client,
-            insertedDemo.id,
-            demo.tags.filter((tag) => !!tag.slug) as Tag[],
+        for (const demo of data.demos) {
+          const demoIndex = data.demos.indexOf(demo)
+          setPublishProgress(
+            `Publishing demo ${demoIndex + 1} of ${data.demos.length}...`,
           )
-        }
 
-        setCreatedDemoSlug(insertedDemo.demo_slug)
+          const demoData: Omit<Tables<"demos">, "id"> = {
+            component_id: existingComponent.id,
+            demo_code: "",
+            demo_dependencies: parsedCode.demoDependencies || {},
+            preview_url: "",
+            video_url: "",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            compiled_css: null,
+            pro_preview_image_url: null,
+            name: demo.name || "",
+            demo_direct_registry_dependencies:
+              demo.demo_direct_registry_dependencies || null,
+            user_id: user?.id || "",
+            fts: null,
+            demo_slug: demo.demo_slug,
+          }
+
+          const [demoCodeUrl, previewImageR2Url, videoR2Url] =
+            await Promise.all([
+              uploadToR2({
+                file: {
+                  name: "demo.tsx",
+                  type: "text/plain",
+                  textContent: demo.demo_code,
+                },
+                fileKey: `${baseFolder}/${demo.demo_slug}/code.demo.tsx`,
+                bucketName: "components-code",
+              }),
+              demo?.preview_image_file &&
+              demo?.preview_image_file.size > 0 &&
+              demo?.preview_image_data_url
+                ? uploadToR2({
+                    file: {
+                      name: "preview.png",
+                      type: demo.preview_image_file.type,
+                      encodedContent: demo.preview_image_data_url.replace(
+                        /^data:image\/(png|jpeg|jpg);base64,/,
+                        "",
+                      ),
+                    },
+                    fileKey: `${baseFolder}/${demo.demo_slug}/preview.png`,
+                    bucketName: "components-code",
+                    contentType: demo.preview_image_file.type,
+                  })
+                : Promise.resolve(null),
+              demo?.preview_video_file &&
+              demo?.preview_video_file.size > 0 &&
+              demo?.preview_video_data_url
+                ? uploadToR2({
+                    file: {
+                      name: "video.mp4",
+                      type: "video/mp4",
+                      encodedContent: demo.preview_video_data_url.replace(
+                        /^data:video\/mp4;base64,/,
+                        "",
+                      ),
+                    },
+                    fileKey: `${baseFolder}/${demo.demo_slug}/video.mp4`,
+                    bucketName: "components-code",
+                    contentType: "video/mp4",
+                  })
+                : Promise.resolve(null),
+            ])
+
+          if (demoCodeUrl) {
+            demoData.demo_code = demoCodeUrl
+            demoData.preview_url = previewImageR2Url ?? null
+            demoData.video_url = videoR2Url ?? null
+
+            const { data: insertedDemo, error: insertError } = await client
+              .from("demos")
+              .insert(demoData)
+              .select()
+              .single()
+
+            if (insertError) throw insertError
+
+            if (demo.tags?.length) {
+              await addTagsToComponent(
+                client,
+                insertedDemo.id,
+                demo.tags.filter((tag) => !!tag.slug) as Tag[],
+              )
+            }
+
+            setCreatedDemoSlug(demo.demo_slug)
+          }
+        }
       } else {
         setPublishProgress("Uploading component files...")
         const baseFolder = `${publishAsUser?.id}/${data.component_slug}`
@@ -852,6 +867,7 @@ export default function PublishComponentForm({
     ])
 
     setCurrentDemoIndex(newDemoIndex)
+    setIsAddingNewDemo(true)
     handleStepChange("demoCode")
     setOpenAccordion(`demo-${newDemoIndex}`)
   }
@@ -1013,308 +1029,17 @@ export default function PublishComponentForm({
     }
   }, [form.getValues().demos?.length, formStep])
 
+  const [isAddingNewDemo, setIsAddingNewDemo] = useState(false)
+
+  const handleEditClick = (index: number) => {
+    setCurrentDemoIndex(index)
+    setIsEditingFromCard(true)
+    handleStepChange("demoCode")
+  }
+
   return (
     <>
       <Form {...form}>
-        {formStep === "code" && (
-          <div className="flex flex-col h-screen w-full absolute left-0 right-0">
-            <PublishHeader
-              formStep={formStep}
-              componentSlug={componentSlug}
-              activeCodeTab={activeCodeTab}
-              setActiveCodeTab={handleCodeTabChange}
-              setFormStep={handleStepChange}
-              handleSubmit={handleSubmit}
-              isSubmitting={isSubmitting}
-              isFormValid={isFormValid(form)}
-              form={form}
-              currentDemoIndex={currentDemoIndex}
-              setCurrentDemoIndex={setCurrentDemoIndex}
-            />
-            <div className="flex h-[calc(100vh-3rem)]">
-              <div className="w-1/2 border-r pointer-events-auto">
-                {activeCodeTab === "component" && (
-                  <div className="h-full">
-                    <EditorStep
-                      form={form}
-                      isDarkTheme={isDarkTheme}
-                      fieldName="code"
-                      value={code}
-                      onChange={(value) => form.setValue("code", value)}
-                    />
-                  </div>
-                )}
-                {activeCodeTab === "tailwind" && (
-                  <div className="h-full">
-                    <EditorStep
-                      form={form}
-                      isDarkTheme={isDarkTheme}
-                      fieldName="tailwind_config"
-                      value={customTailwindConfig || ""}
-                      onChange={(value) => setCustomTailwindConfig(value)}
-                    />
-                  </div>
-                )}
-                {activeCodeTab === "globals" && (
-                  <div className="h-full">
-                    <EditorStep
-                      form={form}
-                      isDarkTheme={isDarkTheme}
-                      fieldName="globals_css"
-                      value={customGlobalCss || ""}
-                      onChange={(value) => setCustomGlobalCss(value)}
-                    />
-                  </div>
-                )}
-              </div>
-              <div className="w-1/2 pointer-events-auto">
-                <div className="h-full p-8">
-                  {activeCodeTab === "component" && <CodeGuidelinesAlert />}
-                  {activeCodeTab === "tailwind" && <TailwindGuidelinesAlert />}
-                  {activeCodeTab === "globals" && (
-                    <GlobalStylesGuidelinesAlert />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div
-          className={cn(
-            "flex flex-col h-screen w-full absolute left-0 right-0",
-            formStep === "nameSlugForm" && "hidden",
-          )}
-        >
-          {(formStep === "demoCode" ||
-            formStep === "demoDetails" ||
-            formStep === "detailedForm") && (
-            <>
-              <PublishHeader
-                formStep={formStep}
-                componentSlug={componentSlug}
-                setFormStep={handleStepChange}
-                handleSubmit={handleSubmit}
-                isSubmitting={isSubmitting}
-                isFormValid={isFormValid(form)}
-                form={form}
-                currentDemoIndex={currentDemoIndex}
-                setCurrentDemoIndex={setCurrentDemoIndex}
-                onAddDemo={handleAddNewDemo}
-              />
-              <div className="flex h-[calc(100vh-3.5rem)]">
-                <div
-                  className={cn(
-                    "border-r pointer-events-auto transition-[width] duration-300",
-                    formStep === "demoCode" ? "w-1/2" : "w-1/3",
-                    formStep === "demoCode" && "!w-1/2",
-                  )}
-                >
-                  {formStep === "demoCode" && (
-                    <EditorStep
-                      form={form}
-                      isDarkTheme={isDarkTheme}
-                      fieldName={`demos.${currentDemoIndex}.demo_code`}
-                      value={demoCode}
-                      onChange={handleDemoCodeChange}
-                    />
-                  )}
-                  {formStep === "demoDetails" && (
-                    <div className="p-8">
-                      <DemoDetailsForm
-                        form={form}
-                        demoIndex={currentDemoIndex}
-                      />
-                    </div>
-                  )}
-                  {formStep === "detailedForm" && (
-                    <div className="w-full flex flex-col gap-4 overflow-y-auto p-4">
-                      <div className="space-y-4 p-[2px]">
-                        <Accordion
-                          type="single"
-                          value={openAccordion}
-                          onValueChange={handleAccordionChange}
-                          collapsible
-                          className="w-full"
-                        >
-                          {!isAddDemoMode && (
-                            <AccordionItem value="component-info">
-                              <AccordionTrigger className="py-2 text-[15px] leading-6 hover:no-underline hover:bg-muted/50 rounded-md data-[state=open]:rounded-b-none transition-all duration-200 ease-in-out -mx-2 px-2">
-                                <div className="flex items-center gap-2">
-                                  Component info
-                                  <Badge
-                                    variant="outline"
-                                    className={cn(
-                                      "gap-1.5 text-xs font-medium",
-                                      isComponentInfoComplete()
-                                        ? "border-emerald-500/20"
-                                        : "border-amber-500/20",
-                                    )}
-                                  >
-                                    <span
-                                      className={cn(
-                                        "size-1.5 rounded-full",
-                                        isComponentInfoComplete()
-                                          ? "bg-emerald-500"
-                                          : "bg-amber-500",
-                                      )}
-                                      aria-hidden="true"
-                                    />
-                                    {isComponentInfoComplete()
-                                      ? "Complete"
-                                      : "Required"}
-                                  </Badge>
-                                </div>
-                              </AccordionTrigger>
-                              <AccordionContent className="text-muted-foreground">
-                                <div className="text-foreground">
-                                  <ComponentDetailsForm
-                                    form={form}
-                                    handleSubmit={handleSubmit}
-                                    isSubmitting={isSubmitting}
-                                    hotkeysEnabled={!isSuccessDialogOpen}
-                                  />
-
-                                  <div className="space-y-3 mt-6">
-                                    <EditCodeFileCard
-                                      iconSrc={
-                                        isDarkTheme
-                                          ? "/tsx-file-dark.svg"
-                                          : "/tsx-file.svg"
-                                      }
-                                      mainText={`${form.getValues("name")} code`}
-                                      subText={`${parsedCode.componentNames.slice(0, 2).join(", ")}${parsedCode.componentNames.length > 2 ? ` +${parsedCode.componentNames.length - 2}` : ""}`}
-                                      onEditClick={() => {
-                                        handleStepChange("code")
-                                        codeInputRef.current?.focus()
-                                      }}
-                                    />
-                                    <EditCodeFileCard
-                                      iconSrc={
-                                        isDarkTheme
-                                          ? "/css-file-dark.svg"
-                                          : "/css-file.svg"
-                                      }
-                                      mainText="Custom styles"
-                                      subText="Tailwind config and globals.css"
-                                      onEditClick={() => {
-                                        handleStepChange("code")
-                                        setActiveCodeTab("tailwind")
-                                      }}
-                                    />
-                                  </div>
-                                </div>
-                              </AccordionContent>
-                            </AccordionItem>
-                          )}
-
-                          {demos?.map((demo, index) => (
-                            <AccordionItem
-                              key={index}
-                              value={`demo-${index}`}
-                              className="bg-background border-none group"
-                            >
-                              <AccordionTrigger className="py-2 text-[15px] leading-6 hover:no-underline hover:bg-muted/50 rounded-md data-[state=open]:rounded-b-none transition-all duration-200 ease-in-out -mx-2 px-2">
-                                <div className="flex items-center gap-2 w-full">
-                                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                                    <div className="truncate">
-                                      {demo.name || `Demo ${index + 1}`}
-                                    </div>
-                                    <Badge
-                                      variant="outline"
-                                      className={cn(
-                                        "gap-1.5 text-xs font-medium shrink-0",
-                                        isDemoComplete(index)
-                                          ? "border-emerald-500/20"
-                                          : "border-amber-500/20",
-                                      )}
-                                    >
-                                      <span
-                                        className={cn(
-                                          "size-1.5 rounded-full",
-                                          isDemoComplete(index)
-                                            ? "bg-emerald-500"
-                                            : "bg-amber-500",
-                                        )}
-                                        aria-hidden="true"
-                                      />
-                                      {isDemoComplete(index)
-                                        ? "Complete"
-                                        : "Required"}
-                                    </Badge>
-                                  </div>
-                                  {demos.length > 1 && (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 ml-auto mr-1"
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        setDemoToDelete({
-                                          index,
-                                          name:
-                                            demo?.name || `Demo ${index + 1}`,
-                                        })
-                                      }}
-                                    >
-                                      <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive transition-colors" />
-                                    </Button>
-                                  )}
-                                </div>
-                              </AccordionTrigger>
-                              <AccordionContent>
-                                <div className="text-foreground space-y-4">
-                                  <DemoDetailsForm
-                                    form={form}
-                                    demoIndex={index}
-                                  />
-                                  <EditCodeFileCard
-                                    iconSrc={
-                                      isDarkTheme
-                                        ? "/demo-file-dark.svg"
-                                        : "/demo-file.svg"
-                                    }
-                                    mainText={`Demo ${index + 1} code`}
-                                    onEditClick={() => {
-                                      handleStepChange("demoCode")
-                                      setCurrentDemoIndex(index)
-                                    }}
-                                  />
-                                </div>
-                              </AccordionContent>
-                            </AccordionItem>
-                          ))}
-                        </Accordion>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <PreviewSection
-                  isPreviewReady={isPreviewReady}
-                  formStep={formStep}
-                  code={code}
-                  componentSlug={componentSlug}
-                  registryToPublish={registryToPublish}
-                  directRegistryDependencies={directRegistryDependencies}
-                  demoDirectRegistryDependencies={
-                    demoDirectRegistryDependencies
-                  }
-                  isDarkTheme={isDarkTheme}
-                  customTailwindConfig={customTailwindConfig}
-                  customGlobalCss={customGlobalCss}
-                  form={form}
-                  parsedCode={parsedCode}
-                  shouldBlurPreview={shouldBlurPreview}
-                  onRestartPreview={handleRestartPreview}
-                  previewKey={previewKey}
-                  currentDemoIndex={currentDemoIndex}
-                />
-              </div>
-            </>
-          )}
-        </div>
-
         {formStep === "nameSlugForm" && (
           <div className="flex flex-col scrollbar-hide items-start gap-2 py-8 max-h-[calc(100vh-40px)] px-[2px] overflow-y-auto w-1/3 min-w-[450px]">
             <NameSlugStep
@@ -1327,6 +1052,311 @@ export default function PublishComponentForm({
                 form.setValue("publish_as_username", username)
               }
             />
+          </div>
+        )}
+
+        {formStep !== "nameSlugForm" && (
+          <div className="flex flex-col h-screen w-full">
+            {formStep === "code" && (
+              <>
+                <PublishHeader
+                  formStep={formStep}
+                  componentSlug={componentSlug}
+                  activeCodeTab={activeCodeTab}
+                  setActiveCodeTab={handleCodeTabChange}
+                  setFormStep={handleStepChange}
+                  handleSubmit={handleSubmit}
+                  isSubmitting={isSubmitting}
+                  isFormValid={isFormValid(form)}
+                  form={form}
+                  currentDemoIndex={currentDemoIndex}
+                  setCurrentDemoIndex={setCurrentDemoIndex}
+                />
+                <div className="flex h-[calc(100vh-3rem)]">
+                  <div className="w-1/2 border-r pointer-events-auto">
+                    {activeCodeTab === "component" && (
+                      <div className="h-full">
+                        <EditorStep
+                          form={form}
+                          isDarkTheme={isDarkTheme}
+                          fieldName="code"
+                          value={code}
+                          onChange={(value) => form.setValue("code", value)}
+                        />
+                      </div>
+                    )}
+                    {activeCodeTab === "tailwind" && (
+                      <div className="h-full">
+                        <EditorStep
+                          form={form}
+                          isDarkTheme={isDarkTheme}
+                          fieldName="tailwind_config"
+                          value={customTailwindConfig || ""}
+                          onChange={(value) => setCustomTailwindConfig(value)}
+                        />
+                      </div>
+                    )}
+                    {activeCodeTab === "globals" && (
+                      <div className="h-full">
+                        <EditorStep
+                          form={form}
+                          isDarkTheme={isDarkTheme}
+                          fieldName="globals_css"
+                          value={customGlobalCss || ""}
+                          onChange={(value) => setCustomGlobalCss(value)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div className="w-1/2 pointer-events-auto">
+                    <div className="h-full p-8">
+                      {activeCodeTab === "component" && <CodeGuidelinesAlert />}
+                      {activeCodeTab === "tailwind" && (
+                        <TailwindGuidelinesAlert />
+                      )}
+                      {activeCodeTab === "globals" && (
+                        <GlobalStylesGuidelinesAlert />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {(formStep === "demoCode" ||
+              formStep === "demoDetails" ||
+              formStep === "detailedForm") && (
+              <>
+                <PublishHeader
+                  formStep={formStep}
+                  componentSlug={componentSlug}
+                  setFormStep={handleStepChange}
+                  handleSubmit={handleSubmit}
+                  isSubmitting={isSubmitting}
+                  isFormValid={isFormValid(form)}
+                  form={form}
+                  currentDemoIndex={currentDemoIndex}
+                  setCurrentDemoIndex={setCurrentDemoIndex}
+                  onAddDemo={handleAddNewDemo}
+                  previousStep={previousStep}
+                  isAddingNewDemo={isAddingNewDemo}
+                  mode={mode}
+                  isEditingFromCard={isEditingFromCard}
+                />
+                <div className="flex h-[calc(100vh-3.5rem)]">
+                  <div
+                    className={cn(
+                      "border-r pointer-events-auto transition-[width] duration-300",
+                      formStep === "demoCode" ? "w-1/2" : "w-1/3",
+                      formStep === "demoCode" && "!w-1/2",
+                    )}
+                  >
+                    {formStep === "demoCode" && (
+                      <EditorStep
+                        form={form}
+                        isDarkTheme={isDarkTheme}
+                        fieldName={`demos.${currentDemoIndex}.demo_code`}
+                        value={demoCode}
+                        onChange={handleDemoCodeChange}
+                      />
+                    )}
+                    {formStep === "demoDetails" && (
+                      <div className="p-8">
+                        <DemoDetailsForm
+                          form={form}
+                          demoIndex={currentDemoIndex}
+                        />
+                      </div>
+                    )}
+                    {formStep === "detailedForm" && (
+                      <div className="w-full flex flex-col gap-4 overflow-y-auto p-4">
+                        <div className="space-y-4 p-[2px]">
+                          <Accordion
+                            type="single"
+                            value={openAccordion}
+                            onValueChange={handleAccordionChange}
+                            collapsible
+                            className="w-full"
+                          >
+                            {!isAddDemoMode && (
+                              <AccordionItem value="component-info">
+                                <AccordionTrigger className="py-2 text-[15px] leading-6 hover:no-underline hover:bg-muted/50 rounded-md data-[state=open]:rounded-b-none transition-all duration-200 ease-in-out -mx-2 px-2">
+                                  <div className="flex items-center gap-2">
+                                    Component info
+                                    <Badge
+                                      variant="outline"
+                                      className={cn(
+                                        "gap-1.5 text-xs font-medium",
+                                        isComponentInfoComplete()
+                                          ? "border-emerald-500/20"
+                                          : "border-amber-500/20",
+                                      )}
+                                    >
+                                      <span
+                                        className={cn(
+                                          "size-1.5 rounded-full",
+                                          isComponentInfoComplete()
+                                            ? "bg-emerald-500"
+                                            : "bg-amber-500",
+                                        )}
+                                        aria-hidden="true"
+                                      />
+                                      {isComponentInfoComplete()
+                                        ? "Complete"
+                                        : "Required"}
+                                    </Badge>
+                                  </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="text-muted-foreground">
+                                  <div className="text-foreground">
+                                    <ComponentDetailsForm
+                                      form={form}
+                                      handleSubmit={handleSubmit}
+                                      isSubmitting={isSubmitting}
+                                      hotkeysEnabled={!isSuccessDialogOpen}
+                                    />
+
+                                    <div className="space-y-3 mt-6">
+                                      <EditCodeFileCard
+                                        iconSrc={
+                                          isDarkTheme
+                                            ? "/tsx-file-dark.svg"
+                                            : "/tsx-file.svg"
+                                        }
+                                        mainText={`${form.getValues("name")} code`}
+                                        subText={`${parsedCode.componentNames.slice(0, 2).join(", ")}${parsedCode.componentNames.length > 2 ? ` +${parsedCode.componentNames.length - 2}` : ""}`}
+                                        onEditClick={() => {
+                                          handleStepChange("code")
+                                          setIsEditingFromCard(true)
+                                          codeInputRef.current?.focus()
+                                        }}
+                                      />
+                                      <EditCodeFileCard
+                                        iconSrc={
+                                          isDarkTheme
+                                            ? "/css-file-dark.svg"
+                                            : "/css-file.svg"
+                                        }
+                                        mainText="Custom styles"
+                                        subText="Tailwind config and globals.css"
+                                        onEditClick={() => {
+                                          handleStepChange("code")
+                                          setIsEditingFromCard(true)
+                                          setActiveCodeTab("tailwind")
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                </AccordionContent>
+                              </AccordionItem>
+                            )}
+
+                            {demos?.map((demo, index) => (
+                              <AccordionItem
+                                key={index}
+                                value={`demo-${index}`}
+                                className="bg-background border-none group"
+                              >
+                                <AccordionTrigger className="py-2 text-[15px] leading-6 hover:no-underline hover:bg-muted/50 rounded-md data-[state=open]:rounded-b-none transition-all duration-200 ease-in-out -mx-2 px-2">
+                                  <div className="flex items-center gap-2 w-full">
+                                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                                      <div className="truncate">
+                                        {demo.name || `Demo ${index + 1}`}
+                                      </div>
+                                      <Badge
+                                        variant="outline"
+                                        className={cn(
+                                          "gap-1.5 text-xs font-medium shrink-0",
+                                          isDemoComplete(index)
+                                            ? "border-emerald-500/20"
+                                            : "border-amber-500/20",
+                                        )}
+                                      >
+                                        <span
+                                          className={cn(
+                                            "size-1.5 rounded-full",
+                                            isDemoComplete(index)
+                                              ? "bg-emerald-500"
+                                              : "bg-amber-500",
+                                          )}
+                                          aria-hidden="true"
+                                        />
+                                        {isDemoComplete(index)
+                                          ? "Complete"
+                                          : "Required"}
+                                      </Badge>
+                                    </div>
+                                    {demos.length > 1 && (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 ml-auto mr-1"
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          setDemoToDelete({
+                                            index,
+                                            name:
+                                              demo?.name || `Demo ${index + 1}`,
+                                          })
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive transition-colors" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                  <div className="text-foreground space-y-4">
+                                    <DemoDetailsForm
+                                      form={form}
+                                      demoIndex={index}
+                                    />
+                                    <EditCodeFileCard
+                                      iconSrc={
+                                        isDarkTheme
+                                          ? "/demo-file-dark.svg"
+                                          : "/demo-file.svg"
+                                      }
+                                      mainText={`Demo ${index + 1} code`}
+                                      onEditClick={() => {
+                                        handleStepChange("demoCode")
+                                        setIsEditingFromCard(true)
+                                        setCurrentDemoIndex(index)
+                                      }}
+                                    />
+                                  </div>
+                                </AccordionContent>
+                              </AccordionItem>
+                            ))}
+                          </Accordion>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <PreviewSection
+                    isPreviewReady={isPreviewReady}
+                    formStep={formStep}
+                    code={code}
+                    componentSlug={componentSlug}
+                    registryToPublish={registryToPublish}
+                    directRegistryDependencies={directRegistryDependencies}
+                    demoDirectRegistryDependencies={
+                      demoDirectRegistryDependencies
+                    }
+                    isDarkTheme={isDarkTheme}
+                    customTailwindConfig={customTailwindConfig}
+                    customGlobalCss={customGlobalCss}
+                    form={form}
+                    parsedCode={parsedCode}
+                    shouldBlurPreview={shouldBlurPreview}
+                    onRestartPreview={handleRestartPreview}
+                    previewKey={previewKey}
+                    currentDemoIndex={currentDemoIndex}
+                  />
+                </div>
+              </>
+            )}
           </div>
         )}
       </Form>

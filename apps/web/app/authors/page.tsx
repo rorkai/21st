@@ -87,7 +87,7 @@ export default async function AuthorsPage() {
   return (
     <>
       <Header text="Top authors" />
-      <div className="container mx-auto mt-20">
+      <div className="container mx-auto mt-20 px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
           {authorsWithStats.map((author) => (
             <Link href={`/${author.username}`} key={author.id}>

@@ -13,7 +13,7 @@ export default function PublishPage() {
       </Head>
       <SignedIn>
         <Header variant="publish" />
-        <div className="flex flex-row items-center h-screen w-full py-4">
+        <div className="flex flex-row items-center h-screen w-full">
           <PublishComponentForm />
         </div>
       </SignedIn>

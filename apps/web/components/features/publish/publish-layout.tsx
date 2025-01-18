@@ -661,7 +661,7 @@ export default function PublishComponentForm({
             .from("submissions")
             .insert({
               component_id: insertedComponent.id,
-              status: "waiting_for_review",
+              status: "on_review",
             })
 
           if (submissionError) {

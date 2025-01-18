@@ -5,6 +5,7 @@ export type Component = Database["public"]["Tables"]["components"]["Row"]
 export type Demo = Database["public"]["Tables"]["demos"]["Row"]
 export type User = Database["public"]["Tables"]["users"]["Row"]
 export type Tag = Database["public"]["Tables"]["tags"]["Row"]
+export type Submission = Database["public"]["Tables"]["submissions"]["Row"]
 
 export type DemoWithComponent = Demo & {
   component: Component & { user: User }

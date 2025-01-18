@@ -487,7 +487,7 @@ export type Database = {
           created_at?: string
           id?: number
           moderators_feedback?: string | null
-          status: Database["public"]["Enums"]["submission_status"]
+          status?: Database["public"]["Enums"]["submission_status"]
         }
         Update: {
           component_id?: number
@@ -1072,11 +1072,7 @@ export type Database = {
           }
     }
     Enums: {
-      submission_status:
-        | "waiting_for_review"
-        | "published"
-        | "rejected"
-        | "changes_needed"
+      submission_status: "on_review" | "featured" | "posted"
     }
     CompositeTypes: {
       component_with_user: {

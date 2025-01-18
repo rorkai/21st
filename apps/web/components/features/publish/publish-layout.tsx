@@ -61,7 +61,7 @@ import {
   TailwindGuidelinesAlert,
 } from "./components/alerts"
 import { generateDemoSlug } from "./hooks/use-is-check-slug-available"
-
+import { useIsAdmin } from "./hooks/use-is-admin"
 export interface ParsedCodeData {
   dependencies: Record<string, string>
   demoDependencies: Record<string, string>
@@ -194,6 +194,7 @@ export default function PublishComponentForm({
   const [publishAttemptCount, setPublishAttemptCount] = useState(0)
 
   const isAddDemoMode = mode === "add-demo"
+  const isUserAdmin = useIsAdmin()
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -250,7 +251,7 @@ export default function PublishComponentForm({
           description: "",
           license: "mit",
           website_url: "",
-          is_public: true,
+          is_public: isUserAdmin,
         },
   })
 
@@ -640,6 +641,7 @@ export default function PublishComponentForm({
           registry: data.registry,
           license: data.license,
           website_url: data.website_url,
+          is_public: data.is_public,
         } as Tables<"components">
 
         const { data: insertedComponent, error } = await client
@@ -651,6 +653,21 @@ export default function PublishComponentForm({
         if (error) {
           console.error("Error inserting component:", error)
           throw error
+        }
+
+        if (!data.is_public) {
+          // create entry in submissions table
+          const { error: submissionError } = await client
+            .from("submissions")
+            .insert({
+              component_id: insertedComponent.id,
+              status: "on_review",
+            })
+
+          if (submissionError) {
+            console.error("Error inserting submission:", submissionError)
+            throw submissionError
+          }
         }
 
         if (!publishAsUser?.id) {

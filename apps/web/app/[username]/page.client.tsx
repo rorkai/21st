@@ -14,7 +14,6 @@ import { trackEvent } from "@/lib/amplitude"
 import { useEffect } from "react"
 import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { Component, DemoWithComponent, User } from "@/types/global"
-import { transformDemoResult } from "@/lib/utils/transformData"
 
 const useProfileAnalytics = ({
   username,

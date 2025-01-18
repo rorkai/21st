@@ -504,12 +504,22 @@ export async function getComponentWithDemo(
     .eq("component_slug", slug)
     .eq("users.username", username)
     .not("user", "is", null)
-    .eq("is_public", true)
     .single()
 
   if (componentError) {
     console.error("Error fetching component:", componentError)
     return { data: null, error: new Error(componentError.message) }
+  }
+
+  const { data: submission, error: submissionError } = await supabase
+    .from("submissions")
+    .select("*")
+    .eq("component_id", component.id)
+    .single()
+
+  if (submissionError) {
+    console.error("Error fetching submission:", submissionError)
+    return { data: null, error: new Error(submissionError.message) }
   }
 
   const { data: demo, error: demoError } = await supabase
@@ -558,6 +568,7 @@ export async function getComponentWithDemo(
     data: {
       component: formattedComponent,
       demo: formattedDemo,
+      submission,
     },
     error: null,
   }
@@ -604,6 +615,7 @@ export async function getDemosCounts(supabase: SupabaseClient<Database>) {
 export async function getUserDemos(
   supabase: SupabaseClient<Database>,
   userId: string,
+  loggedInUserId?: string,
 ) {
   const { data: filteredData, error } = await supabase.rpc(
     "get_filtered_demos",
@@ -612,6 +624,7 @@ export async function getUserDemos(
       p_sort_by: "newest",
       p_offset: 0,
       p_limit: 1000,
+      p_include_private: userId === loggedInUserId,
     },
   )
 

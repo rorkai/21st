@@ -7,7 +7,7 @@ import { atom, useAtom } from "jotai"
 import { useQuery } from "@tanstack/react-query"
 import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs"
 
-import { Component, Demo, Tag, User, DemoWithTags } from "@/types/global"
+import { Component, Demo, Tag, User, DemoWithTags, Submission } from "@/types/global"
 import { PromptType, PROMPT_TYPES } from "@/types/global"
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import { addTagsToComponent, useUpdateComponentWithTags } from "@/lib/queries"
@@ -76,6 +76,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 
 export const isShowCodeAtom = atom(true)
 const selectedPromptTypeAtom = atomWithStorage<PromptType | "v0-open">(
@@ -336,6 +337,7 @@ type ComponentPageProps = {
   tailwindConfig?: string
   globalCss?: string
   compiledCss?: string
+  submission?: Submission
 }
 
 export default function ComponentPage({
@@ -352,6 +354,7 @@ export default function ComponentPage({
   globalCss,
   compiledCss,
   componentDemos,
+  submission,
 }: ComponentPageProps) {
   const [component, setComponent] = useState(initialComponent)
   const demo = initialDemo
@@ -740,6 +743,51 @@ export default function ComponentPage({
                 </PopoverContent>
               </Popover>
             </div>
+          )}
+
+          {canEdit && submission && (
+            <>
+              <Icons.slash className="text-border w-[22px] h-[22px]" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className={cn(
+                    "px-2 py-0.5 text-xs font-medium rounded-full flex items-center gap-1",
+                    submission.status === "on_review" &&
+                      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+                    submission.status === "featured" &&
+                      "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200", 
+                    submission.status === "posted" &&
+                      "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
+                  )}>
+                    {submission.status.replace("_", " ").charAt(0).toUpperCase() +
+                      submission.status.replace("_", " ").slice(1)}
+                    {submission.status === "posted" && (
+                      <Check size={12} className="inline-block" />
+                    )}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-[300px]">
+                  <div className="flex flex-col gap-1">
+                    <p className="font-medium">Submission Status: {submission.status.replace("_", " ")}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {submission.status === "on_review" && "Your component is being reviewed by our moderators before being made public."}
+                      {submission.status === "featured" && "Your component has been approved and is featured on the platform, but not showed on the homepage."}
+                      {submission.status === "posted" && "Your component has been approved and is available on the platform."}
+                    </p>
+                    {submission.moderators_feedback && ["on_review", "featured"].includes(submission.status) && (
+                      <>
+                        <div className="h-px bg-border my-1" />
+                        <p className="text-sm text-muted-foreground">
+                          <span className="text-white">Moderator Feedback:</span>
+                          <br />
+                          {submission.moderators_feedback}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </>
           )}
         </div>
 

@@ -265,6 +265,7 @@ export default async function ComponentPageServer({
           tailwindConfig={tailwindConfigResult?.data as string}
           globalCss={globalCssResult?.data as string}
           compiledCss={compiledCssResult?.data as string}
+          submission={data.submission ?? undefined}
         />
       </div>
     )

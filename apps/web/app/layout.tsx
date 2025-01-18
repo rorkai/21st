@@ -35,7 +35,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn(GeistSans.variable, GeistMono.variable, "font-sans")}>
+      <body
+        className={cn(
+          GeistSans.variable,
+          GeistMono.variable,
+          "font-sans [scrollbar-gutter:stable]",
+        )}
+      >
         <div className="h-full">
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <TooltipProvider>

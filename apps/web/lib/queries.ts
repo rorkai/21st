@@ -46,7 +46,6 @@ export async function getComponent(
     .eq("component_slug", slug)
     .eq("user.username", username)
     .not("user", "is", null)
-    .eq("is_public", true)
     .order("downloads_count", { ascending: false })
     .returns<(Component & { user: User } & { tags: Tag[] })[]>()
     .single()

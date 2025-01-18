@@ -745,7 +745,7 @@ export default function ComponentPage({
             </div>
           )}
 
-          {submission && (
+          {canEdit && submission && (
             <>
               <Icons.slash className="text-border w-[22px] h-[22px]" />
               <Tooltip>

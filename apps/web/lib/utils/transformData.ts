@@ -19,7 +19,7 @@ export const transformDemoResult = (result: any): DemoWithComponent => {
     fts: result.fts,
     component: {
       ...(result.component_data as Component),
-      user: result.component_user_data as User,
+      user: result.user_data as User,
     } as Component & { user: User },
     user: result.user_data as User,
     tags: (result.tags as Tag[]) || [],

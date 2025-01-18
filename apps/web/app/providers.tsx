@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 
 import { ClerkProvider } from "@clerk/nextjs"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/ui/sidebar-layout"
@@ -36,6 +37,7 @@ export function AppProviders({
       <ClerkProvider>
         <CommandMenu />
         <ProductHuntDialog />
+        <SpeedInsights />
         {showSidebar ? (
           <SidebarProvider>
             <AppSidebar />

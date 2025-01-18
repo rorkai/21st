@@ -32,6 +32,11 @@ export function News({
   const cards = articles.filter(({ href }) => !dismissedNews.includes(href))
   const cardCount = cards.length
   const [showCompleted, setShowCompleted] = useState(cardCount > 0)
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout> | undefined = undefined
@@ -40,8 +45,9 @@ export function News({
     return () => clearTimeout(timeout)
   }, [cardCount])
 
-  if (typeof window === "undefined") {
-    return <div />
+  // Return null during SSR
+  if (!isMounted) {
+    return null
   }
 
   return cards.length || (enableShowCompleted && showCompleted) ? (

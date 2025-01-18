@@ -585,7 +585,7 @@ export default function ComponentPage({
       `Component: ${component.name}\nAuthor: ${component.user.username}\nURL: ${window.location.href}\n\nPlease describe the issue:`,
     )
     window.open(
-      `https://github.com/serafimcloud  /21st/issues/new?title=${issueTitle}&body=${issueBody}`,
+      `https://github.com/serafimcloud/21st/issues/new?title=${issueTitle}&body=${issueBody}`,
       "_blank",
     )
   }

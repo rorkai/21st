@@ -11,6 +11,12 @@ const getShadcnRegistrySlug = (registryName: string) => {
   if (registryName === "hooks") {
     return "registry:hook"
   }
+  if (registryName === "blocks") {
+    return "registry:block"
+  }
+  if (registryName === "icons") {
+    return "registry:ui"
+  }
   return `registry:${registryName}`
 }
 

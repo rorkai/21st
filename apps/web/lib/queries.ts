@@ -506,7 +506,6 @@ export async function getComponentWithDemo(
     .single()
 
   if (componentError) {
-    console.error("Error fetching component:", componentError)
     return { data: null, error: new Error(componentError.message) }
   }
 
@@ -514,10 +513,9 @@ export async function getComponentWithDemo(
     .from("submissions")
     .select("*")
     .eq("component_id", component.id)
-    .single()
+    .maybeSingle()
 
   if (submissionError) {
-    console.error("Error fetching submission:", submissionError)
     return { data: null, error: new Error(submissionError.message) }
   }
 
@@ -537,7 +535,6 @@ export async function getComponentWithDemo(
     .single()
 
   if (demoError) {
-    console.error("Error fetching demo:", demoError)
     if (demo_slug === "default") {
       return { data: null, error: new Error(demoError.message) }
     }
@@ -681,6 +678,7 @@ export async function getComponentDemos(
   supabase: SupabaseClient<Database>,
   componentId: number,
 ) {
+
   const { data, error } = await supabase
     .from("demos")
     .select(

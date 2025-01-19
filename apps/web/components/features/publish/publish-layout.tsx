@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils"
 import { uploadToR2 } from "@/lib/r2"
 import { addTagsToComponent } from "@/lib/queries"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
+import { addVersionToUrl } from "@/lib/utils/url"
 import {
   extractComponentNames,
   extractNPMDependencies,
@@ -481,6 +482,7 @@ export default function PublishComponentForm({
     setPublishAttemptCount((count) => count + 1)
     setIsSubmitting(true)
     setIsLoadingDialogOpen(true)
+
     try {
       if (isAddDemoMode) {
         const baseFolder = `${existingComponent.user_id}/${existingComponent.component_slug}`
@@ -557,9 +559,9 @@ export default function PublishComponentForm({
             ])
 
           if (demoCodeUrl) {
-            demoData.demo_code = demoCodeUrl
-            demoData.preview_url = previewImageR2Url ?? null
-            demoData.video_url = videoR2Url ?? null
+            demoData.demo_code = addVersionToUrl(demoCodeUrl)
+            demoData.preview_url = addVersionToUrl(previewImageR2Url) ?? null
+            demoData.video_url = addVersionToUrl(videoR2Url) ?? null
 
             const { data: insertedDemo, error: insertError } = await client
               .from("demos")
@@ -628,9 +630,9 @@ export default function PublishComponentForm({
           name: data.name,
           component_names: parsedCode.componentNames,
           component_slug: data.component_slug,
-          code: codeUrl,
-          tailwind_config_extension: tailwindConfigUrl,
-          global_css_extension: globalCssUrl,
+          code: addVersionToUrl(codeUrl) || "",
+          tailwind_config_extension: addVersionToUrl(tailwindConfigUrl),
+          global_css_extension: addVersionToUrl(globalCssUrl),
           description: data.description ?? null,
           user_id: publishAsUser?.id,
           dependencies: parsedCode.dependencies,
@@ -765,9 +767,9 @@ export default function PublishComponentForm({
           const { error: updateDemoError } = await client
             .from("demos")
             .update({
-              demo_code: demoCodeUrl,
-              preview_url: previewImageR2Url,
-              video_url: videoR2Url,
+              demo_code: addVersionToUrl(demoCodeUrl),
+              preview_url: addVersionToUrl(previewImageR2Url),
+              video_url: addVersionToUrl(videoR2Url),
               updated_at: new Date().toISOString(),
             })
             .eq("id", insertedDemo.id)

@@ -36,6 +36,38 @@ We're building more than just a component registry – we're building a communit
 Yes, you read that right—**1 minute**! 🕒  
 Publishing your React component is as easy as pie. Just head over to our [publish page](https://21st.dev) and share your creation with the world.
 
+### Review Process
+
+When you publish a component, it follows this journey:
+
+1. **Initial State** (`on_review`) - Component is available via direct link and awaiting review
+2. **Posted State** (`posted`) - Component has passed review and is available on your profile and via direct link
+3. **Featured State** (`featured`) - Component is featured on the homepage and in public listings
+
+I ([Serafim](https://x.com/serafimcloud)) personally review each component to ensure it meets our quality standards before featuring it.
+
+### Quality Guidelines
+
+To get your component featured, ensure it follows these key principles:
+
+1. **Visual Quality**
+
+   - Component should be visually polished and provide real value to the community
+   - Follow modern UI/UX practices
+
+2. **Code Structure**
+
+   - Follow the shadcn/ui pattern of separating component logic from demo content
+   - Component file should contain only the reusable functionality
+   - Demo file should showcase the component through props, not hardcoded content
+
+3. **Theming**
+   - Use CSS variables from shadcn's theme system (see `globals.css`)
+   - Support both light and dark modes out of the box
+   - Use the proper color variables (e.g., `hsl(var(--background))`)
+
+Remember: Quality over quantity! We prioritize well-crafted, reusable components that follow these guidelines.
+
 ### File Structure:
 
 ```
@@ -191,3 +223,67 @@ And, of course, **YOU**—our amazing open-source contributors! ❤️
 ## 🚀 Let's Build the Future Together!
 
 Ready to dive in? Start exploring, publishing, and contributing today. Let's make 21st.dev the best place for React UI components on the web. Happy coding! 🎉
+
+## 📋 Component Guidelines
+
+We maintain high quality standards for components that appear on the homepage and in public listings. While all published components are immediately available via direct links, they go through a review process before being featured publicly.
+
+### Review Process
+
+When you publish a component, it follows this journey:
+
+1. **Initial State** (`on_review`) - Component is available via direct link and awaiting review
+2. **Posted State** (`posted`) - Component has passed review and is available on your profile and via direct link
+3. **Featured State** (`featured`) - Component is featured on the homepage and in public listings
+
+I ([Serafim](https://x.com/serafimcloud)) personally review each component to ensure it meets our quality standards before featuring it. This helps maintain a high-quality collection of components that truly benefit the community.
+
+### Quality Standards
+
+To ensure your component gets featured, follow these guidelines:
+
+1. **Visual Design**
+
+   - Component should be visually polished and provide value to the community
+   - Follow modern UI/UX practices
+   - Support both light and dark themes
+   - Use consistent spacing and sizing
+
+2. **Code Structure**
+
+   - Follow the shadcn/ui pattern of separating component logic from demo content
+   - Component file should contain only the reusable functionality
+   - Demo file should showcase the component with realistic content
+   - Use props for customization and content injection
+
+3. **Theming**
+
+   - Use CSS variables from shadcn's theme system (see `globals.css`)
+   - Support both light and dark modes out of the box
+   - Use `hsl` variables for colors (e.g., `hsl(var(--background))`)
+   - Follow the naming convention for CSS variables
+
+4. **Accessibility**
+
+   - Include proper ARIA attributes
+   - Support keyboard navigation
+   - Maintain sufficient color contrast
+   - Test with screen readers
+
+5. **Documentation**
+
+   - Provide clear prop documentation
+   - Include usage examples
+   - Document any required dependencies
+   - Add helpful comments for complex logic
+
+6. **Best Practices**
+   - Keep components focused and single-purpose
+   - Minimize external dependencies
+   - Ensure responsive behavior
+   - Follow TypeScript best practices
+   - Include meaningful default props
+
+Remember: Quality over quantity! We'd rather have fewer, well-crafted components than many that don't meet our standards.
+
+---

@@ -1,6 +1,12 @@
 import { Component, DemoWithComponent, User, Tag } from "@/types/global"
 
 export const transformDemoResult = (result: any): DemoWithComponent => {
+  
+  const componentUser =
+    result.component_user_data ||
+    (result.component_data && result.component_data.user) ||
+    result.user_data
+
   const transformed = {
     id: result.id,
     name: result.name,
@@ -19,7 +25,7 @@ export const transformDemoResult = (result: any): DemoWithComponent => {
     fts: result.fts,
     component: {
       ...(result.component_data as Component),
-      user: result.component_user_data as User,
+      user: componentUser as User,
     } as Component & { user: User },
     user: result.user_data as User,
     tags: (result.tags as Tag[]) || [],

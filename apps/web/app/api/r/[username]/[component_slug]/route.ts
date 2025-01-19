@@ -131,7 +131,6 @@ export async function GET(
               /module\.exports\s*=\s*({[\s\S]*})/,
             )
             if (!configMatch?.[1]) {
-              console.log("No config match found")
               return {}
             }
 
@@ -146,7 +145,6 @@ export async function GET(
               /"theme"\s*:\s*({[^}]*(?:}[^}]*)*})/,
             )
             if (!themeMatch?.[1]) {
-              console.log("No theme object found")
               return {}
             }
 
@@ -155,7 +153,6 @@ export async function GET(
               /"extend"\s*:\s*({[^}]*(?:}[^}]*)*})[^}]*$/,
             )
             if (!extendMatch?.[1]) {
-              console.log("No extend object found")
               return {}
             }
 
@@ -167,26 +164,36 @@ export async function GET(
               .replace(/}\s*}/g, "}") // Remove whitespace between closing braces
               .replace(/}(?!}|$)/g, "},") // Add commas between objects where missing
               .replace(/,+/g, ",") // Remove any remaining multiple commas
+              // Handle template literals with data URLs
+              .replace(/`([^`]*)`/g, function (match, p1) {
+                return JSON.stringify(p1)
+              })
               // Quote unquoted property names, but skip already quoted ones
               .replace(/([{,]\s*)(?!")([a-zA-Z0-9-]+):/g, '$1"$2":')
               // Remove any remaining trailing commas
               .replace(/,(\s*})/g, "$1")
               .trim()
 
-            // Count opening and closing braces
-            const openBraces = (cleanThemeExtend.match(/{/g) || []).length
-            const closeBraces = (cleanThemeExtend.match(/}/g) || []).length
-
-            // Add missing closing braces
-            if (openBraces > closeBraces) {
-              cleanThemeExtend += "}".repeat(openBraces - closeBraces)
+            try {
+              const parsed = JSON.parse(cleanThemeExtend)
+              return { theme: { extend: parsed } }
+            } catch (error) {
+              // If parsing fails, try a simpler approach
+              const simpleObject = {
+                backgroundImage: {
+                  "grid-pattern":
+                    tailwindConfig.match(
+                      /['"]grid-pattern['"]:\s*`([^`]*)`/,
+                    )?.[1] || "",
+                  "grid-pattern-light":
+                    tailwindConfig.match(
+                      /['"]grid-pattern-light['"]:\s*`([^`]*)`/,
+                    )?.[1] || "",
+                },
+              }
+              return { theme: { extend: simpleObject } }
             }
-
-            // Try to parse and re-stringify to ensure valid JSON
-            const parsed = JSON.parse(cleanThemeExtend)
-            return { theme: { extend: parsed } }
           } catch (error) {
-            console.error("Error parsing tailwind theme.extend:", error)
             throw error
           }
         })()

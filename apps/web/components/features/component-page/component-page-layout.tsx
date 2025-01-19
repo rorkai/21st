@@ -715,7 +715,8 @@ export default function ComponentPage({
                       <CommandGroup>
                         {componentDemos?.map((d) => (
                           <CommandItem
-                            key={d.id}
+                            value={`${d.id}-${d.demo_slug}`}
+                            data-demo-id={d.id}
                             onSelect={() =>
                               router.push(
                                 `/${component.user.username}/${component.component_slug}/${d.demo_slug}`,

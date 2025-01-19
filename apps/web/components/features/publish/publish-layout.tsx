@@ -484,6 +484,10 @@ export default function PublishComponentForm({
     setIsLoadingDialogOpen(true)
 
     try {
+      if (!publishAsUser?.id) {
+        throw new Error("The user is not authorized. Please log in")
+      }
+
       if (isAddDemoMode) {
         const baseFolder = `${existingComponent.user_id}/${existingComponent.component_slug}`
 
@@ -584,7 +588,7 @@ export default function PublishComponentForm({
         }
       } else {
         setPublishProgress("Uploading component files...")
-        const baseFolder = `${publishAsUser?.id}/${data.component_slug}`
+        const baseFolder = `${publishAsUser.id}/${data.component_slug}`
 
         if (!data.code) throw new Error("Component code is required")
         if (!data.demos.length) throw new Error("At least one demo is required")
@@ -634,7 +638,7 @@ export default function PublishComponentForm({
           tailwind_config_extension: addVersionToUrl(tailwindConfigUrl),
           global_css_extension: addVersionToUrl(globalCssUrl),
           description: data.description ?? null,
-          user_id: publishAsUser?.id,
+          user_id: publishAsUser.id,
           dependencies: parsedCode.dependencies,
           demo_dependencies: parsedCode.demoDependencies,
           direct_registry_dependencies: data.direct_registry_dependencies,
@@ -670,10 +674,6 @@ export default function PublishComponentForm({
             console.error("Error inserting submission:", submissionError)
             throw submissionError
           }
-        }
-
-        if (!publishAsUser?.id) {
-          throw new Error("User ID is required")
         }
 
         for (const demo of data.demos) {

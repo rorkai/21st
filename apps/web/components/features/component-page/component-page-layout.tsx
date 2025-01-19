@@ -404,19 +404,38 @@ export default function ComponentPage({
     updatedData: Partial<Component>,
     demoUpdates: Partial<Demo> & { demo_tags?: Tag[] },
   ) => {
+    let currentUrls: { preview_url: string | null; video_url: string | null } =
+      {
+        preview_url: null,
+        video_url: null,
+      }
+
+    if (demoUpdates.id) {
+      const { data: currentDemo } = await supabase
+        .from("demos")
+        .select("preview_url, video_url")
+        .eq("id", demoUpdates.id)
+        .single()
+
+      if (currentDemo) {
+        currentUrls = currentDemo
+      }
+    }
+
+    if (demoUpdates.preview_url) {
+      const baseUrl = currentUrls.preview_url || demoUpdates.preview_url
+      demoUpdates.preview_url = addVersionToUrl(baseUrl)
+    }
+    if (demoUpdates.video_url) {
+      const baseUrl = currentUrls.video_url || demoUpdates.video_url
+      demoUpdates.video_url = addVersionToUrl(baseUrl)
+    }
+
     if (demoUpdates.preview_url || demoUpdates.video_url) {
       await purgeCacheForDemo(
         addNoCacheParam(demoUpdates.preview_url),
         addNoCacheParam(demoUpdates.video_url),
       )
-    }
-
-    // Add version to URLs if they are being updated
-    if (demoUpdates.preview_url) {
-      demoUpdates.preview_url = addVersionToUrl(demoUpdates.preview_url)
-    }
-    if (demoUpdates.video_url) {
-      demoUpdates.video_url = addVersionToUrl(demoUpdates.video_url)
     }
 
     updateComponent(
@@ -459,7 +478,6 @@ export default function ComponentPage({
                 video_url: demoUpdates.video_url,
                 updated_at: new Date().toISOString(),
               }
-              console.log("Demo updates:", demoUpdatePayload)
 
               const { error: demoError } = await supabase
                 .from("demos")
@@ -496,8 +514,6 @@ export default function ComponentPage({
                   (tagRelation: any) => tagRelation.tag,
                 ),
               }
-
-              console.log("Updated component data:", transformedComponent)
 
               setComponent(
                 transformedComponent as Component & { user: User } & {

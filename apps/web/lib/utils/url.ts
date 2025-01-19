@@ -10,15 +10,17 @@ export const addVersionToUrl = (
 ): string => {
   if (!url) return ""
 
-  const urlObj = new URL(url)
-  const vParam = urlObj.searchParams.get("v")
+  // Split URL and parameters
+  const [baseUrl, queryString] = url.split("?")
+  const params = new URLSearchParams(queryString || "")
+  const currentVersion = params.get("v")
 
-  if (vParam) {
-    const nextVersion = parseInt(vParam) + 1
-    urlObj.searchParams.set("v", nextVersion.toString())
+  if (currentVersion) {
+    const nextVersion = parseInt(currentVersion) + 1
+    params.set("v", nextVersion.toString())
   } else {
-    urlObj.searchParams.set("v", initialVersion.toString())
+    params.set("v", initialVersion.toString())
   }
-
-  return urlObj.toString()
+  const newQueryString = params.toString()
+  return newQueryString ? `${baseUrl}?${newQueryString}` : baseUrl || ""
 }

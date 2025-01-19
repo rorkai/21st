@@ -458,7 +458,6 @@ export default function ComponentPage({
                 preview_url: demoUpdates.preview_url,
                 video_url: demoUpdates.video_url,
                 updated_at: new Date().toISOString(),
-                tags: demoUpdates.demo_tags,
               }
               console.log("Demo updates:", demoUpdatePayload)
 

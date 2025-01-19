@@ -9,6 +9,7 @@ import { ComponentDetailsForm } from "./forms/component-form"
 import { Icons } from "@/components/icons"
 import { LinkPreview } from "@/components/ui/link-preview"
 import { useAnimation } from "framer-motion"
+import { Info, ArrowRight } from "lucide-react"
 
 interface NameSlugStepProps {
   form: UseFormReturn<FormData>
@@ -38,7 +39,38 @@ export function NameSlugStep({
 
   return (
     <div className="absolute inset-x-0 top-0 bg-background px-2 sm:px-4 md:px-0">
-      <Card className="w-full max-w-[800px] mx-auto mt-4 sm:mt-20 md:mt-20 p-4 sm:p-6 md:p-8">
+      <div className="z-[100] max-w-[800px] mx-auto mt-4 sm:mt-20 md:mt-20 mb-4 rounded-lg border border-border bg-background px-4 py-3 shadow-lg shadow-black/5">
+        <div className="flex gap-2">
+          <div className="flex grow gap-3">
+            <Info
+              className="mt-0.5 shrink-0 text-blue-500"
+              size={16}
+              strokeWidth={2}
+              aria-hidden="true"
+            />
+            <div className="flex grow justify-between gap-12">
+              <p className="text-sm text-muted-foreground">
+                Components go through a review process before being featured.
+              </p>
+              <a
+                href="https://github.com/serafimcloud/21st?tab=readme-ov-file#review-process"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group whitespace-nowrap text-sm font-medium text-primary"
+              >
+                Learn more
+                <ArrowRight
+                  className="-mt-0.5 ms-1 inline-flex opacity-60 transition-transform group-hover:translate-x-0.5"
+                  size={16}
+                  strokeWidth={2}
+                  aria-hidden="true"
+                />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <Card className="w-full max-w-[800px] mx-auto p-4 sm:p-6 md:p-8">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

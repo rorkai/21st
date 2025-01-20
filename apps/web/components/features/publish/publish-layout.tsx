@@ -1276,8 +1276,8 @@ export default function PublishComponentForm({
                               >
                                 <AccordionTrigger className="py-2 text-[15px] leading-6 hover:no-underline hover:bg-muted/50 rounded-md data-[state=open]:rounded-b-none transition-all duration-200 ease-in-out -mx-2 px-2">
                                   <div className="flex items-center gap-2 w-full">
-                                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                                      <div className="truncate">
+                                    <div className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden">
+                                      <div className="truncate flex-shrink min-w-0">
                                         {demo.name || `Demo ${index + 1}`}
                                       </div>
                                       <Badge
@@ -1307,7 +1307,7 @@ export default function PublishComponentForm({
                                       <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 ml-auto mr-1"
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 ml-auto mr-1 shrink-0"
                                         onClick={(e) => {
                                           e.stopPropagation()
                                           setDemoToDelete({

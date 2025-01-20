@@ -87,7 +87,7 @@ export function DemoPreviewTabs({
         className="flex flex-col h-full"
       >
         {demos.length > 1 && (
-          <TabsList className="h-auto gap-2 rounded-none bg-transparent px-4 py-2">
+          <TabsList className="h-auto gap-2 rounded-none bg-transparent px-4 py-2 overflow-x-auto scrollbar-none whitespace-nowrap">
             {demos.map((demo, index) => (
               <TabsTrigger
                 key={index}

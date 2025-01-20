@@ -130,6 +130,7 @@ export function ComponentPagePreview({
   )
 
   const files = {
+    ...registryDependencies,
     ...generateSandpackFiles({
       demoComponentNames,
       componentSlug: component.component_slug,
@@ -141,7 +142,6 @@ export function ComponentPagePreview({
       customTailwindConfig: tailwindConfig,
       customGlobalCss: globalCss,
     }),
-    ...registryDependencies,
   }
 
   const mainComponentFile = Object.keys(files).find((file) =>

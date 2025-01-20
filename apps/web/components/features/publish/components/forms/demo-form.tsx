@@ -13,6 +13,12 @@ import MultipleSelector, { Option } from "@/components/ui/multiselect"
 import { Input } from "@/components/ui/input"
 import { FormField } from "@/components/ui/form"
 import { makeSlugFromName } from "../../hooks/use-is-check-slug-available"
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "@/components/ui/collapsible"
+import { Textarea } from "@/components/ui/textarea"
 
 export const DemoDetailsForm = ({
   form,
@@ -34,7 +40,7 @@ export const DemoDetailsForm = ({
   const demoNameId = useId()
 
   React.useEffect(() => {
-    if (demoIndex === 0) {
+    if (demoIndex === 0 && !form.getValues("component_slug")) {
       const currentName = form.getValues(`demos.${demoIndex}.name`)
       if (!currentName) {
         handleDemoNameChange("Default")
@@ -349,6 +355,89 @@ export const DemoDetailsForm = ({
             component
           </p>
         </div>
+
+        <Collapsible>
+          <CollapsibleTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Advanced
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label>Demo Slug</Label>
+              <FormField
+                control={form.control}
+                name={`demos.${demoIndex}.demo_slug`}
+                render={({ field }) => (
+                  <Input placeholder="demo-slug" {...field} />
+                )}
+              />
+              <p className="text-xs text-muted-foreground">
+                URL-friendly identifier for this demo
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Registry Dependencies</Label>
+              <FormField
+                control={form.control}
+                name={`demos.${demoIndex}.demo_direct_registry_dependencies`}
+                render={({ field }) => (
+                  <Textarea
+                    placeholder='["username/component-slug"]'
+                    className="font-mono text-sm"
+                    value={JSON.stringify(field.value || [], null, 2)}
+                    onChange={(e) => {
+                      try {
+                        const value = JSON.parse(e.target.value)
+                        if (Array.isArray(value)) {
+                          field.onChange(value)
+                        }
+                      } catch (e) {
+                        // Invalid JSON, ignore
+                      }
+                    }}
+                  />
+                )}
+              />
+              <p className="text-xs text-muted-foreground">
+                Direct dependencies from the registry
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>NPM Dependencies</Label>
+              <FormField
+                control={form.control}
+                name={`demos.${demoIndex}.demo_dependencies`}
+                render={({ field }) => (
+                  <Textarea
+                    placeholder='{"package": "^1.0.0"}'
+                    className="font-mono text-sm"
+                    value={JSON.stringify(field.value || {}, null, 2)}
+                    onChange={(e) => {
+                      try {
+                        const value = JSON.parse(e.target.value)
+                        if (typeof value === "object" && value !== null) {
+                          field.onChange(value)
+                        }
+                      } catch (e) {
+                        // Invalid JSON, ignore
+                      }
+                    }}
+                  />
+                )}
+              />
+              <p className="text-xs text-muted-foreground">
+                NPM package dependencies
+              </p>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
     </div>
   )

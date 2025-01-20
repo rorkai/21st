@@ -106,32 +106,17 @@ export const generateDemoSlug = async (
     throw demosError
   }
 
-  // Check if 'default' slug is available
-  const hasDefaultDemo = existingDemos?.some(
-    (demo) => demo.demo_slug === "default",
-  )
-
-  if (!hasDefaultDemo) {
-    return "default"
-  }
-
-  // If 'default' is taken, generate unique slug from name
-  let baseSlug = makeSlugFromName(name)
-  let finalSlug = baseSlug || "demo"
+  let baseSlug = makeSlugFromName(name) || "demo"
+  let finalSlug = baseSlug
   let counter = 1
 
-  while (true) {
-    const slugExists = existingDemos?.some(
-      (demo) => demo.demo_slug === finalSlug,
-    )
-
-    if (!slugExists) {
-      return finalSlug
-    }
-
+  // Keep trying new slugs until we find a unique one
+  while (existingDemos?.some((demo) => demo.demo_slug === finalSlug)) {
     finalSlug = `${baseSlug}-${counter}`
     counter++
   }
+
+  return finalSlug
 }
 
 export const useIsCheckSlugAvailable = ({

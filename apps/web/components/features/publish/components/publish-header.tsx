@@ -153,7 +153,7 @@ export function PublishHeader({
       const currentDemo = demos[currentDemoIndex]
       if (!currentDemo?.demo_code) {
         form?.setValue(`demos.${currentDemoIndex}`, {
-          name: "",
+          name: "Default",
           demo_slug: "",
           demo_code: "",
           tags: [],
@@ -162,6 +162,7 @@ export function PublishHeader({
           preview_video_data_url: "",
           preview_video_file: new File([], "placeholder"),
           demo_direct_registry_dependencies: [],
+          demo_dependencies: {},
         })
 
         form?.setValue("unknown_dependencies", [])
@@ -215,8 +216,7 @@ export function PublishHeader({
 
       setShowDependenciesModal(false)
       setFormStep("demoDetails")
-    } catch (error) {
-    }
+    } catch (error) {}
   }
 
   const isDemoDetailsValid = () => {
@@ -350,21 +350,20 @@ export function PublishHeader({
                 </DialogTitle>
               </div>
             </DialogHeader>
-              <ResolveUnknownDependenciesAlertForm
-                unknownDependencies={(
-                  form?.watch("unknown_dependencies") || []
-                ).map((dep) => ({
-                  slugWithUsername: dep,
-                  registry: "ui",
-                  isDemoDependency: true,
-                }))}
-                onBack={() => {
-                  setShowDependenciesModal(false)
-                  handleStepChange("demoCode")
-                }}
-                onDependenciesResolved={handleDependenciesResolved}
-              />
-
+            <ResolveUnknownDependenciesAlertForm
+              unknownDependencies={(
+                form?.watch("unknown_dependencies") || []
+              ).map((dep) => ({
+                slugWithUsername: dep,
+                registry: "ui",
+                isDemoDependency: true,
+              }))}
+              onBack={() => {
+                setShowDependenciesModal(false)
+                handleStepChange("demoCode")
+              }}
+              onDependenciesResolved={handleDependenciesResolved}
+            />
           </DialogContent>
         </Dialog>
       </>

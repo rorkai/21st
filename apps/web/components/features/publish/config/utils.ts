@@ -31,6 +31,7 @@ const demoSchema = z.object({
       message: "At least one tag is required.",
     }),
   demo_direct_registry_dependencies: z.array(z.string()).default([]),
+  demo_dependencies: z.record(z.string()).default({}),
 })
 
 export const formSchema = z.object({

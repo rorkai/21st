@@ -70,7 +70,7 @@ export default async function TagPage({ params }: TagPageProps) {
       : defaultQuickFilter
 
     const filteredDemos = await supabaseWithAdminAccess.rpc(
-      "get_filtered_demos",
+      "get_filtered_demos_with_views",
       {
         p_quick_filter: quickFilterPreference,
         p_sort_by: sortByPreference,

@@ -1,10 +1,6 @@
 import { UserProfileClient } from "./page.client"
 
-import {
-  getUserData,
-  getHuntedComponents,
-  getUserDemos,
-} from "@/lib/queries"
+import { getUserData, getHuntedComponents, getUserDemos } from "@/lib/queries"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { validateRouteParams } from "@/lib/utils/validateRouteParams"
 import { redirect } from "next/navigation"

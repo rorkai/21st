@@ -9,7 +9,7 @@ import { CircleX } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { searchQueryAtom } from "@/components/ui/header.client"
-import { Component, DemoWithComponent, User } from "@/types/global"
+import { DemoWithComponent, HuntedComponents } from "@/types/global"
 
 export type UserComponentsTab = "published" | "hunted" | "demos"
 
@@ -59,7 +59,7 @@ export function UserComponentsHeader({
   username,
 }: {
   publishedComponents?: DemoWithComponent[]
-  huntedComponents?: (Component & { user: User })[]
+  huntedComponents?: HuntedComponents
   userDemos?: DemoWithComponent[]
   username: string
 }) {

@@ -99,7 +99,7 @@ export function HomePageClient({
 
         if (!debouncedSearchQuery) {
           const { data: filteredData, error } = await supabase.rpc(
-            "get_filtered_demos",
+            "get_filtered_demos_with_views",
             {
               p_quick_filter: quickFilter,
               p_sort_by: sortBy,

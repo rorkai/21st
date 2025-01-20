@@ -6,6 +6,7 @@ export type Demo = Database["public"]["Tables"]["demos"]["Row"]
 export type User = Database["public"]["Tables"]["users"]["Row"]
 export type Tag = Database["public"]["Tables"]["tags"]["Row"]
 export type Submission = Database["public"]["Tables"]["submissions"]["Row"]
+export type HuntedComponents = Database["public"]["Functions"]["get_hunted_components"]["Returns"]
 
 export type DemoWithComponent = Demo & {
   component: Component & { user: User }
@@ -15,6 +16,7 @@ export type DemoWithComponent = Demo & {
   user_id: string
   fts: unknown | null
   pro_preview_image_url: string | null
+  view_count: number | null
 }
 
 export type DemoWithTags = Demo & {

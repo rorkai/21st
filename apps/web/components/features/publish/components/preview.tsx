@@ -62,7 +62,7 @@ export function PublishComponentPreview({
       const { data, error } = await resolveRegistryDependencyTree({
         supabase,
         sourceDependencySlugs: directRegistryDependencies,
-        withDemoDependencies: true,
+        withDemoDependencies: false,
       })
       if (error) {
         throw error

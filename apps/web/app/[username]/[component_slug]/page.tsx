@@ -201,7 +201,7 @@ export default async function ComponentPageServer({
           `${params.username}/${params.component_slug}`,
           ...demoRegistryDeps,
         ],
-        withDemoDependencies: true,
+        withDemoDependencies: false,
       }),
     ])
 

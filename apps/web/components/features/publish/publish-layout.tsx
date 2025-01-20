@@ -434,9 +434,15 @@ export default function PublishComponentForm({
           ],
         })
 
-        const ambigiousRegistryDependencies = [
-          ...new Set(Object.values(extractAmbigiousRegistryDependencies(code))),
-        ]
+        // Skip checking component dependencies in add-demo mode since they are already resolved
+        const ambigiousRegistryDependencies = isAddDemoMode
+          ? []
+          : [
+              ...new Set(
+                Object.values(extractAmbigiousRegistryDependencies(code)),
+              ),
+            ]
+
         const ambigiousDemoDirectRegistryDependencies = [
           ...new Set(
             Object.values(extractAmbigiousRegistryDependencies(demoCode)),
@@ -450,9 +456,7 @@ export default function PublishComponentForm({
           .map((d) => ({
             slugWithUsername: d.slug,
             registry: d.registry,
-            isDemoDependency: ambigiousRegistryDependencies?.includes(d)
-              ? false
-              : true,
+            isDemoDependency: ambigiousRegistryDependencies.findIndex(dep => dep.slug === d.slug) === -1,
           }))
           .filter((d) => componentSlug !== d.slugWithUsername)
           .filter(

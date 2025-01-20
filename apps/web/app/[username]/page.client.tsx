@@ -13,7 +13,7 @@ import { Globe, SquareArrowOutUpRight } from "lucide-react"
 import { trackEvent } from "@/lib/amplitude"
 import { useEffect } from "react"
 import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
-import { Component, DemoWithComponent, User } from "@/types/global"
+import { Component, DemoWithComponent, User, HuntedComponents } from "@/types/global"
 
 const useProfileAnalytics = ({
   username,
@@ -38,7 +38,7 @@ export function UserProfileClient({
 }: {
   user: User
   publishedComponents: DemoWithComponent[]
-  huntedComponents: (Component & { user: User })[]
+  huntedComponents: HuntedComponents
   userDemos: DemoWithComponent[]
 }) {
   useProfileAnalytics({

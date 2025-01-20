@@ -29,6 +29,7 @@ export const transformDemoResult = (result: any): DemoWithComponent => {
     } as Component & { user: User },
     user: result.user_data as User,
     tags: (result.tags as Tag[]) || [],
+    view_count: result.view_count,
   }
   return transformed
 }

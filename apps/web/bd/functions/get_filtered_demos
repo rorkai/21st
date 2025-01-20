@@ -1,6 +1,6 @@
-DROP FUNCTION public.get_filtered_demos;
+DROP FUNCTION public.get_filtered_demos_with_views;
 
-CREATE OR REPLACE FUNCTION public.get_filtered_demos(
+CREATE OR REPLACE FUNCTION public.get_filtered_demos_with_views(
   p_quick_filter text,
   p_sort_by text,
   p_offset integer,

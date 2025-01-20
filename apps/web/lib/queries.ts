@@ -434,20 +434,20 @@ export async function getHuntedComponents(
   supabase: SupabaseClient<Database>,
   hunterUsername: string,
 ) {
-  const { data, error } = await supabase
-    .from("components")
-    .select(componentReadableDbFields)
-    .eq("hunter_username", hunterUsername)
-    .eq("is_public", true)
-    .order("downloads_count", { ascending: false })
-    .returns<(Component & { user: User })[]>()
+  const { data, error } = await supabase.rpc("get_hunted_components", {
+    p_hunter_username: hunterUsername,
+  })
 
   if (error) {
     console.error("Error fetching hunted components:", error)
     return null
   }
 
-  return data
+  return data.map((component) => ({
+    ...component,
+    user: component.user_data as User,
+    view_count: component.view_count || 0,
+  }))
 }
 
 export function useHuntedComponents(username: string) {
@@ -467,7 +467,7 @@ export async function getFilteredDemos(
   limit: number = 24,
 ) {
   const { data, error } = await supabase
-    .rpc("get_filtered_demos", {
+    .rpc("get_filtered_demos_with_views", {
       p_quick_filter: quickFilter,
       p_sort_by: sortBy,
       p_offset: offset,
@@ -614,7 +614,7 @@ export async function getUserDemos(
   loggedInUserId?: string,
 ) {
   const { data: filteredData, error } = await supabase.rpc(
-    "get_filtered_demos",
+    "get_filtered_demos_with_views",
     {
       p_quick_filter: "all",
       p_sort_by: "newest",
@@ -678,7 +678,6 @@ export async function getComponentDemos(
   supabase: SupabaseClient<Database>,
   componentId: number,
 ) {
-
   const { data, error } = await supabase
     .from("demos")
     .select(

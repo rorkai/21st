@@ -902,6 +902,67 @@ export type Database = {
           debug_info: Json
         }[]
       }
+      get_filtered_demos_with_views: {
+        Args: {
+          p_quick_filter: string
+          p_sort_by: string
+          p_offset: number
+          p_limit: number
+          p_tag_slug?: string
+          p_include_private?: boolean
+        }
+        Returns: {
+          id: number
+          name: string
+          demo_code: string
+          preview_url: string
+          video_url: string
+          compiled_css: string
+          demo_dependencies: Json
+          demo_direct_registry_dependencies: Json
+          pro_preview_image_url: string
+          created_at: string
+          updated_at: string
+          component_id: number
+          component_data: Json
+          user_data: Json
+          component_user_data: Json
+          tags: Json
+          total_count: number
+          view_count: number
+          fts: unknown
+          demo_slug: string
+          debug_info: Json
+        }[]
+      }
+      get_hunted_components: {
+        Args: {
+          p_hunter_username: string
+        }
+        Returns: {
+          id: number
+          name: string
+          description: string
+          component_slug: string
+          demo_code: string
+          preview_url: string
+          video_url: string
+          compiled_css: string
+          demo_dependencies: Json
+          demo_direct_registry_dependencies: Json
+          demo_slug: string
+          component_id: number
+          user_id: string
+          pro_preview_image_url: string
+          created_at: string
+          updated_at: string
+          fts: unknown
+          component: Json
+          user_data: Json
+          tags: Json
+          view_count: number
+        }[]
+      }
       get_random_components: {
         Args: Record<PropertyKey, never>
         Returns: {

@@ -6,7 +6,7 @@ import {
 } from "../features/list-card/card"
 import { DemoWithComponent, User, Component } from "@/types/global"
 
-type ComponentOrDemo = DemoWithComponent | (Component & { user: User })
+type ComponentOrDemo = DemoWithComponent | (Component & { user: User } & { view_count?: number })
 
 export function ComponentsList({
   components,

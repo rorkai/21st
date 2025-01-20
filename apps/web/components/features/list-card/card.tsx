@@ -3,16 +3,12 @@
 
 import { Video, Eye, Heart } from "lucide-react"
 import Link from "next/link"
-import { useClerkSupabaseClient } from "@/lib/clerk"
-import { useQuery } from "@tanstack/react-query"
-import { AnalyticsActivityType } from "@/types/global"
 
 import { Component, User, DemoWithComponent } from "../../../types/global"
 import ComponentPreviewImage from "./card-image"
 import { ComponentVideoPreview } from "./card-video"
 import { CopyComponentButton } from "../../ui/copy-code-page-button"
 import { UserAvatar } from "../../ui/user-avatar"
-import { cn } from "@/lib/utils"
 
 export function ComponentCardSkeleton() {
   return (
@@ -37,7 +33,7 @@ export function ComponentCard({
   component,
   isLoading,
 }: {
-  component?: DemoWithComponent | (Component & { user: User })
+  component?: DemoWithComponent | (Component & { user: User } & { view_count?: number })
   isLoading?: boolean
 }) {
   if (isLoading || !component) {
@@ -55,26 +51,7 @@ export function ComponentCard({
   const componentUrl = isDemo
     ? `/${componentData.user.username}/${component.component.component_slug}/${component.demo_slug || `demo-${component.id}`}`
     : `/${userData.username}/${component.component_slug}`
-  /* 
-  const supabase = useClerkSupabaseClient()
 
-  const componentId = isDemo ? component.component.id : component.id
-
-  const { data: analytics } = useQuery({
-    queryKey: ["component-analytics", componentId],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("mv_component_analytics")
-        .select("component_id, count")
-        .eq("component_id", componentId)
-        .eq("activity_type", AnalyticsActivityType.COMPONENT_VIEW)
-      return data
-    },
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 30,
-    refetchOnWindowFocus: false,
-  })
- */
   const videoUrl = isDemo ? component.video_url : component.video_url
 
   const codeUrl = isDemo ? component.component.code : component.code
@@ -143,10 +120,10 @@ export function ComponentCard({
             </div>
           </Link>
           <div className="flex items-center gap-3">
-            {/* <div className="flex items-center text-xs text-muted-foreground whitespace-nowrap shrink-0 gap-1">
-              <Eye size={14} />
-              <span>{analytics?.[0]?.count || 0}</span>
-            </div> */}
+              <div className="flex items-center text-xs text-muted-foreground whitespace-nowrap shrink-0 gap-1">
+                <Eye size={14} />
+                <span>{component.view_count || 0}</span>
+              </div>
             <div className="flex items-center text-xs text-muted-foreground whitespace-nowrap shrink-0 gap-1">
               <Heart size={14} className="text-muted-foreground" />
               <span>{likesCount || 0}</span>

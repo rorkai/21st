@@ -4,7 +4,7 @@ import { useAtom, useAtomValue } from "jotai"
 import { ComponentsList } from "@/components/ui/items-list"
 import { searchQueryAtom } from "@/components/ui/header.client"
 import { userComponentsTabAtom } from "@/components/features/user-page/user-page-header"
-import { Component, DemoWithComponent, User } from "@/types/global"
+import { Component, DemoWithComponent, HuntedComponents, User } from "@/types/global"
 import { useQuery } from "@tanstack/react-query"
 
 type ComponentOrDemo = DemoWithComponent | (Component & { user: User })
@@ -17,7 +17,7 @@ export function UserComponentsList({
 }: {
   user: User
   publishedComponents?: DemoWithComponent[]
-  huntedComponents?: (Component & { user: User })[]
+  huntedComponents?: HuntedComponents
   userDemos?: DemoWithComponent[]
 }) {
   const activeTab = useAtomValue(userComponentsTabAtom)
@@ -42,7 +42,7 @@ export function UserComponentsList({
             compiled_css: component.compiled_css || null,
             demo_dependencies: component.demo_dependencies || null,
             demo_direct_registry_dependencies:
-              component.direct_registry_dependencies || null,
+              component.demo_direct_registry_dependencies || null,
             demo_slug: "default",
             component_id: component.id,
             user_id: component.user_id,
@@ -50,9 +50,10 @@ export function UserComponentsList({
             created_at: component.created_at,
             updated_at: component.updated_at,
             fts: null,
-            component: component,
-            user: component.user,
+            component: component as any,
+            user: component.user_data as any,
             tags: [],
+            view_count: component.view_count || 0,
           }
         })
         break

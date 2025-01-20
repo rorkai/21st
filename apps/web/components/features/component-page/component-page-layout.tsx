@@ -804,12 +804,12 @@ export default function ComponentPage({
                     )}
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-[300px]">
-                  <div className="flex flex-col gap-1">
-                    <p className="font-medium">
-                      Submission Status: {submission.status.replace("_", " ")}
+                <TooltipContent className="py-3">
+                  <div className="space-y-1">
+                    <p className="text-[13px] font-medium">
+                      Submission Status: {submission.status.replace("_", " ").charAt(0).toUpperCase() + submission.status.replace("_", " ").slice(1)}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       {submission.status === "on_review" &&
                         "Your component is being reviewed by our moderators before being made public."}
                       {submission.status === "featured" &&
@@ -821,8 +821,8 @@ export default function ComponentPage({
                       ["on_review", "featured"].includes(submission.status) && (
                         <>
                           <div className="h-px bg-border my-1" />
-                          <p className="text-sm text-muted-foreground">
-                            <span className="text-white">
+                          <p className="text-xs text-muted-foreground">
+                            <span className="text-[13px] font-medium">
                               Moderator Feedback:
                             </span>
                             <br />

@@ -341,7 +341,7 @@ export function PublishHeader({
           open={showDependenciesModal}
           onOpenChange={setShowDependenciesModal}
         >
-          <DialogContent>
+          <DialogContent className="max-h-[90vh] flex flex-col">
             <DialogHeader>
               <div className="flex items-center gap-2">
                 <Icons.workflowIcon />
@@ -350,20 +350,21 @@ export function PublishHeader({
                 </DialogTitle>
               </div>
             </DialogHeader>
-            <ResolveUnknownDependenciesAlertForm
-              unknownDependencies={(
-                form?.watch("unknown_dependencies") || []
-              ).map((dep) => ({
-                slugWithUsername: dep,
-                registry: "ui",
-                isDemoDependency: true,
-              }))}
-              onBack={() => {
-                setShowDependenciesModal(false)
-                handleStepChange("demoCode")
-              }}
-              onDependenciesResolved={handleDependenciesResolved}
-            />
+              <ResolveUnknownDependenciesAlertForm
+                unknownDependencies={(
+                  form?.watch("unknown_dependencies") || []
+                ).map((dep) => ({
+                  slugWithUsername: dep,
+                  registry: "ui",
+                  isDemoDependency: true,
+                }))}
+                onBack={() => {
+                  setShowDependenciesModal(false)
+                  handleStepChange("demoCode")
+                }}
+                onDependenciesResolved={handleDependenciesResolved}
+              />
+
           </DialogContent>
         </Dialog>
       </>

@@ -65,7 +65,9 @@ export function PublishHeader({
   }, [form?.getValues().demos?.length])
 
   const checkForUnknownDependencies = (code: string) => {
-    if (!form || !code) return []
+    if (!form || !code) {
+      return []
+    }
 
     const currentDemoDeps =
       form.getValues(
@@ -82,14 +84,17 @@ export function PublishHeader({
     const newDeps = demoImports
       .map((imp) => {
         const match = imp.match(/\/ui\/([^"']+)/)
-        if (!match?.[1]) return null
+        if (!match?.[1]) {
+          return null
+        }
         const slug = match[1].replace(/\.tsx$/, "")
 
         if (
           slug === componentSlugToPublish ||
           currentDemoDeps.includes(`ui/${slug}`)
-        )
+        ) {
           return null
+        }
 
         return {
           slugWithUsername: slug,
@@ -107,14 +112,17 @@ export function PublishHeader({
         } => dep !== null,
       )
 
-    return newDeps.filter(
+    const filteredDeps = newDeps.filter(
       (dep) =>
         !currentDemoDeps.includes(`${dep.registry}/${dep.slugWithUsername}`),
     )
+    return filteredDeps
   }
 
   const handleDemoCodeContinue = () => {
-    if (!form) return
+    if (!form) {
+      return
+    }
 
     const currentDemo = form.watch(`demos.${currentDemoIndex}`)
     const currentDemoCode = currentDemo?.demo_code || ""
@@ -124,12 +132,15 @@ export function PublishHeader({
     }
 
     const unknownDeps = checkForUnknownDependencies(currentDemoCode)
+    const existingUnknownDeps = form.watch("unknown_dependencies") || []
 
-    if (unknownDeps.length > 0) {
-      form.setValue(
-        "unknown_dependencies",
-        unknownDeps.map((dep) => dep.slugWithUsername),
-      )
+    if (unknownDeps.length > 0 || existingUnknownDeps.length > 0) {
+      form.setValue("unknown_dependencies", [
+        ...new Set([
+          ...existingUnknownDeps,
+          ...unknownDeps.map((dep) => dep.slugWithUsername),
+        ]),
+      ])
       setShowDependenciesModal(true)
     } else {
       setFormStep("demoDetails")
@@ -161,7 +172,9 @@ export function PublishHeader({
   }
 
   const handleDependenciesResolved = (resolvedDependencies: any[]) => {
-    if (!form) return
+    if (!form) {
+      return
+    }
 
     try {
       const nonDemoDependencies = resolvedDependencies.filter(
@@ -173,6 +186,7 @@ export function PublishHeader({
 
       const currentDirectDeps =
         form.getValues("direct_registry_dependencies") || []
+
       const newDirectDeps = [
         ...new Set([
           ...currentDirectDeps,
@@ -185,6 +199,7 @@ export function PublishHeader({
         form.getValues(
           `demos.${currentDemoIndex}.demo_direct_registry_dependencies`,
         ) || []
+
       const newDemoDeps = [
         ...new Set([
           ...currentDemoDeps,
@@ -201,7 +216,6 @@ export function PublishHeader({
       setShowDependenciesModal(false)
       setFormStep("demoDetails")
     } catch (error) {
-      console.error("Error updating dependencies:", error)
     }
   }
 

@@ -28,7 +28,7 @@ import { toast } from "sonner"
 import { sections } from "@/lib/navigation"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { useClerkSupabaseClient } from "@/lib/clerk"
-import { cn } from "@/lib/utils"
+import { cn, replaceSpacesWithPlus } from "@/lib/utils"
 import { getComponentInstallPrompt } from "@/lib/prompts"
 import { resolveRegistryDependencyTree } from "@/lib/queries.server"
 import fetchFileTextContent from "@/lib/utils/fetchFileTextContent"
@@ -122,7 +122,7 @@ export function CommandMenu() {
       const { data: searchResults, error } = await supabase.rpc(
         "search_demos",
         {
-          search_query: searchQuery,
+          search_query: replaceSpacesWithPlus(searchQuery),
         },
       )
 

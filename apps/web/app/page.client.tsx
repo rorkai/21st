@@ -24,6 +24,7 @@ import { Loader2 } from "lucide-react"
 import { useDebounce } from "@/hooks/use-debounce"
 import ComponentsList from "@/components/ui/items-list"
 import { transformDemoResult } from "@/lib/utils/transformData"
+import { replaceSpacesWithPlus } from "@/lib/utils"
 
 const useSetServerUserDataCookies = () => {
   useEffect(() => {
@@ -119,7 +120,7 @@ export function HomePageClient({
         const { data: searchResults, error } = await supabase.rpc(
           "search_demos",
           {
-            search_query: debouncedSearchQuery,
+            search_query: replaceSpacesWithPlus(debouncedSearchQuery),
           },
         )
 

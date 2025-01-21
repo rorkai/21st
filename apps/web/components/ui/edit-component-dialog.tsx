@@ -29,6 +29,7 @@ import { toast } from "sonner"
 import { useIsMobile } from "@/hooks/use-media-query"
 import { DemoDetailsForm } from "../features/publish/components/forms/demo-form"
 import { Button } from "@/components/ui/button"
+import { LoaderCircle } from "lucide-react"
 
 const cleanInitialUrl = (url: string | null) => {
   if (!url) return ""
@@ -251,6 +252,14 @@ export function EditComponentDialog({
                   uploadToR2Mutation.isPending || updateMutation.isPending
                 }
               >
+                {(uploadToR2Mutation.isPending || updateMutation.isPending) && (
+                  <LoaderCircle
+                    className="-ms-1 me-2 animate-spin"
+                    size={16}
+                    strokeWidth={2}
+                    aria-hidden="true"
+                  />
+                )}
                 {uploadToR2Mutation.isPending || updateMutation.isPending
                   ? "Saving..."
                   : "Save"}
@@ -299,9 +308,17 @@ export function EditComponentDialog({
                 uploadToR2Mutation.isPending || updateMutation.isPending
               }
             >
+              {(uploadToR2Mutation.isPending || updateMutation.isPending) && (
+                <LoaderCircle
+                  className="-ms-1 me-2 animate-spin"
+                  size={16}
+                  strokeWidth={2}
+                  aria-hidden="true"
+                />
+              )}
               {uploadToR2Mutation.isPending || updateMutation.isPending
-                ? "Saving..."
-                : "Save"}
+                ? "Сохранение..."
+                : "Сохранить"}
             </Button>
           </div>
         </SheetHeader>

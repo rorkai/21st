@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 
 import { UseFormReturn } from "react-hook-form"
-import { ChevronLeftIcon } from "lucide-react"
+import { ChevronLeftIcon, LoaderCircle } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -265,9 +265,7 @@ export function PublishHeader({
           >
             <ChevronLeftIcon className="w-4 h-4" />
           </Button>
-          <Button onClick={() => handleStepChange("demoCode")}>
-            Continue
-          </Button>
+          <Button onClick={() => handleStepChange("demoCode")}>Continue</Button>
         </div>
       </div>
     )
@@ -289,16 +287,16 @@ export function PublishHeader({
           <div className="flex items-center gap-2 flex-1 justify-end">
             <div className="flex items-center gap-2">
               {isEditingFromCard ? (
-                <Button
-                  onClick={() => handleStepChange("detailedForm")}
-                >
+                <Button onClick={() => handleStepChange("detailedForm")}>
                   Save
                 </Button>
               ) : (
                 <>
                   <Button
                     size={
-                      isAddingNewDemo && formStep === "demoCode" ? "default" : "icon"
+                      isAddingNewDemo && formStep === "demoCode"
+                        ? "default"
+                        : "icon"
                     }
                     variant="outline"
                     onClick={() =>
@@ -379,11 +377,7 @@ export function PublishHeader({
         <div className="text-center font-medium mr-8">Create component</div>
         <div className="flex items-center gap-2 flex-1 justify-end">
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={onAddDemo}
-              className="gap-2"
-            >
+            <Button variant="outline" onClick={onAddDemo} className="gap-2">
               <svg
                 width="15"
                 height="15"
@@ -407,13 +401,15 @@ export function PublishHeader({
               onClick={handleSubmit}
               className="relative"
             >
-              {isSubmitting ? (
-                <div className="flex items-center gap-2">
-                  <span>Publishing...</span>
-                </div>
-              ) : (
-                "Publish"
+              {isSubmitting && (
+                <LoaderCircle
+                  className="-ms-1 me-2 animate-spin"
+                  size={16}
+                  strokeWidth={2}
+                  aria-hidden="true"
+                />
               )}
+              {isSubmitting ? "Publishing..." : "Publish"}
             </Button>
           </div>
         </div>

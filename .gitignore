@@ -18,9 +18,6 @@ coverage
 # Turbo
 .turbo
 
-# Supabase
-supabase/
-
 # Vercel
 .vercel
 

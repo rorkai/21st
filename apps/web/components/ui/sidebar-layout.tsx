@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 
 import { useAtom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
+import { useSidebar } from "@/components/ui/sidebar"
 
 import { ChevronRight, Sparkles, UsersRound } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -29,6 +30,11 @@ import {
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { sections } from "@/lib/navigation"
 import { News } from "@/components/ui/news"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 type SidebarState = {
   openSections: Record<string, boolean>
@@ -45,6 +51,7 @@ export function AppSidebar() {
   const sidebarRef = useRef<HTMLDivElement>(null)
   const [sidebarState, setSidebarState] = useAtom(sidebarStateAtom)
   const initialRender = useRef(true)
+  const { toggleSidebar } = useSidebar()
 
   useEffect(() => {
     if (initialRender.current && sidebarRef.current) {
@@ -52,6 +59,31 @@ export function AppSidebar() {
       initialRender.current = false
     }
   }, [])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        document.activeElement?.tagName === "INPUT" ||
+        document.activeElement?.tagName === "TEXTAREA"
+      ) {
+        return
+      }
+
+      if (
+        e.code === "KeyS" &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        !e.metaKey &&
+        !e.shiftKey
+      ) {
+        e.preventDefault()
+        toggleSidebar()
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [toggleSidebar])
 
   const handleScroll = () => {
     if (sidebarRef.current) {
@@ -197,7 +229,17 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <div className="fixed bottom-4 left-4 z-50">
-        <SidebarTrigger />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <SidebarTrigger />
+          </TooltipTrigger>
+          <TooltipContent className="flex items-center gap-1.5" side="right">
+            <span>Toggle Sidebar</span>
+            <kbd className="pointer-events-none h-5 text-muted-foreground select-none items-center gap-1 rounded border bg-muted px-1.5 opacity-100 flex text-[11px] leading-none font-sans">
+              S
+            </kbd>
+          </TooltipContent>
+        </Tooltip>
       </div>
     </Sidebar>
   )

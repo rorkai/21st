@@ -40,13 +40,11 @@ export const DemoDetailsForm = ({
   const demoNameId = useId()
 
   React.useEffect(() => {
-    if (demoIndex === 0) {
+    if (demoIndex === 0 && !form.getValues("component_slug")) {
       form.setValue(`demos.${demoIndex}.demo_slug`, "default")
-      if (!form.getValues("component_slug")) {
-        const currentName = form.getValues(`demos.${demoIndex}.name`)
-        if (!currentName) {
-          handleDemoNameChange("Default")
-        }
+      const currentName = form.getValues(`demos.${demoIndex}.name`)
+      if (!currentName) {
+        handleDemoNameChange("Default")
       }
     }
   }, [demoIndex, form])
@@ -107,7 +105,9 @@ export const DemoDetailsForm = ({
   })
 
   const handleDemoNameChange = (name: string) => {
-    const demoSlug = demoIndex === 0 ? "default" : makeSlugFromName(name)
+    const isFirstDemoOnCreate =
+      demoIndex === 0 && !form.getValues("component_slug")
+    const demoSlug = isFirstDemoOnCreate ? "default" : makeSlugFromName(name)
     form.setValue(`demos.${demoIndex}.name`, name)
     form.setValue(`demos.${demoIndex}.demo_slug`, demoSlug)
   }
@@ -374,14 +374,18 @@ export const DemoDetailsForm = ({
               <FormField
                 control={form.control}
                 name={`demos.${demoIndex}.demo_slug`}
-                render={({ field }) => (
-                  <Input
-                    placeholder="demo-slug"
-                    {...field}
-                    disabled={demoIndex === 0}
-                    value={demoIndex === 0 ? "default" : field.value}
-                  />
-                )}
+                render={({ field }) => {
+                  const isFirstDemoOnCreate =
+                    demoIndex === 0 && !form.getValues("component_slug")
+                  return (
+                    <Input
+                      placeholder="demo-slug"
+                      {...field}
+                      disabled={isFirstDemoOnCreate}
+                      value={isFirstDemoOnCreate ? "default" : field.value}
+                    />
+                  )
+                }}
               />
               <p className="text-xs text-muted-foreground">
                 URL-friendly identifier for this demo

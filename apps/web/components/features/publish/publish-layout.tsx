@@ -456,7 +456,10 @@ export default function PublishComponentForm({
           .map((d) => ({
             slugWithUsername: d.slug,
             registry: d.registry,
-            isDemoDependency: ambigiousRegistryDependencies.findIndex(dep => dep.slug === d.slug) === -1,
+            isDemoDependency:
+              ambigiousRegistryDependencies.findIndex(
+                (dep) => dep.slug === d.slug,
+              ) === -1,
           }))
           .filter((d) => componentSlug !== d.slugWithUsername)
           .filter(
@@ -1172,7 +1175,7 @@ export default function PublishComponentForm({
                 <div className="flex h-[calc(100vh-3.5rem)]">
                   <div
                     className={cn(
-                      "border-r pointer-events-auto transition-[width] duration-300",
+                      "border-r pointer-events-auto transition-[width] duration-300 max-h-screen overflow-y-auto",
                       formStep === "demoCode" ? "w-1/2" : "w-1/3",
                       formStep === "demoCode" && "!w-1/2",
                     )}

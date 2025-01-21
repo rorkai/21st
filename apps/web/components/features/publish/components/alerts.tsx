@@ -158,8 +158,8 @@ export const ResolveUnknownDependenciesAlertForm = ({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col space-y-6 flex-1 overflow-y-auto">
-      <div className="space-y-4">
+    <form onSubmit={handleSubmit} className="flex flex-col space-y-6 flex-1">
+      <div className="space-y-4 overflow-y-auto px-1.5 py-1.5 -mx-1.5 -my-1.5">
         {unknownDependencies.map(({ slugWithUsername, registry }) => (
           <div key={slugWithUsername} className="space-y-2">
             <Label>

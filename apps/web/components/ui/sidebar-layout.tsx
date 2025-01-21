@@ -239,19 +239,6 @@ export function AppSidebar() {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
-      <div className="fixed bottom-4 left-4 z-50">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <SidebarTrigger />
-          </TooltipTrigger>
-          <TooltipContent className="flex items-center gap-1.5" side="right">
-            <span>Toggle Sidebar</span>
-            <kbd className="pointer-events-none h-5 text-muted-foreground select-none items-center gap-1 rounded border bg-muted px-1.5 opacity-100 flex text-[11px] leading-none font-sans">
-              S
-            </kbd>
-          </TooltipContent>
-        </Tooltip>
-      </div>
     </Sidebar>
   )
 }

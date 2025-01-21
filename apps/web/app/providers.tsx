@@ -39,7 +39,7 @@ export function AppProviders({
         <ProductHuntDialog />
         <SpeedInsights />
         {showSidebar ? (
-          <SidebarProvider defaultOpen={false}>
+          <SidebarProvider defaultOpen={true}>
             <AppSidebar />
             <SidebarInset>{children}</SidebarInset>
           </SidebarProvider>

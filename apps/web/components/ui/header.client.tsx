@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, usePathname } from "next/navigation"
 
 import { atom } from "jotai"
 import {
@@ -30,8 +30,115 @@ import { cn } from "@/lib/utils"
 
 import { HeaderServer } from "./header"
 import { UserAvatar } from "./user-avatar"
+import { useSidebar } from "@/components/ui/sidebar"
+import { Icons } from "@/components/icons"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export const searchQueryAtom = atom("")
+
+function Logo() {
+  const pathname = usePathname()
+  const { open, toggleSidebar } = useSidebar()
+  const isHomePage = pathname === "/"
+  const [isHovered, setIsHovered] = useState(false)
+  const [showTriggerTimeout, setShowTriggerTimeout] = useState(false)
+
+  useEffect(() => {
+    if (!open) {
+      setShowTriggerTimeout(true)
+      const timer = setTimeout(() => {
+        setShowTriggerTimeout(false)
+      }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [open])
+
+  const showTrigger = (isHomePage && !open && isHovered) || showTriggerTimeout
+
+  return (
+    <div
+      className="relative w-7 h-7"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <Link
+        href="/"
+        className={cn(
+          "absolute inset-0 flex items-center justify-center rounded-full cursor-pointer bg-foreground transition-all duration-300",
+          showTrigger ? "opacity-0 scale-90" : "opacity-100 scale-100",
+        )}
+      />
+      {!open && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              aria-label="Toggle Sidebar"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                toggleSidebar()
+              }}
+              className={cn(
+                "absolute inset-0 flex items-center justify-center rounded-full cursor-pointer text-foreground transition-all duration-300",
+                showTrigger ? "opacity-100 scale-100" : "opacity-0 scale-90",
+              )}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                role="img"
+                focusable="false"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M15 5.25A3.25 3.25 0 0 0 11.75 2h-7.5A3.25 3.25 0 0 0 1 5.25v5.5A3.25 3.25 0 0 0 4.25 14h7.5A3.25 3.25 0 0 0 15 10.75v-5.5Zm-3.5 7.25H7v-9h4.5a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2Zm-6 0H4.25a1.75 1.75 0 0 1-1.75-1.75v-5.5c0-.966.784-1.75 1.75-1.75H5.5v9Z" />
+              </svg>
+            </button>
+          </TooltipTrigger>
+          <TooltipContent className="flex items-center gap-1.5" side="right">
+            <span>Toggle Sidebar</span>
+            <kbd className="pointer-events-none h-5 text-muted-foreground select-none items-center gap-1 rounded border bg-muted px-1.5 opacity-100 flex text-[11px] leading-none font-sans">
+              S
+            </kbd>
+          </TooltipContent>
+        </Tooltip>
+      )}
+      {open && (
+        <button
+          aria-label="Toggle Sidebar"
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            toggleSidebar()
+          }}
+          className={cn(
+            "absolute inset-0 flex items-center justify-center rounded-full cursor-pointer text-foreground transition-all duration-300",
+            showTrigger ? "opacity-100 scale-100" : "opacity-0 scale-90",
+          )}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            role="img"
+            focusable="false"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path d="M15 5.25A3.25 3.25 0 0 0 11.75 2h-7.5A3.25 3.25 0 0 0 1 5.25v5.5A3.25 3.25 0 0 0 4.25 14h7.5A3.25 3.25 0 0 0 15 10.75v-5.5Zm-3.5 7.25H7v-9h4.5a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2Zm-6 0H4.25a1.75 1.75 0 0 1-1.75-1.75v-5.5c0-.966.784-1.75 1.75-1.75H5.5v9Z" />
+          </svg>
+        </button>
+      )}
+    </div>
+  )
+}
 
 export function Header({
   text,
@@ -79,7 +186,13 @@ export function Header({
         )}
       >
         <div className="flex items-center gap-4">
-          <HeaderServer text={text} />
+          <Logo />
+          {text && (
+            <div className="flex items-center gap-2">
+              <Icons.slash className="text-border w-[22px] h-[22px]" />
+              <span className="text-[14px] font-medium">{text}</span>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-1">

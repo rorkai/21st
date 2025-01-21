@@ -40,10 +40,13 @@ export const DemoDetailsForm = ({
   const demoNameId = useId()
 
   React.useEffect(() => {
-    if (demoIndex === 0 && !form.getValues("component_slug")) {
-      const currentName = form.getValues(`demos.${demoIndex}.name`)
-      if (!currentName) {
-        handleDemoNameChange("Default")
+    if (demoIndex === 0) {
+      form.setValue(`demos.${demoIndex}.demo_slug`, "default")
+      if (!form.getValues("component_slug")) {
+        const currentName = form.getValues(`demos.${demoIndex}.name`)
+        if (!currentName) {
+          handleDemoNameChange("Default")
+        }
       }
     }
   }, [demoIndex, form])
@@ -104,7 +107,7 @@ export const DemoDetailsForm = ({
   })
 
   const handleDemoNameChange = (name: string) => {
-    const demoSlug = makeSlugFromName(name)
+    const demoSlug = demoIndex === 0 ? "default" : makeSlugFromName(name)
     form.setValue(`demos.${demoIndex}.name`, name)
     form.setValue(`demos.${demoIndex}.demo_slug`, demoSlug)
   }
@@ -372,7 +375,12 @@ export const DemoDetailsForm = ({
                 control={form.control}
                 name={`demos.${demoIndex}.demo_slug`}
                 render={({ field }) => (
-                  <Input placeholder="demo-slug" {...field} />
+                  <Input
+                    placeholder="demo-slug"
+                    {...field}
+                    disabled={demoIndex === 0}
+                    value={demoIndex === 0 ? "default" : field.value}
+                  />
                 )}
               />
               <p className="text-xs text-muted-foreground">

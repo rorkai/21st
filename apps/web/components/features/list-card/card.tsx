@@ -87,7 +87,7 @@ export function ComponentCard({
           </div>
           {videoUrl && (
             <div
-              className="absolute top-2 left-2 z-20 bg-background/90 backdrop-blur rounded-md px-2 py-1 pointer-events-none"
+              className="absolute top-2 left-2 z-20 bg-background/90 backdrop-blur rounded-sm px-2 py-1 pointer-events-none"
               data-video-icon={`${component.id}`}
             >
               <Video size={16} className="text-foreground" />

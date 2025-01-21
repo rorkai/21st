@@ -86,7 +86,7 @@ export function CopyComponentButton({
             </div>
             <div
               className={cn(
-                "absolute transition-all",
+                "absolute transition-all rounded-sm",
                 copied ? "scale-0 opacity-0" : "scale-100 opacity-100",
                 isLoading && "animate-spin",
               )}

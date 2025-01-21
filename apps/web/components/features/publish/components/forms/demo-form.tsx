@@ -360,7 +360,6 @@ export const DemoDetailsForm = ({
           <CollapsibleTrigger asChild>
             <Button
               variant="ghost"
-              size="sm"
               className="text-muted-foreground hover:text-foreground"
             >
               Advanced

@@ -50,7 +50,6 @@ export function EditCodeFileCard({
       <div className="absolute right-3 top-1/2 -translate-y-1/2">
         <Button
           variant="ghost"
-          size="sm"
           onClick={onEditClick}
           className="h-8 px-3 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
         >

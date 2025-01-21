@@ -265,7 +265,7 @@ export function PublishHeader({
           >
             <ChevronLeftIcon className="w-4 h-4" />
           </Button>
-          <Button size="sm" onClick={() => handleStepChange("demoCode")}>
+          <Button onClick={() => handleStepChange("demoCode")}>
             Continue
           </Button>
         </div>
@@ -290,7 +290,6 @@ export function PublishHeader({
             <div className="flex items-center gap-2">
               {isEditingFromCard ? (
                 <Button
-                  size="sm"
                   onClick={() => handleStepChange("detailedForm")}
                 >
                   Save
@@ -299,7 +298,7 @@ export function PublishHeader({
                 <>
                   <Button
                     size={
-                      isAddingNewDemo && formStep === "demoCode" ? "sm" : "icon"
+                      isAddingNewDemo && formStep === "demoCode" ? "default" : "icon"
                     }
                     variant="outline"
                     onClick={() =>
@@ -319,7 +318,6 @@ export function PublishHeader({
                     )}
                   </Button>
                   <Button
-                    size="sm"
                     onClick={() =>
                       formStep === "demoCode"
                         ? handleDemoCodeContinue()
@@ -383,7 +381,6 @@ export function PublishHeader({
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
-              size="sm"
               onClick={onAddDemo}
               className="gap-2"
             >
@@ -406,7 +403,6 @@ export function PublishHeader({
             </Button>
             <Button
               type="submit"
-              size="sm"
               disabled={!isFormValid || isSubmitting}
               onClick={handleSubmit}
               className="relative"

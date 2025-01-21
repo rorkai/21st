@@ -130,6 +130,7 @@ export function DemoPreviewTabs({
                       customTailwindConfig={customTailwindConfig}
                       customGlobalCss={customGlobalCss}
                       key={previewKeys[index] || previewKey}
+                      demoDependencies={demo.demo_dependencies}
                     />
                     {shouldBlurPreview &&
                       formStep === "demoCode" &&

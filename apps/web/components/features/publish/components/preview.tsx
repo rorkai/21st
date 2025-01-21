@@ -35,6 +35,7 @@ export function PublishComponentPreview({
   isDarkTheme,
   customTailwindConfig,
   customGlobalCss,
+  demoDependencies,
 }: {
   code: string
   demoCode: string
@@ -44,6 +45,7 @@ export function PublishComponentPreview({
   isDarkTheme: boolean
   customTailwindConfig?: string
   customGlobalCss?: string
+  demoDependencies?: Record<string, string>
 }) {
   const isDebug = useDebugMode()
   const supabase = useClerkSupabaseClient()
@@ -204,8 +206,9 @@ export function PublishComponentPreview({
       ...extractNPMDependencies(code),
       ...extractNPMDependencies(currentDemoCode),
       ...(registryDependencies?.npmDependencies || {}),
+      ...(demoDependencies || {}),
     }
-  }, [code, currentDemoCode, registryDependencies?.npmDependencies])
+  }, [code, currentDemoCode, registryDependencies?.npmDependencies, demoDependencies])
 
   const providerProps = {
     template: "react-ts" as const,

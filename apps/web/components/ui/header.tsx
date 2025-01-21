@@ -33,7 +33,7 @@ HeaderServer.SocialIcons = function SocialIcons() {
           className="fill-foreground size-8"
         >
           <Twitter
-            className="min-h-[18px] min-w-[18px] fill-current"
+            className="min-h-[16px] max-h-[16px] min-w-[16px] max-w-[16px] fill-current"
             aria-hidden="true"
           />
         </Button>

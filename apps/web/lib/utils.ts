@@ -37,3 +37,7 @@ export function appendQueryParam(url: string, param: string, value: string) {
     return url
   }
 }
+
+export function replaceSpacesWithPlus(str: string) {
+  return str?.trim()?.replace(/\s+/g, "+")
+}

@@ -18,6 +18,7 @@ import { SupabaseClient } from "@supabase/supabase-js"
 import { useClerkSupabaseClient } from "./clerk"
 import { Database } from "@/types/supabase"
 import { transformDemoResult } from "@/lib/utils/transformData"
+import { replaceSpacesWithPlus } from "./utils"
 
 export const componentReadableDbFields = `
   *,
@@ -643,7 +644,7 @@ export async function searchDemos(
   searchQuery: string,
 ): Promise<DemoWithComponent[]> {
   const { data: searchResults, error } = await supabase.rpc("search_demos", {
-    search_query: searchQuery,
+    search_query: replaceSpacesWithPlus(searchQuery),
   })
 
   if (error) throw new Error(error.message)

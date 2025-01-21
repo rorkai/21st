@@ -50,6 +50,15 @@ export const formSchema = z.object({
   website_url: z.string().optional(),
   is_public: z.boolean(),
   unknown_dependencies: z.array(z.string()).default([]),
+  unknown_dependencies_with_metadata: z
+    .array(
+      z.object({
+        slugWithUsername: z.string(),
+        registry: z.string(),
+        isDemoDependency: z.boolean(),
+      }),
+    )
+    .default([]),
   direct_registry_dependencies: z.array(z.string()).default([]),
   registry: z.string(),
   publish_as_username: z.string().optional(),

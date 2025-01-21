@@ -40,11 +40,13 @@ export const DemoDetailsForm = ({
   const demoNameId = useId()
 
   React.useEffect(() => {
-    if (demoIndex === 0 && !form.getValues("component_slug")) {
+    if (demoIndex === 0 && !form.getValues(`demos.${demoIndex}.demo_slug`)) {
       form.setValue(`demos.${demoIndex}.demo_slug`, "default")
-      const currentName = form.getValues(`demos.${demoIndex}.name`)
-      if (!currentName) {
-        handleDemoNameChange("Default")
+      if (!form.getValues("component_slug")) {
+        const currentName = form.getValues(`demos.${demoIndex}.name`)
+        if (!currentName) {
+          handleDemoNameChange("Default")
+        }
       }
     }
   }, [demoIndex, form])
@@ -105,9 +107,9 @@ export const DemoDetailsForm = ({
   })
 
   const handleDemoNameChange = (name: string) => {
-    const isFirstDemoOnCreate =
-      demoIndex === 0 && !form.getValues("component_slug")
-    const demoSlug = isFirstDemoOnCreate ? "default" : makeSlugFromName(name)
+    const currentDemoSlug = form.getValues(`demos.${demoIndex}.demo_slug`)
+    const demoSlug =
+      currentDemoSlug || (demoIndex === 0 ? "default" : makeSlugFromName(name))
     form.setValue(`demos.${demoIndex}.name`, name)
     form.setValue(`demos.${demoIndex}.demo_slug`, demoSlug)
   }
@@ -374,18 +376,14 @@ export const DemoDetailsForm = ({
               <FormField
                 control={form.control}
                 name={`demos.${demoIndex}.demo_slug`}
-                render={({ field }) => {
-                  const isFirstDemoOnCreate =
-                    demoIndex === 0 && !form.getValues("component_slug")
-                  return (
-                    <Input
-                      placeholder="demo-slug"
-                      {...field}
-                      disabled={isFirstDemoOnCreate}
-                      value={isFirstDemoOnCreate ? "default" : field.value}
-                    />
-                  )
-                }}
+                render={({ field }) => (
+                  <Input
+                    placeholder="demo-slug"
+                    {...field}
+                    disabled={demoIndex === 0}
+                    value={demoIndex === 0 ? "default" : field.value}
+                  />
+                )}
               />
               <p className="text-xs text-muted-foreground">
                 URL-friendly identifier for this demo

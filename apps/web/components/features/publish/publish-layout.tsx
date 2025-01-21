@@ -450,16 +450,19 @@ export default function PublishComponentForm({
         ]
 
         const parsedUnknownDependencies = [
-          ...ambigiousRegistryDependencies,
-          ...ambigiousDemoDirectRegistryDependencies,
+          ...ambigiousRegistryDependencies.map((d) => ({
+            ...d,
+            isDemoDependency: false,
+          })),
+          ...ambigiousDemoDirectRegistryDependencies.map((d) => ({
+            ...d,
+            isDemoDependency: true,
+          })),
         ]
           .map((d) => ({
             slugWithUsername: d.slug,
             registry: d.registry,
-            isDemoDependency:
-              ambigiousRegistryDependencies.findIndex(
-                (dep) => dep.slug === d.slug,
-              ) === -1,
+            isDemoDependency: d.isDemoDependency,
           }))
           .filter((d) => componentSlug !== d.slugWithUsername)
           .filter(
@@ -474,6 +477,10 @@ export default function PublishComponentForm({
         form.setValue(
           "unknown_dependencies",
           parsedUnknownDependencies.map((d) => d.slugWithUsername),
+        )
+        form.setValue(
+          "unknown_dependencies_with_metadata",
+          parsedUnknownDependencies,
         )
       } catch (error) {
         console.error("Error parsing dependencies from code:", error)

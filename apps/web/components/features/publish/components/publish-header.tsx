@@ -154,7 +154,7 @@ export function PublishHeader({
       if (!currentDemo?.demo_code) {
         form?.setValue(`demos.${currentDemoIndex}`, {
           name: "Default",
-          demo_slug: currentDemoIndex === 0 ? "default" : "",
+          demo_slug: mode === "full" && currentDemoIndex === 0 ? "default" : "",
           demo_code: "",
           tags: [],
           preview_image_data_url: "",
@@ -347,13 +347,9 @@ export function PublishHeader({
               </div>
             </DialogHeader>
             <ResolveUnknownDependenciesAlertForm
-              unknownDependencies={(
-                form?.watch("unknown_dependencies") || []
-              ).map((dep) => ({
-                slugWithUsername: dep,
-                registry: "ui",
-                isDemoDependency: true,
-              }))}
+              unknownDependencies={
+                form?.watch("unknown_dependencies_with_metadata") || []
+              }
               onBack={() => {
                 setShowDependenciesModal(false)
                 handleStepChange("demoCode")

@@ -127,8 +127,8 @@ export function DemoPreviewTabs({
                         ...(demo.demo_direct_registry_dependencies || []),
                       ]}
                       isDarkTheme={isDarkTheme}
-                      customTailwindConfig={customTailwindConfig}
-                      customGlobalCss={customGlobalCss}
+                      customTailwindConfig={form.getValues("tailwind_config")}
+                      customGlobalCss={form.getValues("globals_css")}
                       key={previewKeys[index] || previewKey}
                       demoDependencies={demo.demo_dependencies}
                     />

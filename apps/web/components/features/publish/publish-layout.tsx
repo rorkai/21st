@@ -213,8 +213,8 @@ export default function PublishComponentForm({
           unknown_dependencies: [],
           direct_registry_dependencies:
             existingComponent.direct_registry_dependencies || [],
-          tailwind_config: initialTailwindConfig || "",
-          globals_css: initialGlobalCss || "",
+          tailwind_config: existingComponent.tailwind_config_extension || "",
+          globals_css: existingComponent.global_css_extension || "",
           demos: [
             {
               name: "",
@@ -328,7 +328,6 @@ export default function PublishComponentForm({
     if (newStep === "demoCode") {
       const demos = form?.getValues("demos") || []
       const currentDemo = demos[currentDemoIndex]
-
       if (!currentDemo?.demo_code) {
         const demoSlug = await generateDemoSlug(
           client,
@@ -339,7 +338,8 @@ export default function PublishComponentForm({
 
         form?.setValue(`demos.${currentDemoIndex}`, {
           name: "",
-          demo_slug: demoSlug,
+          demo_slug:
+            mode === "full" && currentDemoIndex === 0 ? "default" : demoSlug,
           demo_code: "",
           tags: [],
           preview_image_data_url: "",
@@ -348,6 +348,8 @@ export default function PublishComponentForm({
           preview_video_file: new File([], "placeholder"),
           demo_direct_registry_dependencies: [],
           demo_dependencies: {},
+          tailwind_config: customTailwindConfig,
+          global_css: customGlobalCss,
         })
 
         form?.setValue("unknown_dependencies", [])
@@ -450,16 +452,19 @@ export default function PublishComponentForm({
         ]
 
         const parsedUnknownDependencies = [
-          ...ambigiousRegistryDependencies,
-          ...ambigiousDemoDirectRegistryDependencies,
+          ...ambigiousRegistryDependencies.map((d) => ({
+            ...d,
+            isDemoDependency: false,
+          })),
+          ...ambigiousDemoDirectRegistryDependencies.map((d) => ({
+            ...d,
+            isDemoDependency: true,
+          })),
         ]
           .map((d) => ({
             slugWithUsername: d.slug,
             registry: d.registry,
-            isDemoDependency:
-              ambigiousRegistryDependencies.findIndex(
-                (dep) => dep.slug === d.slug,
-              ) === -1,
+            isDemoDependency: d.isDemoDependency,
           }))
           .filter((d) => componentSlug !== d.slugWithUsername)
           .filter(
@@ -474,6 +479,10 @@ export default function PublishComponentForm({
         form.setValue(
           "unknown_dependencies",
           parsedUnknownDependencies.map((d) => d.slugWithUsername),
+        )
+        form.setValue(
+          "unknown_dependencies_with_metadata",
+          parsedUnknownDependencies,
         )
       } catch (error) {
         console.error("Error parsing dependencies from code:", error)
@@ -928,7 +937,7 @@ export default function PublishComponentForm({
       const firstDemo = newDemos[0]!
       newDemos[0] = {
         name: firstDemo.name || "Default",
-        demo_slug: "default",
+        demo_slug: firstDemo.demo_slug,
         demo_code: firstDemo.demo_code,
         preview_image_data_url: firstDemo.preview_image_data_url,
         preview_image_file: firstDemo.preview_image_file,
@@ -1194,6 +1203,7 @@ export default function PublishComponentForm({
                         <DemoDetailsForm
                           form={form}
                           demoIndex={currentDemoIndex}
+                          mode={mode}
                         />
                       </div>
                     )}
@@ -1339,6 +1349,7 @@ export default function PublishComponentForm({
                                     <DemoDetailsForm
                                       form={form}
                                       demoIndex={index}
+                                      mode={mode}
                                     />
                                     <EditCodeFileCard
                                       iconSrc={

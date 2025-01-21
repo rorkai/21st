@@ -23,9 +23,11 @@ import { Textarea } from "@/components/ui/textarea"
 export const DemoDetailsForm = ({
   form,
   demoIndex,
+  mode,
 }: {
   form: UseFormReturn<FormData>
   demoIndex: number
+  mode?: string
 }) => {
   const { resolvedTheme } = useTheme()
   const isDarkTheme = resolvedTheme === "dark"
@@ -40,7 +42,11 @@ export const DemoDetailsForm = ({
   const demoNameId = useId()
 
   React.useEffect(() => {
-    if (demoIndex === 0) {
+    if (
+      mode === "full" &&
+      demoIndex === 0 &&
+      !form.getValues(`demos.${demoIndex}.demo_slug`)
+    ) {
       form.setValue(`demos.${demoIndex}.demo_slug`, "default")
       if (!form.getValues("component_slug")) {
         const currentName = form.getValues(`demos.${demoIndex}.name`)
@@ -49,7 +55,7 @@ export const DemoDetailsForm = ({
         }
       }
     }
-  }, [demoIndex, form])
+  }, [demoIndex, form, mode])
 
   // Convert tags to MultipleSelector options format
   const tagOptions: Option[] = availableTags.map((tag) => ({
@@ -107,7 +113,11 @@ export const DemoDetailsForm = ({
   })
 
   const handleDemoNameChange = (name: string) => {
-    const demoSlug = demoIndex === 0 ? "default" : makeSlugFromName(name)
+    const currentDemoSlug = form.getValues(`demos.${demoIndex}.demo_slug`)
+    const shouldKeepCurrentSlug =
+      mode === "full" && demoIndex === 0 && currentDemoSlug === "default"
+    const demoSlug = shouldKeepCurrentSlug ? "default" : makeSlugFromName(name)
+
     form.setValue(`demos.${demoIndex}.name`, name)
     form.setValue(`demos.${demoIndex}.demo_slug`, demoSlug)
   }
@@ -375,12 +385,7 @@ export const DemoDetailsForm = ({
                 control={form.control}
                 name={`demos.${demoIndex}.demo_slug`}
                 render={({ field }) => (
-                  <Input
-                    placeholder="demo-slug"
-                    {...field}
-                    disabled={demoIndex === 0}
-                    value={demoIndex === 0 ? "default" : field.value}
-                  />
+                  <Input placeholder="demo-slug" {...field} />
                 )}
               />
               <p className="text-xs text-muted-foreground">

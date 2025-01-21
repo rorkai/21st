@@ -23,6 +23,8 @@ import {
   SidebarMenuSub,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
+  SidebarRail,
+  SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { sections } from "@/lib/navigation"
@@ -65,7 +67,8 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="offcanvas">
+      <SidebarRail />
       <SidebarContent
         className="mt-14 pb-[400px]"
         ref={sidebarRef}
@@ -193,19 +196,8 @@ export function AppSidebar() {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
-      <div className="fixed bottom-0 left-0 w-[240px] z-50">
-        <News
-          enableShowCompleted={false}
-          articles={[
-            {
-              href: "https://www.producthunt.com/posts/21st-dev-2",
-              title: "We're on Product Hunt! 🎉",
-              summary:
-                "Help us become Product of the Month by upvoting. Your support means a lot!",
-              image: "/product-of-the-day.png",
-            },
-          ]}
-        />
+      <div className="fixed bottom-4 left-4 z-50">
+        <SidebarTrigger />
       </div>
     </Sidebar>
   )

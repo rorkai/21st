@@ -49,9 +49,10 @@ const sidebarStateAtom = atomWithStorage<SidebarState>("sidebarState", {
 export function AppSidebar() {
   const pathname = usePathname()
   const sidebarRef = useRef<HTMLDivElement>(null)
+  const firstItemRef = useRef<HTMLAnchorElement>(null)
   const [sidebarState, setSidebarState] = useAtom(sidebarStateAtom)
   const initialRender = useRef(true)
-  const { toggleSidebar } = useSidebar()
+  const { toggleSidebar, open } = useSidebar()
 
   useEffect(() => {
     if (initialRender.current && sidebarRef.current) {
@@ -78,12 +79,17 @@ export function AppSidebar() {
       ) {
         e.preventDefault()
         toggleSidebar()
+        if (!open) {
+          setTimeout(() => {
+            firstItemRef.current?.focus()
+          }, 100)
+        }
       }
     }
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [toggleSidebar])
+  }, [toggleSidebar, open])
 
   const handleScroll = () => {
     if (sidebarRef.current) {
@@ -120,7 +126,12 @@ export function AppSidebar() {
                   })
                 }}
               >
-                <a href="/pro" className="flex items-center gap-2">
+                <a
+                  ref={firstItemRef}
+                  href="/pro"
+                  className="flex items-center gap-2"
+                  tabIndex={0}
+                >
                   <Sparkles className="w-4 h-4" />
                   <span>Pro Components</span>
                 </a>

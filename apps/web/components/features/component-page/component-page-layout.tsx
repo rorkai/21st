@@ -708,70 +708,73 @@ export default function ComponentPage({
                   align="start"
                   className="w-[300px] p-0"
                 >
-                  <Command>
+                  <Command className="flex flex-col">
                     <CommandInput placeholder="Find demo..." />
-                    <CommandList>
-                      <CommandEmpty>No demos found.</CommandEmpty>
-                      <CommandGroup>
-                        {componentDemos?.map((d) => (
+                    <div className="flex-1 h-[300px] flex flex-col">
+                      <CommandList className="flex-1 overflow-y-auto">
+                        <CommandEmpty>No demos found.</CommandEmpty>
+                        <CommandGroup>
+                          {componentDemos?.map((d) => (
+                            <CommandItem
+                              value={`${d.id}-${d.demo_slug}`}
+                              data-demo-id={d.id}
+                              onSelect={() =>
+                                router.push(
+                                  `/${component.user.username}/${component.component_slug}/${d.demo_slug}`,
+                                )
+                              }
+                              className="flex items-center gap-2"
+                            >
+                              <div className="relative w-[80px] h-[60px] flex-shrink-0">
+                                <Image
+                                  src={d.preview_url || "/placeholder.svg"}
+                                  alt={d.name || ""}
+                                  fill
+                                  className="rounded-sm object-cover"
+                                />
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <p className="font-medium line-clamp-2">
+                                  {d.name}
+                                </p>
+                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                  <UserAvatar
+                                    src={d.user.image_url || "/placeholder.svg"}
+                                    alt={d.user.name}
+                                    size={16}
+                                    isClickable={false}
+                                    user={d.user}
+                                  />
+                                  <span className="truncate">
+                                    {d.user.username}
+                                  </span>
+                                </div>
+                              </div>
+                              {d.id === demo.id && (
+                                <Check
+                                  size={16}
+                                  className="ml-auto flex-shrink-0"
+                                />
+                              )}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                      <div className="border-t">
+                        <CommandGroup>
                           <CommandItem
-                            value={`${d.id}-${d.demo_slug}`}
-                            data-demo-id={d.id}
                             onSelect={() =>
                               router.push(
-                                `/${component.user.username}/${component.component_slug}/${d.demo_slug}`,
+                                `/publish/demo?componentId=${component.id}`,
                               )
                             }
-                            className="flex items-center gap-2"
                           >
-                            <div className="relative w-[80px] h-[60px] flex-shrink-0">
-                              <Image
-                                src={d.preview_url || "/placeholder.svg"}
-                                alt={d.name || ""}
-                                fill
-                                className="rounded-sm object-cover"
-                              />
-                            </div>
-                            <div className="flex flex-col min-w-0">
-                              <p className="font-medium line-clamp-2">
-                                {d.name}
-                              </p>
-                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <UserAvatar
-                                  src={d.user.image_url || "/placeholder.svg"}
-                                  alt={d.user.name}
-                                  size={16}
-                                  isClickable={false}
-                                  user={d.user}
-                                />
-                                <span className="truncate">
-                                  {d.user.username}
-                                </span>
-                              </div>
-                            </div>
-                            {d.id === demo.id && (
-                              <Check
-                                size={16}
-                                className="ml-auto flex-shrink-0"
-                              />
-                            )}
+                            <Plus size={16} className="mr-2" />
+                            Add new demo
                           </CommandItem>
-                        ))}
-                      </CommandGroup>
-                      <CommandSeparator />
-                      <CommandGroup>
-                        <CommandItem
-                          onSelect={() =>
-                            router.push(
-                              `/publish/demo?componentId=${component.id}`,
-                            )
-                          }
-                        >
-                          <Plus size={16} className="mr-2" />
-                          Add new demo
-                        </CommandItem>
-                      </CommandGroup>
-                    </CommandList>
+                        </CommandGroup>
+                      </div>
+                    </div>
                   </Command>
                 </PopoverContent>
               </Popover>
@@ -807,15 +810,20 @@ export default function ComponentPage({
                 <TooltipContent className="py-3">
                   <div className="space-y-1">
                     <p className="text-[13px] font-medium">
-                      Submission Status: {submission.status.replace("_", " ").charAt(0).toUpperCase() + submission.status.replace("_", " ").slice(1)}
+                      Submission Status:{" "}
+                      {submission.status
+                        .replace("_", " ")
+                        .charAt(0)
+                        .toUpperCase() +
+                        submission.status.replace("_", " ").slice(1)}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {submission.status === "on_review" &&
                         "Your component is being reviewed by our moderators before being made public."}
                       {submission.status === "featured" &&
-                        "Your component has been approved and is featured on the platform, but not showed on the homepage."}
+                        "Your component has been approved and is featured on the platform and homepage."}
                       {submission.status === "posted" &&
-                        "Your component has been approved and is available on the platform."}
+                        "Your component has been approved but is not shown on the homepage."}
                     </p>
                     {submission.moderators_feedback &&
                       ["on_review", "featured"].includes(submission.status) && (

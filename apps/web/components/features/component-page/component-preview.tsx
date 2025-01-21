@@ -1,4 +1,6 @@
-import React, { useState, useRef, Suspense, useEffect } from "react"
+"use client"
+
+import React, { useState, useRef, useEffect, useCallback } from "react"
 import { useAnimation, motion, AnimatePresence } from "framer-motion"
 import { useAtom } from "jotai"
 import { useTheme } from "next-themes"
@@ -9,8 +11,6 @@ import {
   CodeXml,
   Info,
   ChevronDown,
-  Maximize2,
-  Minimize2,
 } from "lucide-react"
 
 import { ComponentPageInfo } from "./info-section"
@@ -35,7 +35,10 @@ import {
   SandpackFileExplorer,
   SandpackProviderProps,
 } from "@codesandbox/sandpack-react"
-import { SandpackProvider as SandpackProviderUnstyled } from "@codesandbox/sandpack-react/unstyled"
+import {
+  SandpackProvider as SandpackProviderUnstyled,
+  SandpackPreview,
+} from "@codesandbox/sandpack-react/unstyled"
 
 import { useDebugMode } from "@/hooks/use-debug-mode"
 import { useCompileCss } from "@/hooks/use-compile-css"
@@ -50,12 +53,6 @@ import { useUser } from "@clerk/nextjs"
 
 import styles from "./component-preview.module.css"
 import { FullScreenButton } from "../../ui/full-screen-button"
-
-const SandpackPreview = React.lazy(() =>
-  import("@codesandbox/sandpack-react/unstyled").then((module) => ({
-    default: module.SandpackPreview,
-  })),
-)
 
 export function ComponentPagePreview({
   component,
@@ -253,35 +250,33 @@ export function ComponentPagePreview({
           }}
         >
           <FullScreenButton />
-          <Suspense fallback={<LoadingSpinner text="Loading preview..." />}>
-            {previewError ? (
-              <div className="flex flex-col items-center justify-center h-full gap-3">
-                <p className="text-muted-foreground text-sm">
-                  Failed to load preview
-                </p>
-                <button
-                  onClick={() => {
-                    setPreviewError(false)
-                    setIsLoading(true)
-                  }}
-                  className="text-sm underline text-muted-foreground hover:text-foreground"
-                >
-                  Try again
-                </button>
-              </div>
-            ) : (
-              <SandpackPreview
-                showSandpackErrorOverlay={false}
-                showOpenInCodeSandbox={process.env.NODE_ENV === "development"}
-                showRefreshButton={false}
-                onLoad={() => setIsLoading(false)}
-                onError={() => {
-                  setPreviewError(true)
-                  setIsLoading(false)
+          {previewError ? (
+            <div className="flex flex-col items-center justify-center h-full gap-3">
+              <p className="text-muted-foreground text-sm">
+                Failed to load preview
+              </p>
+              <button
+                onClick={() => {
+                  setPreviewError(false)
+                  setIsLoading(true)
                 }}
-              />
-            )}
-          </Suspense>
+                className="text-sm underline text-muted-foreground hover:text-foreground"
+              >
+                Try again
+              </button>
+            </div>
+          ) : (
+            <SandpackPreview
+              showSandpackErrorOverlay={false}
+              showOpenInCodeSandbox={process.env.NODE_ENV === "development"}
+              showRefreshButton={false}
+              onLoad={() => setIsLoading(false)}
+              onError={() => {
+                setPreviewError(true)
+                setIsLoading(false)
+              }}
+            />
+          )}
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/50">
               <LoadingSpinner text={loadingText} />

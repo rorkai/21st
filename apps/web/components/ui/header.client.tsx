@@ -171,9 +171,6 @@ export function Header({
   const searchParams = useSearchParams()
   const step = searchParams.get("step")
   const controls = useAnimation()
-  // Debug logs
-  console.log("DB User:", dbUser)
-  console.log("Clerk User:", user)
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

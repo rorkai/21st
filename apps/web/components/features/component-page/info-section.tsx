@@ -161,7 +161,7 @@ export const ComponentPageInfo = ({
                     href={`/${component.user.display_username || component.user.username}`}
                     className="flex items-center"
                   >
-                    <Avatar className="h-12 w-12">
+                    <Avatar className="h-[22px] w-[22px]">
                       <AvatarImage
                         src={
                           component.user.display_image_url ||
@@ -282,7 +282,7 @@ export const ComponentPageInfo = ({
                         hunterUser.username ||
                         ""
                       }
-                      size={20}
+                      size={22}
                     />
                     <span className="ml-1 font-medium">
                       {hunterUser.display_name ||

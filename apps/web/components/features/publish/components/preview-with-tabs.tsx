@@ -17,7 +17,7 @@ interface DemoPreviewTabsProps {
   isDarkTheme: boolean
   customTailwindConfig?: string
   customGlobalCss?: string
-  form: UseFormReturn<FormData>
+  form?: UseFormReturn<FormData>
   shouldBlurPreview?: boolean
   onRestartPreview?: () => void
   formStep?: FormStep
@@ -40,7 +40,7 @@ export function DemoPreviewTabs({
   previewKey,
   currentDemoIndex,
 }: DemoPreviewTabsProps) {
-  const demos = form.watch("demos") || []
+  const demos = form?.watch("demos") || []
   const [activeTab, setActiveTab] = useState("demo-0")
   const [renderedTabs, setRenderedTabs] = useState<Set<string>>(
     new Set(["demo-0"]),
@@ -127,8 +127,8 @@ export function DemoPreviewTabs({
                         ...(demo.demo_direct_registry_dependencies || []),
                       ]}
                       isDarkTheme={isDarkTheme}
-                      customTailwindConfig={form.getValues("tailwind_config")}
-                      customGlobalCss={form.getValues("globals_css")}
+                      customTailwindConfig={form?.getValues("tailwind_config")}
+                      customGlobalCss={form?.getValues("globals_css")}
                       key={previewKeys[index] || previewKey}
                       demoDependencies={demo.demo_dependencies}
                     />

@@ -29,7 +29,7 @@ import { useCodeInputsAutoFocus } from "./hooks/use-code-inputs-auto-focus"
 
 import { cn } from "@/lib/utils"
 import { uploadToR2 } from "@/lib/r2"
-import { addTagsToComponent } from "@/lib/queries"
+import { addTagsToDemo } from "@/lib/queries"
 import { trackEvent, AMPLITUDE_EVENTS } from "@/lib/amplitude"
 import { addVersionToUrl } from "@/lib/utils/url"
 import {
@@ -528,7 +528,7 @@ export default function PublishComponentForm({
             pro_preview_image_url: null,
             name: demo.name || "",
             demo_direct_registry_dependencies:
-            demo.demo_direct_registry_dependencies || null,
+              demo.demo_direct_registry_dependencies || null,
             user_id: user?.id || "",
             fts: null,
             demo_slug: demo.demo_slug,
@@ -595,7 +595,7 @@ export default function PublishComponentForm({
             if (insertError) throw insertError
 
             if (demo.tags?.length) {
-              await addTagsToComponent(
+              await addTagsToDemo(
                 client,
                 insertedDemo.id,
                 demo.tags.filter((tag) => !!tag.slug) as Tag[],
@@ -796,7 +796,7 @@ export default function PublishComponentForm({
           if (updateDemoError) throw updateDemoError
 
           if (demo.tags?.length) {
-            await addTagsToComponent(
+            await addTagsToDemo(
               client,
               insertedDemo.id,
               demo.tags.filter((tag) => !!tag.slug) as Tag[],

@@ -1,10 +1,9 @@
-/* eslint-disable @next/next/no-img-element */
 import { ImageResponse } from "next/og"
 import { getComponentWithDemoForOG } from "@/lib/queries"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 
 export const runtime = "edge"
-export const alt = "Component"
+export const alt = "Component Demo"
 export const size = {
   width: 1200,
   height: 630,
@@ -15,15 +14,15 @@ export const contentType = "image/png"
 export default async function Image({
   params,
 }: {
-  params: { username: string; component_slug: string }
+  params: { username: string; component_slug: string; demo_slug: string }
 }) {
-  const { username, component_slug } = params
+  const { username, component_slug, demo_slug } = params
 
   const result = await getComponentWithDemoForOG(
     supabaseWithAdminAccess,
     username,
     component_slug,
-    "default",
+    demo_slug,
   )
 
   if (!result.data) {
@@ -40,7 +39,7 @@ export default async function Image({
             color: "#000",
           }}
         >
-          Component not found
+          Component or Demo not found
         </div>
       ),
       {
@@ -109,7 +108,7 @@ export default async function Image({
           >
             <img
               src={demo.preview_url || component.preview_url}
-              alt={`Preview of ${component.name}`}
+              alt={`Preview of ${demo.name || component.name}`}
               style={{
                 width: "100%",
                 height: "100%",
@@ -133,12 +132,18 @@ export default async function Image({
               <div
                 style={{
                   display: "flex",
-                  fontSize: "72px",
+                  flexWrap: "wrap",
+                  gap: "12px",
+                  fontSize: "56px",
                   fontWeight: "bold",
                   color: "hsl(240 10% 3.9%)",
+                  overflow: "hidden",
+                  wordBreak: "break-word",
                 }}
               >
-                {component.name}
+                <div style={{ display: "flex" }}>
+                  {component.name} / {(demo as any).name}
+                </div>
               </div>
               <div
                 style={{
@@ -222,6 +227,9 @@ export default async function Image({
               </div>
               <div style={{ display: "flex" }}>
                 {totalUsages.toLocaleString()} usages
+              </div>
+              <div style={{ display: "flex" }}>
+                {(component.likes_count || 0).toLocaleString()} likes
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>

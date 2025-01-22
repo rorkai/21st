@@ -37,6 +37,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { EditProfileDialog } from "@/components/features/profile/edit-profile-dialog"
+import { useUserProfile } from "@/components/hooks/use-user-profile"
+import { useAnimation } from "framer-motion"
 
 export const searchQueryAtom = atom("")
 
@@ -162,10 +165,15 @@ export function Header({
 }) {
   const inputRef = React.useRef<HTMLInputElement>(null)
   const isMobile = useIsMobile()
-  const { user, signOut } = useClerk()
-  const [showUserProfile, setShowUserProfile] = useState(false)
+  const { signOut } = useClerk()
+  const { user: dbUser, clerkUser: user, isLoading } = useUserProfile()
+  const [showEditProfile, setShowEditProfile] = useState(false)
   const searchParams = useSearchParams()
   const step = searchParams.get("step")
+  const controls = useAnimation()
+  // Debug logs
+  console.log("DB User:", dbUser)
+  console.log("Clerk User:", user)
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -222,51 +230,57 @@ export function Header({
                 <DropdownMenu>
                   <DropdownMenuTrigger className="cursor-pointer rounded-full ml-2">
                     <UserAvatar
-                      src={user?.imageUrl}
-                      alt={user?.fullName}
+                      src={
+                        dbUser?.display_image_url || user?.imageUrl || undefined
+                      }
+                      alt={dbUser?.display_name || user?.fullName || undefined}
                       size={32}
                     />
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="max-w-64" align="start">
-                    <DropdownMenuLabel
-                      className="flex items-center gap-3 cursor-pointer rounded-md hover:bg-accent transition-colors"
-                      onClick={() =>
-                        (window.location.href = `/${user?.externalAccounts?.[0]?.username}`)
-                      }
-                    >
-                      <UserAvatar
-                        src={user?.imageUrl}
-                        alt={user?.fullName}
-                        size={32}
-                        className="shrink-0"
-                      />
-                      <div className="flex min-w-0 flex-col justify-center">
-                        <span className="truncate text-sm font-medium text-foreground">
-                          {user?.fullName}
-                        </span>
-                        <span className="truncate text-xs font-normal text-muted-foreground">
-                          {user?.primaryEmailAddress?.emailAddress}
-                        </span>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onSelect={() => setShowUserProfile(true)}>
-                      <Settings className="w-4 h-4 mr-2 opacity-60" />
-                      <span>Manage account</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onSelect={() => window.open("/terms", "_blank")}
-                    >
-                      <FileText className="w-4 h-4 mr-2 opacity-60" />
-                      <span>Terms of Service</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onSelect={() => signOut({ redirectUrl: "/" })}
-                    >
-                      <LogOut className="w-4 h-4 mr-2 opacity-60" />
-                      <span>Sign out</span>
-                    </DropdownMenuItem>
+                  <DropdownMenuContent className="w-[240px] p-0" align="end">
+                    <div className="p-3 border-b border-border">
+                      <p className="text-sm text-foreground">
+                        {user?.primaryEmailAddress?.emailAddress}
+                      </p>
+                    </div>
+
+                    <div className="p-1">
+                      <DropdownMenuItem
+                        className="text-sm px-3 py-2 cursor-pointer"
+                        onSelect={() =>
+                          (window.location.href = `/${dbUser?.display_username || user?.externalAccounts?.[0]?.username}`)
+                        }
+                      >
+                        View Profile
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-sm px-3 py-2 cursor-pointer"
+                        onSelect={() => setShowEditProfile(true)}
+                      >
+                        Edit Profile
+                      </DropdownMenuItem>
+                    </div>
+
+                    <div className="border-t border-border p-1">
+                      <DropdownMenuItem
+                        className="text-sm px-3 py-2 cursor-pointer"
+                        onSelect={() => window.open("/terms", "_blank")}
+                      >
+                        Terms of Service
+                      </DropdownMenuItem>
+                    </div>
+
+                    <div className="border-t border-border p-1">
+                      <DropdownMenuItem
+                        onSelect={() => signOut({ redirectUrl: "/" })}
+                        className="text-sm px-3 py-2 cursor-pointer flex justify-between items-center"
+                        onMouseEnter={() => controls.start("hover")}
+                        onMouseLeave={() => controls.start("normal")}
+                      >
+                        <span>Log Out</span>
+                        <Icons.logout size={16} controls={controls} />
+                      </DropdownMenuItem>
+                    </div>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </SignedIn>
@@ -280,22 +294,27 @@ export function Header({
           )}
         </div>
       </header>
-      {showUserProfile && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-10"
-          onClick={() => setShowUserProfile(false)}
-        >
-          <div className="relative">
-            <UserProfile />
-            <Button
-              variant="ghost"
-              onClick={() => setShowUserProfile(false)}
-              className="absolute top-4 right-4 w-8 h-8 text-muted-foreground text-sm rounded flex items-center justify-center"
-            >
-              <X className="min-w-4 min-h-4" />
-            </Button>
-          </div>
-        </div>
+      {showEditProfile && dbUser && !isLoading && (
+        <EditProfileDialog
+          isOpen={showEditProfile}
+          setIsOpen={setShowEditProfile}
+          user={{
+            name: user?.fullName || "",
+            username: user?.externalAccounts?.[0]?.username || "",
+            image_url: user?.imageUrl || "",
+            display_name: dbUser.display_name || null,
+            display_username: dbUser.display_username || null,
+            display_image_url: dbUser.display_image_url || null,
+            bio: dbUser.bio || null,
+            website_url: dbUser.website_url || null,
+            github_url: dbUser.github_url || null,
+            twitter_url: dbUser.twitter_url || null,
+          }}
+          onUpdate={() => {
+            setShowEditProfile(false)
+            window.location.reload() // Refresh to show updated data
+          }}
+        />
       )}
     </>
   )

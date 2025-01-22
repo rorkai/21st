@@ -158,16 +158,32 @@ export const ComponentPageInfo = ({
               <HoverCardTrigger asChild>
                 <div className="flex items-center justify-start hover:bg-accent rounded-md px-2 py-1 -mx-2 mr-auto">
                   <Link
-                    href={`/${component.user.username}`}
+                    href={`/${component.user.display_username || component.user.username}`}
                     className="flex items-center"
                   >
-                    <UserAvatar
-                      src={component.user.image_url || "/placeholder.svg"}
-                      alt={component.user.name || component.user.username}
-                      size={20}
-                    />
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage
+                        src={
+                          component.user.display_image_url ||
+                          component.user.image_url ||
+                          "/placeholder.svg"
+                        }
+                        alt={
+                          component.user.display_name ||
+                          component.user.name ||
+                          component.user.username ||
+                          ""
+                        }
+                      />
+                      <AvatarFallback>
+                        {(component.user.display_name ||
+                          component.user.name)?.[0]?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
                     <span className="ml-1 font-medium">
-                      {component.user.name || component.user.username}
+                      {component.user.display_name ||
+                        component.user.name ||
+                        component.user.username}
                     </span>
                   </Link>
                 </div>
@@ -180,28 +196,42 @@ export const ComponentPageInfo = ({
                 <div className="flex gap-4">
                   <Avatar className="h-12 w-12">
                     <AvatarImage
-                      src={component.user.image_url || "/placeholder.svg"}
-                      alt={component.user.name || component.user.username || ""}
+                      src={
+                        component.user.display_image_url ||
+                        component.user.image_url ||
+                        "/placeholder.svg"
+                      }
+                      alt={
+                        component.user.display_name ||
+                        component.user.name ||
+                        component.user.username ||
+                        ""
+                      }
                     />
                     <AvatarFallback>
-                      {component.user.name?.[0]?.toUpperCase()}
+                      {(component.user.display_name ||
+                        component.user.name)?.[0]?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="space-y-1">
                     <Link
-                      href={`/${component.user.username}`}
+                      href={`/${component.user.display_username || component.user.username}`}
                       className="hover:underline"
                     >
                       <h4 className="text-sm font-semibold">
-                        {component.user.name || component.user.username}
+                        {component.user.display_name ||
+                          component.user.name ||
+                          component.user.username}
                       </h4>
                     </Link>
                     <Link
-                      href={`/${component.user.username}`}
+                      href={`/${component.user.display_username || component.user.username}`}
                       className="hover:underline"
                     >
                       <p className="text-sm text-muted-foreground">
-                        @{component.user.username}
+                        @
+                        {component.user.display_username ||
+                          component.user.username}
                       </p>
                     </Link>
                     {component.user.bio && (

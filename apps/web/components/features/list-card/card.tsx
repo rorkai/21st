@@ -33,7 +33,9 @@ export function ComponentCard({
   component,
   isLoading,
 }: {
-  component?: DemoWithComponent | (Component & { user: User } & { view_count?: number })
+  component?:
+    | DemoWithComponent
+    | (Component & { user: User } & { view_count?: number })
   isLoading?: boolean
 }) {
   if (isLoading || !component) {
@@ -47,7 +49,7 @@ export function ComponentCard({
   if (!userData) {
     return <ComponentCardSkeleton />
   }
-  
+
   const componentUrl = isDemo
     ? `/${componentData.user.username}/${component.component.component_slug}/${component.demo_slug || `demo-${component.id}`}`
     : `/${userData.username}/${component.component_slug}`
@@ -97,8 +99,12 @@ export function ComponentCard({
       </Link>
       <div className="flex space-x-3 items-center">
         <UserAvatar
-          src={userData.image_url || "/placeholder.svg"}
-          alt={userData.name}
+          src={
+            userData.display_image_url ||
+            userData.image_url ||
+            "/placeholder.svg"
+          }
+          alt={userData.display_name || userData.name || ""}
           size={32}
           user={userData}
           isClickable
@@ -120,10 +126,10 @@ export function ComponentCard({
             </div>
           </Link>
           <div className="flex items-center gap-3">
-              <div className="flex items-center text-xs text-muted-foreground whitespace-nowrap shrink-0 gap-1">
-                <Eye size={14} />
-                <span>{component.view_count || 0}</span>
-              </div>
+            <div className="flex items-center text-xs text-muted-foreground whitespace-nowrap shrink-0 gap-1">
+              <Eye size={14} />
+              <span>{component.view_count || 0}</span>
+            </div>
             <div className="flex items-center text-xs text-muted-foreground whitespace-nowrap shrink-0 gap-1">
               <Heart size={14} className="text-muted-foreground" />
               <span>{likesCount || 0}</span>

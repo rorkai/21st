@@ -71,7 +71,7 @@ export async function getUserData(
     const { data, error } = await supabase
       .from("users")
       .select("*")
-      .eq("username", username)
+      .or(`username.eq.${username},display_username.eq.${username}`)
       .single()
 
     if (error) {

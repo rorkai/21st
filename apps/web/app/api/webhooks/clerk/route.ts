@@ -59,15 +59,36 @@ export async function POST(req: Request) {
       try {
         const username =
           user.external_accounts?.[0]?.username || user.username || user.id
+        const name =
+          `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() || null
+        const image_url = user.image_url
 
-        const { data, error } = await supabaseAdmin.from("users").upsert({
+        // For new users, initialize display fields with Clerk data
+        const { data: existingUser } = await supabaseAdmin
+          .from("users")
+          .select("id")
+          .eq("id", user.id)
+          .single()
+
+        const userData = {
           id: user.id,
-          username: username,
-          image_url: user.image_url,
+          username,
+          image_url,
           email: user.email_addresses[0]?.email_address ?? null,
-          name:
-            `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() || null,
-        })
+          name,
+          // Only set display fields for new users
+          ...(existingUser
+            ? {}
+            : {
+                display_name: name,
+                display_username: username,
+                display_image_url: image_url,
+              }),
+        }
+
+        const { data, error } = await supabaseAdmin
+          .from("users")
+          .upsert(userData)
 
         if (error) {
           return NextResponse.json(

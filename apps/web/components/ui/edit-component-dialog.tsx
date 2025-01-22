@@ -317,8 +317,8 @@ export function EditComponentDialog({
                 />
               )}
               {uploadToR2Mutation.isPending || updateMutation.isPending
-                ? "Сохранение..."
-                : "Сохранить"}
+                ? "Saving..."
+                : "Save"}
             </Button>
           </div>
         </SheetHeader>

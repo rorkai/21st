@@ -148,8 +148,17 @@ export default async function ProPage() {
               </Link>
               <div className="flex items-center space-x-3">
                 <UserAvatar
-                  src={publisher.image_url || "/placeholder.svg"}
-                  alt={publisher.name}
+                  src={
+                    publisher.display_image_url ||
+                    publisher.image_url ||
+                    "/placeholder.svg"
+                  }
+                  alt={
+                    publisher.display_name ||
+                    publisher.name ||
+                    publisher.username ||
+                    ""
+                  }
                   size={24}
                   user={publisher}
                   isClickable

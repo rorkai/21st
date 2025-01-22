@@ -661,12 +661,21 @@ export default function ComponentPage({
             <Icons.slash className="text-border w-[22px] h-[22px]" />
             <div className="flex items-center gap-2 min-w-0">
               <Link
-                href={`/${component.user.username}`}
+                href={`/${component.user.display_username || component.user.username}`}
                 className="cursor-pointer"
               >
                 <UserAvatar
-                  src={component.user.image_url || "/placeholder.svg"}
-                  alt={component.user.name}
+                  src={
+                    component.user.display_image_url ||
+                    component.user.image_url ||
+                    "/placeholder.svg"
+                  }
+                  alt={
+                    component.user.display_name ||
+                    component.user.name ||
+                    component.user.username ||
+                    ""
+                  }
                   size={22}
                   isClickable={true}
                   user={component.user}
@@ -684,17 +693,30 @@ export default function ComponentPage({
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="ghost" className="gap-2">
-                    <Link href={`/${demo.user.username}`}>
+                    <Link
+                      href={`/${demo.user.display_username || demo.user.username}`}
+                    >
                       <UserAvatar
-                        src={demo.user.image_url || "/placeholder.svg"}
-                        alt={demo.user.name}
+                        src={
+                          demo.user.display_image_url ||
+                          demo.user.image_url ||
+                          "/placeholder.svg"
+                        }
+                        alt={
+                          demo.user.display_name ||
+                          demo.user.name ||
+                          demo.user.username ||
+                          ""
+                        }
                         size={22}
                         isClickable={true}
                         user={demo.user}
                       />
                     </Link>
                     <p className="text-[14px] font-medium whitespace-nowrap">
-                      {demo.name}
+                      {demo.user.display_name ||
+                        demo.user.name ||
+                        demo.user.username}
                     </p>
                     <ChevronDown
                       size={16}
@@ -738,14 +760,23 @@ export default function ComponentPage({
                                 </p>
                                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
                                   <UserAvatar
-                                    src={d.user.image_url || "/placeholder.svg"}
-                                    alt={d.user.name}
+                                    src={
+                                      d.user.display_image_url ||
+                                      d.user.image_url ||
+                                      "/placeholder.svg"
+                                    }
+                                    alt={
+                                      d.user.display_name ||
+                                      d.user.name ||
+                                      d.user.username ||
+                                      ""
+                                    }
                                     size={16}
                                     isClickable={false}
                                     user={d.user}
                                   />
                                   <span className="truncate">
-                                    {d.user.username}
+                                    {d.user.display_username || d.user.username}
                                   </span>
                                 </div>
                               </div>

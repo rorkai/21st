@@ -267,16 +267,27 @@ export const ComponentPageInfo = ({
               <HoverCardTrigger asChild>
                 <div className="flex items-center justify-start hover:bg-accent rounded-md px-2 py-1 -mx-2 mr-auto">
                   <Link
-                    href={`/${hunterUser.username}`}
+                    href={`/${hunterUser.display_username || hunterUser.username}`}
                     className="flex items-center"
                   >
                     <UserAvatar
-                      src={hunterUser.image_url || "/placeholder.svg"}
-                      alt={hunterUser.name || hunterUser.username}
+                      src={
+                        hunterUser.display_image_url ||
+                        hunterUser.image_url ||
+                        "/placeholder.svg"
+                      }
+                      alt={
+                        hunterUser.display_name ||
+                        hunterUser.name ||
+                        hunterUser.username ||
+                        ""
+                      }
                       size={20}
                     />
                     <span className="ml-1 font-medium">
-                      {hunterUser.name || hunterUser.username}
+                      {hunterUser.display_name ||
+                        hunterUser.name ||
+                        hunterUser.username}
                     </span>
                   </Link>
                 </div>
@@ -289,28 +300,40 @@ export const ComponentPageInfo = ({
                 <div className="flex gap-4">
                   <Avatar className="h-12 w-12">
                     <AvatarImage
-                      src={hunterUser.image_url || "/placeholder.svg"}
-                      alt={hunterUser.name || hunterUser.username || ""}
+                      src={
+                        hunterUser.display_image_url ||
+                        hunterUser.image_url ||
+                        "/placeholder.svg"
+                      }
+                      alt={
+                        hunterUser.display_name ||
+                        hunterUser.name ||
+                        hunterUser.username ||
+                        ""
+                      }
                     />
                     <AvatarFallback>
-                      {hunterUser.name?.[0]?.toUpperCase()}
+                      {(hunterUser.display_name ||
+                        hunterUser.name)?.[0]?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="space-y-1">
                     <Link
-                      href={`/${hunterUser.username}`}
+                      href={`/${hunterUser.display_username || hunterUser.username}`}
                       className="hover:underline"
                     >
                       <h4 className="text-sm font-semibold">
-                        {hunterUser.name || hunterUser.username}
+                        {hunterUser.display_name ||
+                          hunterUser.name ||
+                          hunterUser.username}
                       </h4>
                     </Link>
                     <Link
-                      href={`/${hunterUser.username}`}
+                      href={`/${hunterUser.display_username || hunterUser.username}`}
                       className="hover:underline"
                     >
                       <p className="text-sm text-muted-foreground">
-                        @{hunterUser.username}
+                        @{hunterUser.display_username || hunterUser.username}
                       </p>
                     </Link>
                     {hunterUser.bio && (

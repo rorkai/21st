@@ -21,6 +21,9 @@ export default async function AuthorsPage() {
       username,
       name,
       image_url,
+      display_username,
+      display_name,
+      display_image_url,
       bio,
       components!components_user_id_fkey(
         id,
@@ -90,20 +93,33 @@ export default async function AuthorsPage() {
       <div className="container mx-auto mt-20 px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
           {authorsWithStats.map((author) => (
-            <Link href={`/${author.username}`} key={author.id}>
+            <Link
+              href={`/${author.display_username || author.username}`}
+              key={author.id}
+            >
               <Card className="h-full hover:bg-accent/50 transition-colors">
                 <CardHeader className="h-full">
                   <div className="flex items-start gap-4">
                     <Avatar className="h-12 w-12 bg-muted/30">
-                      {author.image_url ? (
+                      {author.display_image_url || author.image_url ? (
                         <AvatarImage
-                          src={author.image_url}
-                          alt={author.name || author.username || ""}
+                          src={
+                            author.display_image_url || author.image_url || ""
+                          }
+                          alt={
+                            author.display_name ||
+                            author.name ||
+                            author.username ||
+                            ""
+                          }
                         />
                       ) : (
                         <AvatarFallback>
                           {(
-                            (author.name || author.username || "?")?.[0] || "?"
+                            (author.display_name ||
+                              author.name ||
+                              author.username ||
+                              "?")?.[0] || "?"
                           ).toUpperCase()}
                         </AvatarFallback>
                       )}
@@ -111,10 +127,13 @@ export default async function AuthorsPage() {
                     <div className="flex flex-col h-full">
                       <div className="space-y-1 mb-4">
                         <h2 className="font-semibold text-lg">
-                          {author.name || author.username}
+                          {author.display_name ||
+                            author.name ||
+                            author.username}
                         </h2>
                         <p className="text-sm text-muted-foreground line-clamp-1 h-5">
-                          {author.bio || `@${author.username}`}
+                          {author.bio ||
+                            `@${author.display_username || author.username}`}
                         </p>
                       </div>
                       <div className="mt-auto space-y-0.5">

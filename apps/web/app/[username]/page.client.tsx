@@ -13,7 +13,12 @@ import { Globe, SquareArrowOutUpRight } from "lucide-react"
 import { trackEvent } from "@/lib/amplitude"
 import { useEffect } from "react"
 import { AMPLITUDE_EVENTS } from "@/lib/amplitude"
-import { Component, DemoWithComponent, User, HuntedComponents } from "@/types/global"
+import {
+  Component,
+  DemoWithComponent,
+  User,
+  HuntedComponents,
+} from "@/types/global"
 
 const useProfileAnalytics = ({
   username,
@@ -42,7 +47,7 @@ export function UserProfileClient({
   userDemos: DemoWithComponent[]
 }) {
   useProfileAnalytics({
-    username: user.username,
+    username: user.display_username || user.username || "",
     isManuallyAdded: user.manually_added,
   })
 
@@ -54,17 +59,19 @@ export function UserProfileClient({
           <div className="flex md:w-[20%] md:min-w-[300px] flex-col items-center w-full">
             <div className="flex flex-col items-center md:items-start space-y-6">
               <UserAvatar
-                src={user.image_url || "/placeholder.svg"}
-                alt={user.name}
+                src={
+                  user.display_image_url || user.image_url || "/placeholder.svg"
+                }
+                alt={user.display_name || user.name || ""}
                 size={120}
                 className="cursor-default"
               />
               <div className="space-y-2 text-center md:text-left">
                 <h1 className="text-3xl font-semibold tracking-tight">
-                  {user.name}
+                  {user.display_name || user.name || ""}
                 </h1>
                 <p className="text-lg text-muted-foreground">
-                  @{user.username}
+                  @{user.display_username || user.username || ""}
                 </p>
                 {user.bio && (
                   <p className="text-sm text-muted-foreground max-w-md leading-normal">
@@ -87,8 +94,8 @@ export function UserProfileClient({
                     href={
                       user.manually_added
                         ? user.github_url ||
-                          `https://github.com/${user.username}`
-                        : `https://github.com/${user.username}`
+                          `https://github.com/${user.display_username || user.username || ""}`
+                        : `https://github.com/${user.display_username || user.username || ""}`
                     }
                     target="_blank"
                     rel="noopener noreferrer"
@@ -163,7 +170,7 @@ export function UserProfileClient({
               publishedComponents={publishedComponents}
               huntedComponents={huntedComponents}
               userDemos={userDemos}
-              username={user.username ?? ""}
+              username={user.display_username || user.username || ""}
             />
             <UserComponentsList
               user={user}

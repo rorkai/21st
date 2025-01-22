@@ -4,6 +4,8 @@ import { SitebrewLogo } from "./sitebrew"
 import { TerminalIcon } from "./terminal"
 import { ClapIcon } from "./clap"
 import { WorkflowIcon } from "./workslow"
+import { LogoutIcon } from "./logout-icon"
+
 export type Icon = LucideIcon
 
 export const Icons = {
@@ -111,4 +113,5 @@ export const Icons = {
       />
     </svg>
   ),
+  logout: LogoutIcon,
 }

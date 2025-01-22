@@ -26,24 +26,24 @@ export const generateMetadata = async ({
 
   return {
     metadataBase: new URL("https://21st.dev"),
-    title: `${user.name || user.username} | 21st.dev - The NPM for Design Engineers`,
-    description: `Collection of free open source shadcn/ui React Tailwind components by ${user.name || user.username}.`,
+    title: `${user.display_name || user.name || user.username} | 21st.dev - The NPM for Design Engineers`,
+    description: `Collection of free open source shadcn/ui React Tailwind components by ${user.display_name || user.name || user.username}.`,
     openGraph: {
-      title: `${user.name || user.username}'s Components | 21st.dev - The NPM for Design Engineers`,
-      description: `Browse ${user.name || user.username}'s collection of React Tailwind components inspired by shadcn/ui.`,
+      title: `${user.display_name || user.name || user.username}'s Components | 21st.dev - The NPM for Design Engineers`,
+      description: `Browse ${user.display_name || user.name || user.username}'s collection of React Tailwind components inspired by shadcn/ui.`,
       images: [
         {
           url: ogImageUrl,
           width: 1200,
           height: 630,
-          alt: `${user.name || user.username}'s profile`,
+          alt: `${user.display_name || user.name || user.username}'s profile`,
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: `${user.name || user.username}'s Components | 21st.dev - The NPM for Design Engineers`,
-      description: `Browse ${user.name || user.username}'s collection of React Tailwind components inspired by shadcn/ui.`,
+      title: `${user.display_name || user.name || user.username}'s Components | 21st.dev - The NPM for Design Engineers`,
+      description: `Browse ${user.display_name || user.name || user.username}'s collection of React Tailwind components inspired by shadcn/ui.`,
       images: [ogImageUrl],
     },
     keywords: [
@@ -53,7 +53,7 @@ export const generateMetadata = async ({
       "shadcn/ui",
       "shadcn",
       "open source",
-      `${user.username} components`,
+      `${user.display_username || user.username} components`,
     ],
   }
 }

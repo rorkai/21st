@@ -41,7 +41,7 @@ export const generateMetadata = async ({
     }
   }
 
-  const ogImageUrl = `${process.env.NEXT_PUBLIC_APP_URL}/${user.username}/${component.component_slug}/opengraph-image`
+  const ogImageUrl = `${process.env.NEXT_PUBLIC_APP_URL}/${user.display_username || user.username}/${component.component_slug}/opengraph-image`
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -54,7 +54,7 @@ export const generateMetadata = async ({
     },
     author: {
       "@type": "Person",
-      name: user.username,
+      name: user.display_name || user.name || user.username,
     },
     dateCreated: component.created_at,
     license: component.license,
@@ -65,7 +65,7 @@ export const generateMetadata = async ({
     title: `${component.name} | 21st.dev - The NPM for Design Engineers`,
     description:
       component.description ||
-      `A React component by ${user.username}. Ship polished UIs faster with ready-to-use Tailwind components inspired by shadcn/ui.`,
+      `A React component by ${user.display_name || user.name || user.username}. Ship polished UIs faster with ready-to-use Tailwind components inspired by shadcn/ui.`,
     keywords: [
       "react components",
       "design engineers",
@@ -81,7 +81,7 @@ export const generateMetadata = async ({
       title: `${component.name} | 21st.dev - The NPM for Design Engineers`,
       description:
         component.description ||
-        `A React component by ${user.username}. Ship polished UIs faster with ready-to-use Tailwind components inspired by shadcn/ui.`,
+        `A React component by ${user.display_name || user.name || user.username}. Ship polished UIs faster with ready-to-use Tailwind components inspired by shadcn/ui.`,
       images: [
         {
           url: ogImageUrl,
@@ -96,7 +96,7 @@ export const generateMetadata = async ({
       title: `${component.name} | 21st.dev - The NPM for Design Engineers`,
       description:
         component.description ||
-        `A React component by ${user.username}. Ship polished UIs faster with ready-to-use Tailwind components inspired by shadcn/ui.`,
+        `A React component by ${user.display_name || user.name || user.username}. Ship polished UIs faster with ready-to-use Tailwind components inspired by shadcn/ui.`,
       images: [ogImageUrl],
     },
     other: {

@@ -77,8 +77,12 @@ export default async function Image({
           }}
         >
           <img
-            src={user.image_url || "https://21st.dev/placeholder.svg"}
-            alt={`${user.username}'s avatar`}
+            src={
+              user.display_image_url ||
+              user.image_url ||
+              "https://21st.dev/placeholder.svg"
+            }
+            alt={`${user.display_name || user.name || user.username}'s avatar`}
             style={{
               width: "100%",
               height: "100%",
@@ -120,7 +124,7 @@ export default async function Image({
               textOverflow: "ellipsis",
             }}
           >
-            {user.name || user.username}
+            {user.display_name || user.name || user.username}
           </span>
           <span
             style={{
@@ -129,7 +133,7 @@ export default async function Image({
               textOverflow: "ellipsis",
             }}
           >
-            @{user.username}
+            @{user.display_username || user.username}
           </span>
         </div>
       </div>

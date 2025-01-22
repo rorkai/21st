@@ -22,7 +22,7 @@ export const generateMetadata = async ({
     }
   }
 
-  const ogImageUrl = `${process.env.NEXT_PUBLIC_APP_URL}/${user.username}/opengraph-image`
+  const ogImageUrl = `${process.env.NEXT_PUBLIC_APP_URL}/${user.display_username || user.username}/opengraph-image`
 
   return {
     metadataBase: new URL("https://21st.dev"),

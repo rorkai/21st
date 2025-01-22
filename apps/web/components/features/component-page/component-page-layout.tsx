@@ -17,7 +17,7 @@ import {
 } from "@/types/global"
 import { PromptType, PROMPT_TYPES } from "@/types/global"
 import { useClerkSupabaseClient } from "@/lib/clerk"
-import { addTagsToComponent, useUpdateComponentWithTags } from "@/lib/queries"
+import { addTagsToDemo, useUpdateComponentWithTags } from "@/lib/queries"
 import {
   identifyUser,
   trackPageProperties,
@@ -463,11 +463,7 @@ export default function ComponentPage({
                   ) as Tag[]
 
                   if (tagsToAdd.length > 0) {
-                    await addTagsToComponent(
-                      supabase,
-                      demoUpdates.id,
-                      tagsToAdd,
-                    )
+                    await addTagsToDemo(supabase, demoUpdates.id, tagsToAdd)
                   }
                 }
               }

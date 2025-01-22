@@ -44,7 +44,6 @@ export function ComponentCard({
 
   const isDemo = "component" in component
   const userData = component.user
-  const componentData = isDemo ? component.component : component
 
   if (!userData) {
     return <ComponentCardSkeleton />

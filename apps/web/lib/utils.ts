@@ -41,3 +41,10 @@ export function appendQueryParam(url: string, param: string, value: string) {
 export function replaceSpacesWithPlus(str: string) {
   return str?.trim()?.replace(/\s+/g, "+")
 }
+
+export function makeSlugFromName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}

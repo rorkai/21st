@@ -51,12 +51,14 @@ export function ComponentCard({
   }
 
   const componentUrl = isDemo
-    ? `/${componentData.user.username}/${component.component.component_slug}/${component.demo_slug || `demo-${component.id}`}`
-    : `/${userData.username}/${component.component_slug}`
+    ? `/${userData.display_username || userData.username}/${component.component.component_slug}/${component.demo_slug}`
+    : `/${userData.display_username || userData.username}/${component.component_slug}`
 
   const videoUrl = isDemo ? component.video_url : component.video_url
 
-  const codeUrl = isDemo ? component.component.code : component.code
+  const codeUrl = isDemo
+    ? `/${userData.display_username || userData.username}/${component.component.component_slug}/${component.demo_slug}/code`
+    : `/${userData.display_username || userData.username}/${component.component_slug}/code`
 
   const likesCount = isDemo
     ? component.component.likes_count

@@ -741,7 +741,7 @@ export default function ComponentPage({
                               data-demo-id={d.id}
                               onSelect={() =>
                                 router.push(
-                                  `/${component.user.username}/${component.component_slug}/${d.demo_slug}`,
+                                  `/${component.user.display_username || component.user.username}/${component.component_slug}/${d.demo_slug}`,
                                 )
                               }
                               className="flex items-center gap-2"

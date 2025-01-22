@@ -36,6 +36,7 @@ export async function getComponent(
   username: string,
   slug: string,
 ) {
+
   const { data, error } = await supabase
     .from("components")
     .select(
@@ -490,6 +491,20 @@ export async function getComponentWithDemo(
   slug: string,
   demo_slug: string,
 ) {
+
+  // First get the user
+  const { data: user, error: userError } = await supabase
+    .from("users")
+    .select("*")
+    .or(`username.eq.${username},display_username.eq.${username}`)
+    .single()
+
+  if (userError) {
+    console.error("User error:", userError)
+    return { data: null, error: new Error(userError.message) }
+  }
+
+  // Then get the component for this user
   const { data: component, error: componentError } = await supabase
     .from("components")
     .select(
@@ -502,11 +517,11 @@ export async function getComponentWithDemo(
     `,
     )
     .eq("component_slug", slug)
-    .eq("users.username", username)
-    .not("user", "is", null)
+    .eq("user_id", user.id)
     .single()
 
   if (componentError) {
+    console.error("Component error:", componentError)
     return { data: null, error: new Error(componentError.message) }
   }
 

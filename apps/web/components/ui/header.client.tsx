@@ -10,18 +10,16 @@ import {
   SignedIn,
   SignedOut,
   useClerk,
-  UserProfile,
 } from "@clerk/nextjs"
-import { LogOut, Settings, X, FileText } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { NavigationMenuLink } from "@/components/ui/navigation-menu"
 
@@ -171,9 +169,6 @@ export function Header({
   const searchParams = useSearchParams()
   const step = searchParams.get("step")
   const controls = useAnimation()
-  // Debug logs
-  console.log("DB User:", dbUser)
-  console.log("Clerk User:", user)
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -223,9 +218,68 @@ export function Header({
             <>
               <SignedIn>
                 {variant !== "publish" && (
-                  <Button asChild className="ml-2">
-                    <Link href="/publish">Publish component</Link>
-                  </Button>
+                  <div className="inline-flex -space-x-px divide-x divide-primary-foreground/30 rounded-lg shadow-sm shadow-black/5 rtl:space-x-reverse ml-2">
+                    <Button
+                      asChild
+                      className="rounded-none shadow-none first:rounded-s-lg last:rounded-e-lg focus-visible:z-10"
+                    >
+                      <Link href="/publish">Publish component</Link>
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          className="rounded-none shadow-none first:rounded-s-lg last:rounded-e-lg focus-visible:z-10"
+                          size="icon"
+                          aria-label="Component options"
+                        >
+                          <ChevronDown
+                            size={16}
+                            strokeWidth={2}
+                            aria-hidden="true"
+                          />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        className="w-64"
+                        side="bottom"
+                        sideOffset={4}
+                        align="end"
+                      >
+                        <DropdownMenuItem asChild>
+                          <Link href="/publish" className="cursor-pointer">
+                            <div className="flex flex-col gap-1">
+                              <span className="text-sm font-medium">
+                                Publish component
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                Create and publish a new component to the
+                                registry
+                              </span>
+                            </div>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/import" className="cursor-pointer">
+                            <div className="flex flex-col gap-1">
+                              <span className="text-sm font-medium flex items-center gap-1">
+                                Import from registry
+                                <Badge
+                                  variant="secondary"
+                                  className="h-5 text-[11px] tracking-wide font-medium uppercase px-1.5 py-0 leading-none"
+                                >
+                                  beta
+                                </Badge>
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                Import an existing component from shadcn
+                                registry
+                              </span>
+                            </div>
+                          </Link>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 )}
                 <DropdownMenu>
                   <DropdownMenuTrigger className="cursor-pointer rounded-full ml-2">

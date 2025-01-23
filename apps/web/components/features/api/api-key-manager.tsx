@@ -6,7 +6,7 @@ import { useClerkSupabaseClient } from "@/lib/clerk"
 import { ApiKey } from "@/types/global"
 import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Key, Trash2, AlertTriangle } from "lucide-react"
+import { Key, AlertTriangle, LoaderCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { TermsDialog } from "./terms-dialog"
 
 interface ApiKeyManagerProps {
   initialKey: ApiKey | null
@@ -29,6 +30,7 @@ interface ApiKeyManagerProps {
 
 export function ApiKeyManager({ initialKey, userId }: ApiKeyManagerProps) {
   const [key, setKey] = useState<ApiKey | null>(initialKey)
+  const [showProjectDialog, setShowProjectDialog] = useState(false)
   const [showTerms, setShowTerms] = useState(false)
   const [loading, setLoading] = useState(false)
   const [projectUrl, setProjectUrl] = useState("")
@@ -56,7 +58,7 @@ export function ApiKeyManager({ initialKey, userId }: ApiKeyManagerProps) {
       const { data, error } = await supabase.rpc("create_api_key", {
         user_id: userId,
         plan: "free",
-        requests_limit: 100
+        requests_limit: 100,
       })
 
       if (error) throw error
@@ -82,26 +84,7 @@ export function ApiKeyManager({ initialKey, userId }: ApiKeyManagerProps) {
       toast.error("Failed to create API key")
     } finally {
       setLoading(false)
-      setShowTerms(false)
-    }
-  }
-
-  const deleteApiKey = async () => {
-    if (!key) return
-
-    try {
-      const { error } = await supabase
-        .from("api_keys")
-        .delete()
-        .eq("id", key.id)
-
-      if (error) throw error
-
-      setKey(null)
-      toast.success("API key deleted successfully")
-    } catch (error) {
-      console.error("Error deleting API key:", error)
-      toast.error("Failed to delete API key")
+      setShowProjectDialog(false)
     }
   }
 
@@ -130,6 +113,7 @@ export function ApiKeyManager({ initialKey, userId }: ApiKeyManagerProps) {
               Create API Key
             </Button>
           )}
+          {key && <span className="text-sm text-muted-foreground">Contact Serafim to upgrade your plan</span>}
         </CardHeader>
         <CardContent className="grid gap-4">
           {!key ? (
@@ -175,10 +159,6 @@ export function ApiKeyManager({ initialKey, userId }: ApiKeyManagerProps) {
                     </a>
                   </div>
                 </div>
-                <Button variant="ghost" className="h-9" onClick={deleteApiKey}>
-                  <Trash2 className="h-4 w-4" />
-                  <span className="sr-only">Delete API key</span>
-                </Button>
               </div>
 
               <div className="grid gap-2">
@@ -212,13 +192,21 @@ export function ApiKeyManager({ initialKey, userId }: ApiKeyManagerProps) {
         </CardContent>
       </Card>
 
-      <Dialog open={showTerms} onOpenChange={setShowTerms}>
+      <TermsDialog
+        open={showTerms}
+        onAccept={() => {
+          setShowTerms(false)
+          setShowProjectDialog(true)
+        }}
+        onClose={() => setShowTerms(false)}
+      />
+
+      <Dialog open={showProjectDialog} onOpenChange={setShowProjectDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create API Key</DialogTitle>
+            <DialogTitle>Project URL</DialogTitle>
             <DialogDescription>
-              By creating an API key, you agree to our terms of service and
-              acceptable use policy.
+              Enter the URL of the project where you'll be using this API key
             </DialogDescription>
           </DialogHeader>
 
@@ -232,32 +220,34 @@ export function ApiKeyManager({ initialKey, userId }: ApiKeyManagerProps) {
                 onChange={(e) => setProjectUrl(e.target.value)}
               />
               <p className="text-sm text-muted-foreground">
-                Enter the URL of the project where you'll be using this API key.
                 We may revoke access if the URL provided is invalid or if the
                 project is not owned by you.
               </p>
             </div>
-
-            <div className="grid gap-2">
-              <h4 className="font-medium">Terms of Use</h4>
-              <ul className="text-sm text-muted-foreground list-disc pl-4 space-y-1">
-                <li>One API key per user account</li>
-                <li>100 requests per month on the free tier</li>
-                <li>
-                  API key must be used from the specified project URL only
-                </li>
-                <li>We may revoke access if terms are violated</li>
-                <li>Contact us for higher usage limits</li>
-              </ul>
-            </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowTerms(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowProjectDialog(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={createApiKey} disabled={loading}>
-              Accept & Create
+            <Button
+              onClick={createApiKey}
+              disabled={loading}
+              className="relative min-w-24"
+            >
+              {loading ? (
+                <LoaderCircle
+                  className="animate-spin"
+                  size={16}
+                  strokeWidth={2}
+                  aria-hidden="true"
+                />
+              ) : (
+                "Create Key"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

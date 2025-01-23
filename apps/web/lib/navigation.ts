@@ -1,4 +1,4 @@
-import { Dock, Box, Webhook } from "lucide-react"
+import { Dock, Box } from "lucide-react"
 
 type NavigationItem = {
   title: string
@@ -77,15 +77,6 @@ const uiComponents: NavigationItem[] = [
 ].sort((a, b) => a.title.localeCompare(b.title))
 
 export const sections: NavigationSection[] = [
-  {
-    title: "API",
-    icon: Webhook,
-    items: [
-      { title: "Documentation", href: "/api-docs" },
-      { title: "API Keys", href: "/api-keys" },
-    ],
-    isNew: true,
-  },
   {
     title: "Landing Pages",
     icon: Dock,

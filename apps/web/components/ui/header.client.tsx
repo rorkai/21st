@@ -313,9 +313,9 @@ export function Header({
                     <div className="border-t border-border p-1">
                       <DropdownMenuItem
                         className="text-sm px-3 py-2 cursor-pointer"
-                        onSelect={() => (window.location.href = "/api-keys")}
+                        onSelect={() => (window.location.href = "/api-access")}
                       >
-                        API Keys
+                        API Docs & Keys
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-sm px-3 py-2 cursor-pointer"

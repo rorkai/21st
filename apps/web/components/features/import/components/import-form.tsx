@@ -83,26 +83,28 @@ export function ImportForm({
           formStep === "demoCode" ? "w-1/2" : "w-2/3",
         )}
       >
-        <DemoPreviewTabs
-          code={code}
-          slugToPublish={componentSlug}
-          registryToPublish={registry}
-          directRegistryDependencies={form.watch(
-            "direct_registry_dependencies",
-          )}
-          demoDirectRegistryDependencies={form.watch(
-            `demos.${currentDemoIndex}.demo_direct_registry_dependencies`,
-          )}
-          isDarkTheme={isDarkTheme}
-          customTailwindConfig={form.watch("tailwind_config")}
-          customGlobalCss={form.watch("globals_css")}
-          form={form}
-          shouldBlurPreview={shouldBlurPreview}
-          onRestartPreview={onRestartPreview}
-          formStep={formStep}
-          previewKey={previewKey}
-          currentDemoIndex={currentDemoIndex}
-        />
+        {(!form.watch("unknown_dependencies") || form.watch("unknown_dependencies").length === 0) && (
+          <DemoPreviewTabs
+            code={code}
+            slugToPublish={componentSlug}
+            registryToPublish={registry}
+            directRegistryDependencies={form.watch(
+              "direct_registry_dependencies",
+            )}
+            demoDirectRegistryDependencies={form.watch(
+              `demos.${currentDemoIndex}.demo_direct_registry_dependencies`,
+            )}
+            isDarkTheme={isDarkTheme}
+            customTailwindConfig={form.watch("tailwind_config")}
+            customGlobalCss={form.watch("globals_css")}
+            form={form}
+            shouldBlurPreview={shouldBlurPreview}
+            onRestartPreview={onRestartPreview}
+            formStep={formStep}
+            previewKey={previewKey}
+            currentDemoIndex={currentDemoIndex}
+          />
+        )}
       </div>
     </div>
   )

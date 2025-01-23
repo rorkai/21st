@@ -53,22 +53,22 @@ function ApiDocs() {
       <div className="space-y-4">
         <h2 className="text-sm font-medium">Integration Examples</h2>
         <Tabs defaultValue="next" className="w-full">
-          <TabsList className="relative h-auto w-full gap-0.5 bg-transparent p-0 pl-2 justify-start before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-border">
+          <TabsList className="relative h-auto w-full gap-0.5 bg-transparent p-0 pl-2 justify-start overflow-x-auto flex-nowrap before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-border">
             <TabsTrigger
               value="next"
-              className="overflow-hidden rounded-b-none border-x border-t border-border bg-muted py-2 data-[state=active]:z-10 data-[state=active]:shadow-none"
+              className="overflow-hidden rounded-b-none border-x border-t border-border bg-muted py-2 data-[state=active]:z-10 data-[state=active]:shadow-none whitespace-nowrap"
             >
               Next.js
             </TabsTrigger>
             <TabsTrigger
               value="react"
-              className="overflow-hidden rounded-b-none border-x border-t border-border bg-muted py-2 data-[state=active]:z-10 data-[state=active]:shadow-none"
+              className="overflow-hidden rounded-b-none border-x border-t border-border bg-muted py-2 data-[state=active]:z-10 data-[state=active]:shadow-none whitespace-nowrap"
             >
               React
             </TabsTrigger>
             <TabsTrigger
               value="node"
-              className="overflow-hidden rounded-b-none border-x border-t border-border bg-muted py-2 data-[state=active]:z-10 data-[state=active]:shadow-none"
+              className="overflow-hidden rounded-b-none border-x border-t border-border bg-muted py-2 data-[state=active]:z-10 data-[state=active]:shadow-none whitespace-nowrap"
             >
               Node.js
             </TabsTrigger>
@@ -246,17 +246,19 @@ export default async function ApiAccessPage() {
   const apiKey = await getApiKey(userId)
 
   return (
-    <div className="mx-auto max-w-2xl py-20">
-      <div className="space-y-12">
+    <div className="container mx-auto max-w-2xl py-6 px-4 sm:py-20 pt-20 sm:px-0">
+      <div className="space-y-8 sm:space-y-12">
         <div className="space-y-4">
           <div className="space-y-1">
-            <h1 className="text-2xl font-medium tracking-tight">API Access</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl font-medium tracking-tight">
+              API Access
+            </h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
               Semantic UI Component API for AI-Powered Development
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-6 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pt-2">
             <div className="space-y-1">
               <p className="font-medium">Semantic Search</p>
               <p className="text-sm text-muted-foreground">
@@ -275,7 +277,7 @@ export default async function ApiAccessPage() {
 
         <ApiDocs />
 
-        <div className="border-t pt-8">
+        <div className="border-t pt-6 sm:pt-8">
           <ApiKeyManager initialKey={apiKey} userId={userId} />
         </div>
       </div>

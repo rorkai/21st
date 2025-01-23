@@ -83,7 +83,7 @@ export const sections: NavigationSection[] = [
     items: landingPageSections,
   },
   {
-    title: "UI elements", 
+    title: "UI elements",
     icon: Box,
     items: uiComponents,
   },

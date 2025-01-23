@@ -5,6 +5,7 @@ import { ThemeToggle } from "./theme-toggle"
 import { GitHubStars } from "./github-stars-number"
 import { Button } from "@/components/ui/button"
 import { Twitter } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 
 export function HeaderServer({ text }: { text?: string }) {
   return (

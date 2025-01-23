@@ -9,6 +9,56 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      api_keys: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          key: string
+          last_used_at: string | null
+          plan: Database["public"]["Enums"]["api_plan"] | null
+          project_url: string | null
+          requests_count: number | null
+          requests_limit: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          key: string
+          last_used_at?: string | null
+          plan?: Database["public"]["Enums"]["api_plan"] | null
+          project_url?: string | null
+          requests_count?: number | null
+          requests_limit?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          key?: string
+          last_used_at?: string | null
+          plan?: Database["public"]["Enums"]["api_plan"] | null
+          project_url?: string | null
+          requests_count?: number | null
+          requests_limit?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       component_analytics: {
         Row: {
           activity_type: string | null
@@ -245,6 +295,7 @@ export type Database = {
           price: number
           pro_preview_image_url: string | null
           registry: string
+          registry_url: string | null
           tailwind_config_extension: string | null
           updated_at: string
           user_id: string
@@ -278,6 +329,7 @@ export type Database = {
           price?: number
           pro_preview_image_url?: string | null
           registry?: string
+          registry_url?: string | null
           tailwind_config_extension?: string | null
           updated_at?: string
           user_id: string
@@ -311,6 +363,7 @@ export type Database = {
           price?: number
           pro_preview_image_url?: string | null
           registry?: string
+          registry_url?: string | null
           tailwind_config_extension?: string | null
           updated_at?: string
           user_id?: string
@@ -400,6 +453,7 @@ export type Database = {
           demo_dependencies: Json | null
           demo_direct_registry_dependencies: Json | null
           demo_slug: string
+          embedding?: string | null
           fts: unknown | null
           id: number
           name: string | null
@@ -417,6 +471,7 @@ export type Database = {
           demo_dependencies?: Json | null
           demo_direct_registry_dependencies?: Json | null
           demo_slug?: string
+          embedding?: string | null
           fts?: unknown | null
           id?: number
           name?: string | null
@@ -434,6 +489,7 @@ export type Database = {
           demo_dependencies?: Json | null
           demo_direct_registry_dependencies?: Json | null
           demo_slug?: string
+          embedding?: string | null
           fts?: unknown | null
           id?: number
           name?: string | null
@@ -762,6 +818,32 @@ export type Database = {
       }
     }
     Functions: {
+      check_api_key: {
+        Args: {
+          api_key: string
+        }
+        Returns: Json
+      }
+      create_api_key: {
+        Args: {
+          user_id: string
+          plan?: Database["public"]["Enums"]["api_plan"]
+          requests_limit?: number
+        }
+        Returns: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          key: string
+          last_used_at: string | null
+          plan: Database["public"]["Enums"]["api_plan"] | null
+          project_url: string | null
+          requests_count: number | null
+          requests_limit: number | null
+          user_id: string
+        }
+      }
       delete_component: {
         Args: {
           component_id: number
@@ -1001,6 +1083,7 @@ export type Database = {
           price: number
           pro_preview_image_url: string | null
           registry: string
+          registry_url: string | null
           tailwind_config_extension: string | null
           updated_at: string
           user_id: string
@@ -1042,6 +1125,12 @@ export type Database = {
       increment: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      increment_api_requests: {
+        Args: {
+          key_id: string
+        }
+        Returns: undefined
       }
       is_trigger_operation: {
         Args: Record<PropertyKey, never>
@@ -1103,6 +1192,36 @@ export type Database = {
           demo_slug: string
         }[]
       }
+      search_demos_ai:
+        | {
+            Args: {
+              match_threshold?: number
+              query_embedding?: string
+              search_query?: string
+            }
+            Returns: {
+              id: number
+              name: string
+              preview_url: string
+              video_url: string
+              component_data: Json
+              user_data: Json
+            }[]
+          }
+        | {
+            Args: {
+              search_query: string
+              match_threshold?: number
+            }
+            Returns: {
+              id: number
+              name: string
+              preview_url: string
+              video_url: string
+              component_data: Json
+              user_data: Json
+            }[]
+          }
       update_component_dependencies_closure:
         | {
             Args: {
@@ -1142,6 +1261,7 @@ export type Database = {
           }
     }
     Enums: {
+      api_plan: "free" | "pro" | "enterprise"
       submission_status: "on_review" | "featured" | "posted"
     }
     CompositeTypes: {

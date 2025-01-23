@@ -100,22 +100,24 @@ export function ApiKeyManager({ initialKey, userId }: ApiKeyManagerProps) {
 
   return (
     <>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-lg font-medium">
-            <div className="flex items-center gap-2">
-              <Key className="h-4 w-4" />
-              Your API Key
-            </div>
-          </CardTitle>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            Your API Key
+          </div>
           {!key && (
             <Button onClick={() => setShowTerms(true)} disabled={loading}>
               Create API Key
             </Button>
           )}
-          {key && <span className="text-sm text-muted-foreground">Contact Serafim to upgrade your plan</span>}
-        </CardHeader>
-        <CardContent className="grid gap-4">
+          {key && (
+            <span className="text-sm text-muted-foreground">
+              Contact Serafim to upgrade your plan
+            </span>
+          )}
+        </div>
+
+        <div className="grid gap-4">
           {!key ? (
             <Alert>
               <AlertTriangle className="h-4 w-4" />
@@ -146,17 +148,6 @@ export function ApiKeyManager({ initialKey, userId }: ApiKeyManagerProps) {
                         Last used {formatDate(key.last_used_at)}
                       </time>
                     )}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Project URL:{" "}
-                    <a
-                      href={key.project_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline"
-                    >
-                      {key.project_url}
-                    </a>
                   </div>
                 </div>
               </div>
@@ -189,8 +180,8 @@ export function ApiKeyManager({ initialKey, userId }: ApiKeyManagerProps) {
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <TermsDialog
         open={showTerms}

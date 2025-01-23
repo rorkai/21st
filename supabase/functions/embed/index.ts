@@ -1,7 +1,5 @@
 import { Pool } from "https://deno.land/x/postgres@v0.17.0/mod.ts"
-// import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
-
-
+import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 
 const model = new Supabase.ai.Session("gte-small")
 
@@ -11,11 +9,11 @@ const pool = new Pool(databaseUrl, 1, true)
 
 async function embedDemo(demoId: string) {
   console.log(`Starting to embed demo ${demoId}`)
-  
-  console.log('Connecting to database...')
+
+  console.log("Connecting to database...")
   const connection = await pool.connect()
-  
-  console.log('Fetching demo data from database...')
+
+  console.log("Fetching demo data from database...")
   const result = await connection.queryObject`
    SELECT 
     c.name,
@@ -43,22 +41,22 @@ async function embedDemo(demoId: string) {
     demo_code: string
     tags: string
   }
-  console.log('Demo data fetched successfully')
+  console.log("Demo data fetched successfully")
 
-  console.log('Fetching code content...')
+  console.log("Fetching code content...")
   const [codeText, demoCodeText] = await Promise.all([
     (await fetch(data.code)).text(),
     (await fetch(data.demo_code)).text(),
   ])
-  console.log('Code content fetched successfully')
+  console.log("Code content fetched successfully")
 
   const text = `${data.name} ${data.demo_name} ${data.description} ${data.tags} ${codeText} ${demoCodeText}`
 
-  console.log('Generating embedding...')
+  console.log("Generating embedding...")
   const output = await model.run(text, { mean_pool: true, normalize: true })
-  console.log('Embedding generated successfully')
+  console.log("Embedding generated successfully")
 
-  console.log('Updating demo with embedding...')
+  console.log("Updating demo with embedding...")
   await connection.queryObject`
     UPDATE public.demos
     SET embedding = ${JSON.stringify(output)}
@@ -70,11 +68,20 @@ async function embedDemo(demoId: string) {
 }
 
 Deno.serve(async (req: Request) => {
-  console.log('Received embedding request')
-  const { demoId } = await req.json()
-  console.log(`Processing demo ID: ${demoId}`)
-  
-  EdgeRuntime.waitUntil(embedDemo(demoId))
+  console.log("Received embedding request")
+  // record is for the case when we send data from database webhooks
+  const { demoId, record } = await req.json()
+  console.log(`Processing demo ID or recrod: ${demoId} ${record}`)
+
+  const idFromRecord = record?.id
+
+  if (demoId && idFromRecord) {
+    throw Error("Both demoId and record are provided")
+  }
+
+  const finalId = demoId ?? idFromRecord
+
+  EdgeRuntime.waitUntil(embedDemo(finalId))
 
   return new Response("ok", {
     headers: {

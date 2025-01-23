@@ -23,6 +23,8 @@ interface DemoPreviewTabsProps {
   formStep?: FormStep
   previewKey?: string
   currentDemoIndex: number
+  demoCode: string
+  demoDependencies?: Record<string, string>
 }
 
 export function DemoPreviewTabs({
@@ -39,8 +41,22 @@ export function DemoPreviewTabs({
   formStep,
   previewKey,
   currentDemoIndex,
+  demoCode,
+  demoDependencies,
 }: DemoPreviewTabsProps) {
   const demos = form?.watch("demos") || []
+
+  console.log("DemoPreviewTabs values:", {
+    code,
+    demoCode,
+    demos,
+    directRegistryDependencies,
+    demoDependencies,
+    customTailwindConfig,
+    customGlobalCss,
+    currentDemo: demos[currentDemoIndex],
+  })
+
   const [activeTab, setActiveTab] = useState("demo-0")
   const [renderedTabs, setRenderedTabs] = useState<Set<string>>(
     new Set(["demo-0"]),
@@ -119,7 +135,7 @@ export function DemoPreviewTabs({
                   <div className="relative h-full">
                     <PublishComponentPreview
                       code={code}
-                      demoCode={demo.demo_code}
+                      demoCode={demo.demo_code || demoCode}
                       slugToPublish={slugToPublish}
                       registryToPublish={registryToPublish}
                       directRegistryDependencies={[
@@ -130,7 +146,9 @@ export function DemoPreviewTabs({
                       customTailwindConfig={form?.getValues("tailwind_config")}
                       customGlobalCss={form?.getValues("globals_css")}
                       key={previewKeys[index] || previewKey}
-                      demoDependencies={demo.demo_dependencies}
+                      demoDependencies={
+                        demo.demo_dependencies || demoDependencies
+                      }
                     />
                     {shouldBlurPreview &&
                       formStep === "demoCode" &&

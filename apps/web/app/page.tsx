@@ -79,7 +79,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
 export default async function HomePage() {
   const { userId } = auth()
   if (!userId) {
-    redirect("https://accounts.21st.dev/sign-in")
+    redirect("/sign-in")
   }
 
   const supabase = createClient(

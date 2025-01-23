@@ -43,6 +43,26 @@ const cleanInitialUrl = (url: string | null) => {
   return url.replace(/^(https?:\/\/)+(www\.)?/, "")
 }
 
+const sanitizeDependencies = (deps: unknown): string[] =>
+  Array.isArray(deps) ? deps.filter(Boolean) : []
+
+interface CommonEditorProps {
+  code: string
+  demoCode: string
+  componentSlug: string
+  registryToPublish: string
+  customTailwindConfig?: string
+  customGlobalCss?: string
+  currentState: {
+    code: string
+    demoCode: string
+    directRegistryDependencies: string[]
+    demoDirectRegistryDependencies: string[]
+    tailwindConfig?: string
+    globalsCss?: string
+  }
+}
+
 export function EditComponentDialog({
   component,
   demo,
@@ -368,14 +388,34 @@ export function EditComponentDialog({
       console.log("Versioned URL:", versionedUrl)
 
       if (codeUrl) {
-        console.log("Updating component with new code URL")
-        await onUpdate(
-          {
+        // Обновляем компонент
+        const { error: updateComponentError } = await supabase
+          .from("components")
+          .update({
             code: versionedUrl,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", componentData.id)
+
+        if (updateComponentError) {
+          console.error("Error updating component:", updateComponentError)
+          throw updateComponentError
+        }
+
+        // Обновляем все демо этого компонента
+        const { error: updateDemosError } = await supabase
+          .from("demos")
+          .update({
             compiled_css: null,
-          },
-          {},
-        )
+            updated_at: new Date().toISOString(),
+          })
+          .eq("component_id", componentData.id)
+
+        if (updateDemosError) {
+          console.error("Error updating demos:", updateDemosError)
+          throw updateDemosError
+        }
+
         setComponentCode(newCode)
         toast.success("Component code updated successfully")
         window.location.reload()
@@ -520,6 +560,27 @@ export function EditComponentDialog({
     }
   }
 
+  const commonEditorProps: CommonEditorProps = {
+    code: componentCode,
+    demoCode: demoCode,
+    componentSlug: componentData.component_slug,
+    registryToPublish: componentData.registry,
+    customTailwindConfig: tailwindConfig,
+    customGlobalCss: globalCss,
+    currentState: {
+      code: componentCode,
+      demoCode: demoCode,
+      directRegistryDependencies: sanitizeDependencies(
+        componentData.direct_registry_dependencies,
+      ),
+      demoDirectRegistryDependencies: sanitizeDependencies(
+        demo.demo_direct_registry_dependencies,
+      ),
+      tailwindConfig: tailwindConfig,
+      globalsCss: globalCss,
+    },
+  }
+
   const content = (
     <>
       <div className="space-y-6">
@@ -606,134 +667,43 @@ export function EditComponentDialog({
     <>
       {isEditingCode && (
         <CodeEditorDialog
+          {...commonEditorProps}
           isOpen={isEditingCode}
           setIsOpen={setIsEditingCode}
-          code={componentCode}
-          demoCode={demoCode}
-          componentSlug={componentData.component_slug}
-          registryToPublish={componentData.registry}
-          directRegistryDependencies={
-            Array.isArray(componentData.direct_registry_dependencies)
-              ? (componentData.direct_registry_dependencies as string[]).filter(
-                  Boolean,
-                )
-              : []
-          }
-          customTailwindConfig={tailwindConfig}
-          customGlobalCss={globalCss}
+          directRegistryDependencies={sanitizeDependencies(
+            componentData.direct_registry_dependencies,
+          )}
           onSave={handleSaveComponentCode}
           mode="component"
-          currentState={{
-            code: componentCode,
-            demoCode: demoCode,
-            directRegistryDependencies: Array.isArray(
-              componentData.direct_registry_dependencies,
-            )
-              ? (componentData.direct_registry_dependencies as string[]).filter(
-                  Boolean,
-                )
-              : [],
-            demoDirectRegistryDependencies: Array.isArray(
-              demo.demo_direct_registry_dependencies,
-            )
-              ? (demo.demo_direct_registry_dependencies as string[]).filter(
-                  Boolean,
-                )
-              : [],
-            tailwindConfig: tailwindConfig,
-            globalsCss: globalCss,
-          }}
         />
       )}
 
       {isEditingDemo && (
         <CodeEditorDialog
+          {...commonEditorProps}
           isOpen={isEditingDemo}
           setIsOpen={setIsEditingDemo}
-          code={componentCode}
-          demoCode={demoCode}
-          componentSlug={componentData.component_slug}
-          registryToPublish={componentData.registry}
-          directRegistryDependencies={
-            Array.isArray(componentData.direct_registry_dependencies)
-              ? (componentData.direct_registry_dependencies as string[]).filter(
-                  Boolean,
-                )
-              : []
-          }
-          demoDirectRegistryDependencies={
-            Array.isArray(demo.demo_direct_registry_dependencies)
-              ? (demo.demo_direct_registry_dependencies as string[]).filter(
-                  Boolean,
-                )
-              : []
-          }
-          customTailwindConfig={tailwindConfig}
-          customGlobalCss={globalCss}
+          directRegistryDependencies={sanitizeDependencies(
+            componentData.direct_registry_dependencies,
+          )}
+          demoDirectRegistryDependencies={sanitizeDependencies(
+            demo.demo_direct_registry_dependencies,
+          )}
           onSave={handleSaveDemoCode}
           mode="demo"
-          currentState={{
-            code: componentCode,
-            demoCode: demoCode,
-            directRegistryDependencies: Array.isArray(
-              componentData.direct_registry_dependencies,
-            )
-              ? (componentData.direct_registry_dependencies as string[]).filter(
-                  Boolean,
-                )
-              : [],
-            demoDirectRegistryDependencies: Array.isArray(
-              demo.demo_direct_registry_dependencies,
-            )
-              ? (demo.demo_direct_registry_dependencies as string[]).filter(
-                  Boolean,
-                )
-              : [],
-            tailwindConfig: tailwindConfig,
-            globalsCss: globalCss,
-          }}
         />
       )}
 
       {isEditingStyles && (
         <CodeEditorDialog
+          {...commonEditorProps}
           isOpen={isEditingStyles}
           setIsOpen={setIsEditingStyles}
-          code={componentCode}
-          demoCode={demoCode}
-          componentSlug={componentData.component_slug}
-          registryToPublish={componentData.registry}
-          directRegistryDependencies={
-            Array.isArray(componentData.direct_registry_dependencies)
-              ? (componentData.direct_registry_dependencies as string[]).filter(
-                  Boolean,
-                )
-              : []
-          }
-          customTailwindConfig={tailwindConfig}
-          customGlobalCss={globalCss}
+          directRegistryDependencies={sanitizeDependencies(
+            componentData.direct_registry_dependencies,
+          )}
           onSave={handleSaveStyles}
           mode="styles"
-          currentState={{
-            code: componentCode,
-            demoCode: demoCode,
-            directRegistryDependencies: Array.isArray(
-              componentData.direct_registry_dependencies,
-            )
-              ? (componentData.direct_registry_dependencies as string[]).filter(
-                  Boolean,
-                )
-              : [],
-            demoDirectRegistryDependencies: Array.isArray(
-              demo.demo_direct_registry_dependencies,
-            )
-              ? (demo.demo_direct_registry_dependencies as string[]).filter(
-                  Boolean,
-                )
-              : [],
-            tailwindConfig: tailwindConfig,
-            globalsCss: globalCss,
-          }}
         />
       )}
 
@@ -754,30 +724,7 @@ export function EditComponentDialog({
           <SheetHeader className="min-h-12 border-b bg-background z-50 pointer-events-auto px-4 sticky top-0">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                {isEditingCode && (
-                  <Tabs value={activeCodeTab} onValueChange={setActiveCodeTab}>
-                    <TabsList className="h-auto gap-2 rounded-none bg-transparent px-0 py-1 text-foreground">
-                      <TabsTrigger
-                        value="component"
-                        className="relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-2 after:h-0.5 hover:bg-accent hover:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent data-[state=inactive]:text-foreground/70"
-                      >
-                        {componentData.component_slug}.tsx
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="tailwind"
-                        className="relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-2 after:h-0.5 hover:bg-accent hover:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent data-[state=inactive]:text-foreground/70"
-                      >
-                        tailwind.config.js
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="globals"
-                        className="relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-2 after:h-0.5 hover:bg-accent hover:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent data-[state=inactive]:text-foreground/70"
-                      >
-                        globals.css
-                      </TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                )}
+                <SheetTitle>Edit component</SheetTitle>
               </div>
               <div className="flex items-center gap-2">
                 <Button

@@ -1,3 +1,5 @@
+"use client"
+
 import {
   Prism as SyntaxHighlighter,
   SyntaxHighlighterProps,

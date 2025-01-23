@@ -2,6 +2,8 @@ import React from "react"
 import { Metadata } from "next"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
+import { auth } from "@clerk/nextjs/server"
+import { createClient } from "@supabase/supabase-js"
 
 import {
   QuickFilterOption,
@@ -9,7 +11,6 @@ import {
   DemoWithComponent,
 } from "@/types/global"
 
-import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { transformDemoResult } from "@/lib/utils/transformData"
 
 import { Header } from "@/components/ui/header.client"
@@ -44,7 +45,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
     keywords: [
       "react components",
       "tailwind css",
-      "ui components",
+      "ui components", 
       "design engineers",
       "component library",
       "shadcn ui",
@@ -64,7 +65,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
     },
     twitter: {
       card: "summary_large_image",
-      title: "21st.dev - The NPM for Design Engineers",
+      title: "21st.dev - The NPM for Design Engineers", 
       description:
         "Ship polished UIs faster with ready-to-use React Tailwind components inspired by shadcn/ui. Built by design engineers, for design engineers.",
       images: [`${process.env.NEXT_PUBLIC_APP_URL}/og-image.png`],
@@ -76,6 +77,22 @@ export const generateMetadata = async (): Promise<Metadata> => {
 }
 
 export default async function HomePage() {
+  const { userId } = auth()
+  if (!userId) {
+    redirect("/sign-in")
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }
+  )
+
   try {
     const cookieStore = cookies()
     const shouldShowHero = !cookieStore.has("has_visited")
@@ -109,7 +126,7 @@ export default async function HomePage() {
     })()
 
     const { data: initialDemos, error: demosError } =
-      await supabaseWithAdminAccess
+      await supabase
         .from("demos")
         .select(
           "*, component:components!demos_component_id_fkey(*, user:users!user_id(*)), user:users!user_id(*)",
@@ -124,7 +141,7 @@ export default async function HomePage() {
       return null
     }
 
-    const filteredDemos = await supabaseWithAdminAccess.rpc(
+    const filteredDemos = await supabase.rpc(
       "get_filtered_demos_with_views",
       {
         p_quick_filter: quickFilterPreference,
@@ -143,7 +160,7 @@ export default async function HomePage() {
     )
 
     const { data: initialTabsCountsData, error: initialTabsCountsError } =
-      await supabaseWithAdminAccess.rpc("get_components_counts")
+      await supabase.rpc("get_components_counts")
 
     const initialTabsCounts =
       !initialTabsCountsError && Array.isArray(initialTabsCountsData)

@@ -6,7 +6,8 @@ export type Demo = Database["public"]["Tables"]["demos"]["Row"]
 export type User = Database["public"]["Tables"]["users"]["Row"]
 export type Tag = Database["public"]["Tables"]["tags"]["Row"]
 export type Submission = Database["public"]["Tables"]["submissions"]["Row"]
-export type HuntedComponents = Database["public"]["Functions"]["get_hunted_components"]["Returns"]
+export type HuntedComponents =
+  Database["public"]["Functions"]["get_hunted_components"]["Returns"]
 
 export type DemoWithComponent = Demo & {
   component: Component & { user: User }
@@ -76,3 +77,42 @@ export type FormStep =
   | "demoCode"
   | "demoDetails"
   | "detailedForm"
+
+// API Types
+export interface ComponentSearchResult {
+  name: string
+  preview_url: string
+  video_url: string | null
+  component_data: {
+    name: string
+    description: string
+    code: string
+    install_command: string
+  }
+  component_user_data: {
+    name: string
+    username: string
+    image_url: string | null
+  }
+}
+
+export interface SearchResponse {
+  results: ComponentSearchResult[]
+  metadata?: {
+    plan: string
+    requests_remaining: number
+  }
+}
+
+export type ApiKey = {
+  id: string
+  key: string
+  user_id: string
+  plan: "free" | "pro" | "enterprise"
+  requests_limit: number
+  requests_count: number
+  created_at: string
+  expires_at: string | null
+  last_used_at: string | null
+  is_active: boolean
+}

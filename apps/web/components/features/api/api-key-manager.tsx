@@ -101,12 +101,16 @@ export function ApiKeyManager({ initialKey, userId }: ApiKeyManagerProps) {
   return (
     <>
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm font-medium">
             Your API Key
           </div>
           {!key && (
-            <Button onClick={() => setShowTerms(true)} disabled={loading}>
+            <Button
+              onClick={() => setShowTerms(true)}
+              disabled={loading}
+              className="w-full sm:w-auto"
+            >
               Create API Key
             </Button>
           )}
@@ -126,17 +130,17 @@ export function ApiKeyManager({ initialKey, userId }: ApiKeyManagerProps) {
               </AlertDescription>
             </Alert>
           ) : (
-            <div className="grid gap-4 p-4 rounded-lg border bg-card text-card-foreground">
-              <div className="flex items-start justify-between gap-4">
+            <div className="grid gap-4 p-3 sm:p-4 rounded-lg border bg-card text-card-foreground">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                 <div className="grid gap-3 flex-1">
                   <Code
                     code={key.key}
                     language="bash"
                     fontSize="sm"
                     display="block"
-                    className="m-0"
+                    className="m-0 break-all"
                   />
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
                     <time dateTime={key.created_at} className="tabular-nums">
                       Created {formatDate(key.created_at)}
                     </time>
@@ -153,7 +157,7 @@ export function ApiKeyManager({ initialKey, userId }: ApiKeyManagerProps) {
               </div>
 
               <div className="grid gap-2">
-                <div className="flex justify-between text-sm">
+                <div className="flex flex-col sm:flex-row justify-between text-sm gap-1">
                   <span>Usage</span>
                   <span className="tabular-nums">
                     {key.requests_count} / {key.requests_limit} requests
@@ -217,7 +221,7 @@ export function ApiKeyManager({ initialKey, userId }: ApiKeyManagerProps) {
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-3 sm:gap-[inherit]">
             <Button
               variant="outline"
               onClick={() => setShowProjectDialog(false)}

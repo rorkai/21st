@@ -35,7 +35,7 @@ export function TermsDialog({ open, onAccept, onClose }: TermsDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="flex flex-col gap-0 p-0 sm:max-h-[min(640px,80vh)] sm:max-w-lg [&>button:last-child]:top-3.5">
+      <DialogContent className="flex flex-col gap-0 p-0 max-h-[calc(100vh-100px)] rounded-lg sm:max-h-[min(640px,80vh)] sm:max-w-lg [&>button:last-child]:top-3.5">
         <DialogHeader className="contents space-y-0 text-left">
           <DialogTitle className="border-b border-border px-6 py-4 text-base">
             21st.dev API Terms of Use
@@ -251,7 +251,7 @@ export function TermsDialog({ open, onAccept, onClose }: TermsDialogProps) {
             </DialogDescription>
           </div>
         </DialogHeader>
-        <DialogFooter className="border-t border-border px-6 py-4 sm:items-center">
+        <DialogFooter className="border-t border-border px-6 py-4 sm:items-center gap-3 sm:gap-[inherit]">
           {!hasReadToBottom && (
             <span className="grow text-xs text-muted-foreground max-sm:text-center">
               Read all terms before accepting.

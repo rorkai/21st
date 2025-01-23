@@ -5,12 +5,7 @@ import Link from "next/link"
 import { useSearchParams, usePathname } from "next/navigation"
 
 import { atom } from "jotai"
-import {
-  SignInButton,
-  SignedIn,
-  SignedOut,
-  useClerk,
-} from "@clerk/nextjs"
+import { SignInButton, SignedIn, SignedOut, useClerk } from "@clerk/nextjs"
 import { ChevronDown } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -316,6 +311,12 @@ export function Header({
                     </div>
 
                     <div className="border-t border-border p-1">
+                      <DropdownMenuItem
+                        className="text-sm px-3 py-2 cursor-pointer"
+                        onSelect={() => (window.location.href = "/api-keys")}
+                      >
+                        API Keys
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-sm px-3 py-2 cursor-pointer"
                         onSelect={() => window.open("/terms", "_blank")}

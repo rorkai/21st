@@ -18,6 +18,7 @@ export type Database = {
           key: string
           last_used_at: string | null
           plan: Database["public"]["Enums"]["api_plan"] | null
+          project_url: string | null
           requests_count: number | null
           requests_limit: number | null
           user_id: string
@@ -30,6 +31,7 @@ export type Database = {
           key: string
           last_used_at?: string | null
           plan?: Database["public"]["Enums"]["api_plan"] | null
+          project_url?: string | null
           requests_count?: number | null
           requests_limit?: number | null
           user_id: string
@@ -42,6 +44,7 @@ export type Database = {
           key?: string
           last_used_at?: string | null
           plan?: Database["public"]["Enums"]["api_plan"] | null
+          project_url?: string | null
           requests_count?: number | null
           requests_limit?: number | null
           user_id?: string
@@ -835,6 +838,7 @@ export type Database = {
           key: string
           last_used_at: string | null
           plan: Database["public"]["Enums"]["api_plan"] | null
+          project_url: string | null
           requests_count: number | null
           requests_limit: number | null
           user_id: string

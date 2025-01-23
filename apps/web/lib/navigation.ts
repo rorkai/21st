@@ -1,4 +1,4 @@
-import { Dock, Box } from "lucide-react"
+import { Dock, Box, Webhook } from "lucide-react"
 
 type NavigationItem = {
   title: string
@@ -78,12 +78,21 @@ const uiComponents: NavigationItem[] = [
 
 export const sections: NavigationSection[] = [
   {
+    title: "API",
+    icon: Webhook,
+    items: [
+      { title: "Documentation", href: "/api-docs" },
+      { title: "API Keys", href: "/api-keys" },
+    ],
+    isNew: true,
+  },
+  {
     title: "Landing Pages",
     icon: Dock,
     items: landingPageSections,
   },
   {
-    title: "UI elements", 
+    title: "UI elements",
     icon: Box,
     items: uiComponents,
   },

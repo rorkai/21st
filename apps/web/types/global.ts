@@ -115,4 +115,5 @@ export type ApiKey = {
   expires_at: string | null
   last_used_at: string | null
   is_active: boolean
+  project_url: string
 }

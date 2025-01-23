@@ -5,13 +5,26 @@ import { useForm, FormProvider } from "react-hook-form"
 import { toast } from "sonner"
 import { FormData } from "@/components/features/publish/config/utils"
 import { useTheme } from "next-themes"
-import { extractDemoComponentNames } from "@/lib/parsers"
+import {
+  extractDemoComponentNames,
+  extractRegistryDependenciesFromImports,
+  extractAmbigiousRegistryDependencies,
+  extractNPMDependencies,
+} from "@/lib/parsers"
 import { UrlInput } from "@/components/features/import/components/url-input"
 import { ImportForm } from "@/components/features/import/components/import-form"
 import { ImportHeader } from "@/components/features/import/components/import-header"
 import { SuccessDialog } from "@/components/features/publish/components/success-dialog"
 import { useRouter } from "next/navigation"
 import { useUser } from "@clerk/nextjs"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { WorkflowIcon } from "@/components/icons/workslow"
+import { ResolveUnknownDependenciesAlertForm } from "@/components/features/publish/components/alerts"
 
 interface RegistryComponent {
   name: string
@@ -59,6 +72,8 @@ export default function ImportPageClient() {
   const { resolvedTheme } = useTheme()
   const isDarkTheme = resolvedTheme === "dark"
   const router = useRouter()
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false)
+  const [showDependenciesModal, setShowDependenciesModal] = useState(false)
 
   const urlForm = useForm<UrlFormData>({
     defaultValues: {
@@ -99,6 +114,50 @@ export default function ImportPageClient() {
     },
   })
 
+  const handleDependenciesResolved = (resolvedDependencies: any[]) => {
+    if (!form) {
+      return
+    }
+
+    try {
+      const nonDemoDependencies = resolvedDependencies.filter(
+        (d) => !d.isDemoDependency,
+      )
+      const demoDependencies = resolvedDependencies.filter(
+        (d) => d.isDemoDependency,
+      )
+
+      const currentDirectDeps =
+        form.getValues("direct_registry_dependencies") || []
+
+      const newDirectDeps = [
+        ...new Set([
+          ...currentDirectDeps,
+          ...nonDemoDependencies.map((d) => `${d.username}/${d.slug}`),
+        ]),
+      ]
+      form.setValue("direct_registry_dependencies", newDirectDeps)
+
+      const currentDemoDeps =
+        form.getValues(`demos.0.demo_direct_registry_dependencies`) || []
+
+      const newDemoDeps = [
+        ...new Set([
+          ...currentDemoDeps,
+          ...demoDependencies.map((d) => `${d.username}/${d.slug}`),
+        ]),
+      ]
+      form.setValue(`demos.0.demo_direct_registry_dependencies`, newDemoDeps)
+
+      form.setValue("unknown_dependencies", [])
+      form.setValue("unknown_dependencies_with_metadata", [])
+
+      setShowDependenciesModal(false)
+    } catch (error) {
+      console.error("Error resolving dependencies:", error)
+    }
+  }
+
   const handleFetch = async (url: string) => {
     try {
       setIsLoading(true)
@@ -123,6 +182,59 @@ export default function ImportPageClient() {
       const componentName = formatComponentName(data.name)
       const originalName = componentNames[0] || data.name
 
+      // Extract all dependencies
+      const directRegistryDependencyImports =
+        extractRegistryDependenciesFromImports(componentFile.content)
+      const ambigiousRegistryDependencies = Object.values(
+        extractAmbigiousRegistryDependencies(componentFile.content),
+      )
+      const npmDependencies = extractNPMDependencies(componentFile.content)
+
+      // Create demo code
+      const demoCode = `import { ${originalName} } from "@/components/${data.type.replace("registry:", "")}/${data.name}"
+
+const Demo = () => {
+  return (
+    <${originalName} />
+  )
+}
+  
+export default { Demo }`
+
+      // Extract demo dependencies
+      const demoDependencyImports =
+        extractRegistryDependenciesFromImports(demoCode)
+      const ambigiousDemoRegistryDependencies = Object.values(
+        extractAmbigiousRegistryDependencies(demoCode),
+      )
+      const demoNpmDependencies = extractNPMDependencies(demoCode)
+
+      // Combine all unknown dependencies
+      const parsedUnknownDependencies = [
+        ...ambigiousRegistryDependencies.map((d) => ({
+          ...d,
+          isDemoDependency: false,
+        })),
+        ...ambigiousDemoRegistryDependencies.map((d) => ({
+          ...d,
+          isDemoDependency: true,
+        })),
+      ]
+        .map((d) => ({
+          slugWithUsername: d.slug,
+          registry: d.registry,
+          isDemoDependency: d.isDemoDependency,
+        }))
+        .filter((d) => data.name !== d.slugWithUsername)
+        .filter(
+          (d) =>
+            !(
+              d.isDemoDependency
+                ? demoDependencyImports
+                : directRegistryDependencyImports
+            ).includes(d.slugWithUsername),
+        )
+
       form.reset({
         ...form.getValues(),
         name: componentName,
@@ -141,31 +253,32 @@ export default function ImportPageClient() {
           {
             name: "Default",
             demo_slug: "default",
-            demo_code: `import { ${originalName} } from "@/components/${data.type.replace("registry:", "")}/${data.name}"
-
-const Demo = () => {
-  return (
-    <${originalName} />
-  )
-}
-  
-export default { Demo }`,
+            demo_code: demoCode,
             preview_image_data_url: "",
             preview_image_file: new File([], "placeholder"),
             preview_video_data_url: "",
             preview_video_file: new File([], "placeholder"),
             tags: [],
-            demo_dependencies: Object.fromEntries(
-              (data.dependencies || []).map((dep: string) => [dep, "latest"]),
-            ),
-            demo_direct_registry_dependencies: data.registryDependencies,
+            demo_dependencies: {
+              ...Object.fromEntries(
+                (data.dependencies || []).map((dep: string) => [dep, "latest"]),
+              ),
+              ...demoNpmDependencies,
+            },
+            demo_direct_registry_dependencies: demoDependencyImports,
           },
         ],
         slug_available: false,
-        unknown_dependencies: [],
-        unknown_dependencies_with_metadata: [],
-        direct_registry_dependencies: data.registryDependencies,
+        unknown_dependencies: parsedUnknownDependencies.map(
+          (d) => d.slugWithUsername,
+        ),
+        unknown_dependencies_with_metadata: parsedUnknownDependencies,
+        direct_registry_dependencies: directRegistryDependencyImports,
       })
+
+      if (parsedUnknownDependencies.length > 0) {
+        setShowDependenciesModal(true)
+      }
 
       setShowUrlInput(false)
       setFormStep("detailedForm")
@@ -287,6 +400,29 @@ export default { Demo }`,
         onGoToComponent={handleGoToComponent}
         mode="component"
       />
+
+      <Dialog
+        open={showDependenciesModal}
+        onOpenChange={setShowDependenciesModal}
+      >
+        <DialogContent className="max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <WorkflowIcon />
+              <DialogTitle>Unknown Dependencies</DialogTitle>
+            </div>
+          </DialogHeader>
+          <ResolveUnknownDependenciesAlertForm
+            unknownDependencies={
+              form?.watch("unknown_dependencies_with_metadata") || []
+            }
+            onBack={() => {
+              setShowDependenciesModal(false)
+            }}
+            onDependenciesResolved={handleDependenciesResolved}
+          />
+        </DialogContent>
+      </Dialog>
     </FormProvider>
   )
 }

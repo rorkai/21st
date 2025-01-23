@@ -113,13 +113,6 @@ export function CodeEditorDialog({
     setPreviewKey(`${value}-${Date.now()}`)
   }
 
-  const handleRestartPreview = () => {
-    setPreviewKey(
-      `${editedCode}-${demoCode}-${customTailwindConfig}-${customGlobalCss}-${isDarkTheme}-${Date.now()}`,
-    )
-    setShouldBlurPreview(false)
-  }
-
   const handleSave = async () => {
     try {
       setIsSaving(true)
@@ -135,9 +128,10 @@ export function CodeEditorDialog({
   const previewProps = {
     code: mode === "component" ? editedCode : currentStateValue.code,
     demoCode: mode === "demo" ? editedCode : currentStateValue.demoCode,
-    directRegistryDependencies: currentStateValue.directRegistryDependencies,
+    directRegistryDependencies:
+      currentStateValue.directRegistryDependencies ?? [],
     demoDirectRegistryDependencies:
-      currentStateValue.demoDirectRegistryDependencies,
+      currentStateValue.demoDirectRegistryDependencies ?? [],
     customTailwindConfig:
       mode === "styles" && activeStyleTab === "tailwind"
         ? editedCode
@@ -152,17 +146,17 @@ export function CodeEditorDialog({
     <FormProvider {...methods}>
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetContent
-          side="left"
+          side="center"
           className="w-screen h-screen p-0 sm:max-w-none"
         >
           <div className="flex flex-col h-screen">
-            <div className="flex items-center justify-between p-4 border-b">
+            <div className="flex items-center justify-between px-4 py-1 border-b">
               <div className="flex items-center gap-4">
-                <h2 className="text-lg font-semibold">
+                <div className="font-medium text-sm">
                   {mode === "component" && "Edit Component Code"}
                   {mode === "demo" && "Edit Demo Code"}
                   {mode === "styles" && "Edit Styles"}
-                </h2>
+                </div>
                 {mode === "styles" && (
                   <Tabs
                     value={activeStyleTab}
@@ -208,7 +202,7 @@ export function CodeEditorDialog({
             <div className="flex flex-1 overflow-hidden">
               <div className="w-1/2 border-r">
                 <EditorStep
-                  form={methods}
+                  form={methods as any}
                   isDarkTheme={isDarkTheme}
                   fieldName={mode === "demo" ? "demos.0.demo_code" : "code"}
                   value={editedCode}
@@ -222,7 +216,7 @@ export function CodeEditorDialog({
                   slugToPublish={componentSlug}
                   registryToPublish={registryToPublish}
                   isDarkTheme={isDarkTheme}
-                  form={methods}
+                  form={methods as any}
                   shouldBlurPreview={false}
                   onRestartPreview={() => {
                     setPreviewKey(`${editedCode}-${Date.now()}`)

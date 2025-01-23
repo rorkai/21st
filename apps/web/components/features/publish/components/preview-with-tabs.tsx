@@ -23,7 +23,7 @@ interface DemoPreviewTabsProps {
   formStep?: FormStep
   previewKey?: string
   currentDemoIndex: number
-  demoCode: string
+  demoCode?: string
   demoDependencies?: Record<string, string>
 }
 
@@ -46,16 +46,6 @@ export function DemoPreviewTabs({
 }: DemoPreviewTabsProps) {
   const demos = form?.watch("demos") || []
 
-  console.log("DemoPreviewTabs values:", {
-    code,
-    demoCode,
-    demos,
-    directRegistryDependencies,
-    demoDependencies,
-    customTailwindConfig,
-    customGlobalCss,
-    currentDemo: demos[currentDemoIndex],
-  })
 
   const [activeTab, setActiveTab] = useState("demo-0")
   const [renderedTabs, setRenderedTabs] = useState<Set<string>>(
@@ -135,7 +125,7 @@ export function DemoPreviewTabs({
                   <div className="relative h-full">
                     <PublishComponentPreview
                       code={code}
-                      demoCode={demo.demo_code || demoCode}
+                      demoCode={demo.demo_code ?? demoCode}
                       slugToPublish={slugToPublish}
                       registryToPublish={registryToPublish}
                       directRegistryDependencies={[

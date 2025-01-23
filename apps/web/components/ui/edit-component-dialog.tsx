@@ -35,6 +35,8 @@ import { useTheme } from "next-themes"
 import { useState } from "react"
 import { CodeEditorDialog } from "./code-editor-dialog"
 import { addVersionToUrl } from "@/lib/utils/url"
+import { useClerkSupabaseClient } from "@/lib/clerk"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 const cleanInitialUrl = (url: string | null) => {
   if (!url) return ""
@@ -71,6 +73,7 @@ export function EditComponentDialog({
   const [tailwindConfig, setTailwindConfig] = useState<string>()
   const [globalCss, setGlobalCss] = useState<string>()
   const [activeStyleTab, setActiveStyleTab] = useState<string>("tailwind")
+  const [activeCodeTab, setActiveCodeTab] = useState<string>("component")
 
   const form = useForm<FormData>({
     defaultValues: {
@@ -285,9 +288,34 @@ export function EditComponentDialog({
 
   const handleEditDemo = async () => {
     try {
-      const response = await fetch(demo.demo_code)
-      const code = await response.text()
-      setDemoCode(code)
+      const [
+        componentResponse,
+        demoResponse,
+        tailwindConfigResponse,
+        globalCssResponse,
+      ] = await Promise.all([
+        fetch(componentData.code),
+        fetch(demo.demo_code),
+        componentData.tailwind_config_extension
+          ? fetch(componentData.tailwind_config_extension)
+          : Promise.resolve(undefined),
+        componentData.global_css_extension
+          ? fetch(componentData.global_css_extension)
+          : Promise.resolve(undefined),
+      ])
+
+      const [componentCode, demoCode, tailwindConfig, globalCss] =
+        await Promise.all([
+          componentResponse.text(),
+          demoResponse.text(),
+          tailwindConfigResponse?.text() || "",
+          globalCssResponse?.text() || "",
+        ])
+
+      setComponentCode(componentCode)
+      setDemoCode(demoCode)
+      setTailwindConfig(tailwindConfig)
+      setGlobalCss(globalCss)
       setIsEditingDemo(true)
     } catch (error) {
       console.error("Error fetching demo code:", error)
@@ -322,20 +350,35 @@ export function EditComponentDialog({
 
   const handleSaveComponentCode = async (newCode: string) => {
     try {
+      console.log("Saving new component code:", newCode)
       const baseFolder = `${componentData.user_id}/${componentData.component_slug}`
+      const timestamp = Date.now()
       const codeUrl = await uploadToR2({
         file: {
           name: "code.tsx",
           type: "text/plain",
           textContent: newCode,
         },
-        fileKey: `${baseFolder}/code.tsx`,
+        fileKey: `${baseFolder}/code.${timestamp}.tsx`,
         bucketName: "components-code",
       })
 
+      console.log("Original URL:", codeUrl)
+      const versionedUrl = addVersionToUrl(codeUrl)
+      console.log("Versioned URL:", versionedUrl)
+
       if (codeUrl) {
-        await onUpdate({ code: addVersionToUrl(codeUrl) }, {})
+        console.log("Updating component with new code URL")
+        await onUpdate(
+          {
+            code: versionedUrl,
+            compiled_css: null,
+          },
+          {},
+        )
+        setComponentCode(newCode)
         toast.success("Component code updated successfully")
+        window.location.reload()
       }
     } catch (error) {
       console.error("Error saving component code:", error)
@@ -344,22 +387,60 @@ export function EditComponentDialog({
     }
   }
 
+  const supabase = useClerkSupabaseClient()
+
   const handleSaveDemoCode = async (newCode: string) => {
     try {
+      console.log("Saving new demo code:", newCode)
       const baseFolder = `${componentData.user_id}/${componentData.component_slug}`
+      const timestamp = Date.now()
       const demoCodeUrl = await uploadToR2({
         file: {
           name: "demo.tsx",
           type: "text/plain",
           textContent: newCode,
         },
-        fileKey: `${baseFolder}/${demo.demo_slug}/code.demo.tsx`,
+        fileKey: `${baseFolder}/${demo.demo_slug}/code.demo.${timestamp}.tsx`,
         bucketName: "components-code",
       })
 
+      console.log("Original Demo URL:", demoCodeUrl)
+      const versionedDemoUrl = addVersionToUrl(demoCodeUrl)
+      console.log("Versioned Demo URL:", versionedDemoUrl)
+
       if (demoCodeUrl) {
-        await onUpdate({}, { demo_code: addVersionToUrl(demoCodeUrl) })
+        // Обновляем демо напрямую через Supabase
+        const { error: updateDemoError } = await supabase
+          .from("demos")
+          .update({
+            demo_code: versionedDemoUrl,
+            compiled_css: null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", demo.id)
+
+        if (updateDemoError) {
+          console.error("Error updating demo:", updateDemoError)
+          throw updateDemoError
+        }
+
+        // Обновляем компонент для сброса compiled_css
+        const { error: updateComponentError } = await supabase
+          .from("components")
+          .update({
+            compiled_css: null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", componentData.id)
+
+        if (updateComponentError) {
+          console.error("Error updating component:", updateComponentError)
+          throw updateComponentError
+        }
+
+        setDemoCode(newCode)
         toast.success("Demo code updated successfully")
+        window.location.reload()
       }
     } catch (error) {
       console.error("Error saving demo code:", error)
@@ -370,7 +451,14 @@ export function EditComponentDialog({
 
   const handleSaveStyles = async (newCode: string) => {
     try {
+      console.log(
+        "Saving new styles:",
+        newCode,
+        "activeStyleTab:",
+        activeStyleTab,
+      )
       const baseFolder = `${componentData.user_id}/${componentData.component_slug}`
+      const timestamp = Date.now()
 
       if (isEditingStyles) {
         const [tailwindConfigUrl, globalCssUrl] = await Promise.all([
@@ -381,7 +469,7 @@ export function EditComponentDialog({
               textContent:
                 activeStyleTab === "tailwind" ? newCode : tailwindConfig || "",
             },
-            fileKey: `${baseFolder}/tailwind.config.js`,
+            fileKey: `${baseFolder}/tailwind.config.${timestamp}.js`,
             bucketName: "components-code",
           }),
           uploadToR2({
@@ -391,20 +479,38 @@ export function EditComponentDialog({
               textContent:
                 activeStyleTab === "globals" ? newCode : globalCss || "",
             },
-            fileKey: `${baseFolder}/globals.css`,
+            fileKey: `${baseFolder}/globals.${timestamp}.css`,
             bucketName: "components-code",
           }),
         ])
 
+        const versionedTailwindUrl = addVersionToUrl(tailwindConfigUrl)
+        const versionedGlobalCssUrl = addVersionToUrl(globalCssUrl)
+
         if (tailwindConfigUrl && globalCssUrl) {
-          await onUpdate(
-            {
-              tailwind_config_extension: addVersionToUrl(tailwindConfigUrl),
-              global_css_extension: addVersionToUrl(globalCssUrl),
-            },
-            {},
-          )
+          // Обновляем компонент напрямую через Supabase
+          const { error: updateError } = await supabase
+            .from("components")
+            .update({
+              tailwind_config_extension: versionedTailwindUrl,
+              global_css_extension: versionedGlobalCssUrl,
+              compiled_css: null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", componentData.id)
+
+          if (updateError) {
+            console.error("Error updating component:", updateError)
+            throw updateError
+          }
+
+          if (activeStyleTab === "tailwind") {
+            setTailwindConfig(newCode)
+          } else {
+            setGlobalCss(newCode)
+          }
           toast.success("Styles updated successfully")
+          window.location.reload()
         }
       }
     } catch (error) {
@@ -425,21 +531,21 @@ export function EditComponentDialog({
             uploadToR2Mutation.isPending || updateMutation.isPending
           }
         />
+        <EditCodeFileCard
+          iconSrc={isDarkTheme ? "/tsx-file-dark.svg" : "/tsx-file.svg"}
+          mainText={`${componentData.name} code`}
+          subText={`Component code`}
+          onEditClick={handleEditCode}
+        />
         <div className="mt-6">
           <DemoDetailsForm form={form} demoIndex={0} />
         </div>
 
         <div className="space-y-3 mt-6">
           <EditCodeFileCard
-            iconSrc={isDarkTheme ? "/tsx-file-dark.svg" : "/tsx-file.svg"}
-            mainText={`${componentData.name} code`}
-            subText={`Component code`}
-            onEditClick={handleEditCode}
-          />
-          <EditCodeFileCard
             iconSrc={isDarkTheme ? "/demo-file-dark.svg" : "/demo-file.svg"}
             mainText="Demo code"
-            subText={demo.name}
+            subText={demo.name || "Demo code"}
             onEditClick={handleEditDemo}
           />
           <EditCodeFileCard
@@ -645,27 +751,55 @@ export function EditComponentDialog({
           className="px-0 pb-0 sm:max-w-lg [&_button[aria-label='Close']]:hidden"
           hideCloseButton
         >
-          <SheetHeader className="mb-2 px-6">
-            <div className="flex justify-between items-center">
-              <SheetTitle>Edit component</SheetTitle>
-              <Button
-                onClick={handleSubmit}
-                disabled={
-                  uploadToR2Mutation.isPending || updateMutation.isPending
-                }
-              >
-                {(uploadToR2Mutation.isPending || updateMutation.isPending) && (
-                  <LoaderCircle
-                    className="-ms-1 me-2 animate-spin"
-                    size={16}
-                    strokeWidth={2}
-                    aria-hidden="true"
-                  />
+          <SheetHeader className="min-h-12 border-b bg-background z-50 pointer-events-auto px-4 sticky top-0">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                {isEditingCode && (
+                  <Tabs value={activeCodeTab} onValueChange={setActiveCodeTab}>
+                    <TabsList className="h-auto gap-2 rounded-none bg-transparent px-0 py-1 text-foreground">
+                      <TabsTrigger
+                        value="component"
+                        className="relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-2 after:h-0.5 hover:bg-accent hover:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent data-[state=inactive]:text-foreground/70"
+                      >
+                        {componentData.component_slug}.tsx
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="tailwind"
+                        className="relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-2 after:h-0.5 hover:bg-accent hover:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent data-[state=inactive]:text-foreground/70"
+                      >
+                        tailwind.config.js
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="globals"
+                        className="relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-2 after:h-0.5 hover:bg-accent hover:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent data-[state=inactive]:text-foreground/70"
+                      >
+                        globals.css
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
                 )}
-                {uploadToR2Mutation.isPending || updateMutation.isPending
-                  ? "Saving..."
-                  : "Save"}
-              </Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={handleSubmit}
+                  disabled={
+                    uploadToR2Mutation.isPending || updateMutation.isPending
+                  }
+                >
+                  {(uploadToR2Mutation.isPending ||
+                    updateMutation.isPending) && (
+                    <LoaderCircle
+                      className="-ms-1 me-2 animate-spin"
+                      size={16}
+                      strokeWidth={2}
+                      aria-hidden="true"
+                    />
+                  )}
+                  {uploadToR2Mutation.isPending || updateMutation.isPending
+                    ? "Saving..."
+                    : "Save"}
+                </Button>
+              </div>
             </div>
           </SheetHeader>
           <div className="overflow-y-auto h-[calc(100vh-5rem)] px-6">

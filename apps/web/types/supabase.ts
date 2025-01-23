@@ -453,7 +453,7 @@ export type Database = {
           demo_dependencies: Json | null
           demo_direct_registry_dependencies: Json | null
           demo_slug: string
-          embedding: string | null
+          embedding?: string | null
           fts: unknown | null
           id: number
           name: string | null

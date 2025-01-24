@@ -198,7 +198,7 @@ export function Header({
       >
         <div className="flex items-center gap-4">
           <Logo />
-          {text && (
+          {text && !isMobile && (
             <div className="flex items-center gap-2">
               <Icons.slash className="text-border w-[22px] h-[22px]" />
               <span className="text-[14px] font-medium">{text}</span>

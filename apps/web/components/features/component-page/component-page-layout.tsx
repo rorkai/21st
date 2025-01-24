@@ -690,29 +690,25 @@ export default function ComponentPage({
           {demo && (
             <div className="hidden md:flex items-center gap-2">
               <Icons.slash className="text-border w-[22px] h-[22px]" />
+              <UserAvatar
+                src={
+                  demo.user.display_image_url ||
+                  demo.user.image_url ||
+                  "/placeholder.svg"
+                }
+                alt={
+                  demo.user.display_name ||
+                  demo.user.name ||
+                  demo.user.username ||
+                  ""
+                }
+                size={22}
+                isClickable={true}
+                user={demo.user}
+              />
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" className="gap-2">
-                    <Link
-                      href={`/${demo.user.display_username || demo.user.username}`}
-                    >
-                      <UserAvatar
-                        src={
-                          demo.user.display_image_url ||
-                          demo.user.image_url ||
-                          "/placeholder.svg"
-                        }
-                        alt={
-                          demo.user.display_name ||
-                          demo.user.name ||
-                          demo.user.username ||
-                          ""
-                        }
-                        size={22}
-                        isClickable={true}
-                        user={demo.user}
-                      />
-                    </Link>
+                  <div className="flex items-center gap-1 cursor-pointer group px-2 py-1 rounded-md hover:bg-accent">
                     <p className="text-[14px] font-medium whitespace-nowrap">
                       {demo.name}
                     </p>
@@ -720,7 +716,7 @@ export default function ComponentPage({
                       size={16}
                       className="text-muted-foreground group-hover:text-foreground transition-colors"
                     />
-                  </Button>
+                  </div>
                 </PopoverTrigger>
                 <PopoverContent
                   side="bottom"

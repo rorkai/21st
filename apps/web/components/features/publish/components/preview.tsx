@@ -83,7 +83,10 @@ export function PublishComponentPreview({
     const dummyFiles = generateSandpackFiles({
       demoComponentNames,
       componentSlug: slugToPublish,
-      relativeImportPath: `/components/${registryToPublish}`,
+      relativeImportPath:
+        registryToPublish === "hooks"
+          ? "hooks"
+          : `/components/${registryToPublish}`,
       code,
       demoCode: currentDemoCode,
       theme: isDarkTheme ? "dark" : "light",
@@ -168,7 +171,10 @@ export function PublishComponentPreview({
       generateSandpackFiles({
         demoComponentNames,
         componentSlug: slugToPublish,
-        relativeImportPath: `/components/${registryToPublish}`,
+        relativeImportPath:
+          registryToPublish === "hooks"
+            ? "hooks"
+            : `/components/${registryToPublish}`,
         code,
         demoCode: currentDemoCode,
         theme: isDarkTheme ? "dark" : "light",
@@ -208,7 +214,12 @@ export function PublishComponentPreview({
       ...(registryDependencies?.npmDependencies || {}),
       ...(demoDependencies || {}),
     }
-  }, [code, currentDemoCode, registryDependencies?.npmDependencies, demoDependencies])
+  }, [
+    code,
+    currentDemoCode,
+    registryDependencies?.npmDependencies,
+    demoDependencies,
+  ])
 
   const providerProps = {
     template: "react-ts" as const,

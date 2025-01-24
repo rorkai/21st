@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react"
 import Link from "next/link"
 import { useSearchParams, usePathname } from "next/navigation"
+import { useRouter } from "next/navigation"
 
 import { atom } from "jotai"
 import { SignInButton, SignedIn, SignedOut, useClerk } from "@clerk/nextjs"
@@ -164,6 +165,7 @@ export function Header({
   const searchParams = useSearchParams()
   const step = searchParams.get("step")
   const controls = useAnimation()
+  const router = useRouter()
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -296,9 +298,13 @@ export function Header({
                     <div className="p-1">
                       <DropdownMenuItem
                         className="text-sm px-3 py-2 cursor-pointer"
-                        onSelect={() =>
-                          (window.location.href = `/${dbUser?.display_username || user?.externalAccounts?.[0]?.username}`)
-                        }
+                        onSelect={() => {
+                          if (dbUser?.display_username) {
+                            router.push(`/${dbUser.display_username}`)
+                          } else if (user?.externalAccounts?.[0]?.username) {
+                            router.push(`/${dbUser?.username}`)
+                          }
+                        }}
                       >
                         View Profile
                       </DropdownMenuItem>

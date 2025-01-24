@@ -49,11 +49,7 @@ function ApiKeyManagerLoading() {
 
 export default async function ApiAccessPage() {
   const { userId } = auth()
-  if (!userId) {
-    redirect("https://accounts.21st.dev/sign-in")
-  }
-
-  const apiKey = await getApiKey(userId)
+  const apiKey = userId ? await getApiKey(userId) : null
 
   return (
     <div className="min-h-screen bg-background">

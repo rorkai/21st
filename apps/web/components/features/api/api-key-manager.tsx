@@ -25,7 +25,7 @@ import { TermsDialog } from "./terms-dialog"
 
 interface ApiKeyManagerProps {
   initialKey: ApiKey | null
-  userId: string
+  userId: string | null
 }
 
 export function ApiKeyManager({ initialKey, userId }: ApiKeyManagerProps) {
@@ -35,6 +35,34 @@ export function ApiKeyManager({ initialKey, userId }: ApiKeyManagerProps) {
   const [loading, setLoading] = useState(false)
   const [projectUrl, setProjectUrl] = useState("")
   const supabase = useClerkSupabaseClient()
+
+  if (!userId) {
+    return (
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            Your API Key
+          </div>
+        </div>
+
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Sign in to create and manage your API keys
+          </AlertDescription>
+        </Alert>
+
+        <div className="flex justify-center">
+          <a
+            href="https://accounts.21st.dev/sign-in"
+            className="inline-block px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            Sign In
+          </a>
+        </div>
+      </div>
+    )
+  }
 
   const createApiKey = async () => {
     if (!projectUrl) {

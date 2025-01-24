@@ -91,15 +91,25 @@ export async function resolveRegistryDependencyTree({
     // Determine the file path based on registry
     let fileWithRegistry = {}
     if (registry === "lib") {
-      fileWithRegistry = { [`/lib/${component_slug}.tsx`]: { code, registry: registry! } }
+      fileWithRegistry = {
+        [`/lib/${component_slug}.tsx`]: { code, registry: registry! },
+      }
     } else if (registry === "hooks") {
       // For hooks, add files in both locations
       fileWithRegistry = {
-        [`/components/hooks/${component_slug}.tsx`]: { code, registry: registry! },
-        [`/hooks/${component_slug}.tsx`]: { code, registry: registry! }
+        [`/components/hooks/${component_slug}.tsx`]: {
+          code,
+          registry: registry!,
+        },
+        [`/hooks/${component_slug}.tsx`]: { code, registry: registry! },
       }
     } else {
-      fileWithRegistry = { [`/components/${registry}/${component_slug}.tsx`]: { code, registry: registry! } }
+      fileWithRegistry = {
+        [`/components/${registry}/${component_slug}.tsx`]: {
+          code,
+          registry: registry!,
+        },
+      }
     }
 
     return {

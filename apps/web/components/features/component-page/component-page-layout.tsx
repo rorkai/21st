@@ -84,6 +84,7 @@ import {
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { addVersionToUrl } from "@/lib/utils/url"
+import { isEditingCodeAtom } from "@/components/ui/edit-component-dialog"
 
 export const isShowCodeAtom = atom(true)
 const selectedPromptTypeAtom = atomWithStorage<PromptType | "v0-open">(
@@ -168,29 +169,32 @@ const useKeyboardShortcuts = ({
     }
   }
 
+  const [isEditingCode] = useAtom(isEditingCodeAtom)
+
   useEffect(() => {
     const keyDownHandler = (e: KeyboardEvent) => {
-      if (e.code === "BracketRight") {
+      if (e.code === "BracketRight" || e.code === "BracketLeft") {
+        if (isEditingCode) return
         e.preventDefault()
-        setIsShowCode(false)
-        trackEvent(AMPLITUDE_EVENTS.TOGGLE_CODE_VIEW, {
-          componentId: component.id,
-          view: "info",
-        })
-      }
-      if (e.code === "BracketLeft") {
-        e.preventDefault()
-        setIsShowCode(true)
-        trackEvent(AMPLITUDE_EVENTS.TOGGLE_CODE_VIEW, {
-          componentId: component.id,
-          view: "code",
-        })
+        if (e.code === "BracketRight") {
+          setIsShowCode(false)
+          trackEvent(AMPLITUDE_EVENTS.TOGGLE_CODE_VIEW, {
+            componentId: component.id,
+            view: "info",
+          })
+        } else {
+          setIsShowCode(true)
+          trackEvent(AMPLITUDE_EVENTS.TOGGLE_CODE_VIEW, {
+            componentId: component.id,
+            view: "code",
+          })
+        }
       }
     }
 
     window.addEventListener("keydown", keyDownHandler)
     return () => window.removeEventListener("keydown", keyDownHandler)
-  }, [])
+  }, [isEditingCode, component.id, setIsShowCode])
 
   useEffect(() => {
     const keyDownHandler = (e: KeyboardEvent) => {

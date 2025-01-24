@@ -37,6 +37,7 @@ import { CodeEditorDialog } from "./code-editor-dialog"
 import { addVersionToUrl } from "@/lib/utils/url"
 import { useClerkSupabaseClient } from "@/lib/clerk"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { atom, useAtom } from "jotai"
 
 const cleanInitialUrl = (url: string | null) => {
   if (!url) return ""
@@ -63,6 +64,8 @@ interface CommonEditorProps {
   }
 }
 
+export const isEditingCodeAtom = atom(false)
+
 export function EditComponentDialog({
   component,
   demo,
@@ -85,6 +88,7 @@ export function EditComponentDialog({
   const componentData =
     "component" in component ? component.component : component
 
+  const [, setIsEditingCodeState] = useAtom(isEditingCodeAtom)
   const [isEditingCode, setIsEditingCode] = useState(false)
   const [isEditingDemo, setIsEditingDemo] = useState(false)
   const [isEditingStyles, setIsEditingStyles] = useState(false)
@@ -300,6 +304,7 @@ export function EditComponentDialog({
       setTailwindConfig(tailwindConfig)
       setGlobalCss(globalCss)
       setIsEditingCode(true)
+      setIsEditingCodeState(true)
     } catch (error) {
       console.error("Error fetching component code:", error)
       toast.error("Failed to load component code")
@@ -337,6 +342,7 @@ export function EditComponentDialog({
       setTailwindConfig(tailwindConfig)
       setGlobalCss(globalCss)
       setIsEditingDemo(true)
+      setIsEditingCodeState(true)
     } catch (error) {
       console.error("Error fetching demo code:", error)
       toast.error("Failed to load demo code")
@@ -362,6 +368,7 @@ export function EditComponentDialog({
       setTailwindConfig(tailwindConfig)
       setGlobalCss(globalCss)
       setIsEditingStyles(true)
+      setIsEditingCodeState(true)
     } catch (error) {
       console.error("Error fetching styles:", error)
       toast.error("Failed to load styles")
